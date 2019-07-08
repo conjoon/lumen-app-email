@@ -52,11 +52,11 @@ class UserController extends Controller
     public function __construct(ImapUserRepository $repository) {
 
         $this->repository = $repository;
-
     }
 
     /**
-     *
+     * Action for validating a set of username/password against this ImapUserRepository.
+     * 
      */
     public function authenticate(Request $request)
     {
@@ -69,8 +69,7 @@ class UserController extends Controller
              return response()->json(['success' => true]);
         }
 
-        return response()->json(['success' => false], 401);
+        return response()->json(['success' => false, "msg" => "Unauthorized.", "status" => 401], 401);
     }
 
-    //
 }

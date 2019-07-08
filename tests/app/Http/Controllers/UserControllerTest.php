@@ -54,7 +54,7 @@ class UserControllerTest extends TestCase
 
         $response = $this->call('POST', 'cn_imapuser/auth', ['username' => 'dev@conjoon.org', 'password' => 'test']);
         $this->assertEquals(401, $response->status());
-        $this->assertEquals(['success' => false], $response->getData(true));
+        $this->assertEquals(['success' => false, "msg" => "Unauthorized.", "status" => 401], $response->getData(true));
 
 
         $response = $this->call('POST', 'cn_imapuser/auth', ['username' => 'safsafasfsa', 'password' => 'test']);
