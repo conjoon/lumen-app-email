@@ -24,8 +24,11 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+require_once __DIR__ . '/TestTrait.php';
+
 abstract class TestCase extends Laravel\Lumen\Testing\TestCase
 {
+
     /**
      * Creates the application.
      *
@@ -35,4 +38,7 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     {
         return require __DIR__.'/../bootstrap/app.php';
     }
+    
+    
+
 }
