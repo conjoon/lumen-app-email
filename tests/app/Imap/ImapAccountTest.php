@@ -72,7 +72,7 @@ class ImapAccountTest extends TestCase
     }
 
 
-    public function testForgetterException() {
+    public function testGetterException() {
 
         $config = $this->accountConfig;
         $account = new ImapAccount($config);
