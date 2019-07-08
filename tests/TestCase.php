@@ -38,7 +38,30 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     {
         return require __DIR__.'/../bootstrap/app.php';
     }
-    
-    
+
+
+    /**
+     * Set an expected exception.
+     *
+     * @param string $class
+     *
+     * @return $this
+     *
+     * @see @see https://laracasts.com/discuss/channels/testing/testing-that-exception-was-thrown
+     */
+    public function expectException(string $exception) :void {
+
+        $this->app->instance(\App\Exceptions\Handler::class, new class extends \App\Exceptions\Handler {
+            public function __construct() {}
+            public function report(Exception $e) {}
+            public function render($request, Exception $e)
+            {
+                throw $e;
+            }
+        });
+
+
+        parent::expectException($exception);
+    }
 
 }
