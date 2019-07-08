@@ -54,6 +54,7 @@ class ImapAccountTest extends TestCase
 
         $account = new ImapAccount($config);
 
+        $this->assertInstanceOf(\Illuminate\Contracts\Support\Arrayable::class, $account);
 
         foreach ($config as $property => $value) {
 
@@ -70,6 +71,7 @@ class ImapAccountTest extends TestCase
         }
     }
 
+
     public function testForgetterException() {
 
         $config = $this->accountConfig;
@@ -79,4 +81,15 @@ class ImapAccountTest extends TestCase
 
         $account->getSomeFoo();
     }
+
+
+    public function testToArray() {
+
+        $config = $this->accountConfig;
+
+        $account = new ImapAccount($config);
+
+        $this->assertSame($config, $account->toArray());
+    }
+
 }

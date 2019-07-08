@@ -59,7 +59,7 @@ namespace App\Imap;
  *
  * @package App\Imap
  */
-class ImapAccount  {
+class ImapAccount implements \Illuminate\Contracts\Support\Arrayable {
 
 
     /**
@@ -185,6 +185,30 @@ class ImapAccount  {
         }
 
         throw new \RuntimeException("no method \"".$method."\" found.");
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function toArray() {
+        return [
+            "id"              => $this->getId(),
+            "name"            => $this->getName(),
+            "from"            => $this->getFrom(),
+            "replyTo"         => $this->getReplyTo(),
+            "inbox_type"      => $this->getInboxType(),
+            "inbox_address"   => $this->getInboxAddress(),
+            "inbox_port"      => $this->getInboxPort(),
+            "inbox_user"      => $this->getInboxUser(),
+            "inbox_password"  => $this->getInboxPassword(),
+            "inbox_ssl"       => $this->getInboxSsl(),
+            "outbox_address"  => $this->getOutboxAddress(),
+            "outbox_port"     => $this->getOutboxPort(),
+            "outbox_user"     => $this->getOutboxUser(),
+            "outbox_password" => $this->getOutboxPassword(),
+            "outbox_ssl"      => $this->getOutboxSsl()
+        ];
     }
 
 }
