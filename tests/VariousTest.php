@@ -25,20 +25,33 @@
  */
 
 
+
 class VariousTest extends TestCase
 {
     /**
      * Get information and validate registered middleware for the app.
-     * 
+     *
      * @return void
      */
-    public function testMiddleware()
-    {
+    public function testMiddleware() {
         $reflection = new \ReflectionClass($this->app);
         $property = $reflection->getMethod('gatherMiddlewareClassNames');
         $property->setAccessible(true);
         $ret = $property->invokeArgs($this->app, ['auth']);
 
         $this->assertSame($ret[0], "App\Http\Middleware\Authenticate");
+    }
+
+
+    public function testRoutes() {
+
+        $routes = $this->app->router->getRoutes();
+
+        $this->assertArrayHasKey("POST/cn_imapuser/auth", $routes);
+
+        $this->assertArrayHasKey("GET/cn_mail/MailAccounts", $routes);
+        $this->assertSame("auth", $routes["GET/cn_mail/MailAccounts"]["action"]["middleware"][0]);
+
+
     }
 }
