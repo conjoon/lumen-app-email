@@ -56,7 +56,7 @@ class AuthenticateTest extends TestCase
         // test for is guest
         $stubbedStub::$ISGUEST = true;
         $response = $authenticate->handle(new \Illuminate\Http\Request(), function(){});
-        $this->assertInstanceOf(\Illuminate\Http\Response::class, $response);
+        $this->assertInstanceOf(\Illuminate\Http\JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // test for authenticated
