@@ -24,22 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
 
-$router->post('cn_imapuser/auth', 'UserController@authenticate');
+class MailAccountControllerTest extends TestCase
+{
+    use TestTrait;
 
-$router->group(['middleware' => 'auth'], function () use ($router) {
+    /**
+     * Tests get() to make sure method returns list of available ImapAccounts associated with
+     * the current signed in user.
+     *
+     * @return void
+     */
+    public function testGet_success()
+    {
+        $response = $this->actingAs($this->getTestUserStub())
+                         ->call('GET', 'cn_mail/MailAccounts');
 
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@get');
+        $this->assertEquals(200, $response->status());
 
-});
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => $this->getTestImapAccount()->toArray()
+          ]);
+    }
 
+
+}
