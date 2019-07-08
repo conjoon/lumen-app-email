@@ -24,24 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
+use App\Imap\Service\DefaultMailFolderService;
 
-$router->post('cn_imapuser/auth', 'UserController@authenticate');
 
-$router->group(['middleware' => 'auth'], function () use ($router) {
+class DefaultMailFolderServiceTest extends TestCase {
 
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@get');
+    use TestTrait;
 
-    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@get');
 
-});
+    public function testInstance() {
 
+        $service = new DefaultMailFolderService();
+        $this->assertINstanceOf(\App\Imap\Service\MailFolderService::class, $service);
+    }
+
+
+    public function testGetMailFoldersFor() {
+
+        $service = new DefaultMailFolderService();
+
+        $account = $this->getTestUserStub()->getImapAccount();
+
+        $this->assertSame($service->getMailFoldersFor($account), []);
+    }
+
+
+}

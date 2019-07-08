@@ -52,6 +52,28 @@ class VariousTest extends TestCase
         $this->assertArrayHasKey("GET/cn_mail/MailAccounts", $routes);
         $this->assertSame("auth", $routes["GET/cn_mail/MailAccounts"]["action"]["middleware"][0]);
 
+        $this->assertArrayHasKey("GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders", $routes);
+        $this->assertSame("auth", $routes["GET/cn_mail/MailAccounts"]["action"]["middleware"][0]);
+    }
+
+
+    public function testConcretes() {
+
+
+        $reflection = new \ReflectionClass($this->app);
+        $property = $reflection->getMethod('getConcrete');
+        $property->setAccessible(true);
+
+
+        $this->assertInstanceOf(
+            \App\Imap\DefaultImapUserRepository::class,
+            $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
+        );
+
+        $this->assertInstanceOf(
+            \App\Imap\Service\DefaultMailFolderService::class,
+            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MailFolderService']))
+        );
 
     }
 }

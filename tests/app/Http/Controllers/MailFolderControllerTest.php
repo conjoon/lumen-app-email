@@ -24,24 +24,46 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
 
-$router->post('cn_imapuser/auth', 'UserController@authenticate');
+class MailFolderControllerTest extends TestCase
+{
+    use TestTrait;
 
-$router->group(['middleware' => 'auth'], function () use ($router) {
 
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@get');
+    /**
+     * Tests get() to make sure method returns list of available ImapAccounts associated with
+     * the current signed in user.
+     *
+     * @return void
+     */
+    public function testGet_exception()
+    {
 
-    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@get');
+        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
 
-});
+        $this->actingAs($this->getTestUserStub())
+             ->call('GET', 'cn_mail/MailAccounts/foobar/MailFolders');
+    }
 
+
+    /**
+     * Tests get() to make sure method returns list of available ImapAccounts associated with
+     * the current signed in user.
+     *
+     * @return void
+     */
+    public function testGet_success()
+    {
+        $response = $this->actingAs($this->getTestUserStub())
+                         ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders');
+
+        $this->assertEquals(200, $response->status());
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => []
+          ]);
+    }
+
+
+}

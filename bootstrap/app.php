@@ -75,6 +75,10 @@ $app->singleton('App\Imap\ImapUserRepository', function ($app) {
     return new App\Imap\DefaultImapUserRepository(config('imapserver'));
 });
 
+$app->singleton('App\Imap\Service\MailFolderService', function ($app) {
+    return new App\Imap\Service\DefaultMailFolderService();
+});
+
 /*
 |--------------------------------------------------------------------------
 | Register Middleware

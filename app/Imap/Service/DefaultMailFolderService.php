@@ -23,25 +23,27 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
-|
-*/
+namespace App\Imap\Service;
 
-$router->post('cn_imapuser/auth', 'UserController@authenticate');
+use App\Imap\ImapAccount;
 
-$router->group(['middleware' => 'auth'], function () use ($router) {
+class DefaultMailFolderService implements MailFolderService {
 
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@get');
 
-    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@get');
+    /**
+     * @param ImapAccount $account
+     *
+     *
+     * @return array
+     */
+    public function getMailFoldersFor(ImapAccount $account) :array {
 
-});
+        return [];
 
+    }
+
+
+
+}
