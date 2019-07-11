@@ -50,10 +50,26 @@ class MailFolderControllerTest extends TestCase
      * Tests get() to make sure method returns list of available ImapAccounts associated with
      * the current signed in user.
      *
+     *
      * @return void
      */
     public function testGet_success()
     {
+        $repository = $this->getMockBuilder('App\Imap\Service\DefaultMailFolderService')
+                           ->disableOriginalConstructor()
+                           ->getMock();
+
+        $this->app->when(App\Http\Controllers\MailFolderController::class)
+            ->needs(App\Imap\Service\MailFolderService::class)
+            ->give(function () use ($repository) {
+                return $repository;
+            });
+
+        $repository->expects($this->once())
+                   ->method('getMailFoldersFor')
+                   ->willReturn(['testArray']);
+
+
         $response = $this->actingAs($this->getTestUserStub())
                          ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders');
 
@@ -61,7 +77,7 @@ class MailFolderControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => []
+            "data"    => ['testArray']
           ]);
     }
 

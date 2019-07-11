@@ -27,34 +27,12 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
-
-interface MailFolderService {
-
-
-    /**
-     * Returns an array of Objects representing MailFolders for the specified
-     * ImapAccount.
-     *
-     * @param ImapAccount $account The ImapAccount for which the folder structure
-     * should be returned.
-     *
-     * @return array An array of the Mailbox-structure found on the server. Each
-     * entry must provide the following information:
-     * - id: A unique id for the MailFolder
-     * - mailAccountId: The id of the ImapAccount to which this mailbox belongs
-     * - name: A human readable nameof the mailbox
-     * - unreadCount: An integer value representing the number of unread messages
-     * in this mailbox
-     * - cn_folderType: The type of this mailbox. Can be any of JUNK, TRASH, INBOX, SENT, DRAFT
-     * - data: an array of child folders providing the same structure, if any,
-     * otherwise an empty array
-     *
-     * @throws \App\Imap\Service\MailFolderServiceException
-     *
-     * @see \Horde_Imap_Client_Socket
-     */
-    public function getMailFoldersFor(ImapAccount $account) :array;
+/**
+ * Class MailFolderServiceException
+ *
+ * @package App\Imap\Service
+ */
+class MailFolderServiceException extends \RuntimeException {
 
 
 
