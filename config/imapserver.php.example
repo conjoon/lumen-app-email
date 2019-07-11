@@ -24,20 +24,34 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/*
+|--------------------------------------------------------------------------
+| Add IMAP Server Connection information
+|--------------------------------------------------------------------------
+|
+| Here you can specify an array of supported IMAP servers to which users
+| of your application can connect to. The "match" entry should be a regular
+| expression that matches an email-address to "this" specific server configuration.
+| This file needs to be renamed to "imapserver.php" once configured.
+*/
+
 return [
 
     [
-        "id"              => "dev_sys_conjoon_org",
+        // a unique id for this configuration entry
+        "id"              => "Google_Mail",
         "inbox_type"      => "IMAP",
-        "inbox_address"   => "sfsffs.ffssf.sffs",
+        "inbox_address"   => 'imap.gmail.com',
         "inbox_port"      => 993,
         "inbox_ssl"       => true,
-        "outbox_address"  => "sfsffs.ffssf.sffs",
-        "outbox_port"     => 993,
+        "outbox_address"  => "smtp.gmail.com",
+        "outbox_port"     => 465,
         "outbox_ssl"      => true,
-        "match"           => ["/\@(conjoon.)(org|de|com|info)$/mi"]
+        // a regular expression that makes sure a user's email-address
+        // is matched against "this" entry, e.g. a sign-in with the
+        // username "dev@googlemail.com" would be associated with "this",
+        // server configuration, but "dev@somemailserver.com" wouldn't
+        "match"           => ["/\@(googlemail.)(com)$/mi"]
     ]
-
-
 
 ];
