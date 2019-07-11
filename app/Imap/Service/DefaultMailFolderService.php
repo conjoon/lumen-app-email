@@ -85,7 +85,6 @@ class DefaultMailFolderService implements MailFolderService {
             ];
         }
 
-
         return $this->flatToTree($flat, $account->getId());
     }
 
@@ -101,9 +100,7 @@ class DefaultMailFolderService implements MailFolderService {
      */
     protected function flatToTree(array $flatMailboxes, string $mailAccountId) :array {
 
-
         $data = [];
-
 
         function &lookup($id, &$data) {
 
@@ -117,7 +114,6 @@ class DefaultMailFolderService implements MailFolderService {
                 $node = &lookup($id, $node['data']);
                 return $node;
             }
-
         };
 
         foreach ($flatMailboxes as $mailbox) {
@@ -154,15 +150,15 @@ class DefaultMailFolderService implements MailFolderService {
 
 
     /**
-     * Helperfunction to maps a folder name to a type.
+     * Helper function to map a folder-name to a type.
      * Names will be split given the specified delimiter and a lookup on the
-     * first two parts will be made to guess the type those names belong to.
-     * For example, "INBOX" will always be an INBOX-type, hwereas INBOX.Drafts
+     * first two parts will be made to guess the type this name belong to.
+     * For example, "INBOX" will always be an INBOX-type, whereas INBOX.Drafts
      * will be of type "DRAFT".
      *
      * @example
      *   $this->mapFullFolderNameToType("INBOX", "."); // returns "INBOX"
-     *   $this->mapFullFolderNameToType("INBOX.Somefolder.Deep.Drafts", "."); // returns "DRAFT"
+     *   $this->mapFullFolderNameToType("INBOX.Somefolder.Deep.Drafts", "."); // returns "INBOX"
      *   $this->mapFullFolderNameToType("INBOX.Drafts", "."); // returns "DRAFT"
      *   $this->mapFullFolderNameToType("INBOX.Trash.Deep.Deeper.Folder", "."); // returns "TRASH"
      *
