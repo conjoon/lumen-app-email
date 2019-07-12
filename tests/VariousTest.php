@@ -49,11 +49,18 @@ class VariousTest extends TestCase
 
         $this->assertArrayHasKey("POST/cn_imapuser/auth", $routes);
 
-        $this->assertArrayHasKey("GET/cn_mail/MailAccounts", $routes);
-        $this->assertSame("auth", $routes["GET/cn_mail/MailAccounts"]["action"]["middleware"][0]);
 
-        $this->assertArrayHasKey("GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders", $routes);
-        $this->assertSame("auth", $routes["GET/cn_mail/MailAccounts"]["action"]["middleware"][0]);
+        $testAuthsFor = [
+            "GET/cn_mail/MailAccounts",
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders",
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems"
+        ];
+
+        foreach ($testAuthsFor as $route) {
+            $this->assertArrayHasKey($route, $routes);
+            $this->assertSame("auth", $routes[$route]["action"]["middleware"][0]);
+        }
+
     }
 
 
@@ -73,6 +80,11 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(
             \App\Imap\Service\DefaultMailFolderService::class,
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MailFolderService']))
+        );
+
+        $this->assertInstanceOf(
+            \App\Imap\Service\DefaultMessageItemService::class,
+            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MessageItemService']))
         );
 
     }
