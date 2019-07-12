@@ -132,10 +132,10 @@ class DefaultMailFolderServiceTest extends TestCase {
         $imapStub->shouldReceive('status')->with($mbox3, 16)->andReturn(["unseen" => 4]);
         $imapStub->shouldReceive('status')->with($mbox4, 16)->andReturn(["unseen" => 1]);
         $imapStub->shouldReceive('status')->with($mbox8, 16)->andReturn(["unseen" => 311]);
+        $imapStub->shouldReceive('status')->with($mbox7, 16)->andReturn(["unseen" => 9]);
 
         $imapStub->shouldNotReceive('status')->with($mbox5, 16);
         $imapStub->shouldNotReceive('status')->with($mbox6, 16);
-        $imapStub->shouldNotReceive('status')->with($mbox7, 16);
 
         $service = new DefaultMailFolderService();
 
@@ -181,25 +181,38 @@ class DefaultMailFolderServiceTest extends TestCase {
                 "unreadCount" => 4,
                 "cn_folderType" => "DRAFT",
                 "data" => []
+            ],
+            [
+                "id" => "INBOX.Nonexistent.Child",
+                "mailAccountId" => $account->getId(),
+                "name" => "INBOX.Nonexistent.Child",
+                "unreadCount" => 9,
+                "cn_folderType" => "FOLDER",
+                "data" => []
             ]
         ]);
+
     }
 
 
-    public function testMapFullFolderNameToType() {
+    public function testMapFullFolderIdToType() {
 
         $service = new DefaultMailFolderService();
 
-        $this->assertSame($service->mapFullFolderNameToType("SomeRandomFolder/Draft", "/"), "INBOX");
-        $this->assertSame($service->mapFullFolderNameToType("SomeRandom", "."), "INBOX");
-        $this->assertSame($service->mapFullFolderNameToType("INBOX", "."), "INBOX");
-        $this->assertSame($service->mapFullFolderNameToType("INBOX/Somefolder/Deep/Drafts", "/"), "INBOX");
-        $this->assertSame($service->mapFullFolderNameToType("INBOX.Drafts", "."), "DRAFT");
-        $this->assertSame($service->mapFullFolderNameToType("INBOX.Trash.Deep.Deeper.Folder", "."), "TRASH");
+        $this->assertSame($service->mapFullFolderIdToType("SomeRandomFolder/Draft", "/"), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("SomeRandomFolder/Draft/Test", "/"), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("SomeRandom", "."), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("INBOX", "."), "INBOX");
+        $this->assertSame($service->mapFullFolderIdToType("INBOX/Somefolder/Deep/Drafts", "/"), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("INBOX.Drafts", "."), "DRAFT");
+        $this->assertSame($service->mapFullFolderIdToType("INBOX.Trash.Deep.Deeper.Folder", "."), "FOLDER");
 
-        $this->assertSame($service->mapFullFolderNameToType("Junk/Draft", "/"), "JUNK");
-        $this->assertSame($service->mapFullFolderNameToType("TRASH.Draft.folder", "."), "TRASH");
-        $this->assertSame($service->mapFullFolderNameToType("TRASH", "/"), "TRASH");
+        $this->assertSame($service->mapFullFolderIdToType("Junk/Draft", "/"), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("TRASH.Draft.folder", "."), "FOLDER");
+        $this->assertSame($service->mapFullFolderIdToType("TRASH", "/"), "TRASH");
+
+        $this->assertSame($service->mapFullFolderIdToType("INBOX:TRASH", ":"), "TRASH");
+        $this->assertSame($service->mapFullFolderIdToType("INBOX-DRAFTS", "-"), "DRAFT");
 
     }
 
@@ -209,7 +222,7 @@ class DefaultMailFolderServiceTest extends TestCase {
         $service = new DefaultMailFolderService();
 
         $this->assertFalse($service->shouldBeRootFolder("SomeRandomFolder/Draft", "/"));
-        $this->assertFalse($service->shouldBeRootFolder("SomeRandom", "."));
+        $this->assertTrue($service->shouldBeRootFolder("SomeRandom", "."));
         $this->assertTrue($service->shouldBeRootFolder("INBOX", "."));
         $this->assertFalse($service->shouldBeRootFolder("INBOX/Somefolder/Deep/Drafts", "/"));
         $this->assertTrue($service->shouldBeRootFolder("INBOX/Drafts", "/"));
@@ -217,7 +230,7 @@ class DefaultMailFolderServiceTest extends TestCase {
 
         $this->assertFalse($service->shouldBeRootFolder("Junk/Draft", "/"));
         $this->assertFalse($service->shouldBeRootFolder("TRASH.Draft.folder", "."));
-        $this->assertFalse($service->shouldBeRootFolder("TRASH", "/"));
+        $this->assertTrue($service->shouldBeRootFolder("TRASH", "/"));
 
     }
 
@@ -256,7 +269,7 @@ class DefaultMailFolderServiceTest extends TestCase {
 
         $this->assertTrue($service->shouldSkipMailbox("NOSELECT", $mailboxes));
         $this->assertTrue($service->shouldSkipMailbox("Nonexistant", $mailboxes));
-        $this->assertTrue($service->shouldSkipMailbox("Nonexistant/butchildokay", $mailboxes));
+        $this->assertFalse($service->shouldSkipMailbox("Nonexistant/butchildokay", $mailboxes));
         $this->assertFalse($service->shouldSkipMailbox("canselect", $mailboxes));
         $this->assertFalse($service->shouldSkipMailbox("canselect/childokay", $mailboxes));
 

@@ -46,9 +46,18 @@ interface MailFolderService {
      * - name: A human readable nameof the mailbox
      * - unreadCount: An integer value representing the number of unread messages
      * in this mailbox
-     * - cn_folderType: The type of this mailbox. Can be any of JUNK, TRASH, INBOX, SENT, DRAFT
+     * - cn_folderType: The type of this mailbox. Can be any of JUNK, TRASH, INBOX, SENT, DRAFT, FOLDER
      * - data: an array of child folders providing the same structure, if any,
      * otherwise an empty array
+     * The order of the returned mailboxes are as follows:
+     *  - The INBOX Mailbox comes always first, followed by
+     *  - all system relevant mailboxes, such as JUNK, TRASH, SENT, DRAFT (Note: If those mailboxes
+     *  are child-elements of the INBOX mailbox, they wil be moved to the same level as the INBOX
+     * mailbox.), followed by
+     *  - all remaining folders which will have the type "FOLDER" applied to them.
+     * Child folders of \nonexistent and/or \noselect mailboxes will not have a parent-folder and
+     * returned as root level if applicable.
+     *
      *
      * @throws \App\Imap\Service\MailFolderServiceException
      *
