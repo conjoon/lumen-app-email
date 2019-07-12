@@ -48,7 +48,7 @@ class UserControllerTest extends TestCase
                    ->will(
                        $this->onConsecutiveCalls(
                             null,
-                            new App\Imap\ImapUser('foo', new App\Imap\ImapAccount([]))
+                            new App\Imap\ImapUser('foo', 'bar', new App\Imap\ImapAccount([]))
                         )
                    );
 
@@ -59,6 +59,6 @@ class UserControllerTest extends TestCase
 
         $response = $this->call('POST', 'cn_imapuser/auth', ['username' => 'safsafasfsa', 'password' => 'test']);
         $this->assertEquals(200, $response->status());
-        $this->assertEquals(['success' => true], $response->getData(true));
+        $this->assertEquals(['success' => true, "data" => ['username' => 'foo', 'password' => 'bar']], $response->getData(true));
     }
 }

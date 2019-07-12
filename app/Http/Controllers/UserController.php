@@ -67,7 +67,10 @@ class UserController extends Controller
         $user = $this->repository->getUser($username, $password);
 
         if ($user) {
-             return response()->json(['success' => true]);
+             return response()->json([
+                 'success' => true,
+                 'data'    => $user->toArray()
+             ]);
         }
 
         return response()->json(['success' => false, "msg" => "Unauthorized.", "status" => 401], 401);
