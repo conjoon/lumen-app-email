@@ -50,7 +50,7 @@ class MailAccountController extends Controller {
 
         return response()->json([
             "success" => true,
-            "data" => $user->getImapAccount()->toArray()
+            "data" => [$user->getImapAccount()->toArray()]
         ]);
 
     }

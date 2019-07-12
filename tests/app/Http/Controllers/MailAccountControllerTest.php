@@ -44,7 +44,7 @@ class MailAccountControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => $this->getTestImapAccount()->toArray()
+            "data"    => [$this->getTestImapAccount()->toArray()]
           ]);
     }
 
