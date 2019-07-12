@@ -119,7 +119,7 @@ class DefaultImapUserRepository implements ImapUserRepository {
             foreach ($entry['match'] as $regex) {
 
                 if (preg_match($regex, $username) === 1) {
-                    return new ImapUser($username, ImapUtil::makeAccount(
+                    return new ImapUser($username, $password, ImapUtil::makeAccount(
                         $username, $password, $entry
                     ));
                 }
