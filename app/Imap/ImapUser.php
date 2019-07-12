@@ -52,11 +52,13 @@ class ImapUser {
      * ImapUser constructor.
      *
      * @param string $username
+     * @param string $password
      * @param ImapAccount $account
      */
-    public function __construct(string $username, ImapAccount $imapAccount) {
+    public function __construct(string $username, string $password, ImapAccount $imapAccount) {
 
         $this->username = $username;
+        $this->password = $password;
 
         $this->imapAccount = $imapAccount;
     }
@@ -65,16 +67,39 @@ class ImapUser {
     /**
      * @return string
      */
-    public function getUsername() {
+    public function getUsername() :string {
         return $this->username;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getPassword() :string {
+        return $this->password;
     }
 
 
     /**
      * @return ImapAccount
      */
-    public function getImapAccount() {
+    public function getImapAccount() :ImapAccount {
         return $this->imapAccount;
+    }
+
+
+    /**
+     * Returns an array representation of this user.
+     *
+     * @return array
+     */
+    public function toArray() :array {
+
+        return [
+            'username' => $this->username,
+            'password' => $this->password
+        ];
+
     }
 
 }
