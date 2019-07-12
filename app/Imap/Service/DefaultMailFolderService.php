@@ -38,6 +38,7 @@ use App\Imap\ImapAccount;
  */
 class DefaultMailFolderService implements MailFolderService {
 
+    use ImapTrait;
 
     /**
      * @inheritdoc
@@ -45,27 +46,28 @@ class DefaultMailFolderService implements MailFolderService {
     public function getMailFoldersFor(ImapAccount $account) :array {
 
         try {
-            $client = new \Horde_Imap_Client_Socket(array(
-                'username' => $account->getInboxUser(),
-                'password' => $account->getInboxPassword(),
-                'hostspec' => $account->getInboxAddress(),
-                'port'     => $account->getInboxPort(),
-                'secure'   => $account->getInboxSsl() ? 'ssl' : null
-            ));
+            $client = $this->connect($account);
 
             $mailboxes = $client->listMailboxes(
                 "*",
-                \Horde_Imap_Client::MBOX_ALL
+                \Horde_Imap_Client::MBOX_ALL,
+                ["attributes" => true]
             );
 
         } catch (\Exception $e) {
+
             throw new MailFolderServiceException($e->getMessage(), 0, $e);
         }
 
 
         $flat = [];
 
+
         foreach ($mailboxes as $id => $mailbox) {
+
+            if ($this->shouldSkipMailbox($id, $mailboxes)) {
+                continue;
+            }
 
             try {
                 $status = $client->status(
@@ -104,7 +106,8 @@ class DefaultMailFolderService implements MailFolderService {
 
         function &lookup($id, &$data) {
 
-            foreach ($data as &$node) {
+             foreach ($data as &$node) {
+
                 if (!isset($node['data'])) {
                     $node['data'] = [];
                 }
@@ -112,9 +115,12 @@ class DefaultMailFolderService implements MailFolderService {
                     return $node['data'];
                 }
                 $node = &lookup($id, $node['data']);
-                return $node;
-            }
+             }
+
+             return $node;
         };
+
+        $processed = [];
 
         foreach ($flatMailboxes as $mailbox) {
 
@@ -124,10 +130,14 @@ class DefaultMailFolderService implements MailFolderService {
 
             $path = explode($delim, $id);
 
-            if (count($path) === 1) {
+            if (count($path) === 1 || $this->shouldBeRootFolder($id, $delim)) {
+                $processed[$id] = true;
+
                 $node = &$data;
-                $actualName = $mailbox['name'];
+                $names = explode($delim, $mailbox['name']);
+                $actualName = array_pop($names);
             } else {
+
                 $ex = explode($delim, $mailbox['name']);
                 $actualName = array_pop($ex);
                 array_pop($path);
@@ -181,27 +191,94 @@ class DefaultMailFolderService implements MailFolderService {
             case "INBOX":
                 return "INBOX";
 
-            case "INBOX.TRASH":
-            case "INBOX.PAPIERKORB":
-            case "INBOX.DELETED ITEMS":
+            case "TRASH":
+            case "INBOX".$delimiter."TRASH":
+            case "INBOX".$delimiter."PAPIERKORB":
+            case "INBOX".$delimiter."DELETED ITEMS":
                 return "TRASH";
 
-            case "INBOX.DRAFTS":
+            case "DRAFTS":
+            case "INBOX".$delimiter."DRAFTS":
                 return "DRAFT";
 
-            case "INBOX.SENT":
-            case "INBOX.SENT MESSAGES":
-            case "INBOX.SENT ITEMS":
+            case "SENT":
+            case "INBOX".$delimiter."SENT":
+            case "INBOX".$delimiter."SENT MESSAGES":
+            case "INBOX".$delimiter."SENT ITEMS":
                 return "SENT";
 
-            case "INBOX.JUNK":
-            case "INBOX.SPAM":
+            case "JUNK":
+            case "INBOX".$delimiter."JUNK":
+            case "INBOX".$delimiter."SPAM":
                 return "JUNK";
 
         }
 
+        if (count($path) >= 2) {
+            return $this->mapFullFolderNameToType($path[0], $delimiter);
+        }
 
         return "INBOX";
     }
+
+
+    /**
+     * Returns true if the mailbox with this global name should be added as a root
+     * node to the mailbox hierarchy, although it belongs to a parent folder already.
+     * This is sometimes needed if system relevant mailboxes, such as SENT or DRAFTS
+     * are direct child folders of the INBO mailbox.
+     *
+     * @return bool
+     */
+    public function shouldBeRootFolder($globalName, $delimiter) :bool {
+
+        return array_search(strtoupper($globalName), [
+            "INBOX",
+            "INBOX".$delimiter."TRASH",
+            "INBOX".$delimiter."JUNK",
+            "INBOX".$delimiter."SENT",
+            "INBOX".$delimiter."DRAFTS"
+        ]) !== false;
+
+    }
+
+
+    /**
+     * Returns true if the mailbox with the specified $id belonging to the
+     * $mailboxes should be skipped and not placed in the folder hierarchy.
+     * This is true if either nonexistent or noselect attributes are set, or
+     * if the mailbox has a parent mailbox with these attributes.
+     *
+     * @param string $id
+     * @param string $mailboxes
+     *
+     * @return bool
+     */
+    public function shouldSkipMailbox(string $id, array $mailboxes) :bool {
+
+        $mailbox = isset($mailboxes[$id]) ? $mailboxes[$id] : null;
+
+        if (!$mailbox) {
+            return true;
+        }
+
+        if (array_search('\nonexistent', $mailbox['attributes']) !== false ||
+            array_search('\noselect', $mailbox['attributes']) !== false) {
+            return true;
+        }
+
+        $delim = $mailbox['delimiter'];
+
+        $path = explode($delim, $id);
+        array_pop($path);
+
+        if (count($path) === 0) {
+            return false;
+        }
+
+        return $this->shouldSkipMailbox(implode($delim, $path), $mailboxes);
+    }
+
+
 
 }
