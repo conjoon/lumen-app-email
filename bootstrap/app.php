@@ -79,6 +79,11 @@ $app->singleton('App\Imap\Service\MailFolderService', function ($app) {
     return new App\Imap\Service\DefaultMailFolderService();
 });
 
+$app->singleton('App\Imap\Service\MessageItemService', function ($app) {
+    return new App\Imap\Service\DefaultMessageItemService();
+});
+
+
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
