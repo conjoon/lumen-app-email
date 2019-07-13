@@ -53,7 +53,8 @@ class VariousTest extends TestCase
         $testAuthsFor = [
             "GET/cn_mail/MailAccounts",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems"
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}"
         ];
 
         foreach ($testAuthsFor as $route) {

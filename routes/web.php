@@ -49,5 +49,9 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
         'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems', 'MessageItemController@index'
     );
 
+    $router->get(
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}', 'MessageItemController@get'
+    );
+
 
 });
