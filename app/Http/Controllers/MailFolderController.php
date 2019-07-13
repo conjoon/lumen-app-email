@@ -67,7 +67,7 @@ class MailFolderController extends Controller {
      * @throws if $mailAccountId is not the id of the ImapAccount associated
      * with the user
      */
-    public function get($mailAccountId) {
+    public function index($mailAccountId) {
 
         $user = Auth::user();
 

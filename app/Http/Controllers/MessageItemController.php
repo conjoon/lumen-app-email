@@ -68,7 +68,7 @@ class MessageItemController extends Controller {
      * @throws if $mailAccountId is not the id of the ImapAccount associated
      * with the user
      */
-    public function get(Request $request, $mailAccountId, $mailFolderId) {
+    public function index(Request $request, $mailAccountId, $mailFolderId) {
 
         $user = Auth::user();
 

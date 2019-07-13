@@ -39,14 +39,14 @@ $router->post('cn_imapuser/auth', 'UserController@authenticate');
 
 $router->group(['middleware' => 'auth'], function () use ($router) {
 
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@get');
+    $router->get('cn_mail/MailAccounts', 'MailAccountController@index');
 
-    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@get');
+    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
 
     // {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
     // webserver option is set to "on"
     $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems', 'MessageItemController@get'
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems', 'MessageItemController@index'
     );
 
 

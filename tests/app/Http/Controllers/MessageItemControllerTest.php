@@ -36,7 +36,7 @@ class MessageItemControllerTest extends TestCase
      *
      * @return void
      */
-    public function testGet_exception()
+    public function testIndex_exception()
     {
 
         $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
@@ -53,7 +53,7 @@ class MessageItemControllerTest extends TestCase
      *
      * @return void
      */
-    public function testGet_success()
+    public function testIndex_success()
     {
         $serviceStub = $this->getMockBuilder('App\Imap\Service\DefaultMessageItemService')
                            ->disableOriginalConstructor()

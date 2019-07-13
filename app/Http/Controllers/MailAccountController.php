@@ -43,7 +43,7 @@ class MailAccountController extends Controller {
      *
      * @return ResponseJson
      */
-    public function get() {
+    public function index() {
 
         $user = Auth::user();
 

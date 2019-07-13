@@ -35,7 +35,7 @@ class MailAccountControllerTest extends TestCase
      *
      * @return void
      */
-    public function testGet_success()
+    public function testIndex_success()
     {
         $response = $this->actingAs($this->getTestUserStub())
                          ->call('GET', 'cn_mail/MailAccounts');
