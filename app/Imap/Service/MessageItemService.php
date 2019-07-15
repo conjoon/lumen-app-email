@@ -29,6 +29,11 @@ namespace App\Imap\Service;
 
 use App\Imap\ImapAccount;
 
+/**
+ * Interface MessageItemService
+ *
+ * @package App\Imap\Service
+ */
 interface MessageItemService {
 
     
@@ -70,5 +75,53 @@ interface MessageItemService {
      */
     public function getMessageItemsFor(ImapAccount $account, string $mailFolderId, array $options) :array;
 
+
+    /**
+     * Returns a single MessageItem with the following informations:
+     *
+     * - subject (string)
+     * - date (string)
+     * - from (array)
+     * - seen (bool)
+     * - answered (bool)
+     * - flagged (bool)
+     * - draft (bool)
+     * - recent (bool)
+     * - hasAttachments (bool)
+     * - to (array)
+     * - size (integer)
+     * - mailFolderId (string)
+     * - mailAccountId (string)
+     * - id (string)
+     *
+     * Note how no previewText is returned for a single MessageItem.
+     *
+     * @param ImapAccount $account
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     *
+     * @return array
+     */
+    public function getMessageItemFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array;
+
+
+    /**
+     * Returns an array with informations about the MessageBody of a MessageItem.
+     *
+     * - mailFolderId (string)
+     * - mailAccountId (string)
+     * - id (string)
+     * - textPlain (string) A renderable, displayable, fully decoded and properly formatted text representation
+     * of the Message
+     * - textHtml (string) A renderable, displayable, fully decoded and properly formatted html representation
+     * of the Message
+     *
+     * @param ImapAccount $account
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     *
+     * @return array
+     */
+    public function getMessageBodyFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array;
 
 }
