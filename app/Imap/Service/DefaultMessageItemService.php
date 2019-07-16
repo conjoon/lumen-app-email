@@ -42,26 +42,39 @@ class DefaultMessageItemService implements MessageItemService {
     use ImapTrait;
 
     /**
+     * Number of chars for the previewText of a MessageItem.
+     * @var int
+     */
+    protected const PREVIEW_LENGTH = 200;
+
+
+    /**
      * @inheritdoc
      */
     public function getMessageItemsFor(ImapAccount $account, string $mailFolderId, array $options) :array {
-
 
         try {
 
             $client = $this->connect($account);
 
-            $response = $this->buildMessageItems($client, $account->getId(), $mailFolderId, $options);
+            $results  = $this->queryItems($client, $mailFolderId, $options);
+            $total = count($results["match"]);
+            $fetchedItems    = $this->fetchMessageItems($client, $results["match"], $mailFolderId, $options);
+            $messageItems = $this->buildMessageItems($client, $account->getId(), $mailFolderId, $fetchedItems);
 
             $status = $client->status(
                 $mailFolderId,
                 \Horde_Imap_Client::STATUS_UNSEEN
             );
 
-            $response["meta"] = [
-                "cn_unreadCount" => $status["unseen"],
-                "mailFolderId"   => $mailFolderId,
-                "mailAccountId"  => $account->getId()
+            $response = [
+                "total" => $total,
+                "meta"  => [
+                    "cn_unreadCount" => $status["unseen"],
+                    "mailFolderId"   => $mailFolderId,
+                    "mailAccountId"  => $account->getId()
+                ],
+                "data"  => $messageItems
             ];
 
 
@@ -69,8 +82,114 @@ class DefaultMessageItemService implements MessageItemService {
             throw new MessageItemServiceException($e->getMessage(), 0, $e);
         }
 
+        return $response;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array {
+
+        try {
+
+            $client = $this->connect($account);
+
+            $fetchedItems = $this->fetchMessageItems($client, new \Horde_Imap_Client_Ids($messageItemId), $mailFolderId,[]);
+            $messageItems = $this->buildMessageItems($client, $account->getId(), $mailFolderId, $fetchedItems, false);
+
+            return $messageItems[0];
+
+        } catch (\Exception $e) {
+            throw new MessageItemServiceException($e->getMessage(), 0, $e);
+        }
 
         return $response;
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageBodyFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array {
+
+        try {
+
+            $client = $this->connect($account);
+
+            $query = new \Horde_Imap_Client_Fetch_Query();
+            $query->structure();
+
+            $uid = new \Horde_Imap_Client_Ids($messageItemId);
+
+            $list = $client->fetch($mailFolderId, $query, array(
+                'ids' => $uid
+            ));
+
+            $serverItem = $list->first();
+
+            $messageStructure = $serverItem->getStructure();
+            $typeMap          = $messageStructure->contentTypeMap();
+            $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
+            foreach ($typeMap as $part => $type) {
+                $bodyQuery->bodyPart($part, array(
+                    'decode' => true,
+                    'peek'   => true
+                ));
+            }
+
+            $textHtml  = "";
+            $textPlain = "";
+
+            $messageData = $client->fetch(
+                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($messageItemId)]
+            )->first();
+            if ($messageData) {
+                $plainPartId = $messageStructure->findBody('plain');
+                $htmlPartId  = $messageStructure->findBody('html');
+                foreach ($typeMap as $part => $type) {
+
+                    if ($part == $htmlPartId) {
+                        $body = $messageStructure->getPart($htmlPartId);
+                        $textHtml = $messageData->getBodyPart($part);
+                        if (!$messageData->getBodyPartDecode($part)) {
+                            $body->setContents($textHtml);
+                            $textHtml = $body->getContents();
+                        }
+
+                       // var_dump($body->getCharset());
+
+                    } else if ($part == $plainPartId) {
+                        $body = $messageStructure->getPart($plainPartId);
+                        $textPlain = $messageData->getBodyPart($part);
+                        if (!$messageData->getBodyPartDecode($part)) {
+                            $body->setContents($textPlain);
+                            $textPlain = $body->getContents();
+                        }
+                        //var_dump($body->getCharset());
+                    }
+
+                }
+            }
+
+            if (!$textHtml) {
+                $textHtml = $textPlain;
+            }
+
+
+        } catch (\Exception $e) {
+            throw new MessageItemServiceException($e->getMessage(), 0, $e);
+        }
+
+
+        return [
+            "id" => (string)$serverItem->getUid(),
+            "mailFolderId" => $mailFolderId,
+            "mailAccountId" => $account->getId(),
+            "textPlain" => $textPlain,
+            "textHtml" => $textHtml
+        ];
 
     }
 
@@ -82,27 +201,23 @@ class DefaultMessageItemService implements MessageItemService {
      * @param \Horde_Imap_Client_Socket $client
      * @param string $accountId
      * @param string $mailFolderId
+     * @param array $items
+     * @param bool $withPreview
      *
      * @return array
      *
      * @see queryItems
      */
-    protected function buildMessageItems(\Horde_Imap_Client_Socket $client, string $accountId, string $mailFolderId, array $options) :array {
+    protected function buildMessageItems(
+        \Horde_Imap_Client_Socket $client, string $accountId, string $mailFolderId, array $items, bool $withPreview = true
+    ) :array {
 
-
-        $items = $this->queryItems($client, $mailFolderId, $options);
-
-        $total  = $items["total"];
-        $list   = $items["sortedIds"];
-        $result = $items["fetchResult"];
 
         $bodyQuery = new \Horde_Imap_Client_Fetch_Query();
 
         $messageItems = [];
 
-        foreach ($list as $id) {
-
-            $item = $result[$id];
+        foreach ($items as $item) {
 
             $envelope = $item->getEnvelope();
             $flags    = $item->getFlags();
@@ -127,29 +242,39 @@ class DefaultMessageItemService implements MessageItemService {
             // parse body
             $messageStructure = $item->getStructure();
             $typeMap          = $messageStructure->contentTypeMap();
-            foreach ($typeMap as $part => $type) {
-                // The body of the part - attempt to decode it on the server.
-                $bodyQuery->bodyPart($part, array(
-                    'decode' => true,
-                    'peek'   => true,
-                    'length' => 200
-                ));
+            if ($withPreview !== false) {
+                foreach ($typeMap as $part => $type) {
+                    // The body of the part - attempt to decode it on the server.
+                    $bodyQuery->bodyPart($part, array(
+                        'decode' => true,
+                        'peek'   => true,
+                        'length' => self::PREVIEW_LENGTH
+                    ));
+                }
             }
+
 
             $textPlain = "";
 
             $messageData = $client->fetch(
-                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($id)]
+                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($item->getUid())]
             )->first();
             if ($messageData) {
                 $plainPartId = $messageStructure->findBody('plain');
+                $htmlPartId  = $messageStructure->findBody('html');
+
                 foreach ($typeMap as $part => $type) {
-                    $stream = $messageData->getBodyPart($part, true);
-                    $partData = $messageStructure->getPart($part);
-                    $partData->setContents($stream, array('usestream' => true));
+
+                    $body = $messageStructure->getPart($part);
+
                     if ($part == $plainPartId) {
-                        $textPlain = $partData->getContents();
-                    } else if ($filename = $partData->getName($part)) {
+                        $textPlain = $messageData->getBodyPart($part);
+                        if (!$messageData->getBodyPartDecode($part)) {
+                            $body->setContents($textPlain);
+                            $textPlain = $body->getContents();
+                        }
+                        //var_dump($body->getCharset());
+                    } else if ($part != $htmlPartId && $filename = $body->getName($part)) {
                         $hasAttachments = true;
                     }
                 }
@@ -157,7 +282,7 @@ class DefaultMessageItemService implements MessageItemService {
 
 
             $messageItem = [
-                "id"      => $item->getUid(),
+                "id"             => (string)$item->getUid(),
                 "mailAccountId"  => $accountId,
                 "mailFolderId"   => $mailFolderId,
                 "from"           => $froms,
@@ -170,15 +295,18 @@ class DefaultMessageItemService implements MessageItemService {
                 "draft"          => array_search(\Horde_Imap_Client::FLAG_DRAFT, $flags) !== false,
                 "flagged"        => array_search(\Horde_Imap_Client::FLAG_FLAGGED, $flags) !== false,
                 "recent"         => array_search(\Horde_Imap_Client::FLAG_RECENT, $flags) !== false,
-                "previewText"    => mb_convert_encoding($textPlain, 'UTF-8', 'UTF-8'),
                 "hasAttachments" => $hasAttachments
             ];
+
+            if ($withPreview !== false) {
+                $messageItem["previewText"] =  mb_convert_encoding($textPlain, 'UTF-8', 'UTF-8');
+            }
 
 
             $messageItems[] = $messageItem;
         }
 
-        return ["data" => $messageItems, "total" => $total];
+        return $messageItems;
     }
 
 
@@ -197,24 +325,68 @@ class DefaultMessageItemService implements MessageItemService {
      */
     protected function queryItems(\Horde_Imap_Client_Socket $client, string $mailFolderId, array $options) :array {
 
-        $start = $options["start"];
-        $limit = $options["limit"];
+        $sort = isset($options["sort"]) ? $options["sort"] : [["property" => "date", "direction" => "DESC"]];
+        $sort = $sort[0];
+
+        $sortInfo = [];
+
+        if ($sort["direction"] === "DESC") {
+            $sortInfo[] = \Horde_Imap_Client::SORT_REVERSE;
+        }
+
+        switch ($sort["property"]) {
+            case 'subject':
+                $sortInfo[] = \Horde_Imap_Client::SORT_SUBJECT;
+                break;
+            case 'to':
+                $sortInfo[] = \Horde_Imap_Client::SORT_TO;
+                break;
+            case 'from':
+                $sortInfo[] = \Horde_Imap_Client::SORT_FROM;
+                break;
+            case 'date':
+                $sortInfo[] = \Horde_Imap_Client::SORT_DATE;
+                break;
+            case 'size':
+                $sortInfo[] = \Horde_Imap_Client::SORT_SIZE;
+                break;
+        }
 
         // search and narrow down list
         $searchQuery = new \Horde_Imap_Client_Search_Query();
-        $results = $client->search($mailFolderId, $searchQuery, [
-            "sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]
-        ]);
+        $results = $client->search($mailFolderId, $searchQuery, ["sort" => $sortInfo]);
 
-        $total = count($results['match']);
+        return $results;
+    }
 
-        $tmpList = new \Horde_Imap_Client_Ids();
-        foreach ($results['match'] as $key => $entry) {
-            if ($key >= $start && $key < $start + $limit) {
-                $tmpList->add($entry);
+
+    /**
+     *
+     * @param \Horde_Imap_Client_Socket $client
+     * @param \Horde_Imap_Client_Ids $searchResultIds
+     * @param string $mailFolderId
+     * @param array $options
+     * @return array
+     */
+    protected function fetchMessageItems(\Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) {
+
+        $start = isset($options["start"]) ? intval($options["start"]) : -1;
+        $limit = isset($options["limit"])  ? intval($options["limit"]) : -1;
+
+        if ($start >= 0 && $limit > 0) {
+            $rangeList = new \Horde_Imap_Client_Ids();
+            foreach ($searchResultIds as $key => $entry) {
+                if ($key >= $start && $key < $start + $limit) {
+                    $rangeList->add($entry);
+                }
             }
+
+            $orderedList = $rangeList->ids;
+        } else {
+            $orderedList = $searchResultIds->ids;
+            $rangeList = $searchResultIds;
         }
-        $list = $tmpList->ids;
+
 
         // fetch IMAP
         $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
@@ -223,13 +395,14 @@ class DefaultMessageItemService implements MessageItemService {
         $fetchQuery->envelope();
         $fetchQuery->structure();
 
-        $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $tmpList]);
+        $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
 
-        return [
-            "total"       => $total,
-            "sortedIds"   => $list,
-            "fetchResult" => $fetchResult
-        ];
+        $final = [];
+        foreach ($orderedList as $id) {
+            $final[] = $fetchResult[$id];
+        }
+
+        return $final;
     }
 
 }

@@ -78,6 +78,13 @@ class MessageItemController extends Controller {
             throw new \Illuminate\Auth\Access\AuthorizationException();
         }
 
+        $sort = $request->input('sort');
+        if ($sort) {
+            $sort = json_decode($sort, true);
+        } else {
+            $sort = [["property" => "date", "direction" => "DESC"]];
+        }
+
         $start = (int)$request->input('start');
         $limit = (int)$request->input('limit');
 
@@ -86,7 +93,8 @@ class MessageItemController extends Controller {
         $data = $this->messageItemService->getMessageItemsFor(
             $user->getImapAccount(), $mailFolderId, [
                 "start" => $start,
-                "limit" => $limit
+                "limit" => $limit,
+                "sort"  => $sort
             ]
         );
 
@@ -95,6 +103,55 @@ class MessageItemController extends Controller {
             "meta" => $data["meta"],
             "total" => $data["total"],
             "data" => $data["data"]
+        ]);
+
+    }
+
+
+    /**
+     * Returns a single MessageItem or MessageBody according to the specified arguments.
+     * The entity to return is specified in the parameter "target". If that is missing or does not
+     * default to "MessageBody" or "MessageItem", a "400 - Bad Request" is returned.
+     *
+     * @return ResponseJson
+     *
+     * @throws if $mailAccountId is not the id of the ImapAccount associated
+     * with the user
+     */
+    public function get(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+
+        $user = Auth::user();
+
+        $account = $user->getImapAccount();
+
+        if ($account->getId() !== $mailAccountId) {
+            throw new \Illuminate\Auth\Access\AuthorizationException();
+        }
+
+        // possible targets: MessageItem, MessageBody
+        $target = $request->input('target');
+
+        $mailFolderId = urldecode($mailFolderId);
+
+        if ($target === "MessageBody") {
+            $data = $this->messageItemService->getMessageBodyFor(
+                $user->getImapAccount(), $mailFolderId, $messageItemId
+            );
+        } else if ($target === "MessageItem") {
+            $data = $this->messageItemService->getMessageItemFor(
+                $user->getImapAccount(), $mailFolderId, $messageItemId
+            );
+        } else {
+            return response()->json([
+                "success" => false,
+                "msg" =>  "\"target\" must be specified with either \"MessageBody\" or \"MessageItem\"."
+            ], 400);
+
+        }
+
+        return response()->json([
+            "success" => true,
+            "data" => $data
         ]);
 
     }

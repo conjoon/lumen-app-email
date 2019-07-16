@@ -28,6 +28,10 @@ use App\Imap\Service\DefaultMessageItemService,
     App\Imap\Service\MessageItemServiceException;
 
 
+/**
+ * Class DefaultMessageItemServiceTest
+ *
+ */
 class DefaultMessageItemServiceTest extends TestCase {
 
     use TestTrait;
@@ -60,6 +64,8 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
     /**
+     * Multiple Message Item Test
+     *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
@@ -113,5 +119,84 @@ class DefaultMessageItemServiceTest extends TestCase {
                 $this->assertArrayHasKey($key, $item);
             }
         }
+    }
+
+
+    /**
+     * Single messageItem Test
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemFor() {
+
+
+        $service = new DefaultMessageItemService();
+
+        $account = $this->getTestUserStub()->getImapAccount();
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[16]->setUid("16");
+
+        $imapStub->shouldReceive('fetch')->with(
+            "INBOX", \Mockery::any(), \Mockery::type('array')
+        )->andReturn($fetchResults);
+
+
+        $item = $service->getMessageItemFor($account, "INBOX", "16");
+
+        $this->assertSame([
+            "id"             => "16",
+            "mailAccountId"  => $account->getId(),
+            "mailFolderId"   => "INBOX",
+            "from"           => [],
+            "to"             => [],
+            "size"           => 0,
+            "subject"        => "",
+            "date"           => $fetchResults[16]->getEnvelope()->date->format("Y-m-d H:i"),
+            "seen"           => false,
+            "answered"       => false,
+            "draft"          => false,
+            "flagged"        => false,
+            "recent"         => false,
+            "hasAttachments" => false
+        ], $item);
+    }
+
+
+    /**
+     * Single MessageBody Test
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageBodyFor() {
+
+
+        $service = new DefaultMessageItemService();
+
+        $account = $this->getTestUserStub()->getImapAccount();
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[16]->setUid("16");
+
+        $imapStub->shouldReceive('fetch')->with(
+            "INBOX", \Mockery::any(), \Mockery::type('array')
+        )->andReturn($fetchResults);
+
+
+        $body = $service->getMessageBodyFor($account, "INBOX", "16");
+
+        $this->assertSame([
+            "id"             => "16",
+            "mailFolderId"   => "INBOX",
+            "mailAccountId"  => $account->getId(),
+            "textPlain"      => "",
+            "textHtml"       => ""
+        ], $body);
     }
 }

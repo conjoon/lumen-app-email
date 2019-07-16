@@ -47,7 +47,7 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
-     * Tests get() to make sure method returns list of available MessageItems associated with
+     * Tests index() to make sure method returns list of available MessageItems associated with
      * the current signed in user.
      *
      *
@@ -55,19 +55,14 @@ class MessageItemControllerTest extends TestCase
      */
     public function testIndex_success()
     {
-        $serviceStub = $this->getMockBuilder('App\Imap\Service\DefaultMessageItemService')
-                           ->disableOriginalConstructor()
-                           ->getMock();
+        $serviceStub = $this->initServiceStub();
 
-        $this->app->when(App\Http\Controllers\MessageItemController::class)
-            ->needs(App\Imap\Service\MessageItemService::class)
-            ->give(function () use ($serviceStub) {
-                return $serviceStub;
-            });
 
         $serviceStub->expects($this->once())
                    ->method('getMessageItemsFor')
-                   ->with($this->getTestImapAccount(), "INBOX", ["start" => 0, "limit" => 25])
+                   ->with($this->getTestImapAccount(), "INBOX", [
+                       "start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]
+                   ])
                    ->willReturn([
                        "total" => 0,
                        "data" => [],
@@ -88,5 +83,120 @@ class MessageItemControllerTest extends TestCase
           ]);
     }
 
+
+
+    /**
+     * Tests get() to make sure method returns the MessageBody of a Message
+     *
+     *
+     * @return void
+     */
+    public function testGet_MessageBody_success()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->once())
+            ->method('getMessageBodyFor')
+            ->with($this->getTestImapAccount(), "INBOX", "311")
+            ->willReturn([
+                "mailAccountId" => $this->getTestImapAccount()->getId(),
+                "mailFolderId" => "INBOX",
+                "id"           => "311",
+                "textHtml"     => "foo",
+                "textPlain"    => "bar"
+             ]);
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageBody');
+
+        $this->assertEquals(200, $response->status());
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => [
+                "mailAccountId" => $this->getTestImapAccount()->getId(),
+                "mailFolderId" => "INBOX",
+                "id"           => "311",
+                "textHtml"     => "foo",
+                "textPlain"    => "bar"
+            ]
+        ]);
+    }
+
+
+    /**
+     * Tests get() to make sure method returns the MessageItem of a Message
+     *
+     *
+     * @return void
+     */
+    public function testGet_MessageItem_success()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->once())
+            ->method('getMessageItemFor')
+            ->with($this->getTestImapAccount(), "INBOX", "311")
+            ->willReturn([
+                "dummy"
+            ]);
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageItem');
+
+        $this->assertEquals(200, $response->status());
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => [
+                "dummy"
+            ]
+        ]);
+    }
+
+
+    /**
+     * Tests get() to make sure method relies on target-parameter
+     *
+     *
+     * @return void
+     */
+    public function testGet_MessageItem_BadRequest()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->never())
+                    ->method('getMessageItemFor');
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311');
+
+        $this->assertEquals(400, $response->status());
+
+        $this->seeJsonEquals([
+            "success" => false,
+            "msg"    => "\"target\" must be specified with either \"MessageBody\" or \"MessageItem\"."
+        ]);
+    }
+
+
+    protected function initServiceStub() {
+
+        $serviceStub = $this->getMockBuilder('App\Imap\Service\DefaultMessageItemService')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->app->when(App\Http\Controllers\MessageItemController::class)
+            ->needs(App\Imap\Service\MessageItemService::class)
+            ->give(function () use ($serviceStub) {
+                return $serviceStub;
+            });
+
+        return $serviceStub;
+
+    }
 
 }
