@@ -51,6 +51,9 @@ class Authenticate
 
     /**
      * Handle an incoming request.
+     * Checks if the user might access the resource. Also checks if the currently signed in
+     * user can access the mailAccountId specified in the request. This will fail if
+     * the mailAccountId is not the id of the ImapAccount associated with the user.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -61,6 +64,19 @@ class Authenticate
     {
         if ($this->auth->guard($guard)->guest()) {
             return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
+        }
+
+        // check if the mailAccountId exists in the request and verify
+        // that the currently signed in user can access it
+        $mailAccountId = $request->route("mailAccountId");
+        if ($mailAccountId) {
+
+            $account = $this->auth->user()->getImapAccount();
+
+            if ($account->getId() !== $mailAccountId) {
+                return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
+            }
+
         }
 
         return $next($request);

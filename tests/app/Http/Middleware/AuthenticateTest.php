@@ -28,6 +28,9 @@ use App\Http\Middleware\Authenticate;
 
 class AuthenticateTest extends TestCase
 {
+
+    use TestTrait;
+
     /**
      * Tests handle() to make sure either 401 is called or next is chained.
      *
@@ -70,7 +73,85 @@ class AuthenticateTest extends TestCase
         });
         $this->assertNull($response);
         $this->assertTrue($called);
+    }
 
+
+    /**
+     * Tests handle() to make sure 401 is called if users accountId does not
+     * match the request mailAccountId
+     *
+     * @return void
+     */
+    public function testHandle_accountCompare()
+    {
+        $authStub = $this->getMockBuilder('\Illuminate\Auth\AuthManager')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $stubbedStub = new class {
+            public function guest() {
+                return false;
+            }
+
+        };
+
+        $user = $this->getTestUserStub();
+
+        $authStub->method('guard')
+                 ->willReturn($stubbedStub);
+
+        // we just need the test user here in the __call to
+        // guard->user()
+        $authStub->method('__call')
+                 ->willReturn($user);
+
+        $authenticate = new Authenticate($authStub);
+
+        // test for authenticated
+        $newRequest = new \Illuminate\Http\Request();
+        $newRequest->setRouteResolver(function() {
+            return new class {
+                public function parameter($param) {
+                    if ($param === "mailAccountId") {
+                        return "foo";
+                    }
+                    return null;
+                }
+            };
+        });
+
+        // 401
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
+            $this->assertSame($newRequest, $request);
+        });
+        $this->assertInstanceOf(\Illuminate\Http\JsonResponse::class, $response);
+        $this->assertSame($response->getStatusCode(), 401);
+
+        // OKAY
+        $newRequest->setRouteResolver(function() use($user) {
+            return new class($user) {
+
+                protected $user;
+
+                public function __construct($user) {
+                    $this->user = $user;
+                }
+                public function parameter($param) {
+                    if ($param === "mailAccountId") {
+                        return $this->user->getImapAccount()->getId();
+                    }
+                    return null;
+                }
+            };
+        });
+
+        $called = false;
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
+            $this->assertSame($newRequest, $request);
+            $called = true;
+        });
+        $this->assertNull($response);
+        $this->assertTrue($called);
 
 
     }
