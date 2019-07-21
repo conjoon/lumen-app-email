@@ -57,6 +57,22 @@ class DefaultAttachmentServiceTest extends TestCase {
         $service->getAttachmentsFor($this->getTestUserStub()->getImapAccount(), "1", "1");
     }
 
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetAttachmentsFor_buildAttachmentsIsCalled() {
+        $account = $this->getTestUserStub()->getImapAccount();
+
+        $mockService = $this->setupMocks(
+            $account, "INBOX", "123", ["isFileAttachment", 'buildAttachment']);
+
+        $mockService->expects($this->once())
+                    ->method('buildAttachment');
+
+        $mockService->getAttachmentsFor($account, "INBOX", "123");
+    }
+
 
     /**
      * @runInSeparateProcess
@@ -64,40 +80,54 @@ class DefaultAttachmentServiceTest extends TestCase {
      */
     public function testGetAttachmentsFor()
     {
-
         $account = $this->getTestUserStub()->getImapAccount();
+
+        $mockService = $this->setupMocks(
+            $account, "INBOX", "123", ["isFileAttachment"]);
+
+
+        $attachments = $mockService->getAttachmentsFor($account, "INBOX", "123");
+
+        $this->assertSame(count($attachments), 1);
+
+        $structure = [
+            "id", "mailAccountId", "mailFolderId", "parentMessageItemId",
+            "type", "text", "size",
+            "downloadUrl", "previewImgSrc"
+        ];
+
+        $i = 0;
+        foreach ($attachments as $attachment) {
+            foreach ($structure as $key) {
+                $i++;
+                $this->assertArrayHasKey($key, $attachment);
+            }
+        }
+
+        $this->assertSame($i, count($structure));
+    }
+
+    
+    protected function setupMocks($account, $mailFolderId, $messageItemId, array $methods) {
 
         $imapStub = \Mockery::mock('overload:' . \Horde_Imap_Client_Socket::class);
 
         $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[123] = new \Horde_Imap_Client_Data_Fetch();
-        $fetchResults[123]->setUid(123);
+        $fetchResults[$messageItemId] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[$messageItemId]->setUid($messageItemId);
 
-        $imapStub->shouldReceive('fetch')->with("INBOX", \Mockery::any(), [
-            "ids" => new \Horde_Imap_Client_Ids("123")
+        $imapStub->shouldReceive('fetch')->with($mailFolderId, \Mockery::any(), [
+            "ids" => new \Horde_Imap_Client_Ids($messageItemId)
         ])->andReturn($fetchResults);
 
 
         $mockService = $this->getMockBuilder(DefaultAttachmentService::class)
-            ->setMethods(["isFileAttachment"])
+            ->setMethods($methods)
             ->getMock();
         $mockService->method("isFileAttachment")->willReturn(true);
 
-        $attachments = $mockService->getAttachmentsFor($account, "INBOX", "123");
-
-
-        $this->assertSame($attachments, [[
-            "id" => "1",
-            "mailAccountId" => $account->getId(),
-            "mailFolderId" => "INBOX",
-            "parentMessageItemId" => "123",
-            "type" => "application/octet-stream",
-            "text" => "",
-            "size" => 0,
-            "downloadUrl" => "data:application/octet-stream;base64,",
-            "previewImgSrc" => NULL
-        ]]);
-
+        return $mockService;
     }
+
 
 }

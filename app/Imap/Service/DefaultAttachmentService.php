@@ -66,8 +66,7 @@ class DefaultAttachmentService implements AttachmentService {
 
             foreach ($typeMap as $part => $type) {
                 $bodyQuery->bodyPart($part, array(
-                    'peek'   => true,
-                    "usestream" => false
+                    'peek'   => true
                 ));
             }
 
@@ -127,6 +126,7 @@ class DefaultAttachmentService implements AttachmentService {
      * @param $part
      * @param $fileName
      * @param $attachmentId
+     *
      * @return array
      */
     protected function buildAttachment(
