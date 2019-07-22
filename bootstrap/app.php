@@ -83,6 +83,10 @@ $app->singleton('App\Imap\Service\MessageItemService', function ($app) {
     return new App\Imap\Service\DefaultMessageItemService();
 });
 
+$app->singleton('App\Imap\Service\AttachmentService', function ($app) {
+    return new App\Imap\Service\DefaultAttachmentService();
+});
+
 
 /*
 |--------------------------------------------------------------------------
