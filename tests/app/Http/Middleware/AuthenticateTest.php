@@ -113,7 +113,7 @@ class AuthenticateTest extends TestCase
             return new class {
                 public function parameter($param) {
                     if ($param === "mailAccountId") {
-                        return "foo";
+                        return "TESTFAIL";
                     }
                     return null;
                 }
@@ -138,7 +138,7 @@ class AuthenticateTest extends TestCase
                 }
                 public function parameter($param) {
                     if ($param === "mailAccountId") {
-                        return $this->user->getImapAccount()->getId();
+                        return $this->user->getImapAccount("someid")->getId();
                     }
                     return null;
                 }

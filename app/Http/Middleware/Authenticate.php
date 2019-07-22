@@ -71,9 +71,9 @@ class Authenticate
         $mailAccountId = $request->route("mailAccountId");
         if ($mailAccountId) {
 
-            $account = $this->auth->user()->getImapAccount();
+            $account = $this->auth->user()->getImapAccount($mailAccountId);
 
-            if ($account->getId() !== $mailAccountId) {
+            if (!$account) {
                 return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
             }
 
