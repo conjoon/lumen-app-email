@@ -23,25 +23,36 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Imap\ImapAccount;
+namespace App\Mail\Client;
 
 
-class ImapTraitTest extends TestCase {
+class HtmlReadableStrategy {
 
-    use TestTrait;
 
-    public function testConcreteMethod()
-    {
+    /**
+     * Purifies the text from untrusted HTML/CSS/Script contents.
+     *
+     * @param string $text
+     *
+     * @return string
+     */
+    public function process(string $text) :string {
 
-        $mock = $this->getMockForTrait('\App\Imap\Service\ImapTrait');
+        // require_once 'HTMLPurifier.auto.php';
+        $htmlPurifierConfig = \HTMLPurifier_Config::createDefault();
+        $htmlPurifierConfig->set('HTML.Trusted', false);
+        $htmlPurifierConfig->set('CSS.AllowTricky', false);
+        $htmlPurifierConfig->set('CSS.AllowImportant', false);
+        $htmlPurifierConfig->set('CSS.Trusted', false);
 
-        $socket = $mock->connect($this->getTestImapAccount("dev_sys_conjoon_org"));
+        $inst =  new \HTMLPurifier($htmlPurifierConfig);
 
-        $this->assertInstanceOf(
-            \Horde_Imap_Client_Socket::class, $socket
-        );
+        return $inst->purify($text);
 
     }
+
+
 
 }

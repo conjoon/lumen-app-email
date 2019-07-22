@@ -24,24 +24,27 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\ImapAccount;
+use App\Mail\Client\HtmlReadableStrategy;
 
 
-class ImapTraitTest extends TestCase {
+class HtmlReadableStrategyTest extends TestCase {
 
-    use TestTrait;
 
-    public function testConcreteMethod()
-    {
 
-        $mock = $this->getMockForTrait('\App\Imap\Service\ImapTrait');
 
-        $socket = $mock->connect($this->getTestImapAccount("dev_sys_conjoon_org"));
+    public function testProcess() {
 
-        $this->assertInstanceOf(
-            \Horde_Imap_Client_Socket::class, $socket
-        );
+        $strategy = new HtmlReadableStrategy();
+        $text = "randomstring";
+
+        $this->assertSame($text, $strategy->process($text));
+
+
+        $text = "<html><head></head><body>Test</body></html>html>";
+        $this->assertSame("Test", $strategy->process($text));
 
     }
+
+
 
 }

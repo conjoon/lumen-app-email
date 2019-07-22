@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": ">=7.1.3",
+        "ezyang/htmlpurifier": "^4.11",
         "laravel/lumen-framework": "5.8.*",
         "pear-pear.horde.org/Horde_Imap_Client": "*"
     },

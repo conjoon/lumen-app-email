@@ -25,6 +25,8 @@
  */
 
 use App\Imap\Service\DefaultMessageItemService,
+    App\Text\CharsetConverter,
+    App\Mail\Client\HtmlReadableStrategy,
     App\Imap\Service\MessageItemServiceException;
 
 
@@ -39,7 +41,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     public function testInstance() {
 
-        $service = new DefaultMessageItemService();
+        $service = $this->createService();
         $this->assertInstanceOf(\App\Imap\Service\MessageItemService::class, $service);
     }
 
@@ -56,9 +58,9 @@ class DefaultMessageItemServiceTest extends TestCase {
         $imapStub->shouldReceive('query')
                  ->andThrow(new \Exception("This exception should be caught properly by the test"));
 
-        $service = new DefaultMessageItemService();
+        $service = $this->createService();
         $service->getMessageItemsFor(
-            $this->getTestUserStub()->getImapAccount(),
+            $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"),
             "INBOX", ["start" => 0, "limit" => 25]
         );
     }
@@ -71,7 +73,7 @@ class DefaultMessageItemServiceTest extends TestCase {
      */
     public function testGetMessageItemsFor() {
 
-        $account = $this->getTestUserStub()->getImapAccount();
+        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -95,7 +97,7 @@ class DefaultMessageItemServiceTest extends TestCase {
             $fetchResults
         );
 
-        $service = new DefaultMessageItemService();
+        $service = $this->createService();
 
         $results = $service->getMessageItemsFor($account, "INBOX", ["start" => 0, "limit" => 2]);
 
@@ -130,9 +132,9 @@ class DefaultMessageItemServiceTest extends TestCase {
     public function testGetMessageItemFor() {
 
 
-        $service = new DefaultMessageItemService();
+        $service = $this->createService();
 
-        $account = $this->getTestUserStub()->getImapAccount();
+        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -174,9 +176,9 @@ class DefaultMessageItemServiceTest extends TestCase {
     public function testGetMessageBodyFor() {
 
 
-        $service = new DefaultMessageItemService();
+        $service = $this->createService();
 
-        $account = $this->getTestUserStub()->getImapAccount();
+        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -198,5 +200,11 @@ class DefaultMessageItemServiceTest extends TestCase {
             "textPlain"      => "",
             "textHtml"       => ""
         ], $body);
+    }
+
+
+    protected function createService() {
+
+        return new DefaultMessageItemService(new CharsetConverter, new HtmlReadableStrategy);
     }
 }

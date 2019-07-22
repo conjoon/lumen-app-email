@@ -28,6 +28,9 @@ declare(strict_types=1);
 namespace App\Imap\Service;
 
 use App\Imap\ImapAccount,
+    App\Text\Converter,
+    App\Mail\Client\HtmlReadableStrategy,
+    App\Text\CharsetConverter,
     App\Imap\Service\MessageItemServiceException;
 
 /**
@@ -42,10 +45,29 @@ class DefaultMessageItemService implements MessageItemService {
     use ImapTrait;
 
     /**
+     * @var Converter
+     */
+    protected $converter;
+
+
+    /**
+     * @var Converter
+     */
+    protected $htmlReadableStrategy;
+
+
+    /**
      * Number of chars for the previewText of a MessageItem.
      * @var int
      */
     protected const PREVIEW_LENGTH = 200;
+
+
+    public function __construct(Converter $converter, HtmlReadableStrategy $htmlReadableStrategy) {
+
+        $this->converter = $converter;
+        $this->htmlReadableStrategy = $htmlReadableStrategy;
+    }
 
 
     /**
@@ -121,6 +143,7 @@ class DefaultMessageItemService implements MessageItemService {
             $query = new \Horde_Imap_Client_Fetch_Query();
             $query->structure();
 
+
             $uid = new \Horde_Imap_Client_Ids($messageItemId);
 
             $list = $client->fetch($mailFolderId, $query, array(
@@ -130,48 +153,11 @@ class DefaultMessageItemService implements MessageItemService {
             $serverItem = $list->first();
 
             $messageStructure = $serverItem->getStructure();
-            $typeMap          = $messageStructure->contentTypeMap();
-            $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
-            foreach ($typeMap as $part => $type) {
-                $bodyQuery->bodyPart($part, array(
-                    'decode' => true,
-                    'peek'   => true
-                ));
-            }
 
-            $textHtml  = "";
-            $textPlain = "";
+            $d = $this->getContents($client, $messageStructure, $mailFolderId, (string)$messageItemId, ["plain", "html"]);
 
-            $messageData = $client->fetch(
-                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($messageItemId)]
-            )->first();
-            if ($messageData) {
-                $plainPartId = $messageStructure->findBody('plain');
-                $htmlPartId  = $messageStructure->findBody('html');
-                foreach ($typeMap as $part => $type) {
-
-                    if ($part == $htmlPartId) {
-                        $body = $messageStructure->getPart($htmlPartId);
-                        $textHtml = $messageData->getBodyPart($part);
-                        if (!$messageData->getBodyPartDecode($part)) {
-                            $body->setContents($textHtml);
-                            $textHtml = $body->getContents();
-                        }
-
-                       // var_dump($body->getCharset());
-
-                    } else if ($part == $plainPartId) {
-                        $body = $messageStructure->getPart($plainPartId);
-                        $textPlain = $messageData->getBodyPart($part);
-                        if (!$messageData->getBodyPartDecode($part)) {
-                            $body->setContents($textPlain);
-                            $textPlain = $body->getContents();
-                        }
-                        //var_dump($body->getCharset());
-                    }
-
-                }
-            }
+            $textHtml = $this->converter->convert($d["html"]["content"], $d["html"]["charset"]);
+            $textPlain = $this->converter->convert($d["plain"]["content"], $d["plain"]["charset"]);
 
             if (!$textHtml) {
                 $textHtml = $textPlain;
@@ -188,9 +174,56 @@ class DefaultMessageItemService implements MessageItemService {
             "mailFolderId" => $mailFolderId,
             "mailAccountId" => $account->getId(),
             "textPlain" => $textPlain,
-            "textHtml" => $textHtml
+            "textHtml" => $this->htmlReadableStrategy->process($textHtml)
         ];
 
+    }
+
+
+    /**
+     *
+     * @param \Horde_Imap_Client_Socket $client
+     * @param \Horde_Imap_Client_Ids $searchResultIds
+     * @param string $mailFolderId
+     * @param array $options
+     * @return array
+     */
+    protected function fetchMessageItems(
+        \Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) {
+
+        $start = isset($options["start"]) ? intval($options["start"]) : -1;
+        $limit = isset($options["limit"])  ? intval($options["limit"]) : -1;
+
+        if ($start >= 0 && $limit > 0) {
+            $rangeList = new \Horde_Imap_Client_Ids();
+            foreach ($searchResultIds as $key => $entry) {
+                if ($key >= $start && $key < $start + $limit) {
+                    $rangeList->add($entry);
+                }
+            }
+
+            $orderedList = $rangeList->ids;
+        } else {
+            $orderedList = $searchResultIds->ids;
+            $rangeList = $searchResultIds;
+        }
+
+
+        // fetch IMAP
+        $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+        $fetchQuery->flags();
+        $fetchQuery->size();
+        $fetchQuery->envelope();
+        $fetchQuery->structure();
+
+        $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+
+        $final = [];
+        foreach ($orderedList as $id) {
+            $final[] = $fetchResult[$id];
+        }
+
+        return $final;
     }
 
 
@@ -213,7 +246,7 @@ class DefaultMessageItemService implements MessageItemService {
     ) :array {
 
 
-        $bodyQuery = new \Horde_Imap_Client_Fetch_Query();
+
 
         $messageItems = [];
 
@@ -221,8 +254,6 @@ class DefaultMessageItemService implements MessageItemService {
 
             $envelope = $item->getEnvelope();
             $flags    = $item->getFlags();
-
-            $hasAttachments = false;
 
             $froms = [];
             foreach ($envelope->from as $from) {
@@ -241,45 +272,11 @@ class DefaultMessageItemService implements MessageItemService {
 
             // parse body
             $messageStructure = $item->getStructure();
-            $typeMap          = $messageStructure->contentTypeMap();
-            if ($withPreview !== false) {
-                foreach ($typeMap as $part => $type) {
-                    // The body of the part - attempt to decode it on the server.
-                    $bodyQuery->bodyPart($part, array(
-                        'decode' => true,
-                        'peek'   => true,
-                        'length' => self::PREVIEW_LENGTH
-                    ));
-                }
-            }
 
+            $d = $this->getContents($client, $messageStructure, $mailFolderId, (string)$item->getUid(), ["plain", "hasAttachments"]);
 
-            $textPlain = "";
-
-            $messageData = $client->fetch(
-                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($item->getUid())]
-            )->first();
-            if ($messageData) {
-                $plainPartId = $messageStructure->findBody('plain');
-                $htmlPartId  = $messageStructure->findBody('html');
-
-                foreach ($typeMap as $part => $type) {
-
-                    $body = $messageStructure->getPart($part);
-
-                    if ($part == $plainPartId) {
-                        $textPlain = $messageData->getBodyPart($part);
-                        if (!$messageData->getBodyPartDecode($part)) {
-                            $body->setContents($textPlain);
-                            $textPlain = $body->getContents();
-                        }
-                        //var_dump($body->getCharset());
-                    } else if ($part != $htmlPartId && $filename = $body->getName($part)) {
-                        $hasAttachments = true;
-                    }
-                }
-            }
-
+            $textPlain = $this->converter->convert($d["plain"]["content"], $d["plain"]["charset"]);
+            $hasAttachments = $d["hasAttachments"];
 
             $messageItem = [
                 "id"             => (string)$item->getUid(),
@@ -290,16 +287,20 @@ class DefaultMessageItemService implements MessageItemService {
                 "size"           => $item->getSize(),
                 "subject"        => $envelope->subject,
                 "date"           => $envelope->date->format("Y-m-d H:i"),
-                "seen"           => array_search(\Horde_Imap_Client::FLAG_SEEN, $flags) !== false,
-                "answered"       => array_search(\Horde_Imap_Client::FLAG_ANSWERED, $flags) !== false,
-                "draft"          => array_search(\Horde_Imap_Client::FLAG_DRAFT, $flags) !== false,
-                "flagged"        => array_search(\Horde_Imap_Client::FLAG_FLAGGED, $flags) !== false,
-                "recent"         => array_search(\Horde_Imap_Client::FLAG_RECENT, $flags) !== false,
+                "seen"           => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
+                "answered"       => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
+                "draft"          => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
+                "flagged"        => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
+                "recent"         => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
                 "hasAttachments" => $hasAttachments
             ];
 
             if ($withPreview !== false) {
-                $messageItem["previewText"] =  mb_convert_encoding($textPlain, 'UTF-8', 'UTF-8');
+                $messageItem["previewText"] = mb_substr(
+                    $textPlain,0,200, $d["plain"]["charset"] ? $d["plain"]["charset"] : "UTF-8"
+                );
+
+                $messageItem["previewText"] = htmlentities($messageItem["previewText"]);
             }
 
 
@@ -361,48 +362,85 @@ class DefaultMessageItemService implements MessageItemService {
 
 
     /**
+     * Returns contents of the mail. Possible return keys are based on the passed
+     *$options "html" (string), "plain" (string) and/or "hasAttachments" (bool)
      *
      * @param \Horde_Imap_Client_Socket $client
-     * @param \Horde_Imap_Client_Ids $searchResultIds
+     * @param $messageStructure
      * @param string $mailFolderId
+     * @param string $messageItemId
      * @param array $options
+     *
      * @return array
      */
-    protected function fetchMessageItems(\Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) {
+    protected function getContents(
+        \Horde_Imap_Client_Socket $client, $messageStructure, string $mailFolderId,
+        string $messageItemId, array $options) :array {
 
-        $start = isset($options["start"]) ? intval($options["start"]) : -1;
-        $limit = isset($options["limit"])  ? intval($options["limit"]) : -1;
+        $typeMap          = $messageStructure->contentTypeMap();
+        $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
+        foreach ($typeMap as $part => $type) {
+            $bodyQuery->bodyPart($part, array(
+                'peek'   => true
+            ));
+        }
 
-        if ($start >= 0 && $limit > 0) {
-            $rangeList = new \Horde_Imap_Client_Ids();
-            foreach ($searchResultIds as $key => $entry) {
-                if ($key >= $start && $key < $start + $limit) {
-                    $rangeList->add($entry);
+        $ret             = [];
+        $findHtml        = in_array("html", $options);
+        $findPlain       = in_array("plain", $options);
+        $findAttachments = in_array("hasAttachments", $options);
+
+        if ($findHtml) {
+            $ret["html"] = ["content" => "", "charset" => ""];
+        }
+        if ($findPlain) {
+            $ret["plain"] = ["content" => "", "charset" => ""];
+        }
+        if ($findAttachments) {
+            $ret["hasAttachments"] = false;
+        }
+
+        $messageData = $client->fetch(
+            $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($messageItemId)]
+        )->first();
+
+        if ($messageData) {
+            $plainPartId = $messageStructure->findBody('plain');
+            $htmlPartId  = $messageStructure->findBody('html');
+
+            foreach ($typeMap as $part => $type) {
+
+                $body = $messageStructure->getPart($part);
+
+                if ($findAttachments && $body->isAttachment()) {
+                    $ret["hasAttachments"] = true;
+                    if (!$findHtml && !$findPlain) {
+                        break;
+                    }
                 }
+
+                if ($findHtml || $findPlain) {
+                    $content = $messageData->getBodyPart($part);
+                    if (!$messageData->getBodyPartDecode($part)) {
+                        // Decode the content.
+                        $body->setContents($content);
+                        $content = $body->getContents();
+                    }
+
+                    if ($findHtml && (string)$part === $htmlPartId) {
+                        $ret["html"] = ["content" => $content, "charset" => $body->getCharset()];
+                    } else if ($findPlain && (string)$part === $plainPartId) {
+                        $ret["plain"] = ["content" => $content, "charset" => $body->getCharset()];
+                    }
+                }
+
             }
-
-            $orderedList = $rangeList->ids;
-        } else {
-            $orderedList = $searchResultIds->ids;
-            $rangeList = $searchResultIds;
         }
 
+        return $ret;
 
-        // fetch IMAP
-        $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
-        $fetchQuery->flags();
-        $fetchQuery->size();
-        $fetchQuery->envelope();
-        $fetchQuery->structure();
-
-        $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
-
-        $final = [];
-        foreach ($orderedList as $id) {
-            $final[] = $fetchResult[$id];
-        }
-
-        return $final;
     }
+
+
 
 }
