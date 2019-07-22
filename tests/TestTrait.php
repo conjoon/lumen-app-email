@@ -32,7 +32,6 @@
  */
 trait TestTrait {
 
-    protected $testImapAccount;
 
     public function getTestUserStub() {
 
@@ -40,41 +39,53 @@ trait TestTrait {
             return $m->getName();
             }, (new \ReflectionClass(\Illuminate\Contracts\Auth\Authenticatable::class))->getMethods());
         $methods[] = 'getImapAccount';
+        $methods[] = 'getImapAccounts';
 
         $userStub = $this->getMockBuilder('\Illuminate\Contracts\Auth\Authenticatable')
                          ->setMethods($methods)
                          ->getMock();
 
         $userStub->method('getImapAccount')
-                 ->willReturn( $this->getTestImapAccount());
+                 ->with($this->callback(function($arg) {
+                     return is_string($arg);
+                 }))
+                 ->will(
+                     $this->returnCallback(function($accountId) {
+                         return $this->getTestImapAccount($accountId);
+                     })
+                 );
+
+        $userStub->method('getImapAccounts')
+           ->willReturn([$this->getTestImapAccount("dev_sys_conjoon_org")]);
 
         return $userStub;
     }
 
 
-    public function getTestImapAccount() {
+    public function getTestImapAccount($accountId) {
 
-        if (!$this->testImapAccount) {
-            $this->testImapAccount = new \App\Imap\ImapAccount([
-                'id'              => "dev_sys_conjoon_org",
-                'name'            => "conjoon developer",
-                'from'            => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
-                'replyTo'         => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
-                'inbox_type'      => 'IMAP',
-                'inbox_address'   => 'sfsffs.ffssf.sffs',
-                'inbox_port'      => 993,
-                'inbox_user'      => 'inboxuser',
-                'inbox_password'  => 'inboxpassword',
-                'inbox_ssl'       => true,
-                'outbox_address'  => 'sfsffs.ffssf.sffs',
-                'outbox_port'     => 993,
-                'outbox_user'     => 'outboxuser',
-                'outbox_password' => 'outboxpassword',
-                'outbox_ssl'      => true
-            ]);
+        if ($accountId === "TESTFAIL") {
+            return null;
         }
 
-        return $this->testImapAccount;
+        return new \App\Imap\ImapAccount([
+            'id'              => $accountId,
+            'name'            => "conjoon developer",
+            'from'            => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
+            'replyTo'         => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
+            'inbox_type'      => 'IMAP',
+            'inbox_address'   => 'sfsffs.ffssf.sffs',
+            'inbox_port'      => 993,
+            'inbox_user'      => 'inboxuser',
+            'inbox_password'  => 'inboxpassword',
+            'inbox_ssl'       => true,
+            'outbox_address'  => 'sfsffs.ffssf.sffs',
+            'outbox_port'     => 993,
+            'outbox_user'     => 'outboxuser',
+            'outbox_password' => 'outboxpassword',
+            'outbox_ssl'      => true
+        ]);
+
 
     }
 
