@@ -54,7 +54,8 @@ class VariousTest extends TestCase
             "GET/cn_mail/MailAccounts",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}"
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments"
         ];
 
         foreach ($testAuthsFor as $route) {
@@ -86,6 +87,11 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(
             \App\Imap\Service\DefaultMessageItemService::class,
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MessageItemService']))
+        );
+
+        $this->assertInstanceOf(
+            \App\Imap\Service\DefaultAttachmentService::class,
+            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\DefaultAttachmentService']))
         );
 
     }

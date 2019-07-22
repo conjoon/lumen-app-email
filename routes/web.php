@@ -46,11 +46,16 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     // {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
     // webserver option is set to "on"
     $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems', 'MessageItemController@index'
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
+        'MessageItemController@index'
     );
-
     $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}', 'MessageItemController@get'
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+        'MessageItemController@get'
+    );
+    $router->get(
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
+        'AttachmentController@index'
     );
 
 
