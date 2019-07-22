@@ -57,6 +57,62 @@ class DefaultAttachmentServiceTest extends TestCase {
         $service->getAttachmentsFor($this->getTestUserStub()->getImapAccount(), "1", "1");
     }
 
+
+    public function testBuildAttachment() {
+
+        $service = new DefaultAttachmentService();
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('buildAttachment');
+        $method->setAccessible(true);
+
+
+        $mockPart = $this->getMockBuilder(\Horde_Mime_Part::class)
+                         ->setMethods(["getType", "getContents", "getBytes"])
+                         ->getMock();
+        $mockPart->method("getType")->willReturn("image/gif");
+        $mockPart->method("getContents")->willReturn("binary");
+        $mockPart->method("getBytes")->willReturn(800);
+
+
+        $buildAttachment = function ($account, $mockPart) use($method, $service) {
+            return $method->invokeArgs($service, [
+                $account,
+                "INBOX",
+                "123",
+                $mockPart,
+                "foo",
+                "69"
+            ]);
+        };
+
+        $attachment = $buildAttachment($this->getTestUserStub()->getImapAccount(), $mockPart);
+
+        $this->assertSame($attachment, [
+            "id"            => "69",
+            "mailAccountId" => $this->getTestUserStub()->getImapAccount()->getId(),
+            "mailFolderId" => "INBOX",
+            "parentMessageItemId" => "123",
+            "type" => "image/gif",
+            "text" => "foo",
+            "size" => 800,
+            "downloadUrl" => 'data:application/octet-stream;base64,' . base64_encode("binary"),
+            "previewImgSrc" =>  "data:" . "image/gif" . ";base64," . base64_encode("binary")
+        ]);
+
+        $mockPart = $this->getMockBuilder(\Horde_Mime_Part::class)
+            ->setMethods(["getType", "getContents", "getBytes"])
+            ->getMock();
+        $mockPart->method("getContents")->willReturn("binary");
+        $mockPart->method("getBytes")->willReturn(800);
+        $mockPart->method("getType")->willReturn("application/binary");
+
+        $attachment = $buildAttachment($this->getTestUserStub()->getImapAccount(), $mockPart);
+
+        $this->assertSame($attachment["previewImgSrc"], null);
+    }
+
+
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
@@ -65,7 +121,7 @@ class DefaultAttachmentServiceTest extends TestCase {
         $account = $this->getTestUserStub()->getImapAccount();
 
         $mockService = $this->setupMocks(
-            $account, "INBOX", "123", ["isFileAttachment", 'buildAttachment']);
+            "INBOX", "123", ["isFileAttachment", 'buildAttachment']);
 
         $mockService->expects($this->once())
                     ->method('buildAttachment');
@@ -83,7 +139,7 @@ class DefaultAttachmentServiceTest extends TestCase {
         $account = $this->getTestUserStub()->getImapAccount();
 
         $mockService = $this->setupMocks(
-            $account, "INBOX", "123", ["isFileAttachment"]);
+            "INBOX", "123", ["isFileAttachment"]);
 
 
         $attachments = $mockService->getAttachmentsFor($account, "INBOX", "123");
@@ -107,8 +163,8 @@ class DefaultAttachmentServiceTest extends TestCase {
         $this->assertSame($i, count($structure));
     }
 
-    
-    protected function setupMocks($account, $mailFolderId, $messageItemId, array $methods) {
+
+    protected function setupMocks($mailFolderId, $messageItemId, array $methods) {
 
         $imapStub = \Mockery::mock('overload:' . \Horde_Imap_Client_Socket::class);
 
