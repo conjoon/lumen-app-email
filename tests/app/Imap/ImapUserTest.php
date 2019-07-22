@@ -32,7 +32,7 @@ class ImapUserTest extends TestCase
 
     public function testClass()
     {
-        $imapAccount = new ImapAccount(array());
+        $imapAccount = new ImapAccount(array("id" => "foo"));
         $username    = "foo";
         $password     = "bar";
 
@@ -45,7 +45,15 @@ class ImapUserTest extends TestCase
             "password" => $password
         ], $user->toArray());
 
-        $this->assertSame($imapAccount, $user->getImapAccount());
+        $this->assertSame($imapAccount, $user->getImapAccount($imapAccount->getId()));
+
+        $accounts = $user->getImapAccounts();
+
+        foreach ($accounts as $account) {
+            $this->assertSame($account, $user->getImapAccount($account->getId()));
+        }
+
+
     }
 
 }

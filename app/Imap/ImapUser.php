@@ -81,10 +81,30 @@ class ImapUser {
 
 
     /**
+     * Returns the ImapAccount that belongs to this user with the specified
+     * $mailAccountId.
+     *
+     * Returns null if no ImapAccount with the specified id was found.
+     *
+     * @param string $mailAccountId
+     *
      * @return ImapAccount
      */
-    public function getImapAccount() :ImapAccount {
+    public function getImapAccount(string $mailAccountId) :?ImapAccount {
+
+        if ((string)$this->imapAccount->getId() !== $mailAccountId) {
+            return null;
+        }
         return $this->imapAccount;
+    }
+
+    /**
+     * Returns an array of all ImapAccounts belonging to this user.
+     *
+     * @return array
+     */
+    public function getImapAccounts() :array {
+        return [$this->imapAccount];
     }
 
 
