@@ -67,14 +67,16 @@ class DefaultImapUserRepositoryTest extends TestCase
 
         $user = $repository->getUser('devtest@conjoon.org', 'b');
         $this->assertInstanceOf(ImapUser::class, $user);
-        $this->assertInstanceOf(ImapAccount::class, $user->getImapAccount());
-        $this->assertSame($config[0]['id'], $user->getImapAccount()->getId());
+        $this->assertNull($user->getImapAccount('abc'));
+        $this->assertInstanceOf(ImapAccount::class, $user->getImapAccount('dev_sys_conjoon_org'));
+        $this->assertSame($config[0]['id'], $user->getImapAccount('dev_sys_conjoon_org')->getId());
 
 
         $user = $repository->getUser('@sNafu', 'b');
         $this->assertInstanceOf(ImapUser::class, $user);
-        $this->assertInstanceOf(ImapAccount::class, $user->getImapAccount());
-        $this->assertSame($config[1]['id'], $user->getImapAccount()->getId());
+        $this->assertNull($user->getImapAccount("dev_sys_conjoon_org"));
+        $this->assertInstanceOf(ImapAccount::class, $user->getImapAccount("imap_test"));
+        $this->assertSame($config[1]['id'], $user->getImapAccount("imap_test")->getId());
 
     }
 }

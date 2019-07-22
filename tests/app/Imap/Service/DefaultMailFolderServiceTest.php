@@ -53,7 +53,7 @@ class DefaultMailFolderServiceTest extends TestCase {
                  ->andThrow(new \Exception("This exception should be caught properly by the test"));
 
         $service = new DefaultMailFolderService();
-        $service->getMailFoldersFor($this->getTestUserStub()->getImapAccount());
+        $service->getMailFoldersFor($this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"));
     }
 
     /**
@@ -62,7 +62,7 @@ class DefaultMailFolderServiceTest extends TestCase {
      */
     public function testGetMailFoldersFor() {
 
-        $account = $this->getTestUserStub()->getImapAccount();
+        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
