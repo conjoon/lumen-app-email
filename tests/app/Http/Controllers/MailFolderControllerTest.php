@@ -31,22 +31,6 @@ class MailFolderControllerTest extends TestCase
 
 
     /**
-     * Tests get() to make sure method returns list of available ImapAccounts associated with
-     * the current signed in user.
-     *
-     * @return void
-     */
-    public function testIndex_exception()
-    {
-
-        $this->expectException(\Illuminate\Auth\Access\AuthorizationException::class);
-
-        $this->actingAs($this->getTestUserStub())
-             ->call('GET', 'cn_mail/MailAccounts/foobar/MailFolders');
-    }
-
-
-    /**
      * Tests get() to make sure method returns list of available MailFolders associated with
      * the current signed in user.
      *
@@ -67,7 +51,7 @@ class MailFolderControllerTest extends TestCase
 
         $repository->expects($this->once())
                    ->method('getMailFoldersFor')
-                   ->with($this->getTestImapAccount())
+                   ->with($this->getTestImapAccount("dev_sys_conjoon_org"))
                    ->willReturn(['testArray']);
 
 

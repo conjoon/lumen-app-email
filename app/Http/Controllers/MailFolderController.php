@@ -63,23 +63,15 @@ class MailFolderController extends Controller {
      * authenticated for the specified $mailAccountId.
      *
      * @return ResponseJson
-     *
-     * @throws if $mailAccountId is not the id of the ImapAccount associated
-     * with the user
      */
     public function index($mailAccountId) {
 
         $user = Auth::user();
 
-        $account = $user->getImapAccount();
-
-        if ($account->getId() !== $mailAccountId) {
-            throw new \Illuminate\Auth\Access\AuthorizationException();
-        }
 
         return response()->json([
             "success" => true,
-            "data" => $this->mailFolderService->getMailFoldersFor($user->getImapAccount())
+            "data" => $this->mailFolderService->getMailFoldersFor($user->getImapAccount($mailAccountId))
         ]);
 
     }

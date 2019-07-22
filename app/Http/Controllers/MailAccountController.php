@@ -47,10 +47,15 @@ class MailAccountController extends Controller {
 
         $user = Auth::user();
 
+        $accounts = $user->getImapAccounts();
+        $res = [];
+        foreach ($accounts as $acc) {
+            $res[] = $acc->toArray();
+        }
 
         return response()->json([
             "success" => true,
-            "data" => [$user->getImapAccount()->toArray()]
+            "data" => $res
         ]);
 
     }
