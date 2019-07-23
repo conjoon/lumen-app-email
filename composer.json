@@ -25,7 +25,8 @@
          "classmap": [
         ],
         "psr-4": {
-            "App\\": "app/"
+            "App\\": "app/",
+            "Conjoon\\": "app/"
         }
     },
     "autoload-dev": {

@@ -28,10 +28,8 @@ declare(strict_types=1);
 namespace App\Imap\Service;
 
 use App\Imap\ImapAccount,
-    App\Text\Converter,
-    App\Mail\Client\HtmlReadableStrategy,
-    App\Text\CharsetConverter,
-    App\Imap\Service\MessageItemServiceException;
+    Conjoon\Text\Converter,
+    App\Mail\Client\HtmlReadableStrategy;
 
 /**
  * Class DefaultMessageItemService.

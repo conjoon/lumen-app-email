@@ -25,7 +25,7 @@
  */
 
 use App\Imap\Service\DefaultMessageItemService,
-    App\Text\CharsetConverter,
+    Conjoon\Text\CharsetConverter,
     App\Mail\Client\HtmlReadableStrategy,
     App\Imap\Service\MessageItemServiceException;
 

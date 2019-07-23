@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Text\CharsetConverter;
+use Conjoon\Text\CharsetConverter;
 
 
 class CharsetConverterTest extends TestCase {
@@ -35,7 +35,7 @@ class CharsetConverterTest extends TestCase {
     public function testInstance() {
 
         $decoder = new CharsetConverter();
-        $this->assertInstanceOf(\App\Text\Converter::class, $decoder);
+        $this->assertInstanceOf(\Conjoon\Text\Converter::class, $decoder);
     }
 
     public function testConvert() {
