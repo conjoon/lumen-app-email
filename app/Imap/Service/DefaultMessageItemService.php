@@ -29,7 +29,7 @@ namespace App\Imap\Service;
 
 use App\Imap\ImapAccount,
     Conjoon\Text\Converter,
-    App\Mail\Client\HtmlReadableStrategy;
+    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
 
 /**
  * Class DefaultMessageItemService.

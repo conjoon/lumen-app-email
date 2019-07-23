@@ -23,25 +23,36 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Mail\Client\HtmlReadableStrategy;
-
-
-class HtmlReadableStrategyTest extends TestCase {
+namespace Conjoon\Mail\Client\Reader;
 
 
+/**
+ * Class PurifiedHtmlStrategy
+ *
+ * Uses \HtmlPurifier for processing texts.
+ *
+ * @package Conjoon\Mail\Client\Reader
+ */
+class PurifiedHtmlStrategy implements HtmlReadableStrategy {
 
 
-    public function testProcess() {
+    /**
+     * @inheritdoc
+     */
+    public function process(string $text) :string {
 
-        $strategy = new HtmlReadableStrategy();
-        $text = "randomstring";
+        // require_once 'HTMLPurifier.auto.php';
+        $htmlPurifierConfig = \HTMLPurifier_Config::createDefault();
+        $htmlPurifierConfig->set('HTML.Trusted', false);
+        $htmlPurifierConfig->set('CSS.AllowTricky', false);
+        $htmlPurifierConfig->set('CSS.AllowImportant', false);
+        $htmlPurifierConfig->set('CSS.Trusted', false);
 
-        $this->assertSame($text, $strategy->process($text));
+        $inst =  new \HTMLPurifier($htmlPurifierConfig);
 
-
-        $text = "<html><head></head><body>Test</body></html>html>";
-        $this->assertSame("Test", $strategy->process($text));
+        return $inst->purify($text);
 
     }
 

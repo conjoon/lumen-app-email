@@ -23,33 +23,30 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Mail\Client;
-
-
-class HtmlReadableStrategy {
+use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
 
 
-    /**
-     * Purifies the text from untrusted HTML/CSS/Script contents.
-     *
-     * @param string $text
-     *
-     * @return string
-     */
-    public function process(string $text) :string {
+class PurifiedHtmlStrategyTest extends TestCase {
 
-        // require_once 'HTMLPurifier.auto.php';
-        $htmlPurifierConfig = \HTMLPurifier_Config::createDefault();
-        $htmlPurifierConfig->set('HTML.Trusted', false);
-        $htmlPurifierConfig->set('CSS.AllowTricky', false);
-        $htmlPurifierConfig->set('CSS.AllowImportant', false);
-        $htmlPurifierConfig->set('CSS.Trusted', false);
 
-        $inst =  new \HTMLPurifier($htmlPurifierConfig);
+    public function testClass() {
 
-        return $inst->purify($text);
+        $strategy = new PurifiedHtmlStrategy();
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\HtmlReadableStrategy::class, $strategy);
+    }
+
+
+    public function testProcess() {
+
+        $strategy = new PurifiedHtmlStrategy();
+        $text = "randomstring";
+
+        $this->assertSame($text, $strategy->process($text));
+
+
+        $text = "<html><head></head><body>Test</body></html>html>";
+        $this->assertSame("Test", $strategy->process($text));
 
     }
 

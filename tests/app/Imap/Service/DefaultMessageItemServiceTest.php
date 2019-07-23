@@ -26,7 +26,7 @@
 
 use App\Imap\Service\DefaultMessageItemService,
     Conjoon\Text\CharsetConverter,
-    App\Mail\Client\HtmlReadableStrategy,
+    Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
     App\Imap\Service\MessageItemServiceException;
 
 
@@ -205,6 +205,6 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     protected function createService() {
 
-        return new DefaultMessageItemService(new CharsetConverter, new HtmlReadableStrategy);
+        return new DefaultMessageItemService(new CharsetConverter, new PurifiedHtmlStrategy);
     }
 }
