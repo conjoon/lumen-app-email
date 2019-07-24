@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace App\Imap;
 
+use Conjoon\Mail\Client\Data\MailAccount;
+
 /**
  * Class Util
  *
@@ -36,10 +38,10 @@ class Util  {
 
 
     /**
-     * Creates an ImapAccount by merging information from $config with $username and $password.
+     * Creates an MailAccount by merging information from $config with $username and $password.
      *
      * @example
-     *       $imapAccount = Util::makeAccount("dev@conjoon.org", "foo", [
+     *       $iaccount = Util::makeAccount("dev@conjoon.org", "foo", [
      *                          "id"              => "dev_sys_conjoon_org",
      *                          "inbox_type"      => "IMAP",
      *                          "inbox_address"   => "234.43.44.5",
@@ -51,7 +53,7 @@ class Util  {
      *                          "match"           => ["/\@(conjoon.)(org|de|com|info)$/mi"]]
      *       );
      *
-     *       // dump $imapAccount
+     *       // dump $account
              //  'id'              => "dev_sys_conjoon_org",
      *       //  'name'            => "dev@conjoon.org",
      *       //  'from'            => ["name" => "dev@conjoon.org", "address" => 'dev@conjoon.org'],
@@ -73,9 +75,9 @@ class Util  {
      * @param string $password
      * @param array $config
      *
-     * @return ImapAccount
+     * @return MailAccount
      */
-    public static function makeAccount(string $username, string $password, array $config): ImapAccount {
+    public static function makeAccount(string $username, string $password, array $config): MailAccount {
 
         $config['name']    = $username;
         $config['from']    = ["name" => $username, "address" => $username];
@@ -87,7 +89,7 @@ class Util  {
         $config['outbox_user']     = $username;
         $config['outbox_password'] = $password;
 
-        return new ImapAccount($config);
+        return new MailAccount($config);
     }
 
 

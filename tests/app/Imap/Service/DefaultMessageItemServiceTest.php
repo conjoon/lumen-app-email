@@ -60,7 +60,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service = $this->createService();
         $service->getMessageItemsFor(
-            $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"),
+            $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
             "INBOX", ["start" => 0, "limit" => 25]
         );
     }
@@ -73,7 +73,7 @@ class DefaultMessageItemServiceTest extends TestCase {
      */
     public function testGetMessageItemsFor() {
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -134,7 +134,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service = $this->createService();
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -178,7 +178,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service = $this->createService();
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 

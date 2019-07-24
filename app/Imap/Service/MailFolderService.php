@@ -27,22 +27,22 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 interface MailFolderService {
 
 
     /**
      * Returns an array of Objects representing MailFolders for the specified
-     * ImapAccount.
+     * MailAccount.
      *
-     * @param ImapAccount $account The ImapAccount for which the folder structure
+     * @param MailAccount $account The MailAccount for which the folder structure
      * should be returned.
      *
      * @return array An array of the Mailbox-structure found on the server. Each
      * entry must provide the following information:
      * - id: A unique id for the MailFolder
-     * - mailAccountId: The id of the ImapAccount to which this mailbox belongs
+     * - mailAccountId: The id of the MailAccount to which this mailbox belongs
      * - name: A human readable nameof the mailbox
      * - unreadCount: An integer value representing the number of unread messages
      * in this mailbox
@@ -63,7 +63,7 @@ interface MailFolderService {
      *
      * @see \Horde_Imap_Client_Socket
      */
-    public function getMailFoldersFor(ImapAccount $account) :array;
+    public function getMailFoldersFor(MailAccount $account) :array;
 
 
 

@@ -50,7 +50,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $socket = $client->connect($this->getTestImapAccount("dev_sys_conjoon_org"));
+        $socket = $client->connect($this->getTestMailAccount("dev_sys_conjoon_org"));
 
         $this->assertInstanceOf(
             \Horde_Imap_Client_Socket::class, $socket
@@ -74,7 +74,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
         $client->getMessageItemsFor(
-            $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"),
+            $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
             "INBOX", ["start" => 0, "limit" => 25]
         );
     }
@@ -87,7 +87,7 @@ class HordeClientTest extends TestCase {
      */
     public function testGetMessageItemsFor() {
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -148,7 +148,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
@@ -192,7 +192,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 

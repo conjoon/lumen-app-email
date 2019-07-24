@@ -38,37 +38,37 @@ trait TestTrait {
         $methods = array_map(function (\ReflectionMethod $m) {
             return $m->getName();
             }, (new \ReflectionClass(\Illuminate\Contracts\Auth\Authenticatable::class))->getMethods());
-        $methods[] = 'getImapAccount';
-        $methods[] = 'getImapAccounts';
+        $methods[] = 'getMailAccount';
+        $methods[] = 'getMailAccounts';
 
         $userStub = $this->getMockBuilder('\Illuminate\Contracts\Auth\Authenticatable')
                          ->setMethods($methods)
                          ->getMock();
 
-        $userStub->method('getImapAccount')
+        $userStub->method('getMailAccount')
                  ->with($this->callback(function($arg) {
                      return is_string($arg);
                  }))
                  ->will(
                      $this->returnCallback(function($accountId) {
-                         return $this->getTestImapAccount($accountId);
+                         return $this->getTestMailAccount($accountId);
                      })
                  );
 
-        $userStub->method('getImapAccounts')
-           ->willReturn([$this->getTestImapAccount("dev_sys_conjoon_org")]);
+        $userStub->method('getMailAccounts')
+           ->willReturn([$this->getTestMailAccount("dev_sys_conjoon_org")]);
 
         return $userStub;
     }
 
 
-    public function getTestImapAccount($accountId) {
+    public function getTestMailAccount($accountId) {
 
         if ($accountId === "TESTFAIL") {
             return null;
         }
 
-        return new \App\Imap\ImapAccount([
+        return new \Conjoon\Mail\Client\Data\MailAccount([
             'id'              => $accountId,
             'name'            => "conjoon developer",
             'from'            => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],

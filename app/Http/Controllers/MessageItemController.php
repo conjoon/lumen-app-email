@@ -82,7 +82,7 @@ class MessageItemController extends Controller {
         $mailFolderId = urldecode($mailFolderId);
 
         $data = $this->messageItemService->getMessageItemsFor(
-            $user->getImapAccount($mailAccountId), $mailFolderId, [
+            $user->getMailAccount($mailAccountId), $mailFolderId, [
                 "start" => $start,
                 "limit" => $limit,
                 "sort"  => $sort
@@ -117,11 +117,11 @@ class MessageItemController extends Controller {
 
         if ($target === "MessageBody") {
             $data = $this->messageItemService->getMessageBodyFor(
-                $user->getImapAccount($mailAccountId), $mailFolderId, $messageItemId
+                $user->getMailAccount($mailAccountId), $mailFolderId, $messageItemId
             );
         } else if ($target === "MessageItem") {
             $data = $this->messageItemService->getMessageItemFor(
-                $user->getImapAccount($mailAccountId), $mailFolderId, $messageItemId
+                $user->getMailAccount($mailAccountId), $mailFolderId, $messageItemId
             );
         } else {
             return response()->json([

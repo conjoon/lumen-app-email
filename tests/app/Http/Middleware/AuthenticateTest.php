@@ -138,7 +138,7 @@ class AuthenticateTest extends TestCase
                 }
                 public function parameter($param) {
                     if ($param === "mailAccountId") {
-                        return $this->user->getImapAccount("someid")->getId();
+                        return $this->user->getMailAccount("someid")->getId();
                     }
                     return null;
                 }

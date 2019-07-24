@@ -139,7 +139,7 @@ class MailAccount  {
 
 
     /**
-     * ImapAccount constructor.
+     * MailAccount constructor.
      *
      * @param array $config
      */

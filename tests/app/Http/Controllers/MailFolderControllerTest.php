@@ -51,7 +51,7 @@ class MailFolderControllerTest extends TestCase
 
         $repository->expects($this->once())
                    ->method('getMailFoldersFor')
-                   ->with($this->getTestImapAccount("dev_sys_conjoon_org"))
+                   ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
                    ->willReturn(['testArray']);
 
 

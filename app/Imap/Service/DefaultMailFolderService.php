@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Class DefaultMailFolderService.
@@ -43,7 +43,7 @@ class DefaultMailFolderService implements MailFolderService {
     /**
      * @inheritdoc
      */
-    public function getMailFoldersFor(ImapAccount $account) :array {
+    public function getMailFoldersFor(MailAccount $account) :array {
 
         try {
             $client = $this->connect($account);

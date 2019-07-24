@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Interface MessageItemService
@@ -59,7 +59,7 @@ interface MessageItemService {
      * - id (string) A unique id of the message, if not globally unique, then unique for the
      * mailbox this message was found in
      * 
-     * @param ImapAccount $account
+     * @param MailAccount $account
      * @param string $mailFolderId
      * @param array $options An array with the following query options:
      *  - start (integer) The position from where the items should be returned
@@ -71,9 +71,9 @@ interface MessageItemService {
      *  - meta: An array provifing the following keys:
      *       - cn_unreadCount: The number of unread messages in this mailbox
      *       - mailFolderId: the global name of the mailbox that was just queried
-     *       - mailAccountId: the id of the ImapAccount that was queried
+     *       - mailAccountId: the id of the MailAccount that was queried
      */
-    public function getMessageItemsFor(ImapAccount $account, string $mailFolderId, array $options) :array;
+    public function getMessageItemsFor(MailAccount $account, string $mailFolderId, array $options) :array;
 
 
     /**
@@ -96,13 +96,13 @@ interface MessageItemService {
      *
      * Note how no previewText is returned for a single MessageItem.
      *
-     * @param ImapAccount $account
+     * @param MailAccount $account
      * @param string $mailFolderId
      * @param string $messageItemId
      *
      * @return array
      */
-    public function getMessageItemFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array;
+    public function getMessageItemFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array;
 
 
     /**
@@ -116,12 +116,12 @@ interface MessageItemService {
      * - textHtml (string) A renderable, displayable, fully decoded and properly formatted html representation
      * of the Message
      *
-     * @param ImapAccount $account
+     * @param MailAccount $account
      * @param string $mailFolderId
      * @param string $messageItemId
      *
      * @return array
      */
-    public function getMessageBodyFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array;
+    public function getMessageBodyFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array;
 
 }

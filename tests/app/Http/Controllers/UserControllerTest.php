@@ -24,6 +24,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use Conjoon\Mail\Client\Data\MailAccount,
+    App\Imap\ImapUser;
+
+
 class UserControllerTest extends TestCase
 {
     /**
@@ -48,7 +52,7 @@ class UserControllerTest extends TestCase
                    ->will(
                        $this->onConsecutiveCalls(
                             null,
-                            new App\Imap\ImapUser('foo', 'bar', new App\Imap\ImapAccount([]))
+                            new ImapUser('foo', 'bar', new MailAccount([]))
                         )
                    );
 

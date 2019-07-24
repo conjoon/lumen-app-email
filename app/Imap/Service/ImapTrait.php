@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Trait ImapTrait
@@ -39,11 +39,11 @@ trait ImapTrait {
     /**
      * Creates a \Horde_Imap_Client_Socket with the specified account informations.
      *
-     * @param ImapAccount $account
+     * @param MailAccount $account
      *
      * @return \Horde_Imap_Client_Socket
      */
-    public function connect(ImapAccount $account) : \Horde_Imap_Client_Socket {
+    public function connect(MailAccount $account) : \Horde_Imap_Client_Socket {
 
 
         return new \Horde_Imap_Client_Socket(array(

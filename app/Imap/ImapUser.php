@@ -27,10 +27,11 @@ declare(strict_types=1);
 
 namespace App\Imap;
 
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Class ImapUser encapsulates a user for the php-cn_imapuser package, containing
- * associated ImapAccount-information.
+ * associated MailAccount-information.
  *
  * @package App\Imap
  */
@@ -38,7 +39,7 @@ class ImapUser {
 
 
     /**
-     * @var ImapAccount
+     * @var MailAccount
      */
     protected $imapAccount;
 
@@ -53,14 +54,14 @@ class ImapUser {
      *
      * @param string $username
      * @param string $password
-     * @param ImapAccount $account
+     * @param MailAccount $account
      */
-    public function __construct(string $username, string $password, ImapAccount $imapAccount) {
+    public function __construct(string $username, string $password, MailAccount $imapAccount) {
 
         $this->username = $username;
         $this->password = $password;
 
-        $this->imapAccount = $imapAccount;
+        $this->mailAccount = $imapAccount;
     }
 
 
@@ -81,30 +82,30 @@ class ImapUser {
 
 
     /**
-     * Returns the ImapAccount that belongs to this user with the specified
+     * Returns the MailAccount that belongs to this user with the specified
      * $mailAccountId.
      *
-     * Returns null if no ImapAccount with the specified id was found.
+     * Returns null if no MailAccount with the specified id was found.
      *
      * @param string $mailAccountId
      *
-     * @return ImapAccount
+     * @return MailAccount
      */
-    public function getImapAccount(string $mailAccountId) :?ImapAccount {
+    public function getMailAccount(string $mailAccountId) :?MailAccount {
 
-        if ((string)$this->imapAccount->getId() !== $mailAccountId) {
+        if ((string)$this->mailAccount->getId() !== $mailAccountId) {
             return null;
         }
-        return $this->imapAccount;
+        return $this->mailAccount;
     }
 
     /**
-     * Returns an array of all ImapAccounts belonging to this user.
+     * Returns an array of all MailAccounts belonging to this user.
      *
      * @return array
      */
-    public function getImapAccounts() :array {
-        return [$this->imapAccount];
+    public function getMailAccounts() :array {
+        return [$this->mailAccount];
     }
 
 

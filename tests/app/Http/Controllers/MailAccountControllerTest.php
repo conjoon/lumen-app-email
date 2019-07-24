@@ -30,7 +30,7 @@ class MailAccountControllerTest extends TestCase
     use TestTrait;
 
     /**
-     * Tests get() to make sure method returns list of available ImapAccounts associated with
+     * Tests get() to make sure method returns list of available MailAccounts associated with
      * the current signed in user.
      *
      * @return void
@@ -44,7 +44,7 @@ class MailAccountControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => [$this->getTestImapAccount("dev_sys_conjoon_org")->toArray()]
+            "data"    => [$this->getTestMailAccount("dev_sys_conjoon_org")->toArray()]
           ]);
     }
 

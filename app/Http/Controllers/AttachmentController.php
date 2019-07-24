@@ -73,7 +73,7 @@ class AttachmentController extends Controller {
         $mailFolderId = urldecode($mailFolderId);
 
         $data = $this->attachmentService->getAttachmentsFor(
-            $user->getImapAccount($mailAccountId), $mailFolderId, $messageItemId
+            $user->getMailAccount($mailAccountId), $mailFolderId, $messageItemId
         );
 
         return response()->json([

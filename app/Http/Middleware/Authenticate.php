@@ -53,7 +53,7 @@ class Authenticate
      * Handle an incoming request.
      * Checks if the user might access the resource. Also checks if the currently signed in
      * user can access the mailAccountId specified in the request. This will fail if
-     * the mailAccountId is not the id of the ImapAccount associated with the user.
+     * the mailAccountId is not the id of the MailAccount associated with the user.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -71,7 +71,7 @@ class Authenticate
         $mailAccountId = $request->route("mailAccountId");
         if ($mailAccountId) {
 
-            $account = $this->auth->user()->getImapAccount($mailAccountId);
+            $account = $this->auth->user()->getMailAccount($mailAccountId);
 
             if (!$account) {
                 return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);

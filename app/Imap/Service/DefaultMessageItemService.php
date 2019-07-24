@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount,
+use Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Text\Converter,
     Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
 
@@ -71,7 +71,7 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItemsFor(ImapAccount $account, string $mailFolderId, array $options) :array {
+    public function getMessageItemsFor(MailAccount $account, string $mailFolderId, array $options) :array {
 
         try {
 
@@ -109,7 +109,7 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItemFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array {
+    public function getMessageItemFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array {
 
         try {
 
@@ -132,7 +132,7 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageBodyFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array {
+    public function getMessageBodyFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array {
 
         try {
 

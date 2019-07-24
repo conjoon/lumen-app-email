@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\ImapAccount;
+use App\Imap\MailAccount;
 
 
 class ImapTraitTest extends TestCase {
@@ -36,7 +36,7 @@ class ImapTraitTest extends TestCase {
 
         $mock = $this->getMockForTrait('\App\Imap\Service\ImapTrait');
 
-        $socket = $mock->connect($this->getTestImapAccount("dev_sys_conjoon_org"));
+        $socket = $mock->connect($this->getTestMailAccount("dev_sys_conjoon_org"));
 
         $this->assertInstanceOf(
             \Horde_Imap_Client_Socket::class, $socket

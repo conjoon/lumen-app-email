@@ -47,7 +47,7 @@ class MailAccountController extends Controller {
 
         $user = Auth::user();
 
-        $accounts = $user->getImapAccounts();
+        $accounts = $user->getMailAccounts();
         $res = [];
         foreach ($accounts as $acc) {
             $res[] = $acc->toArray();

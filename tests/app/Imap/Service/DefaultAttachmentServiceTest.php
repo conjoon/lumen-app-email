@@ -54,7 +54,7 @@ class DefaultAttachmentServiceTest extends TestCase {
                  ->andThrow(new \Exception("This exception should be caught properly by the test"));
 
         $service = new DefaultAttachmentService();
-        $service->getAttachmentsFor($this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"), "1", "1");
+        $service->getAttachmentsFor($this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"), "1", "1");
     }
 
 
@@ -86,11 +86,11 @@ class DefaultAttachmentServiceTest extends TestCase {
             ]);
         };
 
-        $attachment = $buildAttachment($this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"), $mockPart);
+        $attachment = $buildAttachment($this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"), $mockPart);
 
         $this->assertSame($attachment, [
             "id"            => "69",
-            "mailAccountId" => $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org")->getId(),
+            "mailAccountId" => $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org")->getId(),
             "mailFolderId" => "INBOX",
             "parentMessageItemId" => "123",
             "type" => "image/gif",
@@ -107,7 +107,7 @@ class DefaultAttachmentServiceTest extends TestCase {
         $mockPart->method("getBytes")->willReturn(800);
         $mockPart->method("getType")->willReturn("application/binary");
 
-        $attachment = $buildAttachment($this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org"), $mockPart);
+        $attachment = $buildAttachment($this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"), $mockPart);
 
         $this->assertSame($attachment["previewImgSrc"], null);
     }
@@ -118,7 +118,7 @@ class DefaultAttachmentServiceTest extends TestCase {
      * @preserveGlobalState disabled
      */
     public function testGetAttachmentsFor_buildAttachmentsIsCalled() {
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $mockService = $this->setupMocks(
             "INBOX", "123", ["isFileAttachment", 'buildAttachment']);
@@ -136,7 +136,7 @@ class DefaultAttachmentServiceTest extends TestCase {
      */
     public function testGetAttachmentsFor()
     {
-        $account = $this->getTestUserStub()->getImapAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $mockService = $this->setupMocks(
             "INBOX", "123", ["isFileAttachment"]);

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Interface AttachmentService
@@ -52,13 +52,13 @@ interface AttachmentService {
      * - parentMessageItemId (string) the messageItemId to which this attachment belongs
      * - downloadUrl (string) an URI to download the resource or base64-encoded inline data
      *
-     * @param ImapAccount $account
+     * @param MailAccount $account
      * @param string $mailFolderId
      * @param string $messageItemId
      *
      * @return array An array of attachment data
      */
-    public function getAttachmentsFor(ImapAccount $account, string $mailFolderId, string $messageitemId) :array;
+    public function getAttachmentsFor(MailAccount $account, string $mailFolderId, string $messageitemId) :array;
 
 
 }

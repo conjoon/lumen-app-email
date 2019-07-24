@@ -71,7 +71,7 @@ class MailFolderController extends Controller {
 
         return response()->json([
             "success" => true,
-            "data" => $this->mailFolderService->getMailFoldersFor($user->getImapAccount($mailAccountId))
+            "data" => $this->mailFolderService->getMailFoldersFor($user->getMailAccount($mailAccountId))
         ]);
 
     }

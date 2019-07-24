@@ -24,19 +24,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\ImapUser;
-use App\Imap\ImapAccount;
+use App\Imap\ImapUser,
+    Conjoon\Mail\Client\Data\MailAccount;
 
 class ImapUserTest extends TestCase
 {
 
     public function testClass()
     {
-        $imapAccount = new ImapAccount(array("id" => "foo"));
+        $mailAccount = new MailAccount(array("id" => "foo"));
         $username    = "foo";
         $password     = "bar";
 
-        $user = new ImapUser($username, $password, $imapAccount);
+        $user = new ImapUser($username, $password, $mailAccount);
 
         $this->assertSame($username, $user->getUsername());
         $this->assertSame($password, $user->getPassword());
@@ -45,12 +45,12 @@ class ImapUserTest extends TestCase
             "password" => $password
         ], $user->toArray());
 
-        $this->assertSame($imapAccount, $user->getImapAccount($imapAccount->getId()));
+        $this->assertSame($mailAccount, $user->getMailAccount($mailAccount->getId()));
 
-        $accounts = $user->getImapAccounts();
+        $accounts = $user->getMailAccounts();
 
         foreach ($accounts as $account) {
-            $this->assertSame($account, $user->getImapAccount($account->getId()));
+            $this->assertSame($account, $user->getMailAccount($account->getId()));
         }
 
 

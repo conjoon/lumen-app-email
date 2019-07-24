@@ -24,8 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\Util;
-use App\Imap\ImapAccount;
+use App\Imap\Util,
+    Conjoon\Mail\Client\Data\MailAccount;
 
 class UtilTest extends TestCase
 {
@@ -50,7 +50,7 @@ class UtilTest extends TestCase
 
         $account = Util::makeAccount($username, $password, $this->config);
 
-        $this->assertInstanceOf(ImapAccount::class, $account);
+        $this->assertInstanceOf(MailAccount::class, $account);
 
         foreach ($this->config as $property => $value) {
                 $camelKey = '_' . str_replace('_', ' ', strtolower($property));

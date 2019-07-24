@@ -50,7 +50,7 @@ class AttachmentControllerTest extends TestCase
 
         $service->expects($this->once())
                 ->method('getAttachmentsFor')
-                ->with($this->getTestImapAccount("dev_sys_conjoon_org"))
+                ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
                 ->willReturn(['testArray']);
 
 

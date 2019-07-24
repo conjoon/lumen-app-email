@@ -66,12 +66,12 @@ use App\Imap\Util as ImapUtil;
  *                  ]])
  *
  *     $repository->getUser("test@foobar", "meh.");     // returns null
- *     $repository->getUser("test@conjoon.org", "foo"); // returns ImapUser containing the ImapAccount
+ *     $repository->getUser("test@conjoon.org", "foo"); // returns ImapUser containing the MailAccount
  *                                                      // with the id "dev_sys_conjoon_org"
- *     $repository->getUser("jon@conjoon.com", "foo");  // returns ImapUser containing the ImapAccount
+ *     $repository->getUser("jon@conjoon.com", "foo");  // returns ImapUser containing the MailAccount
  *                                                      // with the id "dev_sys_conjoon_org"
  *
- *     $repository->getUser("dev@snafu", "foo");        // returns ImapUser containing the ImapAccount
+ *     $repository->getUser("dev@snafu", "foo");        // returns ImapUser containing the MailAccount
  *                                                      // with the id "imap_test"
  *
  *

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use App\Imap\ImapAccount;
+use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Class DefaultAttachmentService.
@@ -43,7 +43,7 @@ class DefaultAttachmentService implements AttachmentService {
     /**
      * @inheritdoc
      */
-    public function getAttachmentsFor(ImapAccount $account, string $mailFolderId, string $messageItemId) :array {
+    public function getAttachmentsFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array {
 
         try {
 
@@ -130,7 +130,7 @@ class DefaultAttachmentService implements AttachmentService {
      * @return array
      */
     protected function buildAttachment(
-        ImapAccount $account, string $mailFolderId, string $messageItemId, \Horde_Mime_Part $part,
+        MailAccount $account, string $mailFolderId, string $messageItemId, \Horde_Mime_Part $part,
         string $fileName, string $attachmentId) :array {
 
         $mimeType = $part->getType();

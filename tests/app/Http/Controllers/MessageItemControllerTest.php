@@ -44,13 +44,13 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
                    ->method('getMessageItemsFor')
-                   ->with($this->getTestImapAccount("dev_sys_conjoon_org"), "INBOX", [
+                   ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", [
                        "start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]
                    ])
                    ->willReturn([
                        "total" => 0,
                        "data" => [],
-                       "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestImapAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"]
+                       "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"]
                    ]);
 
 
@@ -62,7 +62,7 @@ class MessageItemControllerTest extends TestCase
         $this->seeJsonEquals([
             "success" => true,
             "total"   => 0,
-            "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestImapAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"],
+            "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"],
             "data"    => []
           ]);
     }
@@ -81,9 +81,9 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method('getMessageBodyFor')
-            ->with($this->getTestImapAccount("dev_sys_conjoon_org"), "INBOX", "311")
+            ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311")
             ->willReturn([
-                "mailAccountId" => $this->getTestImapAccount("dev_sys_conjoon_org")->getId(),
+                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
                 "mailFolderId" => "INBOX",
                 "id"           => "311",
                 "textHtml"     => "foo",
@@ -99,7 +99,7 @@ class MessageItemControllerTest extends TestCase
         $this->seeJsonEquals([
             "success" => true,
             "data"    => [
-                "mailAccountId" => $this->getTestImapAccount("dev_sys_conjoon_org")->getId(),
+                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
                 "mailFolderId" => "INBOX",
                 "id"           => "311",
                 "textHtml"     => "foo",
@@ -121,7 +121,7 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method('getMessageItemFor')
-            ->with($this->getTestImapAccount("dev_sys_conjoon_org"), "INBOX", "311")
+            ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311")
             ->willReturn([
                 "dummy"
             ]);
