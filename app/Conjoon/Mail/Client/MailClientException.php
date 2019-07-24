@@ -25,16 +25,14 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Imap;
-
-use Conjoon\Mail\Client\MailClientException;
+namespace Conjoon\Mail\Client;
 
 /**
  * Class MailClientException
  *
  * @package Conjoon\Mail\Client
  */
-class ImapClientException extends MailClientException {
+class MailClientException extends \RuntimeException {
 
 
 
