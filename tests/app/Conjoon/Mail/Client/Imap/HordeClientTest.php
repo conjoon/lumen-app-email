@@ -41,7 +41,7 @@ class HordeClientTest extends TestCase {
     public function testInstance() {
 
         $client = $this->createClient();
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $client);
+        $this->assertInstanceOf(\Conjoon\Mail\Client\MailClient::class, $client);
     }
 
 

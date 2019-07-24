@@ -24,21 +24,20 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Imap\ImapClientException,
-    Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\MailClientException;
 
 /**
- * Class MessageItemServiceExceptionTest
+ * Class MailClientExceptionTest
  * 
  */
-class ImapClientExceptionTest extends TestCase {
+class MailClientExceptionTest extends TestCase {
 
 
     public function testInstance() {
 
-        $exception = new ImapClientException();
+        $exception = new MailClientException();
 
-        $this->assertInstanceOf(MailClientException::class, $exception);
+        $this->assertInstanceOf(\RuntimeException::class, $exception);
     }
 
 

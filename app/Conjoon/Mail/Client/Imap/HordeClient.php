@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Imap;
 
-use Conjoon\Mail\Client\Data\MailAccount,
+use Conjoon\Mail\Client\MailClient,
+    Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Text\Converter;
 
 /**
@@ -37,7 +38,7 @@ use Conjoon\Mail\Client\Data\MailAccount,
  *
  * @package Conjoon\Mail\Client\Imap
  */
-class HordeClient {
+class HordeClient implements MailClient {
 
 
     /**

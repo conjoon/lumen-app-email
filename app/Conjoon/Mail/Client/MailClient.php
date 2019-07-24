@@ -23,23 +23,19 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use Conjoon\Mail\Client\Imap\ImapClientException,
-    Conjoon\Mail\Client\MailClientException;
+namespace Conjoon\Mail\Client;
+
+
 
 /**
- * Class MessageItemServiceExceptionTest
- * 
+ * Interface MailClient
+ * @package Conjoon\Mail\Client
  */
-class ImapClientExceptionTest extends TestCase {
+interface MailClient {
 
 
-    public function testInstance() {
-
-        $exception = new ImapClientException();
-
-        $this->assertInstanceOf(MailClientException::class, $exception);
-    }
 
 
 }
