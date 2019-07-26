@@ -85,7 +85,7 @@ class MessageKey  {
     /**
      * Returns an array representation of this object.
      *
-     * Return array
+     * @return array
      */
     public function toArray() :array {
         return [
