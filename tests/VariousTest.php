@@ -84,10 +84,15 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MailFolderService']))
         );
 
+        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MessageItemService']));
         $this->assertInstanceOf(
             \App\Imap\Service\DefaultMessageItemService::class,
-            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MessageItemService']))
+            $messageItemService
         );
+
+        $mailClient = $messageItemService->getClient();
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailClient);
+        $this->assertInstanceOf(\Conjoon\Text\CharsetConverter::class, $mailClient->getConverter());
 
         $this->assertInstanceOf(
             \App\Imap\Service\DefaultAttachmentService::class,

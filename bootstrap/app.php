@@ -81,7 +81,7 @@ $app->singleton('App\Imap\Service\MailFolderService', function ($app) {
 
 $app->singleton('App\Imap\Service\MessageItemService', function ($app) {
     return new App\Imap\Service\DefaultMessageItemService(
-        new Conjoon\Text\CharsetConverter, new Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy
+        new Conjoon\Mail\Client\Imap\HordeClient(new Conjoon\Text\CharsetConverter)
     );
 });
 
