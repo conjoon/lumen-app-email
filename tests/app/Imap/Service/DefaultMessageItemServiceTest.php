@@ -24,10 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\Service\DefaultMessageItemService,
-    Conjoon\Text\CharsetConverter,
-    Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
-    App\Imap\Service\MessageItemServiceException;
+use App\Imap\Service\DefaultMessageItemService;
 
 
 /**
@@ -39,70 +36,51 @@ class DefaultMessageItemServiceTest extends TestCase {
     use TestTrait;
 
 
+// ------------------
+//     Tests
+// ------------------
+    /**
+     * Tests constructor.
+     */
     public function testInstance() {
 
         $service = $this->createService();
+
         $this->assertInstanceOf(\App\Imap\Service\MessageItemService::class, $service);
+        $this->assertInstanceOf(\Conjoon\Mail\Client\MailClient::class, $service->getClient());
     }
 
-    /**
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
-     */
-    public function testGetMessageItemsFor_exception() {
-
-        $this->expectException(MessageItemServiceException::class);
-
-        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
-
-        $imapStub->shouldReceive('query')
-                 ->andThrow(new \Exception("This exception should be caught properly by the test"));
-
-        $service = $this->createService();
-        $service->getMessageItemsFor(
-            $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
-            "INBOX", ["start" => 0, "limit" => 25]
-        );
-    }
 
     /**
-     * Multiple Message Item Test
-     *
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
+     * Multiple Message Item Test.
      */
     public function testGetMessageItemsFor() {
 
-        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-
-        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
-
-        $imapStub->shouldReceive('status')->with("INBOX", 16)->andReturn(["unseen" => 43]);
-
-        $imapStub->shouldReceive('search')->with("INBOX", \Mockery::any(), [
-            "sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]
-        ])->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
-
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-
-        $fetchResults[111] = new \Horde_Imap_Client_Data_Fetch();
-        $fetchResults[111]->setUid(111);
-        $fetchResults[222] = new \Horde_Imap_Client_Data_Fetch();
-        $fetchResults[222]->setUid(222);
-
-        $imapStub->shouldReceive('fetch')->with(
-            "INBOX", \Mockery::any(),
-            \Mockery::type('array')
-        )->andReturn(
-            $fetchResults
-        );
-
         $service = $this->createService();
 
-        $results = $service->getMessageItemsFor($account, "INBOX", ["start" => 0, "limit" => 2]);
+        $clientStub = $service->getClient();
+
+        $mailFolderId = "INBOX";
+        $options = ["start" => 0, "limit" => 2];
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+
+        $clientStub->method('getMessageItemsFor')
+                   ->with($account, $mailFolderId, $options)
+                    ->willReturn([
+                        "total" => 3,
+                        "data" => $this->buildTestMessageItem(2, $account->getId(), $mailFolderId),
+                        "meta" => [
+                        "cn_unreadCount" => 43, "mailFolderId" => $mailFolderId, "mailAccountId" => $account->getId()
+                    ]]);
+
+        $results = $service->getMessageItemsFor($account, $mailFolderId, $options);
+
 
         $this->assertSame([
-            "cn_unreadCount" => 43, "mailFolderId" => "INBOX", "mailAccountId" => $account->getId()
+            "cn_unreadCount" => 43,
+            "mailFolderId" => $mailFolderId,
+            "mailAccountId" => $account->getId()
             ], $results["meta"]
         );
 
@@ -125,86 +103,145 @@ class DefaultMessageItemServiceTest extends TestCase {
 
 
     /**
-     * Single messageItem Test
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
+     * Single MessageItem Test
      */
     public function testGetMessageItemFor() {
 
-
         $service = $this->createService();
 
+        $mailFolderId = "INBOX";
+        $messageItemId = "8977";
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+        $clientStub = $service->getClient();
+        $clientStub->method('getMessageItemFor')
+            ->with($account, $mailFolderId, $messageItemId)
+            ->willReturn(
+                $this->buildTestMessageItem(1, $account->getId(), $mailFolderId, $messageItemId)[0]
+            );
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
-        $fetchResults[16]->setUid("16");
+        $item = $service->getMessageItemFor($account, $mailFolderId, $messageItemId);
 
-        $imapStub->shouldReceive('fetch')->with(
-            "INBOX", \Mockery::any(), \Mockery::type('array')
-        )->andReturn($fetchResults);
+        $cmpItem = $this->buildTestMessageItem(1, $account->getId(), $mailFolderId, $messageItemId)[0];
+        $cmpItem["date"] = $item["date"] = "";
 
-
-        $item = $service->getMessageItemFor($account, "INBOX", "16");
-
-        $this->assertSame([
-            "id"             => "16",
-            "mailAccountId"  => $account->getId(),
-            "mailFolderId"   => "INBOX",
-            "from"           => [],
-            "to"             => [],
-            "size"           => 0,
-            "subject"        => "",
-            "date"           => $fetchResults[16]->getEnvelope()->date->format("Y-m-d H:i"),
-            "seen"           => false,
-            "answered"       => false,
-            "draft"          => false,
-            "flagged"        => false,
-            "recent"         => false,
-            "hasAttachments" => false
-        ], $item);
+        $this->assertSame($messageItemId, $item["id"]);
+        $this->assertFalse(array_key_exists('previewText', $item));
+        $this->assertSame($cmpItem, $item);
     }
 
 
     /**
      * Single MessageBody Test
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
      */
     public function testGetMessageBodyFor() {
 
-
         $service = $this->createService();
 
+        $mailFolderId = "INBOX";
+        $messageItemId = "8977";
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+        $clientStub = $service->getClient();
+        $clientStub->method('getMessageBodyFor')
+            ->with($account, $mailFolderId, $messageItemId)
+            ->willReturn(
+                $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId)
+            );
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
-        $fetchResults[16]->setUid("16");
+        $body = $service->getMessageBodyFor($account, "INBOX", $messageItemId);
 
-        $imapStub->shouldReceive('fetch')->with(
-            "INBOX", \Mockery::any(), \Mockery::type('array')
-        )->andReturn($fetchResults);
+        $cmpBody = $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId);
 
-
-        $body = $service->getMessageBodyFor($account, "INBOX", "16");
-
-        $this->assertSame([
-            "id"             => "16",
-            "mailFolderId"   => "INBOX",
-            "mailAccountId"  => $account->getId(),
-            "textPlain"      => "",
-            "textHtml"       => ""
-        ], $body);
+        $this->assertSame($messageItemId, $body["id"]);
+        $this->assertSame($cmpBody, $body);
     }
 
 
+// ------------------
+//     Test Helper
+// ------------------
+    /**
+     * Helper function for creating the client Mock.
+     * @return mixed
+     */
+    protected function getMailClientMock() {
+        return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
+                    ->setMethods(["getMessageItemsFor", "getMessageItemFor", "getMessageBodyFor"])
+                    ->disableOriginalConstructor()
+                    ->getMock();
+    }
+
+
+    /**
+     * Helper function for creating the service.
+     * @return DefaultMessageItemService
+     */
     protected function createService() {
-
-        return new DefaultMessageItemService(new CharsetConverter, new PurifiedHtmlStrategy);
+        return new DefaultMessageItemService($this->getMailClientMock());
     }
+
+
+    /**
+     * Helper function for creating Dummy MessageItem.
+     * @param $count
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @return array
+     * @throws Exception
+     */
+    protected function buildTestMessageItem($count, $mailAccountId, $mailFolderId, $messageItemId = null) {
+        $items = [];
+
+        if ($messageItemId !== null && $count > 1) {
+            throw new \RuntimeExeption("Unexpected value for messageItemId since count was greater than 1.");
+        }
+
+        for ($i = 0; $i < $count; $i++) {
+            $item = [
+                "id" => $messageItemId ?: $count+1,
+                "mailAccountId" => $mailAccountId,
+                "mailFolderId" => $mailFolderId,
+                "from" => [],
+                "to" => [],
+                "size" => 100,
+                "subject" => "subject",
+                "date" => new \DateTime(),
+                "seen" => false,
+                "answered" =>false,
+                "draft" =>false,
+                "flagged" => false,
+                "recent" => false,
+                "hasAttachments" => false
+            ];
+
+            if ($count > 1) {
+                $item["previewText"] = "Text";
+            }
+
+            $items[] = $item;
+        }
+        return $items;
+    }
+
+
+    /**
+     * Helper function for creating a MessageBody.
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $messageItemId
+     * @return array
+     */
+    protected function buildTestMessageBody($mailAccountId, $mailFolderId, $messageItemId) {
+
+        return [
+            "id" => $messageItemId,
+            "mailAccountId" => $mailAccountId,
+            "mailFolderId" => $mailFolderId,
+            "textHtml" => "foo",
+            "textPlain" => "bar"
+        ];
+
+    }
+
 }

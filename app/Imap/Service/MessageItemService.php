@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace App\Imap\Service;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Data\MailAccount,
+    Conjoon\Mail\Client\MailClient;
 
 /**
  * Interface MessageItemService
@@ -124,4 +125,11 @@ interface MessageItemService {
      */
     public function getMessageBodyFor(MailAccount $account, string $mailFolderId, string $messageItemId) :array;
 
+
+    /**
+     * Returns the MailClient used by this MessageService.
+     *
+     * @return MailClient
+     */
+    public function getClient() :MailClient;
 }
