@@ -75,7 +75,7 @@ class MailAccountTest extends TestCase
         $config = $this->accountConfig;
         $account = new MailAccount($config);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(\BadMethodCallException::class);
 
         $account->getSomeFoo();
     }

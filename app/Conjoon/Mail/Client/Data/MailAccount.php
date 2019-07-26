@@ -57,7 +57,7 @@ namespace Conjoon\Mail\Client\Data;
  *
  *
  *
- * @package App\Imap
+ * @package Conjoon\Mail\Client\Data
  */
 class MailAccount  {
 
@@ -165,7 +165,7 @@ class MailAccount  {
      *
      * @return mixed
      *
-     * @throws \RuntimeException if a method is called for which no property exists
+     * @throws \BadMethodCallException if a method is called for which no property exists
      */
     public function __call($method, $arguments) {
 
@@ -183,14 +183,16 @@ class MailAccount  {
             }
         }
 
-        throw new \RuntimeException("no method \"".$method."\" found.");
+        throw new \BadMethodCallException("no method \"".$method."\" found.");
     }
 
 
     /**
+     * Returns an Array reoresentation of this instance.
+     *
      * @inheritdoc
      */
-    public function toArray() {
+    public function toArray() :array {
         return [
             "id"              => $this->getId(),
             "name"            => $this->getName(),
