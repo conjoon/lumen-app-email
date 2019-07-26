@@ -452,5 +452,15 @@ class HordeClient implements MailClient {
     }
 
 
+    /**
+     * Returns the Converter used by this instance.
+     *
+     * @return Converter
+     */
+    public function getConverter() :Converter {
+        return $this->converter;
+    }
+
+
 
 }

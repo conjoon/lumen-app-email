@@ -42,6 +42,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
         $this->assertInstanceOf(\Conjoon\Mail\Client\MailClient::class, $client);
+        $this->assertInstanceOf(\Conjoon\Text\Converter::class, $client->getConverter());
     }
 
 
