@@ -30,8 +30,8 @@ namespace Conjoon\Mail\Client\Reader;
 /**
  * Interface HtmlReadableStrategy
  *
- * Implementing classes are advised to properly strip the text from HTML tags.
- * It is okay for this class to return HTML tags in the processed tags.
+ * Implementing classes are advised to properly strip any unwanted/ unsecure/ layout-breaking
+ * HTML tags from text.
  *
  * @package Conjoon\Mail\Client\Reader
  */
