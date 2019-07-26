@@ -26,7 +26,7 @@
 
 use Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\MessageKey,
-    Conjoon\Mail\Client\Data\DataException;
+    Conjoon\Mail\Client\Data\MailAddress;
 
 
 class MessageItemTest extends TestCase
@@ -73,6 +73,9 @@ class MessageItemTest extends TestCase
                     $this->assertEquals($item["date"], $messageItem->getDate());
                     break;
                 case 'from':
+                    $this->assertNotSame($item["from"], $messageItem->getFrom());
+                    $this->assertEquals($item["from"], $messageItem->getFrom());
+                    break;
                 case 'to':
                     $this->assertEquals($item[$key], $messageItem->{$method}(), "\"$key\" not equal");
                     break;
@@ -166,7 +169,7 @@ class MessageItemTest extends TestCase
         $this->assertSame($messageKey, $messageItem->toArray()['messageKey']);
 
         foreach ($keys as $key) {
-            if ($key === "date" || $key === "from" || $key === "date") {
+            if ($key === "date" || $key === "from" || $key === "to") {
                 $this->assertEquals($item[$key], $messageItem->toArray()[$key]);
             } else {
                 $this->assertSame($item[$key], $messageItem->toArray()[$key]);
@@ -185,7 +188,7 @@ class MessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
-            'from'           => ["name" => "name", "address" => "name@address.testcomdomaindev"],
+            'from'           => $this->createFrom(),
             'to'             => [["name" => "name1", "address" => "name1@address.testcomdomaindev"],
                                  ["name" => "name2", "address" => "name2@address.testcomdomaindev"]],
             'size'           => 23,
@@ -210,8 +213,19 @@ class MessageItemTest extends TestCase
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailFolderId = "INBOX", $id = "232") {
+    protected function createMessageKey($mailFolderId = "INBOX", $id = "232") :MessageKey {
         return new MessageKey($mailFolderId, $id);
+    }
+
+
+    /**
+     * Returns a MailAddress to be used with the "from" property of the MessageItem
+     * to test.
+     *
+     * @return MailAddress
+     */
+    protected function createFrom() :MailAddress {
+        return new MailAddress("peterParker@newyork.com", "Peter Parker");
     }
 
 

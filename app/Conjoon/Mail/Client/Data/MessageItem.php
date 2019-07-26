@@ -29,7 +29,7 @@ namespace Conjoon\Mail\Client\Data;
 
 
 /**
- * Class MailAccount models account information for a mail server.
+ * Class MessageItem models simplified envelope informations for a Mail Message.
  *
  * @example
  *
@@ -53,7 +53,7 @@ class MessageItem  {
     protected $messageKey;
 
     /**
-     * @var array
+     * @var MailAddress
      */
     protected $from;
 
@@ -109,14 +109,13 @@ class MessageItem  {
 
 
     /**
-     * MailAccount constructor.
+     * MessageItem constructor.
      *
      * @param MessageKey $messageKey
      * @param array $data
      *
      * @throws \TypeError if any of the submitted values for the properties do not match
      * their expected type
-     * @throws \DataException
      */
     public function __construct(MessageKey $messageKey, array $data = null) {
 
@@ -133,6 +132,19 @@ class MessageItem  {
             }
 
         }
+    }
+
+
+    /**
+     * Sets the "from" property of this message.
+     * Makes sure no reference is stored to the MailAddress-object.
+     *
+     * @param MailAddress $mailAddress
+     * @return $this
+     */
+    public function setFrom(MailAddress $mailAddress) {
+        $this->from = clone($mailAddress);
+        return $this;
     }
 
 
