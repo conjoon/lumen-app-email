@@ -33,13 +33,12 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @example
  *
- *    $item = new MessageItem([
- *        'id'            => "3232",
- *        'mailAccountId' => "conjoon_developer",
- *        'mailFolderId'  => "INBOX"
- *    ]);
+ *    $item = new MessageItem(
+ *              new MessageKey("INBOX", "232"),
+ *              ["date" => new \DateTime()]
+ *            );
  *
- *    $item->getId(); // "3232"
+ *    $item->getMessageKey();
  *    $item->setSubject("Foo");
  *    $item->getSubject(); // "Foo"
  *
@@ -49,19 +48,9 @@ class MessageItem  {
 
 
     /**
-     * @var string
+     * @var MessageKey
      */
-    protected $id;
-
-    /**
-     * @var string
-     */
-    protected $mailAccountId;
-
-    /**
-     * @var string
-     */
-    protected $mailFolderId;
+    protected $messageKey;
 
     /**
      * @var array
@@ -122,46 +111,23 @@ class MessageItem  {
     /**
      * MailAccount constructor.
      *
-     * @param array $config
+     * @param MessageKey $messageKey
+     * @param array $data
      *
      * @throws \TypeError if any of the submitted values for the properties do not match
      * their expected type
      * @throws \DataException
      */
-    public function __construct(array $config) {
+    public function __construct(MessageKey $messageKey, array $data = null) {
 
-        if (isset($config["id"]) && isset($config["mailFolderId"]) && isset($config["mailAccountId"])) {
+        $this->messageKey = $messageKey;
 
-            if (!is_string($config["mailAccountId"]) || !is_string($config["mailFolderId"]) || !is_string($config["id"])) {
-                $key = !is_string($config["id"])
-                    ? "id"
-                    : (!is_string($config["mailFolderId"])
-                        ? "mailFolderId"
-                        : "mailAccountId");
-
-                throw new \TypeError("Wrong type for \"$key\" submitted, \"string\" expected.");
-            }
-            $this->id = $config["id"];
-            $this->mailFolderId = $config["mailFolderId"];
-            $this->mailAccountId = $config["mailAccountId"];
-
-            unset($config["id"]);
-            unset($config["mailFolderId"]);
-            unset($config["mailAccountId"]);
-        } else {
-            $key = !isset($config["id"])
-                    ? "id"
-                    : (!isset($config["mailFolderId"])
-                      ? "mailFolderId"
-                      : "mailAccountId");
-
-            throw new DataException("Missing key \"$key\" for MessageItem");
+        if (!$data) {
+            return;
         }
 
-
-        foreach ($config as $key => $value) {
+        foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {
-
                 $method = "set" . ucfirst($key);
                 $this->{$method}($value);
             }
@@ -210,7 +176,7 @@ class MessageItem  {
             } else if ($isSetter) {
 
                 if (property_exists($this, $property) && 
-                    !in_array($property, ['mailFolderId', 'mailAccountId', 'id'])) {
+                    !in_array($property, ['messageKey'])) {
 
                     $value = $arguments[0];
                     $typeFail = "";
@@ -272,9 +238,7 @@ class MessageItem  {
      */
     public function toArray() :array {
         return [
-            'id'             => $this->getId(),
-            'mailAccountId'  => $this->getMailAccountId(),
-            'mailFolderId'   => $this->getMailFolderId(),
+            'messageKey'     => $this->getMessageKey(),
             'from'           => $this->getFrom(),
             'to'             => $this->getTo(),
             'size'           => $this->getSize(),

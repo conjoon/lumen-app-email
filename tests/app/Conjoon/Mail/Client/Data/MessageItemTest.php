@@ -25,6 +25,7 @@
  */
 
 use Conjoon\Mail\Client\Data\MessageItem,
+    Conjoon\Mail\Client\Data\MessageKey,
     Conjoon\Mail\Client\Data\DataException;
 
 
@@ -35,59 +36,38 @@ class MessageItemTest extends TestCase
 // ---------------------
 //    Tests
 // ---------------------
+
     /**
-     * Test constructor exception with missing keys.
+     * Tests constructor
      */
-    public function testConstructorException() {
+    public function testConstructor() {
 
-        $caught = [];
-
-        $testException = function($key) use (&$caught) {
-            try {
-                $item = $this->getItemConfig();
-                unset($item[$key]);
-                new MessageItem($item);
-            } catch (DataException $e) {
-                if (in_array($e->getMessage(), $caught)) {
-                    return;
-                }
-                $caught[] = $e->getMessage();
-            }
-
-        };
-
-        $testException("id");
-        $testException("mailFolderId");
-        $testException("mailAccountId");
-
-        $this->assertSame(3, count($caught));
+        $messageKey = $this->createMessageKey();
+        $messageItem = new MessageItem($messageKey);
+        $this->assertInstanceOf(MessageItem::class, $messageItem);
     }
 
 
     /**
-     * Test constructor.
+     * Test class.
      */
     public function testClass() {
 
         $item = $this->getItemConfig();
 
-        $messageItem = new MessageItem($item);
+        $messageKey = $this->createMessageKey();
+
+        $messageItem = new MessageItem($messageKey, $item);
 
         $this->assertInstanceOf(MessageItem::class, $messageItem);
 
-        //$this->assertInstanceOf(\DateTime::class, $item["date"]);
+        $this->assertSame($messageKey, $messageItem->getMessageKey());
 
         foreach ($item as $key => $value) {
 
             $method = "get" . ucfirst($key);
 
             switch ($key) {
-                case 'id':
-                case 'mailFolderId':
-                case 'mailAccountId':
-                $this->assertIsString($messageItem->{$method}());
-
-                break;
                 case 'date':
                     $this->assertNotSame($item["date"], $messageItem->getDate());
                     $this->assertEquals($item["date"], $messageItem->getDate());
@@ -128,7 +108,7 @@ class MessageItemTest extends TestCase
             }
 
             try {
-                new MessageItem($item);
+                new MessageItem($this->createMessageKey(), $item);
             } catch (\TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
@@ -138,9 +118,6 @@ class MessageItemTest extends TestCase
 
         };
 
-        $testException("id", "int");
-        $testException("mailFolderId", "int");
-        $testException("mailAccountId", "int");
         $testException("subject", "int");
         $testException("size", "string");
         $testException("seen", "string");
@@ -153,7 +130,24 @@ class MessageItemTest extends TestCase
         $testException("to", "");
         $testException("date", "");
 
-        $this->assertSame(14, count($caught));
+        $this->assertSame(11, count($caught));
+    }
+
+
+    /**
+     * Test \BadMethodCallException for setMessageKey
+     */
+    public function testSetMessageKey() {
+
+        $this->expectException(\BadMethodCallException::class);
+
+        $messageKey = $this->createMessageKey();
+
+        $messageItem = new MessageItem($messageKey);
+
+        $messageKey2 = $this->createMessageKey();
+
+        $messageItem->setMessageKey($messageKey2);
     }
 
 
@@ -163,9 +157,13 @@ class MessageItemTest extends TestCase
     public function testToArray() {
         $item = $this->getItemConfig();
 
-        $messageItem = new MessageItem($item);
+        $messageKey = $this->createMessageKey();
+
+        $messageItem = new MessageItem($messageKey, $item);
 
         $keys = array_keys($item);
+
+        $this->assertSame($messageKey, $messageItem->toArray()['messageKey']);
 
         foreach ($keys as $key) {
             if ($key === "date" || $key === "from" || $key === "date") {
@@ -187,9 +185,6 @@ class MessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
-            'id'             => "233",
-            'mailAccountId'  => "2332",
-            'mailFolderId'   => "INBOX",
             'from'           => ["name" => "name", "address" => "name@address.testcomdomaindev"],
             'to'             => [["name" => "name1", "address" => "name1@address.testcomdomaindev"],
                                  ["name" => "name2", "address" => "name2@address.testcomdomaindev"]],
@@ -204,6 +199,19 @@ class MessageItemTest extends TestCase
             'hasAttachments' => true
         ];
 
+    }
+
+
+    /**
+     * Returns a MessageKey.
+     *
+     * @param string $mailFolderId
+     * @param string $id
+     *
+     * @return MessageKey
+     */
+    protected function createMessageKey($mailFolderId = "INBOX", $id = "232") {
+        return new MessageKey($mailFolderId, $id);
     }
 
 

@@ -29,7 +29,7 @@ namespace Conjoon\Mail\Client\Data;
 
 
 /**
- * Class MessageKey models a compound key for identifying a Message.
+ * Class MessageKey models a compound key for identifying a (IMAP) Message.
  *
  * @example
  *
