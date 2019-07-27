@@ -27,7 +27,10 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client;
 
-
+use Conjoon\Mail\Client\Data\MessageKey,
+    Conjoon\Mail\Client\Data\MailAccount,
+    Conjoon\Mail\Client\Data\MessageItem,
+    Conjoon\Mail\Client\Data\MessageItemList;
 
 /**
  * Interface MailClient
@@ -36,6 +39,39 @@ namespace Conjoon\Mail\Client;
 interface MailClient {
 
 
+    /**
+     * Returns the specified MessageItem for the submitted arguments.
+     *
+     * @param MailAccount $account
+     * @param MessageKey $key
+     * @param array|null $options
+     *
+     * @return MessageItem|null The MessageItem or null if none found.
+     */
+     public function getMessageItem(MailAccount $account, MessageKey $key, array $options = null) :?MessageItem;
 
+
+    /**
+     * Returns the specified MessageBody for the submitted arguments.
+     *
+     * @param MailAccount $account
+     * @param MessageKey $key
+     * @param array|null $options
+     *
+     * @return MessageItem|null The MessageItem or null if none found.
+     */
+    //public function getMessageBody(MailAccount $account, MessageKey $key, array $options = null) :?MessageItem;
+
+
+    /**
+     * Returns the specified MessageList for the submitted arguments.
+     *
+     * @param MailAccount $account
+     * @param FolderKey $key
+     * @param array|null $options
+     *
+     * @return MessageItemList if no MessageItems where found, the list will be empty
+     */
+    public function getMessageItemList(MailAccount $account, string $mailFolderId , array $options = null) :MessageItemList;
 
 }
