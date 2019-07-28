@@ -37,7 +37,7 @@ interface Converter {
      *
      * @param string $text
      * @param string $fromCharset
-     * @param string $toCharset
+     * @param string $targetCharset
      *
      * @return string
      */
