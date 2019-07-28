@@ -29,6 +29,7 @@ namespace App\Imap\Service;
 
 use Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\MailClient,
+    Conjoon\Mail\Client\Reader\HtmlReadableStrategy,
     Conjoon\Text\Converter;
 
 /**
@@ -135,5 +136,18 @@ interface MessageItemService {
     public function getConverter() :Converter;
 
 
+    /**
+     * Returns the MailClient used by this MessageService.
+     *
+     * @return Converter
+     */
+    public function getMailClient() :MailClient;
 
+
+    /**
+     * Returns the HtmlReadableStrategy used by this MessageService.
+     *
+     * @return Converter
+     */
+    public function getHtmlReadableStrategy() :HtmlReadableStrategy;
 }
