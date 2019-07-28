@@ -30,6 +30,7 @@ namespace Conjoon\Mail\Client;
 use Conjoon\Mail\Client\Data\MessageKey,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Data\MessageItem,
+    Conjoon\Mail\Client\Data\MessageBody,
     Conjoon\Mail\Client\Data\MessageItemList;
 
 /**
@@ -56,22 +57,46 @@ interface MailClient {
      *
      * @param MailAccount $account
      * @param MessageKey $key
-     * @param array|null $options
      *
-     * @return MessageItem|null The MessageItem or null if none found.
+     * @return MessageBody The MessageBody or null if none found.
      */
-    //public function getMessageBody(MailAccount $account, MessageKey $key, array $options = null) :?MessageItem;
+    public function getMessageBody(MailAccount $account, MessageKey $key) :?MessageBody;
 
 
     /**
      * Returns the specified MessageList for the submitted arguments.
      *
      * @param MailAccount $account
-     * @param FolderKey $key
+     * @param string $mailFolderId
      * @param array|null $options
+     * @param callable $previewTextProcessor
      *
-     * @return MessageItemList if no MessageItems where found, the list will be empty
+     * @return MessageItemList
      */
-    public function getMessageItemList(MailAccount $account, string $mailFolderId , array $options = null) :MessageItemList;
+    public function getMessageItemList(
+        MailAccount $account, string $mailFolderId , array $options = null, callable $previewTextProcessor) :MessageItemList;
+
+
+    /**
+     * Returns the total number of messages in the specified $mailFolderId for the specified $account;
+     *
+     * @param MailAccount $account
+     * @param string $mailFolderId
+     *
+     * @return int
+     */
+    public function getTotalMessageCount(MailAccount $account, string $mailFolderId) : int;
+
+
+    /**
+     * Returns the total number of UNRWAD messages in the specified $mailFolderId for the specified $account;
+     *
+     * @param MailAccount $account
+     * @param string $mailFolderId
+     *
+     * @return int
+     */
+    public function getUnreadMessageCount(MailAccount $account, string $mailFolderId) : int;
+
 
 }
