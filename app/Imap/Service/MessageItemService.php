@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace App\Imap\Service;
 
 use Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\MailClient;
+    Conjoon\Mail\Client\MailClient,
+    Conjoon\Text\Converter;
 
 /**
  * Interface MessageItemService
@@ -127,9 +128,12 @@ interface MessageItemService {
 
 
     /**
-     * Returns the MailClient used by this MessageService.
+     * Returns the Converter used by this MessageService.
      *
-     * @return MailClient
+     * @return Converter
      */
-    public function getClient() :MailClient;
+    public function getConverter() :Converter;
+
+
+
 }
