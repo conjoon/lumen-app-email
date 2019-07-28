@@ -46,12 +46,15 @@ class MessagePartTest extends TestCase
 
         $this->assertSame("", $messagePart->getContents());
         $this->assertSame("", $messagePart->getCharset());
+        $this->assertSame("", $messagePart->getMimeType());
 
         $messagePart->setContents("contents");
         $messagePart->setCharset("charset");
+        $messagePart->setMimeType("text/plain");
 
         $this->assertSame("contents", $messagePart->getContents());
         $this->assertSame("charset", $messagePart->getCharset());
+        $this->assertSame("text/plain", $messagePart->getMimeType());
 
     }
 

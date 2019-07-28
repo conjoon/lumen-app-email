@@ -46,6 +46,10 @@ namespace Conjoon\Mail\Client\Data;
  */
 class MessagePart  {
 
+    /**
+     * @vr string
+     */
+    protected $mimeType = "";
 
     /**
      * @var string
@@ -101,6 +105,29 @@ class MessagePart  {
      */
     public function getCharset() {
         return $this->charset;
+    }
+
+
+    /**
+     * Sets the "$mimeType" for this part.
+     *
+     * @param String $mimeType
+     *
+     * @return $this
+     */
+    public function setMimeType(string $mimeType) {
+        $this->mimeType = $mimeType;
+        return $this;
+    }
+
+
+    /**
+     * Returns the $mimeType of this part.
+     *
+     * @return string
+     */
+    public function getMimeType() {
+        return $this->mimeType;
     }
 
 
