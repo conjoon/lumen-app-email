@@ -48,8 +48,8 @@ class MessageItemList extends AbstractList {
 
 
 
-// ------------------------- 
-//  AbstractList Interface
+// -------------------------
+//  AbstractList
 // -------------------------
 
     /**
