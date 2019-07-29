@@ -44,109 +44,21 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MessageItemList implements \ArrayAccess, \Iterator  {
+class MessageItemList extends AbstractList {
 
 
-    /**
-     * @var array
-     */
-    protected $data = [];
 
-    /**
-     * \Iterator Interface
-     * @var int
-     */
-    protected $position = 0;
-
-
-// -------------------------
-//  ArrayAccess Interface
+// ------------------------- 
+//  AbstractList Interface
 // -------------------------
 
     /**
      * @inheritdoc
-     *
-     * @throws \TypeException if $value is not of the type MessageItem
      */
-    public function offsetSet($offset, $value) {
-
-        if (!$value instanceof MessageItem) {
-            throw new \TypeError(
-            "Expected type \"".MessageItem::class."\" for value-argument"
-            );
-        }
-
-        if (is_null($offset)) {
-            $this->data[] = $value;
-        } else {
-            $this->data[$offset] = $value;
-        }
+    public function getEntityType() :string{
+        return MessageItem::class;
     }
 
-
-    /**
-     * @inheritdoc
-     */
-    public function offsetExists($offset) {
-        return isset($this->data[$offset]);
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    public function offsetUnset($offset) {
-        unset($this->data[$offset]);
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    public function offsetGet($offset) {
-        return isset($this->data[$offset]) ? $this->data[$offset] : null;
-    }
-
-
-// --------------------------
-//  Iterator Interface
-// --------------------------
-
-    /**
-     * @inheritdoc
-     */
-    public function rewind() {
-
-        $this->position = 0;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function key() {
-        return $this->position;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function current() {
-        return $this->data[$this->position];
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function next() {
-        $this->position++;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function valid() {
-        return isset($this->data[$this->position]);
-    }
 
 
 }

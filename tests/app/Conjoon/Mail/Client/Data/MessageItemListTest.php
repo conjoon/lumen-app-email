@@ -24,8 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\MessageKey,
+use Conjoon\Mail\Client\Data\AbstractList,
+    Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\MessageItemList;
 
 
@@ -40,65 +40,14 @@ class MessageItemListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testClass() {
 
         $messageItemList = new MessageItemList();
-        $this->assertInstanceOf(MessageItemList::class, $messageItemList);
-        $this->assertInstanceOf(\ArrayAccess::class, $messageItemList);
-        $this->assertInstanceOf(\Iterator::class, $messageItemList);
+        $this->assertInstanceOf(AbstractList::class, $messageItemList);
+
+
+        $this->assertSame(MessageItem::class, $messageItemList->getEntityType());
     }
-
-
-    /**
-     * Tests ArrayAccess /w type exception
-     */
-    public function testArrayAccessException() {
-
-        $this->expectException(\TypeError::class);
-
-        $messageItemList = new MessageItemList();
-        $messageItemList[] = "foo";
-    }
-
-
-    /**
-     * Tests ArrayAccess
-     */
-    public function testArrayAccess() {
-
-        $messageItemList = new MessageItemList();
-
-        $cmpList = [
-            $this->createMessageItem(),
-            $this->createMessageItem()
-        ];
-
-        $messageItemList[] = $cmpList[0];
-        $messageItemList[] = $cmpList[1];
-
-        foreach ($messageItemList as $key => $item) {
-            $this->assertSame($cmpList[$key], $item);
-        }
-    }
-
-
-// ---------------------
-//    Helper Functions
-// ---------------------
-
-    /**
-     * @var int
-     */
-    protected static $messageItemCount = 0;
-
-
-    /**
-     * Returns an MessageItem
-     */
-    protected function createMessageItem() {
-        return new MessageItem(new MessageKey("INBOX", ++self::$messageItemCount));
-    }
-
 
 
 }
