@@ -26,7 +26,8 @@
 
 use Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\MessageKey,
-    Conjoon\Mail\Client\Data\MailAddress;
+    Conjoon\Mail\Client\Data\MailAddress,
+    Conjoon\Mail\Client\Data\MailAddressList;
 
 
 class MessageItemTest extends TestCase
@@ -77,7 +78,8 @@ class MessageItemTest extends TestCase
                     $this->assertEquals($item["from"], $messageItem->getFrom());
                     break;
                 case 'to':
-                    $this->assertEquals($item[$key], $messageItem->{$method}(), "\"$key\" not equal");
+                    $this->assertNotSame($item["to"], $messageItem->getTo());
+                    $this->assertEquals($item["to"], $messageItem->getTo());
                     break;
                 default :
                     $this->assertSame($messageItem->{$method}(), $item[$key], $key);
@@ -189,8 +191,7 @@ class MessageItemTest extends TestCase
 
         return [
             'from'           => $this->createFrom(),
-            'to'             => [["name" => "name1", "address" => "name1@address.testcomdomaindev"],
-                                 ["name" => "name2", "address" => "name2@address.testcomdomaindev"]],
+            'to'             => $this->createTo(),
             'size'           => 23,
             'subject'        => "SUBJECT",
             'date'           => new \DateTime(),
@@ -228,5 +229,18 @@ class MessageItemTest extends TestCase
         return new MailAddress("peterParker@newyork.com", "Peter Parker");
     }
 
+    /**
+     * Returns a MailAddressList to be used with the "to" property of the MessageItem
+     * @return MailAddressList
+     */
+    protected function createTo() : MailAddressList {
+
+        $list = new MailAddressList;
+
+        $list[] = new MailAddress("name1", "name1@address.testcomdomaindev");
+        $list[] = new MailAddress("name2", "name2@address.testcomdomaindev");
+
+        return $list;
+    }
 
 }

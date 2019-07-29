@@ -58,7 +58,7 @@ class MessageItem  {
     protected $from;
 
     /**
-     * @var array
+     * @var MailAddressList
      */
     protected $to;
 
@@ -136,8 +136,21 @@ class MessageItem  {
 
 
     /**
+     * Sets the "to" property of this message.
+     * Makes sure no reference to the MailAddressList-object is stored.
+     *
+     * @param MailAddressList $mailAddressList
+     * @return $this
+     */
+    public function setTo(MailAddressList $mailAddressList) {
+        $this->to = clone($mailAddressList);
+        return $this;
+    }
+
+
+    /**
      * Sets the "from" property of this message.
-     * Makes sure no reference is stored to the MailAddress-object.
+     * Makes sure no reference to the MailAddress-object is stored.
      *
      * @param MailAddress $mailAddress
      * @return $this
@@ -214,14 +227,6 @@ class MessageItem  {
                         case "hasAttachments":
                             if (!is_bool($value)) {
                                 $typeFail = "bool";
-                            }
-                            break;
-
-
-                        case "from":
-                        case "to":
-                            if (!is_array($value)) {
-                                $typeFail = "array";
                             }
                             break;
 
