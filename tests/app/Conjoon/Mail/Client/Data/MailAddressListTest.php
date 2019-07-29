@@ -50,4 +50,21 @@ class MailAddressListTest extends TestCase
     }
 
 
+
+    /**
+     * Tests toArray
+     */
+    public function testToArray() {
+
+        $mailAddressList = new MailAddressList;
+
+        $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
+        $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
+
+        $this->assertEquals([
+            ["name" => "name1", "address" => "name1@address.testcomdomaindev"],
+            ["name" => "name2", "address" => "name2@address.testcomdomaindev"]
+        ], $mailAddressList->toArray());
+    }
+
 }

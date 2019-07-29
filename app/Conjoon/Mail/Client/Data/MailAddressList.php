@@ -47,6 +47,26 @@ namespace Conjoon\Mail\Client\Data;
 class MailAddressList extends AbstractList {
 
 
+    /**
+     * Returns an array representation of this object and all it's entries
+     *
+     * @return array
+     *
+     * @see MailAddress::toArray()
+     */
+    public function toArray() {
+
+        $d = [];
+
+        foreach ($this->data as $address) {
+            $d[] = $address->toArray();
+        }
+
+
+        return $d;
+    }
+
+
 // -------------------------
 //  AbstractList
 // -------------------------
