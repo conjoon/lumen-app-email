@@ -155,8 +155,8 @@ class MessageItem  {
      * @param MailAddress $mailAddress
      * @return $this
      */
-    public function setFrom(MailAddress $mailAddress) {
-        $this->from = clone($mailAddress);
+    public function setFrom(MailAddress $mailAddress = null) {
+        $this->from = $mailAddress === null ? null : clone($mailAddress);
         return $this;
     }
 

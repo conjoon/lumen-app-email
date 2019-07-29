@@ -180,6 +180,19 @@ class MessageItemTest extends TestCase
     }
 
 
+    /**
+     * Test setFrom /w null
+     */
+    public function testSetFromWithNull() {
+
+        $messageKey = $this->createMessageKey();
+
+        $messageItem = new MessageItem($messageKey, ["from" => null]);
+
+        $this->assertSame(null, $messageItem->getFrom());
+
+    }
+
 // ---------------------
 //    Helper Functions
 // ---------------------
