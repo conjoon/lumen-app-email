@@ -68,7 +68,8 @@ interface MailClient {
      *
      * @param MailAccount $account
      * @param string $mailFolderId
-     * @param array|null $options
+     * @param array|null $options An additional set of options for querying the MessageList, such
+     * as sort-direction or start/limit values.
      * @param callable $previewTextProcessor
      *
      * @return MessageItemList
