@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\AbstractList;
+use Conjoon\Util\AbstractList;
 
 
 class AbstractListTest extends TestCase
