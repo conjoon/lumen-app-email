@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\AbstractList,
+use Conjoon\Util\AbstractList,
     Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\MessageItemList;
 
@@ -44,7 +44,6 @@ class MessageItemListTest extends TestCase
 
         $messageItemList = new MessageItemList();
         $this->assertInstanceOf(AbstractList::class, $messageItemList);
-
 
         $this->assertSame(MessageItem::class, $messageItemList->getEntityType());
     }

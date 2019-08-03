@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use Conjoon\Util\AbstractList;
 
 /**
  * Class MailAddressList organizes a list of MailAddresses.
