@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Util\Jsonable;
 
 /**
  * Class MessageItem models simplified envelope informations for a Mail Message.
@@ -34,7 +36,7 @@ namespace Conjoon\Mail\Client\Data;
  * @example
  *
  *    $item = new MessageItem(
- *              new MessageKey("INBOX", "232"),
+ *              new MessageKey("dev", "INBOX", "232"),
  *              ["date" => new \DateTime()]
  *            );
  *
@@ -44,7 +46,7 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MessageItem  {
+class MessageItem implements Jsonable {
 
 
     /**
@@ -248,19 +250,44 @@ class MessageItem  {
     }
 
 
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
     /**
-     * Returns an array representation of this object.
-     * 
+     * Returns an array representing this MessageItemList.
+     *
+     * Each entry in the returning array must consist of the following key/value-pairs:
+     *
+     * - subject (string)
+     * - date (string) The date of the message in the format "Y-m-d H:i"
+     * - from (array) - The JSON representation od MailAddress
+     * - seen (bool)
+     * - answered (bool)
+     * - flagged (bool)
+     * - draft (bool)
+     * - recent (bool)
+     * - hasAttachments (bool)
+     * - to (array) - The JSON representation od MailAddressList
+     * - previewText (string)
+     * - size (integer) The size of the message in bytes
+     * - mailFolderId (string)
+     * - mailAccountId (string)
+     * - id (string)
+     *
      * @return array
      */
-    public function toArray() :array {
+    public function toJson() :array{
+
         return [
-            'messageKey'     => $this->getMessageKey(),
-            'from'           => $this->getFrom(),
-            'to'             => $this->getTo(),
+            'mailAccountId'  => $this->getMessageKey()->getMailAccountId(),
+            'mailFolderId'   => $this->getMessageKey()->getMailFolderId(),
+            'id'             => $this->getMessageKey()->getId(),
+            'from'           => $this->getFrom()->toJson(),
+            'to'             => $this->getTo()->toJson(),
             'size'           => $this->getSize(),
             'subject'        => $this->getSubject(),
-            'date'           => $this->getDate(),
+            'date'           => $this->getDate()->format("Y-m-d H:i:s"),
             'seen'           => $this->getSeen(),
             'answered'       => $this->getAnswered(),
             'draft'          => $this->getDraft(),
@@ -269,5 +296,8 @@ class MessageItem  {
             'hasAttachments' => $this->getHasAttachments()
         ];
     }
+
+
+
 
 }

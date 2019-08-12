@@ -26,7 +26,8 @@
 
 use Conjoon\Util\AbstractList,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList;
+    Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Util\Jsonable;
 
 
 class MailAddressListTest extends TestCase
@@ -44,6 +45,7 @@ class MailAddressListTest extends TestCase
 
         $mailAddressList = new MailAddressList();
         $this->assertInstanceOf(AbstractList::class, $mailAddressList);
+        $this->assertInstanceOf(Jsonable::class, $mailAddressList);
 
 
         $this->assertSame(MailAddress::class, $mailAddressList->getEntityType());
@@ -54,7 +56,7 @@ class MailAddressListTest extends TestCase
     /**
      * Tests toArray
      */
-    public function testToArray() {
+    public function testToJson() {
 
         $mailAddressList = new MailAddressList;
 
@@ -62,9 +64,9 @@ class MailAddressListTest extends TestCase
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
         $this->assertEquals([
-            ["name" => "name1", "address" => "name1@address.testcomdomaindev"],
-            ["name" => "name2", "address" => "name2@address.testcomdomaindev"]
-        ], $mailAddressList->toArray());
+            $mailAddressList[0]->toJson(),
+            $mailAddressList[1]->toJson()
+        ], $mailAddressList->toJson());
     }
 
 }

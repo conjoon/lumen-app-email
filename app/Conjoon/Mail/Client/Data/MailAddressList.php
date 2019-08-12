@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\AbstractList;
+use Conjoon\Util\AbstractList,
+    Conjoon\Util\Jsonable;
 
 /**
  * Class MailAddressList organizes a list of MailAddresses.
@@ -45,22 +46,27 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddressList extends AbstractList {
+class MailAddressList extends AbstractList implements Jsonable {
 
+
+
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
 
     /**
-     * Returns an array representation of this object and all it's entries
+     * Returns an array representing this MailAddressList.
      *
      * @return array
      *
-     * @see MailAddress::toArray()
+     * @see MailAddress::toJson()
      */
-    public function toArray() {
+    public function toJson() :array{
 
         $d = [];
 
         foreach ($this->data as $address) {
-            $d[] = $address->toArray();
+            $d[] = $address->toJson();
         }
 
 

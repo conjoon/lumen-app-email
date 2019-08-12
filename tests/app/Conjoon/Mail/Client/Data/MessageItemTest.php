@@ -25,9 +25,10 @@
  */
 
 use Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList;
+    Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Util\Jsonable;
 
 
 class MessageItemTest extends TestCase
@@ -45,7 +46,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
         $messageItem = new MessageItem($messageKey);
-        $this->assertInstanceOf(MessageItem::class, $messageItem);
+        $this->assertInstanceOf(Jsonable::class, $messageItem);
     }
 
 
@@ -59,8 +60,6 @@ class MessageItemTest extends TestCase
         $messageKey = $this->createMessageKey();
 
         $messageItem = new MessageItem($messageKey, $item);
-
-        $this->assertInstanceOf(MessageItem::class, $messageItem);
 
         $this->assertSame($messageKey, $messageItem->getMessageKey());
 
@@ -159,7 +158,7 @@ class MessageItemTest extends TestCase
     /**
      * Test toArray
      */
-    public function testToArray() {
+    public function testToJson() {
         $item = $this->getItemConfig();
 
         $messageKey = $this->createMessageKey();
@@ -168,13 +167,19 @@ class MessageItemTest extends TestCase
 
         $keys = array_keys($item);
 
-        $this->assertSame($messageKey, $messageItem->toArray()['messageKey']);
+        $this->assertEquals(
+            $messageKey->toJson(),
+            array_intersect_key($messageItem->toJson(), array_flip(['id', 'mailAccountId', 'mailFolderId']))
+        );
+
 
         foreach ($keys as $key) {
-            if ($key === "date" || $key === "from" || $key === "to") {
-                $this->assertEquals($item[$key], $messageItem->toArray()[$key]);
-            } else {
-                $this->assertSame($item[$key], $messageItem->toArray()[$key]);
+            if ($key === "from" || $key === "to") {
+                $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
+            } else if ($key == "date") {
+                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $messageItem->toJson()[$key]);
+            } else{
+                $this->assertSame($item[$key], $messageItem->toJson()[$key]);
             }
         }
     }
@@ -227,8 +232,8 @@ class MessageItemTest extends TestCase
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailFolderId = "INBOX", $id = "232") :MessageKey {
-        return new MessageKey($mailFolderId, $id);
+    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+        return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
 

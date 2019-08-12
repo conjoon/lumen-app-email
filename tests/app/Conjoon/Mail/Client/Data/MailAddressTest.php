@@ -24,7 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddress,
+    Conjoon\Util\Jsonable;
 
 
 class MailAddressTest extends TestCase
@@ -43,11 +44,11 @@ class MailAddressTest extends TestCase
         $address = "peter.parker@newyork.com";
         $mailAddress = new MailAddress($address, $name);
 
-        $this->assertInstanceOf(MailAddress::class, $mailAddress);
+        $this->assertInstanceOf(Jsonable::class, $mailAddress);
         $this->assertSame($address, $mailAddress->getAddress());
         $this->assertSame($name, $mailAddress->getName());
 
-        $this->assertEquals(["name" => $name, "address" => $address], $mailAddress->toArray());
+        $this->assertEquals(["name" => $name, "address" => $address], $mailAddress->toJson());
     }
 
 

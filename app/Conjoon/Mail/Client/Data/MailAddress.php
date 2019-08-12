@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use Conjoon\Util\Jsonable;
 
 /**
  * Class MailAddress models a Mail Address, containing a "name" and an "address".
@@ -40,7 +41,7 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddress  {
+class MailAddress  implements Jsonable {
 
 
     /**
@@ -82,16 +83,27 @@ class MailAddress  {
     }
 
 
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
     /**
-     * Returns an array representation of this object.
+     * Returns an array representing this MailAddress.
+     *
+     * Each entry in the returning array must consist of the following key/value-pairs:
+     *
+     * - address (string)
+     * - name (string)
      *
      * @return array
      */
-    public function toArray() :array {
+    public function toJson() :array{
+
         return [
             'address' => $this->getAddress(),
             'name'    => $this->getName()
         ];
     }
+
 
 }
