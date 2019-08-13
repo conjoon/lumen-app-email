@@ -156,7 +156,7 @@ class MessageItemTest extends TestCase
 
 
     /**
-     * Test toArray
+     * Test toJson
      */
     public function testToJson() {
         $item = $this->getItemConfig();
@@ -182,6 +182,18 @@ class MessageItemTest extends TestCase
                 $this->assertSame($item[$key], $messageItem->toJson()[$key]);
             }
         }
+
+
+        $messageKey = $this->createMessageKey();
+
+        $messageItem = new MessageItem($messageKey);
+
+        $json = $messageItem->toJson();
+
+        $this->assertSame("1970-01-01 00:00:00", $json["date"]);
+        $this->assertSame([], $json["to"]);
+        $this->assertSame([], $json["from"]);
+
     }
 
 
