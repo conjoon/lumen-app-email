@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable,
+    Conjoon\Util\AbstractList;
 
 /**
  * Class MessageItemList organizes a list of MessageItems.
@@ -45,7 +46,7 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MessageItemList extends AbstractList {
+class MessageItemList extends AbstractList implements Jsonable {
 
 
 
@@ -60,6 +61,29 @@ class MessageItemList extends AbstractList {
         return MessageItem::class;
     }
 
+
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
+    /**
+     * Returns an array representing this MessageItemList.
+     *
+     * Each entry in the returning array holds a JSON representation of
+     * a MessageItem.
+     *
+     * @return array
+     */
+    public function toJson() :array{
+
+        $data = [];
+
+        foreach ($this->data as $key => $messageItem) {
+            $data[] = $messageItem->toJson();
+        }
+
+        return $data;
+    }
 
 
 }
