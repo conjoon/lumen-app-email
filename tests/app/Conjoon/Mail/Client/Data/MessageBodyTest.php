@@ -26,7 +26,8 @@
 
 use Conjoon\Mail\Client\Data\MessageBody,
     Conjoon\Mail\Client\Data\MessagePart,
-    Conjoon\Mail\Client\Data\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Util\Jsonable;
 
 
 class MessageBodyTest extends TestCase
@@ -41,12 +42,14 @@ class MessageBodyTest extends TestCase
      */
     public function testClass() {
 
-        $messageKey = new MessageKey("INBOX", "232");
+        $messageKey = new MessageKey("dev", "INBOX", "232");
 
         $body = new MessageBody($messageKey);
 
-        $plainPart = new MessagePart("foo", "ISO-8859-1");
-        $htmlPart = new MessagePart("<b>bar</b>", "UTF-8");
+        $this->assertInstanceOf(Jsonable::class, $body);
+
+        $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
+        $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
 
         $body->setTextPlain($plainPart);
         $body->setTextHtml($htmlPart);
@@ -54,8 +57,14 @@ class MessageBodyTest extends TestCase
         $this->assertSame($plainPart, $body->getTextPlain());
         $this->assertSame($htmlPart, $body->getTextHtml());
         $this->assertSame($messageKey, $body->getMessageKey());
+
+        $this->assertEquals([
+            "mailAccountId" => "dev",
+            "mailFolderId"  => "INBOX",
+            "id"            => "232",
+            "textPlain"     => "foo",
+            "textHtml"     => "<b>bar</b>"
+        ], $body->toJson());
     }
-
-
 
 }

@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use Conjoon\Util\Jsonable,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
  * Class MessageBody models a simplified representation of  mail message
@@ -34,7 +36,7 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @example
  *
- *    $body = new MessageBody(new MessageKey("INBOX", "232"));
+ *    $body = new MessageBody(new MessageKey("dev", "INBOX", "232"));
  *
  *    $plainPart = new MessagePart("foo", "ISO-8859-1");
  *    $htmlPart = new MessagePart("<b>bar</b>", "UTF-8");
@@ -47,7 +49,7 @@ namespace Conjoon\Mail\Client\Data;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MessageBody  {
+class MessageBody implements Jsonable {
 
 
     /**
@@ -127,6 +129,40 @@ class MessageBody  {
     public function getMessageKey() {
         return $this->messageKey;
     }
+
+
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
+    /**
+     * Returns an array representing this MessageBody.
+     *
+     * Each entry in the returning array must consist of the following key/value-pairs:
+     *
+     * - textHtml (string) - this instances textHtml part's content-value
+     * - textPlain (string) - this instances textPlain part's content-value
+     * - mailFolderId (string) The mailFolderId of this instance's MessageKey
+     * - mailAccountId (string) The mailAccountId of this instance's MessageKey
+     * - id (string) The id of this instance's MessageKey
+     *
+     * Implementing APIs should make sure to properly encode the content of the parts
+     * from the given charset to UTF-8 to prevent errors when trying to send the resulting
+     * array as JSON to interested clients.
+     *
+     * @return array
+     *
+     */
+    public function toJson() :array{
+
+        $keyJson = $this->getMessageKey()->toJson();
+
+        return array_merge($keyJson, [
+            "textHtml" => $this->getTextHtml()->getContents(),
+            "textPlain" => $this->getTextPlain()->getContents()
+        ]);
+    }
+
 
 
 }

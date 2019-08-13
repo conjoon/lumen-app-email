@@ -63,14 +63,28 @@ class MessagePart  {
 
 
     /**
+     * MessagePart constructor.
+     *
+     * @param string $contents
+     * @param string $charset
+     */
+    public function __construct(string $contents, string $charset, string $mimeType) {
+        $this->setContents($contents, $charset);
+        $this->setMimeType($mimeType);
+    }
+
+
+    /**
      * Sets the "contents" for this part.
      *
      * @param String $contents
+     * @param String $charset
      *
      * @return $this
      */
-    public function setContents(string $contents) {
+    public function setContents(string $contents, string $charset) {
         $this->contents = $contents;
+        $this->setCharset($charset);
         return $this;
     }
 
@@ -92,7 +106,7 @@ class MessagePart  {
      *
      * @return $this
      */
-    public function setCharset(string $charset) {
+    protected function setCharset(string $charset) {
         $this->charset = $charset;
         return $this;
     }
@@ -115,7 +129,7 @@ class MessagePart  {
      *
      * @return $this
      */
-    public function setMimeType(string $mimeType) {
+    protected function setMimeType(string $mimeType) {
         $this->mimeType = $mimeType;
         return $this;
     }

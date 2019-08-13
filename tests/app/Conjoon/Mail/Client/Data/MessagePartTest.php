@@ -40,21 +40,19 @@ class MessagePartTest extends TestCase
     public function testClass() {
 
 
-        $messagePart = new MessagePart();
+        $messagePart = new MessagePart("foo", "bar", "text/html");
 
         $this->assertInstanceOf(MessagePart::class, $messagePart);
 
-        $this->assertSame("", $messagePart->getContents());
-        $this->assertSame("", $messagePart->getCharset());
-        $this->assertSame("", $messagePart->getMimeType());
+        $this->assertSame("foo", $messagePart->getContents());
+        $this->assertSame("bar", $messagePart->getCharset());
+        $this->assertSame("text/html", $messagePart->getMimeType());
 
-        $messagePart->setContents("contents");
-        $messagePart->setCharset("charset");
-        $messagePart->setMimeType("text/plain");
+        $messagePart->setContents("contents", "charset");
 
         $this->assertSame("contents", $messagePart->getContents());
         $this->assertSame("charset", $messagePart->getCharset());
-        $this->assertSame("text/plain", $messagePart->getMimeType());
+        $this->assertSame("text/html", $messagePart->getMimeType());
 
     }
 
