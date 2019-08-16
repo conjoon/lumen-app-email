@@ -31,7 +31,9 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Data\MessageBody,
     Conjoon\Mail\Client\Data\MessagePart,
-    Conjoon\Mail\Client\Data\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
+    Conjoon\Mail\Client\Data\CompoundKey\CompoundKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\PreviewableMessageItem,
@@ -47,24 +49,78 @@ use Conjoon\Mail\Client\MailClient,
  */
 class HordeClient implements MailClient {
 
+    /**
+     * @var MailAccount
+     */
+    protected $mailAccount;
 
     /**
-     * Creates a \Horde_Imap_Client_Socket with the specified account informations.
-     *
+     * @var Horde_Imap_Client_Socket
+     */
+    protected $socket;
+
+    /**
+     * HordeClient constructor.
      * @param MailAccount $account
+     */
+    public function __construct(MailAccount $account) {
+        $this->mailAccount = $account;
+    }
+
+
+    /**
+     * Returns the MailAccount providing connection info for the CompoundKey
+     * .
+     * @param CompoundKey $key
+     *
+     * @return MailAccount|null
+     */
+    public function getMailAccount(CompoundKey $key) {
+
+        if ($this->mailAccount->getId() !== $key->getMailAccountId()) {
+            return null;
+        }
+
+        return $this->mailAccount;
+    }
+
+
+    /**
+     * Creates a \Horde_Imap_Client_Socket.
+     * Looks up the MailAccount used by this instance and throws an Exception
+     * if the passed CompoundKey does not share the same mailAccountId with the id
+     * of "this" MailAccount.
+     * Returns a \Horde_Imap_Client_Socket if connecting was successfull.
+     *
+     * @param CompoundKey $key
      *
      * @return \Horde_Imap_Client_Socket
+     *
+     * @throws ImapClientException if the MailAccount used with this Client does not share
+     * the same mailAccountId with the $key
      */
-    public function connect(MailAccount $account) : \Horde_Imap_Client_Socket {
+    public function connect(CompoundKey $key) : \Horde_Imap_Client_Socket {
 
-        return new \Horde_Imap_Client_Socket(array(
-            'username' => $account->getInboxUser(),
-            'password' => $account->getInboxPassword(),
-            'hostspec' => $account->getInboxAddress(),
-            'port'     => $account->getInboxPort(),
-            'secure'   => $account->getInboxSsl() ? 'ssl' : null
-        ));
+        if (!$this->socket) {
+            $account = $this->getMailAccount($key);
 
+            if (!$account) {
+                throw new ImapClientException(
+            "The key's \"mailAccountId\" is not the same as the id of the MailAccount this " .
+                    "class was configured with."
+                );
+            }
+
+            $this->socket = new \Horde_Imap_Client_Socket(array(
+                'username' => $account->getInboxUser(),
+                'password' => $account->getInboxPassword(),
+                'hostspec' => $account->getInboxAddress(),
+                'port'     => $account->getInboxPort(),
+                'secure'   => $account->getInboxSsl() ? 'ssl' : null
+            ));
+        }
+
+        return $this->socket;
     }
 
 // --------------------------
@@ -73,16 +129,15 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(
-        MailAccount $account, string $mailFolderId, array $options = null, callable $previewTextProcessor = null) :MessageItemList {
+    public function getMessageItemList(FolderKey $key, array $options = null, callable $previewTextProcessor = null) :MessageItemList {
 
         try {
-            $client = $this->connect($account);
+            $client = $this->connect($key);
 
-            $results      = $this->queryItems($client, $mailFolderId, $options);
-            $fetchedItems = $this->fetchMessageItems($client, $results["match"], $mailFolderId, $options);
+            $results      = $this->queryItems($client, $key, $options);
+            $fetchedItems = $this->fetchMessageItems($client, $results["match"], $key->getId(), $options);
             $messageItems = $this->buildMessageItems(
-                $client, $mailFolderId, $fetchedItems, $previewTextProcessor
+                $client, $key, $fetchedItems, $previewTextProcessor
             );
 
             return $messageItems;
@@ -98,11 +153,11 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getTotalMessageCount(MailAccount $account, string $mailFolderId) : int {
+    public function getTotalMessageCount(FolderKey $key) : int {
 
         try {
-            $client  = $this->connect($account);
-            $results = $this->queryItems($client, $mailFolderId);
+            $client  = $this->connect($key);
+            $results = $this->queryItems($client, $key);
 
             return count($results["match"]);
 
@@ -117,12 +172,12 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getUnreadMessageCount(MailAccount $account, string $mailFolderId) : int {
+    public function getUnreadMessageCount(FolderKey $key) : int {
 
         try {
 
-            $client = $this->connect($account);
-            $status = $client->status($mailFolderId, \Horde_Imap_Client::STATUS_UNSEEN);
+            $client = $this->connect($key);
+            $status = $client->status($key->getId(), \Horde_Imap_Client::STATUS_UNSEEN);
 
             return $status["unseen"];
 
@@ -136,18 +191,18 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getMessageItem(MailAccount $account, MessageKey $key, array $options = null) :?MessageItem {
+    public function getMessageItem(MessageKey $key, array $options = null) :?MessageItem {
 
         try {
 
-            $client = $this->connect($account);
+            $client = $this->connect($key);
             $mailFolderId = $key->getMailFolderId();
             $fetchedItems = $this->fetchMessageItems(
                 $client,
                 new \Horde_Imap_Client_Ids($key->getId()), $mailFolderId, []
             );
             $messageItem = $this->buildMessageItems(
-                $client, $mailFolderId, $fetchedItems
+                $client, new FolderKey($key->getMailAccountId(), $mailFolderId), $fetchedItems
             )[0];
 
             return $messageItem;
@@ -164,14 +219,14 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getMessageBody(MailAccount $account, MessageKey $key) :MessageBody {
+    public function getMessageBody(MessageKey $key) :MessageBody {
 
         $mailFolderId  = $key->getMailFolderId();
         $messageItemId = $key->getId();
 
         try {
 
-            $client = $this->connect($account);
+            $client = $this->connect($key);
 
             $query = new \Horde_Imap_Client_Fetch_Query();
             $query->structure();
@@ -187,22 +242,16 @@ class HordeClient implements MailClient {
 
             $messageStructure = $serverItem->getStructure();
 
-            $d = $this->getContents($client, $messageStructure, $mailFolderId, $messageItemId, ["plain", "html"]);
+            $d = $this->getContents($client, $messageStructure, $key, ["plain", "html"]);
 
             $body = new MessageBody($key);
 
             if ($d["html"]["content"]) {
-                $htmlPart = new MessagePart();
-                $htmlPart->setContents($d["html"]["content"])
-                    ->setCharset($d["html"]["charset"])
-                    ->setMimeType("text/html");
+                $htmlPart = new MessagePart($d["html"]["content"], $d["html"]["charset"], "text/html");
                 $body->setTextHtml($htmlPart);
             }
 
-            $plainPart = new MessagePart();
-            $plainPart->setContents($d["plain"]["content"])
-                      ->setCharset($d["plain"]["charset"])
-                      ->setMimeType("text/plain");
+            $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"],"text/plain");
             $body->setTextPlain($plainPart);
 
 
@@ -273,7 +322,7 @@ class HordeClient implements MailClient {
      * Transform the passed list of $items to an instance of MessageItemList.
      *
      * @param \Horde_Imap_Client_Socket $client
-     * @param string $mailFolderId
+     * @param FolderKey $key
      * @param array $items
      * @param callable $previewTextProcessor
      *
@@ -282,7 +331,7 @@ class HordeClient implements MailClient {
      * @see queryItems
      */
     protected function buildMessageItems(
-        \Horde_Imap_Client_Socket $client,  string $mailFolderId, array $items, callable $previewTextProcessor = null
+        \Horde_Imap_Client_Socket $client,  FolderKey $key, array $items, callable $previewTextProcessor = null
     ) :MessageItemList {
 
         $messageItems = new MessageItemList;
@@ -308,7 +357,7 @@ class HordeClient implements MailClient {
                 }
             }
 
-            $messageKey = new MessageKey($mailFolderId, (string)$item->getUid());
+            $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
             // parse body
             $messageStructure = $item->getStructure();
@@ -317,7 +366,7 @@ class HordeClient implements MailClient {
             if ($previewTextProcessor !== null) {
                 $options[] = "plain";
             }
-            $d = $this->getContents($client, $messageStructure, $mailFolderId, (string)$item->getUid(), $options);
+            $d = $this->getContents($client, $messageStructure, $messageKey, $options);
 
             $data = [
                 "from"           => $from,
@@ -366,14 +415,14 @@ class HordeClient implements MailClient {
      * a list of messages based on the specified $options.
      *
      * @param \Horde_Imap_Client_Socket $client
-     * @param string $mailFolderId The global name of the mailbox to search in
+     * @param FolderKey $key The key of the folder to query
      * @param array $options An array with the following options
      * - start (integer) The start position from where to return the results
      * - limit (integer) The number of items to return.
      *
      * @return array
      */
-    protected function queryItems(\Horde_Imap_Client_Socket $client, string $mailFolderId, array $options = null) :array {
+    protected function queryItems(\Horde_Imap_Client_Socket $client, FolderKey $key, array $options = null) :array {
 
         $searchOptions = [];
 
@@ -411,7 +460,7 @@ class HordeClient implements MailClient {
 
         // search and narrow down list
         $searchQuery = new \Horde_Imap_Client_Search_Query();
-        $results = $client->search($mailFolderId, $searchQuery, $searchOptions);
+        $results = $client->search($key->getId(), $searchQuery, $searchOptions);
 
         return $results;
     }
@@ -423,15 +472,13 @@ class HordeClient implements MailClient {
      *
      * @param \Horde_Imap_Client_Socket $client
      * @param $messageStructure
-     * @param string $mailFolderId
-     * @param string $messageItemId
+     * @param MessageKey $key
      * @param array $options
      *
      * @return array
      */
     protected function getContents(
-        \Horde_Imap_Client_Socket $client, $messageStructure, string $mailFolderId,
-        string $messageItemId, array $options) :array {
+        \Horde_Imap_Client_Socket $client, $messageStructure, MessageKey $key, array $options) :array {
 
         $typeMap          = $messageStructure->contentTypeMap();
         $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
@@ -457,7 +504,7 @@ class HordeClient implements MailClient {
         }
 
         $messageData = $client->fetch(
-            $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($messageItemId)]
+            $key->getMailFolderId(), $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($key->getId())]
         )->first();
 
         if ($messageData) {

@@ -27,8 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client;
 
-use Conjoon\Mail\Client\Data\MessageKey,
-    Conjoon\Mail\Client\Data\MailAccount,
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\MessageBody,
     Conjoon\Mail\Client\Data\MessageItemList;
@@ -43,61 +43,65 @@ interface MailClient {
     /**
      * Returns the specified MessageItem for the submitted arguments.
      *
-     * @param MailAccount $account
      * @param MessageKey $key
      * @param array|null $options
      *
      * @return MessageItem|null The MessageItem or null if none found.
+     *
+     * @throws MailClientException if any exception occurs
      */
-     public function getMessageItem(MailAccount $account, MessageKey $key, array $options = null) :?MessageItem;
+     public function getMessageItem(MessageKey $key, array $options = null) :?MessageItem;
 
 
     /**
      * Returns the specified MessageBody for the submitted arguments.
      *
-     * @param MailAccount $account
      * @param MessageKey $key
      *
      * @return MessageBody The MessageBody or null if none found.
+     *
+     * @throws MailClientException if any exception occurs
      */
-    public function getMessageBody(MailAccount $account, MessageKey $key) :?MessageBody;
+    public function getMessageBody(MessageKey $key) :?MessageBody;
 
 
     /**
      * Returns the specified MessageList for the submitted arguments.
      *
-     * @param MailAccount $account
-     * @param string $mailFolderId
+     * @param FolderKey $key
      * @param array|null $options An additional set of options for querying the MessageList, such
      * as sort-direction or start/limit values.
      * @param callable $previewTextProcessor
      *
      * @return MessageItemList
+     *
+     * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(
-        MailAccount $account, string $mailFolderId , array $options = null, callable $previewTextProcessor) :MessageItemList;
+    public function getMessageItemList(FolderKey $key , array $options = null, callable $previewTextProcessor) :MessageItemList;
 
 
     /**
      * Returns the total number of messages in the specified $mailFolderId for the specified $account;
      *
-     * @param MailAccount $account
-     * @param string $mailFolderId
+     * @param FolderKey $key
      *
      * @return int
+     *
+     * @throws MailClientException if any exception occurs
      */
-    public function getTotalMessageCount(MailAccount $account, string $mailFolderId) : int;
+    public function getTotalMessageCount(FolderKey $key) : int;
 
 
     /**
      * Returns the total number of UNRWAD messages in the specified $mailFolderId for the specified $account;
      *
-     * @param MailAccount $account
-     * @param string $mailFolderId
+     * @param FolderKey $key
      *
      * @return int
+     *
+     * @throws MailClientException if any exception occurs
      */
-    public function getUnreadMessageCount(MailAccount $account, string $mailFolderId) : int;
+    public function getUnreadMessageCount(FolderKey $key) : int;
 
 
 }

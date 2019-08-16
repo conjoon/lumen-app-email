@@ -25,7 +25,8 @@
  */
 
 use Conjoon\Mail\Client\Imap\HordeClient,
-    Conjoon\Text\CharsetConverter,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Imap\ImapClientException;
 
 
@@ -48,19 +49,57 @@ class HordeClientTest extends TestCase {
 
 
     /**
-     * Tests connect()
+     * Tests getMailAccount()
+     */
+    public function testGetMailAccount() {
+
+        $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $client = $this->createClient($mailAccount);
+
+        $someKey = new FolderKey("foo", "bar");
+        $this->assertSame(null, $client->getMailAccount($someKey));
+
+
+        $key = new FolderKey($mailAccount->getId(), "bar");
+
+        $this->assertSame(
+            $mailAccount,
+            $client->getMailAccount($key)
+        );
+    }
+
+
+    /**
+     * Tests connect() with exception
+     */
+    public function testConnect_exception()
+    {
+
+        $this->expectException(ImapClientException::class);
+        $client = $this->createClient();
+
+        $someKey = new FolderKey("foo", "bar");
+        $client->connect($someKey);
+    }
+
+
+    /**
+     * Tests connect() with exception
      */
     public function testConnect()
     {
+        $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $client = $this->createClient();
+        $client = $this->createClient($mailAccount);
 
-        $socket = $client->connect($this->getTestMailAccount("dev_sys_conjoon_org"));
+        $someKey = new FolderKey($mailAccount->getId(), "bar");
+        $socket = $client->connect($someKey);
+        $this->assertInstanceOf(\Horde_Imap_Client_Socket::class, $socket);
 
-        $this->assertInstanceOf(
-            \Horde_Imap_Client_Socket::class, $socket
-        );
+        $someKey2 = new FolderKey($mailAccount->getId(), "bar");
+        $socket2 = $client->connect($someKey2);
 
+        $this->assertSame($socket, $socket2);
     }
 
 
@@ -79,8 +118,10 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
         $client->getMessageItemList(
-            $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
-            "INBOX", ["start" => 0, "limit" => 25], function(){}
+            $this->createFolderKey(
+                $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org")->getId(),
+            "INBOX"
+            ), ["start" => 0, "limit" => 25], function(){}
         );
     }
 
@@ -121,7 +162,12 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $messageItemList = $client->getMessageItemList($account, "INBOX", ["start" => 0, "limit" => 2], function($text){
+        $messageItemList = $client->getMessageItemList(
+            $this->createFolderKey(
+                $account->getId(),
+                "INBOX"
+            ),
+            ["start" => 0, "limit" => 2], function($text){
             return "has been called";
         });
 
@@ -134,13 +180,13 @@ class HordeClientTest extends TestCase {
         $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
         $this->assertSame("has been called", $messageItemList[0]->getPreviewText());
         $this->assertEquals(
-            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toArray()
+            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
         );
         $this->assertEquals(
-            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toArray()
+            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
         );
         $this->assertEquals(
-            [], $messageItemList[1]->getTo()->toArray()
+            [], $messageItemList[1]->getTo()->toJson()
         );
 
 
@@ -170,7 +216,7 @@ class HordeClientTest extends TestCase {
         )->andReturn($fetchResults);
 
 
-        $item = $client->getMessageItem($account, new \Conjoon\Mail\Client\Data\MessageKey("INBOX", "16"));
+        $item = $client->getMessageItem($this->createMessageKey($account->getId(), "INBOX", "16"));
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Data\MessageItem::class, $item);
         $this->assertSame(null, $item->getFrom());
@@ -200,7 +246,7 @@ class HordeClientTest extends TestCase {
         )->andReturn($fetchResults);
 
 
-        $messageBody = $client->getMessageBody($account, new \Conjoon\Mail\Client\Data\MessageKey("INBOX", "16"));
+        $messageBody = $client->getMessageBody($this->createMessageKey($account->getId(), "INBOX", "16"));
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Data\MessageBody::class, $messageBody);
     }
@@ -222,7 +268,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $count = $client->getTotalMessageCount($account, "INBOX");
+        $count = $client->getTotalMessageCount($this->createFolderKey($account->getId(), "INBOX"));
         $this->assertSame(3, $count);
     }
 
@@ -243,7 +289,7 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $unreadCount = $client->getUnreadMessageCount($account, "INBOX");
+        $unreadCount = $client->getUnreadMessageCount($this->createFolderKey($account->getId(), "INBOX"));
         $this->assertSame(2, $unreadCount);
     }
 
@@ -252,13 +298,38 @@ class HordeClientTest extends TestCase {
 //  Helper
 // -------------------------------
 
+
+    /**
+     * @param $mid
+     * @param $id
+     * @return FolderKey
+     */
+    protected function createFolderKey($mid, $id) {
+        return new FolderKey($mid, $id);
+
+    }
+
+
+    /**
+     * @param $mid
+     * @param $fid
+     * @param $id
+     * @return MessageKey
+     */
+    protected function createMessageKey($mid, $fid, $id) {
+        return new MessageKey($mid, $fid, $id);
+    }
+
     /**
      * Creates an instance of HordeClient.
      *
      * @return HordeCient
      */
-    protected function createClient() :HordeClient {
+    protected function createClient($mailAccount = null) :HordeClient {
 
-        return new HordeClient(new CharsetConverter);
+        if (!$mailAccount) {
+            $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        }
+        return new HordeClient($mailAccount);
     }
 }
