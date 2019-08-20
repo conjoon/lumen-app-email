@@ -27,7 +27,8 @@
 use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Imap\ImapClientException;
+    Conjoon\Mail\Client\Imap\ImapClientException,
+    Conjoon\Mail\Client\Data\MessageBody;
 
 
 /**
@@ -245,10 +246,18 @@ class HordeClientTest extends TestCase {
             "INBOX", \Mockery::any(), \Mockery::type('array')
         )->andReturn($fetchResults);
 
+        $key = $this->createMessageKey($account->getId(), "INBOX", "16");
 
-        $messageBody = $client->getMessageBody($this->createMessageKey($account->getId(), "INBOX", "16"));
+        $mockBody = new MessageBody($key);
 
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Data\MessageBody::class, $messageBody);
+        $messageBody = $client->getMessageBody(
+            $key,
+            function(MessageBody $body) use ($mockBody) {
+                return $mockBody;
+            }
+        );
+
+        $this->assertSame($mockBody, $messageBody);
     }
 
 

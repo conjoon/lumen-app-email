@@ -219,7 +219,7 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getMessageBody(MessageKey $key) :MessageBody {
+    public function getMessageBody(MessageKey $key, callable $messageBodyProcessor) :MessageBody {
 
         $mailFolderId  = $key->getMailFolderId();
         $messageItemId = $key->getId();
@@ -254,6 +254,8 @@ class HordeClient implements MailClient {
             $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"],"text/plain");
             $body->setTextPlain($plainPart);
 
+
+            $body = call_user_func($messageBodyProcessor, $body);
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
