@@ -57,15 +57,12 @@ interface MailClient {
      * Returns the specified MessageBody for the submitted arguments.
      *
      * @param MessageKey $key
-     * @param callable $messageBodyProcessor A callable responsible for properly encoding
-     * and transforming the plain/html-part of the MessageBody to a readable text satisfying the
-     * encoding needs of the client.
      *
      * @return MessageBody The MessageBody or null if none found.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageBody(MessageKey $key, callable $messageBodyProcessor) :?MessageBody;
+    public function getMessageBody(MessageKey $key) :?MessageBody;
 
 
     /**
@@ -74,15 +71,12 @@ interface MailClient {
      * @param FolderKey $key
      * @param array|null $options An additional set of options for querying the MessageList, such
      * as sort-direction or start/limit values.
-     * @param callable $previewTextProcessor A callable responsible for properly encoding
-     * and transforming the preview Text of the MessageBody to a readable text satisfying the
-     * encoding needs of the client.
      *
      * @return MessageItemList
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(FolderKey $key , array $options = null, callable $previewTextProcessor) :MessageItemList;
+    public function getMessageItemList(FolderKey $key , array $options = null) :MessageItemList;
 
 
     /**
