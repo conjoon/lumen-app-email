@@ -39,7 +39,7 @@ namespace Conjoon\Mail\Client\Data;
  *              ["previewText" => "foobar"]
  *            );
  *
- *    $item->getPreviewText; // "foobar"
+ *    $item->getPreviewText(); // "foobar"
  *
  * @package Conjoon\Mail\Client\Data
  */
@@ -72,16 +72,21 @@ class PreviewableMessageItem extends MessageItem  {
     }
 
 
+
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
     /**
      * @inheritdoc
      */
-    public function toArray() :array {
+    public function toJson() :array{
 
-        $arr = parent::toArray();
-
-        $arr["previewText"] = $this->getPreviewText();
-
-        return $arr;
+        return array_merge(
+            parent::toJson(),
+            ["previewText" => $this->getPreviewText()]
+        );
     }
+
 
 }

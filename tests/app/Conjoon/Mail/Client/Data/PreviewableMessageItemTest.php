@@ -26,7 +26,7 @@
 
 use Conjoon\Mail\Client\Data\MessageItem,
     Conjoon\Mail\Client\Data\PreviewableMessageItem,
-    Conjoon\Mail\Client\Data\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 
 class PreviewableMessageItemTest extends TestCase
@@ -66,7 +66,7 @@ class PreviewableMessageItemTest extends TestCase
         $messageItem->setPreviewText("snafu");
         $this->assertSame("snafu", $messageItem->getPreviewText());
 
-        $arr = $messageItem->toArray();
+        $arr = $messageItem->toJson();
         $this->assertArraySubset([
             "subject" => "YO!",
             "previewText" => "snafu"
@@ -82,13 +82,14 @@ class PreviewableMessageItemTest extends TestCase
     /**
      * Returns a MessageKey.
      *
+     * @param string $mailAccountId
      * @param string $mailFolderId
      * @param string $id
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailFolderId = "INBOX", $id = "232") :MessageKey {
-        return new MessageKey($mailFolderId, $id);
+    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+        return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
 }
