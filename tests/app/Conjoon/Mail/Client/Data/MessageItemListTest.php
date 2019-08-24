@@ -26,7 +26,8 @@
 
 use Conjoon\Util\AbstractList,
     Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\MessageItem,
+    Conjoon\Mail\Client\Data\ListMessageItem,
+    Conjoon\Mail\Client\Data\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MessageItemList;
 
@@ -48,10 +49,17 @@ class MessageItemListTest extends TestCase
         $this->assertInstanceOf(AbstractList::class, $messageItemList);
         $this->assertInstanceOf(Jsonable::class, $messageItemList);
 
-        $this->assertSame(MessageItem::class, $messageItemList->getEntityType());
+        $this->assertSame(ListMessageItem::class, $messageItemList->getEntityType());
 
-        $messageItemList[] = new MessageItem(new MessageKey("dev", "INBOX", "1"));
-        $messageItemList[] = new MessageItem(new MessageKey("dev", "INBOX", "2"));
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey("dev", "INBOX", "1"), null,
+            new MessagePart("foo", "bar", "text/plain")
+
+        );
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey("dev", "INBOX", "2"), null,
+            new MessagePart("foo", "bar", "text/plain")
+        );
 
 
         $this->assertSame([

@@ -31,13 +31,13 @@ use Conjoon\Util\Jsonable,
     Conjoon\Util\AbstractList;
 
 /**
- * Class MessageItemList organizes a list of MessageItems.
+ * Class MessageItemList organizes a list of ListMessageItems.
  *
  * @example
  *
  *    $list = new MessageItemList();
  *
- *    $item = new MessageItem(new MessageKey("INBOX", "232");
+ *    $item = new ListMessageItem(new MessageKey("INBOX", "232"), null, new MessagePart("foo", "UTF-8", "text/plain));
  *    $list[] = $item;
  *
  *    foreach ($list as $key => $mItem) {
@@ -58,7 +58,7 @@ class MessageItemList extends AbstractList implements Jsonable {
      * @inheritdoc
      */
     public function getEntityType() :string{
-        return MessageItem::class;
+        return ListMessageItem::class;
     }
 
 
