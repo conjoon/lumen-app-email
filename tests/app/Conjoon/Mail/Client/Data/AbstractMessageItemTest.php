@@ -24,15 +24,16 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MessageItem,
+use Conjoon\Mail\Client\Data\AbstractMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Util\Jsonable;
 
 
-class MessageItemTest extends TestCase
+class AbstractMessageItemTest extends TestCase
 {
+
 
 
 // ---------------------
@@ -45,7 +46,7 @@ class MessageItemTest extends TestCase
     public function testConstructor() {
 
         $messageKey = $this->createMessageKey();
-        $messageItem = new MessageItem($messageKey);
+        $messageItem = $this->createMessageItem($messageKey);
         $this->assertInstanceOf(Jsonable::class, $messageItem);
     }
 
@@ -59,7 +60,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new MessageItem($messageKey, $item);
+        $messageItem = $this->createMessageItem($messageKey, $item);
 
         $this->assertSame($messageKey, $messageItem->getMessageKey());
 
@@ -112,7 +113,7 @@ class MessageItemTest extends TestCase
             }
 
             try {
-                new MessageItem($this->createMessageKey(), $item);
+                $this->createMessageItem($this->createMessageKey(), $item);
             } catch (\TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
@@ -147,7 +148,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new MessageItem($messageKey);
+        $messageItem = $this->createMessageItem($messageKey);
 
         $messageKey2 = $this->createMessageKey();
 
@@ -163,7 +164,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new MessageItem($messageKey, $item);
+        $messageItem = $this->createMessageItem($messageKey, $item);
 
         $keys = array_keys($item);
 
@@ -186,7 +187,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new MessageItem($messageKey);
+        $messageItem = $this->createMessageItem($messageKey);
 
         $json = $messageItem->toJson();
 
@@ -204,7 +205,7 @@ class MessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new MessageItem($messageKey, ["from" => null]);
+        $messageItem = $this->createMessageItem($messageKey, ["from" => null]);
 
         $this->assertSame(null, $messageItem->getFrom());
 
@@ -213,6 +214,20 @@ class MessageItemTest extends TestCase
 // ---------------------
 //    Helper Functions
 // ---------------------
+
+
+    /**
+     * Returns an anonymous class extending AbstractMessageItem.
+     * @param MessageKey $key
+     * @param array|null $data
+     * @return AbstractMessageItem
+     */
+    protected function createMessageItem(MessageKey $key, array $data = null) :AbstractMessageItem {
+        // Create a new instance from the Abstract Class
+       return new class($key, $data) extends AbstractMessageItem {
+
+        };
+    }
 
     /**
      * Returns an MessageItem as array.

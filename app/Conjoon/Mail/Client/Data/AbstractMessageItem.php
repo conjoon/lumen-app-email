@@ -35,6 +35,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  *
  * @example
  *
+ *    class MessageItem extends AbstractMessageItem  {}
+ *
  *    $item = new MessageItem(
  *              new MessageKey("dev", "INBOX", "232"),
  *              ["date" => new \DateTime()]
@@ -46,7 +48,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MessageItem implements Jsonable {
+abstract class AbstractMessageItem implements Jsonable {
 
 
     /**
