@@ -24,12 +24,13 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\PreviewableMessageItem,
+use Conjoon\Mail\Client\Data\AbstractMessageItem,
+    Conjoon\Mail\Client\Data\ListMessageItem,
+    Conjoon\Mail\Client\Data\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 
-class PreviewableMessageItemTest extends TestCase
+class ListMessageItemTest extends TestCase
 {
 
 
@@ -43,8 +44,8 @@ class PreviewableMessageItemTest extends TestCase
     public function testConstructor() {
 
         $messageKey = $this->createMessageKey();
-        $messageItem = new PreviewableMessageItem($messageKey);
-        $this->assertInstanceOf(MessageItem::class, $messageItem);
+        $messageItem = new ListMessageItem($messageKey, null, $this->createMessagePart());
+        $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
     }
 
 
@@ -57,14 +58,15 @@ class PreviewableMessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
 
-        $messageItem = new PreviewableMessageItem(
-            $messageKey, ["subject" => "YO!", "previewText" => $previewText]
+        $messageItem = new ListMessageItem(
+            $messageKey, ["subject" => "YO!"],
+            $this->createMessagePart($previewText, "UTF-8", "text/plain")
         );
 
-        $this->assertSame($previewText, $messageItem->getPreviewText());
+        $this->assertSame($previewText, $messageItem->getMessagePart()->getContents());
 
-        $messageItem->setPreviewText("snafu");
-        $this->assertSame("snafu", $messageItem->getPreviewText());
+        $messageItem->getMessagePart()->setContents("snafu", "UTF-8");
+        $this->assertSame("snafu", $messageItem->getMessagePart()->getContents());
 
         $arr = $messageItem->toJson();
         $this->assertArraySubset([
@@ -92,4 +94,8 @@ class PreviewableMessageItemTest extends TestCase
         return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
+
+    protected function createMessagePart($text = "a", $charset = "b", $mimeType = "c") {
+        return new MessagePart($text, $charset, $mimeType);
+    }
 }

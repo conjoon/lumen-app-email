@@ -27,66 +27,82 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
- * Class PreviewableMessageItem is a MessageItem containing body text for previewing the
- * message's contents.
+ * Class ListMessageItem models envelope informations along with a MessagePart
+ * for preview purposes.
+ * It is up to the implementing client to make sure that the MessagePart's contents
+ * are set to a proper readable text for the requesting client.
  *
  * @example
  *
- *    $item = new PreviewableMessageItem(
- *              new MessageKey("INBOX", "232"),
- *              ["previewText" => "foobar"]
+ *    $item = new ListMessageItem(
+ *              new MessageKey("dev", "INBOX", "232"),
+ *              ["date" => new \DateTime()],
+ *              new MessagePart("foo", "UTF-8", "text/plain")
  *            );
  *
- *    $item->getPreviewText(); // "foobar"
+ *    $item->getMessageKey();
+ *    $item->setSubject("Foo");
+ *    $item->getSubject(); // "Foo"
+ *    $item->getMessagePart(); // instance of MessagePart
+ *
+ * #toJson will return an additional property "previewText" with the contents of the
+ * MessagePart.
+ *
  *
  * @package Conjoon\Mail\Client\Data
  */
-class PreviewableMessageItem extends MessageItem  {
-
+class ListMessageItem extends AbstractMessageItem {
 
     /**
-     * @var string
+     * @var MessagePart
      */
-    protected $previewText = "";
-
+    protected $messagePart;
 
     /**
-     * Sets the previewText for this MessageItem. The text should be UTF-8
-     * encoded and stripped from all HTML tags.
+     * ListMessageItem constructor.
      *
-     * @param string $text
+     * @param MessageKey $messageKey
+     * @param array|null $data
+     * @param MessagePart $messagePart
+     *
+     * @throws \InvalidArgumentException
      */
-    public function setPreviewText(string $text) {
-        $this->previewText = $text;
+    public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart) {
+
+        parent::__construct($messageKey, $data);
+
+        $this->messagePart = $messagePart;
     }
 
 
     /**
-     * Returns the previewText for this MessageItem.
-     * @return string
+     * Returns the MessagePart set for this ListMessageItem.
+     *
+     * @return MessagePart
      */
-    public function getPreviewText() {
-        return $this->previewText;
+    public function getMessagePart() : MessagePart {
+        return $this->messagePart;
     }
-
-
 
 // --------------------------------
 //  Jsonable interface
 // --------------------------------
 
-    /**
+     /**
      * @inheritdoc
      */
     public function toJson() :array{
 
         return array_merge(
             parent::toJson(),
-            ["previewText" => $this->getPreviewText()]
+            ["previewText" => $this->getMessagePart()->getContents()]
         );
     }
+
+
 
 
 }
