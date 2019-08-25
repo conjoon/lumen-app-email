@@ -25,9 +25,11 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Util\Jsonable;
 
 /**
@@ -46,7 +48,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  *    $item->setSubject("Foo");
  *    $item->getSubject(); // "Foo"
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
 abstract class AbstractMessageItem implements Jsonable {
 

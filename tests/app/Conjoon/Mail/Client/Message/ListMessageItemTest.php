@@ -24,9 +24,9 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\AbstractMessageItem,
-    Conjoon\Mail\Client\Data\ListMessageItem,
-    Conjoon\Mail\Client\Data\MessagePart,
+use Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\ListMessageItem,
+    Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 
@@ -45,7 +45,7 @@ class ListMessageItemTest extends TestCase
 
         $messageKey = $this->createMessageKey();
         $messageItem = new ListMessageItem($messageKey, null, $this->createMessagePart());
-        $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
+        $this->assertInstanceOf(MessageItem::class, $messageItem);
     }
 
 

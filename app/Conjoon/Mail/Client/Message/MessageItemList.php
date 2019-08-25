@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Util\Jsonable,
     Conjoon\Util\AbstractList;
@@ -44,7 +44,7 @@ use Conjoon\Util\Jsonable,
  *        // iterating over the item
  *    }
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
 class MessageItemList extends AbstractList implements Jsonable {
 

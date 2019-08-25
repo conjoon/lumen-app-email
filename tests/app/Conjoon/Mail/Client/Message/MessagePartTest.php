@@ -24,13 +24,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MessageBody,
-    Conjoon\Mail\Client\Data\MessagePart,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Util\Jsonable;
+use Conjoon\Mail\Client\Message\MessagePart;
 
 
-class MessageBodyTest extends TestCase
+class MessagePartTest extends TestCase
 {
 
 
@@ -42,29 +39,23 @@ class MessageBodyTest extends TestCase
      */
     public function testClass() {
 
-        $messageKey = new MessageKey("dev", "INBOX", "232");
 
-        $body = new MessageBody($messageKey);
+        $messagePart = new MessagePart("foo", "bar", "text/html");
 
-        $this->assertInstanceOf(Jsonable::class, $body);
+        $this->assertInstanceOf(MessagePart::class, $messagePart);
 
-        $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
-        $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
+        $this->assertSame("foo", $messagePart->getContents());
+        $this->assertSame("bar", $messagePart->getCharset());
+        $this->assertSame("text/html", $messagePart->getMimeType());
 
-        $body->setTextPlain($plainPart);
-        $body->setTextHtml($htmlPart);
+        $messagePart->setContents("contents", "charset");
 
-        $this->assertSame($plainPart, $body->getTextPlain());
-        $this->assertSame($htmlPart, $body->getTextHtml());
-        $this->assertSame($messageKey, $body->getMessageKey());
+        $this->assertSame("contents", $messagePart->getContents());
+        $this->assertSame("charset", $messagePart->getCharset());
+        $this->assertSame("text/html", $messagePart->getMimeType());
 
-        $this->assertEquals([
-            "mailAccountId" => "dev",
-            "mailFolderId"  => "INBOX",
-            "id"            => "232",
-            "textPlain"     => "foo",
-            "textHtml"     => "<b>bar</b>"
-        ], $body->toJson());
     }
+
+
 
 }

@@ -24,38 +24,59 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MessagePart;
+use Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 
-class MessagePartTest extends TestCase
+class MessageItemTest extends TestCase
 {
+
 
 
 // ---------------------
 //    Tests
 // ---------------------
+
     /**
-     * Test class
+     * Tests constructor
      */
-    public function testClass() {
+    public function testConstructor() {
 
-
-        $messagePart = new MessagePart("foo", "bar", "text/html");
-
-        $this->assertInstanceOf(MessagePart::class, $messagePart);
-
-        $this->assertSame("foo", $messagePart->getContents());
-        $this->assertSame("bar", $messagePart->getCharset());
-        $this->assertSame("text/html", $messagePart->getMimeType());
-
-        $messagePart->setContents("contents", "charset");
-
-        $this->assertSame("contents", $messagePart->getContents());
-        $this->assertSame("charset", $messagePart->getCharset());
-        $this->assertSame("text/html", $messagePart->getMimeType());
-
+        $messageKey = $this->createMessageKey();
+        $messageItem = $this->createMessageItem($messageKey);
+        $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
     }
 
+
+// ---------------------
+//    Helper Functions
+// ---------------------
+
+
+    /**
+     * Returns an anonymous class extending AbstractMessageItem.
+     * @param MessageKey $key
+     * @param array|null $data
+     * @return AbstractMessageItem
+     */
+    protected function createMessageItem(MessageKey $key, array $data = null) :AbstractMessageItem {
+        // Create a new instance from the Abstract Class
+       return new MessageItem($key, $data);
+    }
+
+
+    /**
+     * Returns a MessageKey.
+     *
+     * @param string $mailFolderId
+     * @param string $id
+     *
+     * @return MessageKey
+     */
+    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+        return new MessageKey($mailAccountId, $mailFolderId, $id);
+    }
 
 
 }

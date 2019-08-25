@@ -25,14 +25,14 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 
 /**
  * Class MessageItem models envelope informations of a Message.
  *
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
 class MessageItem extends AbstractMessageItem {
 

@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 
 /**
@@ -42,7 +42,7 @@ namespace Conjoon\Mail\Client\Data;
  *    $body->getContents();// "foo"
  *    $item->getCharset(); // "ISO-8859-1"
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
 class MessagePart  {
 

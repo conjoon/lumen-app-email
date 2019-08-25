@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
@@ -52,9 +52,9 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  * MessagePart.
  *
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
-class ListMessageItem extends AbstractMessageItem {
+class ListMessageItem extends MessageItem {
 
     /**
      * @var MessagePart
@@ -67,8 +67,6 @@ class ListMessageItem extends AbstractMessageItem {
      * @param MessageKey $messageKey
      * @param array|null $data
      * @param MessagePart $messagePart
-     *
-     * @throws \InvalidArgumentException
      */
     public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart) {
 

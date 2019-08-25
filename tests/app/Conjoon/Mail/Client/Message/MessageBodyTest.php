@@ -24,49 +24,47 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\ListMessageItem,
-    Conjoon\Mail\Client\Data\MessagePart,
+use Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\MessageItemList;
+    Conjoon\Util\Jsonable;
 
 
-class MessageItemListTest extends TestCase
+class MessageBodyTest extends TestCase
 {
 
 
 // ---------------------
 //    Tests
 // ---------------------
-
     /**
-     * Tests constructor
+     * Test class
      */
     public function testClass() {
 
-        $messageItemList = new MessageItemList();
-        $this->assertInstanceOf(AbstractList::class, $messageItemList);
-        $this->assertInstanceOf(Jsonable::class, $messageItemList);
+        $messageKey = new MessageKey("dev", "INBOX", "232");
 
-        $this->assertSame(ListMessageItem::class, $messageItemList->getEntityType());
+        $body = new MessageBody($messageKey);
 
-        $messageItemList[] = new ListMessageItem(
-            new MessageKey("dev", "INBOX", "1"), null,
-            new MessagePart("foo", "bar", "text/plain")
+        $this->assertInstanceOf(Jsonable::class, $body);
 
-        );
-        $messageItemList[] = new ListMessageItem(
-            new MessageKey("dev", "INBOX", "2"), null,
-            new MessagePart("foo", "bar", "text/plain")
-        );
+        $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
+        $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
 
+        $body->setTextPlain($plainPart);
+        $body->setTextHtml($htmlPart);
 
-        $this->assertSame([
-            $messageItemList[0]->toJson(),
-            $messageItemList[1]->toJson()
-        ], $messageItemList->toJson());
+        $this->assertSame($plainPart, $body->getTextPlain());
+        $this->assertSame($htmlPart, $body->getTextHtml());
+        $this->assertSame($messageKey, $body->getMessageKey());
+
+        $this->assertEquals([
+            "mailAccountId" => "dev",
+            "mailFolderId"  => "INBOX",
+            "id"            => "232",
+            "textPlain"     => "foo",
+            "textHtml"     => "<b>bar</b>"
+        ], $body->toJson());
     }
-
 
 }

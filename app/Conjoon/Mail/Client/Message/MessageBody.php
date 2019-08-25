@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Data;
+namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Util\Jsonable,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -47,7 +47,7 @@ use Conjoon\Util\Jsonable,
  *    $body->getTextPlain();// $plainPart
  *    $body->getTextHtml(); // $htmlPart
  *
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Mail\Client\Message
  */
 class MessageBody implements Jsonable {
 

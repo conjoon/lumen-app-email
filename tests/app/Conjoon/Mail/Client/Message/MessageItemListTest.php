@@ -24,14 +24,16 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\AbstractMessageItem,
-    Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Util\AbstractList,
+    Conjoon\Util\Jsonable,
+    Conjoon\Mail\Client\Message\ListMessageItem,
+    Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Message\MessageItemList;
 
 
-class MessageItemTest extends TestCase
+class MessageItemListTest extends TestCase
 {
-
 
 
 // ---------------------
@@ -41,41 +43,29 @@ class MessageItemTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testClass() {
 
-        $messageKey = $this->createMessageKey();
-        $messageItem = $this->createMessageItem($messageKey);
-        $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
-    }
+        $messageItemList = new MessageItemList();
+        $this->assertInstanceOf(AbstractList::class, $messageItemList);
+        $this->assertInstanceOf(Jsonable::class, $messageItemList);
 
+        $this->assertSame(ListMessageItem::class, $messageItemList->getEntityType());
 
-// ---------------------
-//    Helper Functions
-// ---------------------
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey("dev", "INBOX", "1"), null,
+            new MessagePart("foo", "bar", "text/plain")
 
-
-    /**
-     * Returns an anonymous class extending AbstractMessageItem.
-     * @param MessageKey $key
-     * @param array|null $data
-     * @return AbstractMessageItem
-     */
-    protected function createMessageItem(MessageKey $key, array $data = null) :AbstractMessageItem {
-        // Create a new instance from the Abstract Class
-       return new MessageItem($key, $data);
-    }
+        );
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey("dev", "INBOX", "2"), null,
+            new MessagePart("foo", "bar", "text/plain")
+        );
 
 
-    /**
-     * Returns a MessageKey.
-     *
-     * @param string $mailFolderId
-     * @param string $id
-     *
-     * @return MessageKey
-     */
-    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
-        return new MessageKey($mailAccountId, $mailFolderId, $id);
+        $this->assertSame([
+            $messageItemList[0]->toJson(),
+            $messageItemList[1]->toJson()
+        ], $messageItemList->toJson());
     }
 
 
