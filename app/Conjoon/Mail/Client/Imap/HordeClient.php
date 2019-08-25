@@ -29,16 +29,16 @@ namespace Conjoon\Mail\Client\Imap;
 
 use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\Data\MessageBody,
-    Conjoon\Mail\Client\Data\MessagePart,
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\CompoundKey\CompoundKey,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\ListMessageItem,
-    Conjoon\Mail\Client\Data\MessageItem,
+    Conjoon\Mail\Client\Message\ListMessageItem,
+    Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Data\MessageItemList;
+    Conjoon\Mail\Client\Message\MessageItemList;
 
 /**
  * Class HordeClient.

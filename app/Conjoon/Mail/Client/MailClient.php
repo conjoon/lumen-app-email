@@ -29,9 +29,9 @@ namespace Conjoon\Mail\Client;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\MessageBody,
-    Conjoon\Mail\Client\Data\MessageItemList;
+    Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageItemList;
 
 /**
  * Interface MailClient

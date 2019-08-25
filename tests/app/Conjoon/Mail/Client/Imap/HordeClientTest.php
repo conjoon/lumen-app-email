@@ -28,9 +28,10 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Imap\ImapClientException,
-    Conjoon\Mail\Client\Data\MessageBody,
-    Conjoon\Mail\Client\Data\MessageItem,
-    Conjoon\Mail\Client\Data\PreviewableMessageItem;
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\ListMessageItem;
 
 
 /**
@@ -170,21 +171,19 @@ class HordeClientTest extends TestCase {
                 $account->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 2], function($text){
-            return "has been called";
-        });
+            ["start" => 0, "limit" => 2]
+        );
 
 
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Data\MessageItemList::class, $messageItemList);
+        $this->assertInstanceOf(MessageItemList::class, $messageItemList);
 
         $this->assertSame(2, count($messageItemList));
 
-        $this->assertInstanceOf(PreviewableMessageItem::Class, $messageItemList[0]);
-        $this->assertInstanceOf(PreviewableMessageItem::Class, $messageItemList[1]);
+        $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[0]);
+        $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[1]);
 
         $this->assertSame("111", $messageItemList[0]->getMessageKey()->getId());
         $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
-        $this->assertSame("has been called", $messageItemList[0]->getPreviewText());
         $this->assertEquals(
             ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
         );
@@ -195,19 +194,6 @@ class HordeClientTest extends TestCase {
             [], $messageItemList[1]->getTo()->toJson()
         );
 
-        $messageItemList = $client->getMessageItemList(
-            $this->createFolderKey(
-                $account->getId(),
-                "INBOX"
-            ),
-            ["start" => 0, "limit" => 2]
-        );
-        $this->assertSame(2, count($messageItemList));
-
-        $this->assertInstanceOf(MessageItem::Class, $messageItemList[0]);
-        $this->assertInstanceOf(MessageItem::Class, $messageItemList[1]);
-        $this->assertNotInstanceOf(PreviewableMessageItem::Class, $messageItemList[0]);
-        $this->assertNotInstanceOf(PreviewableMessageItem::Class, $messageItemList[1]);
     }
 
 
@@ -236,7 +222,7 @@ class HordeClientTest extends TestCase {
 
         $item = $client->getMessageItem($this->createMessageKey($account->getId(), "INBOX", "16"));
 
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Data\MessageItem::class, $item);
+        $this->assertInstanceOf(MessageItem::class, $item);
         $this->assertSame(null, $item->getFrom());
 
     }
@@ -265,16 +251,9 @@ class HordeClientTest extends TestCase {
 
         $key = $this->createMessageKey($account->getId(), "INBOX", "16");
 
-        $mockBody = new MessageBody($key);
+        $messageBody = $client->getMessageBody($key);
 
-        $messageBody = $client->getMessageBody(
-            $key,
-            function(MessageBody $body) use ($mockBody) {
-                return $mockBody;
-            }
-        );
-
-        $this->assertSame($mockBody, $messageBody);
+        $this->assertInstanceOf(MessageBody::Class, $messageBody);
     }
 
 
