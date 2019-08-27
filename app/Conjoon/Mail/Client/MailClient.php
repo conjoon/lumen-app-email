@@ -44,13 +44,12 @@ interface MailClient {
      * Returns the specified MessageItem for the submitted arguments.
      *
      * @param MessageKey $key
-     * @param array|null $options
      *
      * @return MessageItem|null The MessageItem or null if none found.
      *
      * @throws MailClientException if any exception occurs
      */
-     public function getMessageItem(MessageKey $key, array $options = null) :?MessageItem;
+     public function getMessageItem(MessageKey $key) :?MessageItem;
 
 
     /**

@@ -191,7 +191,7 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function getMessageItem(MessageKey $key, array $options = null) :?MessageItem {
+    public function getMessageItem(MessageKey $key) :?MessageItem {
 
         try {
 
