@@ -24,17 +24,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
-    Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor,
+use Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
+    Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
+    Conjoon\Mail\Client\Message\Text\ProcessorException,
     Conjoon\Text\Converter,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
 
 /**
- * Class PreviewTextProcessorTest
+ * Class DefaultMessagePartContentProcessorTest
  * 
  */
-class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
+class AbstractMessagePartContentProcessorTest extends TestCase {
 
 
     /**
@@ -42,7 +43,22 @@ class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
      */
     public function testInstance() {
         $processor = $this->createProcessor();
-        $this->assertInstanceOf(DefaultMessagePartContentProcessor::class, $processor);
+        $this->assertInstanceOf(MessagePartContentProcessor::class, $processor);
+    }
+
+
+    /**
+     * Test process w/ exception
+     */
+    public function testProcess_exception() {
+
+        $this->expectException(ProcessorException::class);
+
+        $processor = $this->createProcessor();
+
+        $mp = new MessagePart("foo", "UTF-8", "image/jpg");
+
+        $processor->process($mp);
     }
 
 
@@ -53,23 +69,17 @@ class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
 
         $processor = $this->createProcessor();
 
-        $textPlain = new MessagePart(str_repeat("A",300), "UTF-8", "text/plain");
-        $textHtml = new MessagePart("<b>" . str_repeat("B",300) ."</b>", "UTF-8", "text/html");
+        $textPlain = new MessagePart("plain", "FROMUTF-8", "text/plain");
+        $textHtml = new MessagePart("html", "FROMUTF-8", "text/html");
 
-        $processedTextPlain = $processor->process($textPlain, "UTF-8");
-        $this->assertSame(str_repeat("A",200), $processedTextPlain->getContents());
+        $processedTextPlain = $processor->process($textPlain, "ABC");
+        $this->assertSame("plain FROMUTF-8 ABC", $textPlain->getContents());
 
-        $processedTextHtml = $processor->process($textHtml, "UTF-8");
-        $this->assertSame(str_repeat("B",200), $processedTextHtml->getContents());
+        $processedTextHtml = $processor->process($textHtml, "ABC");
+        $this->assertSame("<HTMLREADABLE>html FROMUTF-8 ABC", $textHtml->getContents());
 
         $this->assertSame($textPlain, $processedTextPlain);
         $this->assertSame($textHtml, $processedTextHtml);
-
-        $textHtml = new MessagePart(" A > B", "UTF-8", "text/html");
-        $processedTextHtml = $processor->process($textHtml, "UTF-8");
-        $this->assertSame("A &gt; B", $processedTextHtml->getContents());
-
-
     }
 
 // +--------------------------
@@ -80,10 +90,11 @@ class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
      * @return DefaultMessagePartContentProcessor
      */
     protected function createProcessor() {
-        return new PreviewTextProcessor(
-            $this->createConverter(), $this->createHtmlReadableStrategy()
-        );
+        return new class($this->createConverter(), $this->createHtmlReadableStrategy()) extends AbstractMessagePartContentProcessor{
+
+        };
     }
+
 
     /**
      * @return Converter
@@ -92,7 +103,7 @@ class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
 
         return new class implements Converter {
             public function convert(string $text, string $fromCharset, string $targetCharset) :string {
-                return $text;
+                return implode(" ", [$text, $fromCharset, $targetCharset]);
             }
         };
 
@@ -105,7 +116,7 @@ class PreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
 
         return new class implements HtmlReadableStrategy {
             public function process(string $text) :string {
-                return $text;
+                return "<HTMLREADABLE>" . $text ;
             }
         };
 

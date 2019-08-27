@@ -26,13 +26,43 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
+use Conjoon\Mail\Client\Message\MessagePart;
 
 /**
- * Interface PreviewProcessor
+ * Class PreviewProcessor
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-interface PreviewTextProcessor extends MessagePartContentProcessor {
+class DefaultPreviewTextProcessor extends AbstractMessagePartContentProcessor implements PreviewTextProcessor {
+
+
+// +--------------------------------------
+// | MessagePartContentProcessor
+// +--------------------------------------
+//
+    /**
+     * Processes the specified MessagePart and returns its contents properly converted to UTF-8
+     * and stripped of all HTML-tags  as a 200 character long previewText.
+     *
+     * @inheritdoc
+     */
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart {
+
+        $messagePart = parent::process($messagePart, $toCharset);
+
+        parent::process($messagePart, $toCharset);
+
+        $messagePart->setContents(
+            htmlentities(
+                mb_substr(
+                    strip_tags(trim($messagePart->getContents())),0,200,  $toCharset
+                )
+            ),
+            $toCharset
+        );
+
+        return $messagePart;
+    }
 
 
 }

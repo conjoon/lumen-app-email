@@ -39,70 +39,7 @@ use Conjoon\Text\Converter,
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-class DefaultMessagePartContentProcessor implements MessagePartContentProcessor{
-
-    /**
-     * @var Converter
-     */
-    protected $converter;
-
-    /**
-     * @var HtmlReadableStrategy
-     */
-    protected $htmlReadableStrategy;
-
-
-    /**
-     * DefaultMessagePartContentProcessor constructor.
-     *
-     * @param Converter $converter
-     * @param HtmlReadableStrategy $htmlReadableStrategy
-     */
-    public function __construct(Converter $converter, HtmlReadableStrategy $htmlReadableStrategy)  {
-        $this->converter = $converter;
-        $this->htmlReadableStrategy = $htmlReadableStrategy;
-    }
-
-
-// +--------------------------------------
-// | Interface MessagePartContentProcessor
-// +--------------------------------------
-    /**
-     * Processes the contents of the MessagePart and makes sure this converter converts
-     * the contents to proper UTF-8.
-     * Additionally, the text/html part will be filtered by this $htmlReadableStrategy.
-     *
-     * @inheritdoc
-     */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart {
-
-        $mimeType = $messagePart->getMimeType();
-
-        switch ($mimeType) {
-
-            case "text/plain":
-                $messagePart->setContents($this->converter->convert(
-                    $messagePart->getContents(),
-                    $messagePart->getCharset(),
-                    $toCharset
-                ), $toCharset);
-                break;
-
-            case "text/html":
-                $messagePart->setContents($this->htmlReadableStrategy->process($this->converter->convert(
-                    $messagePart->getContents(),
-                    $messagePart->getCharset(),
-                    $toCharset
-                )), $toCharset);
-                break;
-
-            default:
-                throw new ProcessorException("Cannot process any mimy type other than \"text/plain\"/\"text/html\"");
-
-        }
-
-        return $messagePart;
-    }
+class DefaultMessagePartContentProcessor extends AbstractMessagePartContentProcessor{
 
 
 }

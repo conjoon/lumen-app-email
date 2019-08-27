@@ -24,102 +24,14 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\ProcessorException,
-    Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+
 
 /**
  * Class DefaultMessagePartContentProcessorTest
  * 
  */
-class DefaultMessagePartContentProcessorTest extends TestCase {
+class DefaultMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest {
 
 
-    /**
-     * Test instance.
-     */
-    public function testInstance() {
-        $processor = $this->createProcessor();
-        $this->assertInstanceOf(MessagePartContentProcessor::class, $processor);
-    }
-
-
-    /**
-     * Test process w/ exception
-     */
-    public function testProcess_exception() {
-
-        $this->expectException(ProcessorException::class);
-
-        $processor = $this->createProcessor();
-
-        $mp = new MessagePart("foo", "UTF-8", "image/jpg");
-
-        $processor->process($mp);
-    }
-
-
-    /**
-     * Test process
-     */
-    public function testProcess() {
-
-        $processor = $this->createProcessor();
-
-        $textPlain = new MessagePart("plain", "FROMUTF-8", "text/plain");
-        $textHtml = new MessagePart("html", "FROMUTF-8", "text/html");
-
-        $processedTextPlain = $processor->process($textPlain, "ABC");
-        $this->assertSame("plain FROMUTF-8 ABC", $textPlain->getContents());
-
-        $processedTextHtml = $processor->process($textHtml, "ABC");
-        $this->assertSame("<HTMLREADABLE>html FROMUTF-8 ABC", $textHtml->getContents());
-
-        $this->assertSame($textPlain, $processedTextPlain);
-        $this->assertSame($textHtml, $processedTextHtml);
-    }
-
-// +--------------------------
-// | Helper
-// +--------------------------
-
-    /**
-     * @return DefaultMessagePartContentProcessor
-     */
-    protected function createProcessor() {
-        return new DefaultMessagePartContentProcessor(
-            $this->createConverter(), $this->createHtmlReadableStrategy()
-        );
-    }
-
-
-    /**
-     * @return Converter
-     */
-    protected function createConverter() :Converter{
-
-        return new class implements Converter {
-            public function convert(string $text, string $fromCharset, string $targetCharset) :string {
-                return implode(" ", [$text, $fromCharset, $targetCharset]);
-            }
-        };
-
-    }
-
-    /**
-     * @return HtmlReadableStrategy
-     */
-    protected function createHtmlReadableStrategy() :HtmlReadableStrategy{
-
-        return new class implements HtmlReadableStrategy {
-            public function process(string $text) :string {
-                return "<HTMLREADABLE>" . $text ;
-            }
-        };
-
-    }
 
 }
