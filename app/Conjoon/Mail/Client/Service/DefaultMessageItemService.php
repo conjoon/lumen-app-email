@@ -30,12 +30,14 @@ namespace Conjoon\Mail\Client\Service;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\MailClient,
+    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\MessageBody;
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\AbstractMessageItem;
 
 /**
  * Class DefaultMessageItemService.
@@ -62,18 +64,26 @@ class DefaultMessageItemService implements MessageItemService {
      */
     protected $messagePartContentProcessor;
 
+    /**
+     * @var MessageItemFieldsProcessor
+     */
+    protected $messageItemFieldsProcessor;
+
 
     /**
      * DefaultMessageItemService constructor.
      *
      * @param MailClient $mailClient
+     * @param MessageItemFieldsProcessor $messageItemFieldsProcessor
      * @param MessagePartContentProcessor $messagePartContentProcessor
      * @param PreviewTextProcessor $previewTextProcessor
      */
     public function __construct(
         MailClient $mailClient,
+        MessageItemFieldsProcessor $messageItemFieldsProcessor,
         MessagePartContentProcessor $messagePartContentProcessor,
         PreviewTextProcessor $previewTextProcessor) {
+        $this->messageItemFieldsProcessor = $messageItemFieldsProcessor;
         $this->mailClient = $mailClient;
         $this->messagePartContentProcessor = $messagePartContentProcessor;
         $this->previewTextProcessor = $previewTextProcessor;
@@ -88,6 +98,14 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function getMailClient() :MailClient {
         return $this->mailClient;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor {
+        return $this->messageItemFieldsProcessor;
     }
 
 
@@ -116,6 +134,7 @@ class DefaultMessageItemService implements MessageItemService {
             $folderKey, $options);
 
         foreach ($messageItemList as $listMessageItem) {
+            $this->charsetConvertHeaderFields($listMessageItem);
             $this->processTextForPreview($listMessageItem->getMessagePart());
         }
 
@@ -127,7 +146,9 @@ class DefaultMessageItemService implements MessageItemService {
      * @inheritdoc
      */
     public function getMessageItem(MessageKey $key) :MessageItem {
-        return $this->mailClient->getMessageItem($key);
+        $messageItem = $this->mailClient->getMessageItem($key);
+        $this->charsetConvertHeaderFields($messageItem);
+        return $messageItem;
     }
 
 
@@ -136,6 +157,7 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function getMessageBody(MessageKey $key) :MessageBody {
         $messageBody = $this->mailClient->getMessageBody($key);
+        $this->processMessageBody($messageBody);
         return $messageBody;
     }
 
@@ -161,6 +183,22 @@ class DefaultMessageItemService implements MessageItemService {
 // -----------------------
 
     /**
+     * Processes the specified MessageItem with the help of this MessageItemFieldsProcessor
+     * @param AbstractMessageItem $messageItem
+     * @return AbstractMessageItem
+     */
+    protected function charsetConvertHeaderFields(AbstractMessageItem $messageItem) :AbstractMessageItem {
+
+        $targetCharset = "UTF-8";
+
+        $messageItem = $this->getMessageItemFieldsProcessor()->process($messageItem, $targetCharset);
+
+        return $messageItem;
+
+    }
+
+
+    /**
      * Processes the contents of the MessageBody's Parts and makes sure this converter converts
      * the contents to proper UTF-8.
      * Additionally, the text/html part will be filtered by this $htmlReadableStrategy.
@@ -178,6 +216,11 @@ class DefaultMessageItemService implements MessageItemService {
         $textHtmlPart  = $messageBody->getTextHtml();
 
         $targetCharset = "UTF-8";
+
+        if (!$textPlainPart) {
+            $textPlainPart = new MessagePart("", "UTF-8", "text/plain");
+            $messageBody->setTextPlain($textPlainPart);
+        }
 
         $this->getMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
 

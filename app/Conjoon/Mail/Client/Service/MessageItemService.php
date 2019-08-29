@@ -32,6 +32,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
+    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody;
@@ -98,6 +99,14 @@ interface MessageItemService {
      * @return int
      */
     public function getUnreadMessageCount(FolderKey $key) : int;
+
+
+    /**
+     * Returns the MessageItemFieldsProcessor used by this MessageService.
+     *
+     * @return MessageItemFieldsProcessor
+     */
+    public function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor;
 
 
     /**

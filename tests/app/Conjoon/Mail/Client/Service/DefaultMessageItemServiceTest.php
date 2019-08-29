@@ -24,8 +24,11 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Service\DefaultMessageItemService,
+use
+    Conjoon\Mail\Client\Service\MessageItemService,
+    Conjoon\Mail\Client\Service\DefaultMessageItemService,
     Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\ListMessageItem,
@@ -36,7 +39,8 @@ use Conjoon\Mail\Client\Service\DefaultMessageItemService,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
+    Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
+    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 
 
 /**
@@ -58,15 +62,17 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $mP = $this->getMessagePartContentProcessor();
         $pP = $this->getPreviewTextProcessor();
+        $miP = $this->getMessageItemFieldsProcessor();
 
 
-        $service = $this->createService($mP, $pP);
+        $service = $this->createService($miP, $mP, $pP);
 
-        $this->assertInstanceOf(DefaultMessageItemService::class, $service);
+        $this->assertInstanceOf(MessageItemService::class, $service);
         $this->assertInstanceOf(MailClient::class, $service->getMailClient());
 
         $this->assertSame($mP, $service->getMessagePartContentProcessor());
         $this->assertSame($pP, $service->getPreviewTextProcessor());
+        $this->assertSame($miP, $service->getMessageItemFieldsProcessor());
     }
 
 
@@ -134,7 +140,15 @@ class DefaultMessageItemServiceTest extends TestCase {
         $cmpItem->setDate($item->getDate());
 
         $this->assertSame($messageItemId, $item->getMessageKey()->getId());
-        $this->assertEquals($cmpItem, $item);
+
+        $cmpJson   = $cmpItem->toJson();
+        $itemJson = $item->toJson();
+
+        $this->assertSame("MessageItemFieldsProcessor", $itemJson["subject"]);
+
+        $cmpJson["subject"] = $itemJson["subject"];
+
+        $this->assertSame($cmpJson, $itemJson);
     }
 
 
@@ -158,12 +172,22 @@ class DefaultMessageItemServiceTest extends TestCase {
                 $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId)
             );
 
+
         $body = $service->getMessageBody($messageKey);
 
         $cmpBody = $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId);
 
         $this->assertSame($messageItemId, $body->getMessageKey()->getId());
-        $this->assertEquals($cmpBody, $body);
+        $this->assertEquals($cmpBody->getMessageKey(), $body->getMessageKey());
+
+        $this->assertTrue($body->getTextPlain() == true);
+        $this->assertTrue($body->getTextHtml() == true);
+
+        $this->assertNull($cmpBody->getTextPlain());
+        $this->assertNull($cmpBody->getTextHtml());
+
+        $this->assertSame("foo", $body->getTextPlain()->getContents());
+        $this->assertSame("foo", $body->getTextHtml()->getContents());
     }
 
 
@@ -256,9 +280,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      * Helper function for creating the service.
      * @return DefaultMessageItemService
      */
-    protected function createService($messagePartContentProcessor = null, $previewTextProcessor = null) {
+    protected function createService($messageItemFieldsProcessor = null, $messagePartContentProcessor = null, $previewTextProcessor = null) {
         return new DefaultMessageItemService(
             $this->getMailClientMock(),
+            $messageItemFieldsProcessor ? $messageItemFieldsProcessor : $this->getMessageItemFieldsProcessor(),
             $messagePartContentProcessor ? $messagePartContentProcessor : $this->getMessagePartContentProcessor(),
             $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor()
         );
@@ -289,6 +314,20 @@ class DefaultMessageItemServiceTest extends TestCase {
             }
         };
     }
+
+
+    /**
+     * @return MessageItemFieldsProcessor
+     */
+    protected function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor{
+        return new class implements MessageItemFieldsProcessor {
+            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8") :AbstractMessageItem{
+                $messageItem->setSubject("MessageItemFieldsProcessor");
+                return $messageItem;
+            }
+        };
+    }
+
 
     /**
      * Helper function for creating Dummy MessageItem.
@@ -336,7 +375,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $messageKey = new MessageKey($mailAccountId, $mailFolderId, $messageItemId);
 
-        return new MessageBody($messageKey);
+        $mb = new MessageBody($messageKey);
+        
+        return $mb;
 
     }
 
