@@ -124,6 +124,7 @@ class AbstractMessageItemTest extends TestCase
         };
 
         $testException("subject", "int");
+        $testException("charset", "int");
         $testException("size", "string");
         $testException("seen", "string");
         $testException("answered", "string");
@@ -135,7 +136,7 @@ class AbstractMessageItemTest extends TestCase
         $testException("to", "");
         $testException("date", "");
 
-        $this->assertSame(11, count($caught));
+        $this->assertSame(12, count($caught));
     }
 
 
@@ -175,7 +176,9 @@ class AbstractMessageItemTest extends TestCase
 
 
         foreach ($keys as $key) {
-            if ($key === "from" || $key === "to") {
+            if ($key === "charset") {
+                $this->assertFalse(array_key_exists('charste', $messageItem->toJson()));
+            }else if ($key === "from" || $key === "to") {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
             } else if ($key == "date") {
                 $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $messageItem->toJson()[$key]);
@@ -235,6 +238,7 @@ class AbstractMessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
+            'charset'        => 'iso-8859-1',
             'from'           => $this->createFrom(),
             'to'             => $this->createTo(),
             'size'           => 23,

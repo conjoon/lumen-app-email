@@ -113,6 +113,11 @@ abstract class AbstractMessageItem implements Jsonable {
      */
     protected $hasAttachments;
 
+    /**
+     * @var string
+     */
+    protected $charset;
+
 
     /**
      * MessageItem constructor.
@@ -214,7 +219,8 @@ abstract class AbstractMessageItem implements Jsonable {
 
                     switch ($property) {
                         case "subject":
-                            if (!is_string($value)) {
+                        case "charset":
+                        if (!is_string($value)) {
                                 $typeFail = "string";
                             }
                             break;
