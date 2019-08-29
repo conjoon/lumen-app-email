@@ -154,7 +154,9 @@ class HordeClientTest extends TestCase {
         $fetchResults[222]->setUid(222);
 
         $fetchResults[111]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
+        $fetchResults[111]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
         $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org"]);
+        $fetchResults[222]->setHeaders('ContentType', 'Content-Type=text/plain;charset= ISO-8859-1');
 
 
         $imapStub->shouldReceive('fetch')->with(
@@ -181,6 +183,9 @@ class HordeClientTest extends TestCase {
 
         $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[0]);
         $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[1]);
+
+        $this->assertSame("utf-8", $messageItemList[0]->getCharset());
+        $this->assertSame("iso-8859-1", $messageItemList[1]->getCharset());
 
         $this->assertSame("111", $messageItemList[0]->getMessageKey()->getId());
         $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());

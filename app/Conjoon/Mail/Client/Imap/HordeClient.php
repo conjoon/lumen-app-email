@@ -307,6 +307,8 @@ class HordeClient implements MailClient {
         $fetchQuery->envelope();
         $fetchQuery->structure();
 
+        $fetchQuery->headers("ContentType", ["Content-Type"], ["peek" => true]);
+
         $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
 
         $final = [];
@@ -411,6 +413,9 @@ class HordeClient implements MailClient {
         $envelope = $item->getEnvelope();
         $flags    = $item->getFlags();
 
+
+        $charset = $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"));
+
         $from = null;
         foreach ($envelope->from as $from) {
             if ($from->bare_address) {
@@ -448,6 +453,7 @@ class HordeClient implements MailClient {
             "draft"          => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
             "flagged"        => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
             "recent"         => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
+            "charset"        => $charset,
             "hasAttachments" => $d["hasAttachments"]
         ];
 
@@ -593,6 +599,28 @@ class HordeClient implements MailClient {
         return $ret;
     }
 
+
+    /**
+     * @param $value
+     * @return string
+     */
+    protected function getCharsetFromContentTypeHeaderValue($value) {
+
+        $value = "" . $value;
+
+        $parts = explode(";", $value);
+        foreach($parts as $key => $part) {
+            $part = trim($part);
+
+            $subPart = explode("=", $part);
+
+            if (strtolower(trim($subPart[0])) === "charset") {
+                return strtolower(trim($subPart[1]));
+            }
+        }
+
+        return "";
+    }
 
 
 }
