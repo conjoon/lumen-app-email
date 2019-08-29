@@ -63,7 +63,7 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor {
 // +--------------------------------------
 // | MessagePartContentProcessor
 // +--------------------------------------
-//
+
     /**
      * Processes the specified MessagePart and returns its contents properly converted to UTF-8
      * and stripped of all HTML-tags  as a 200 character long previewText.
