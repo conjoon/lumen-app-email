@@ -51,8 +51,33 @@ class MessageBodyTest extends TestCase
         $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
         $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
 
+        $this->assertEquals([
+            "mailAccountId" => "dev",
+            "mailFolderId"  => "INBOX",
+            "id"            => "232",
+            "textPlain"     => "",
+            "textHtml"     => ""
+        ], $body->toJson());
+
         $body->setTextPlain($plainPart);
+
+        $this->assertEquals([
+            "mailAccountId" => "dev",
+            "mailFolderId"  => "INBOX",
+            "id"            => "232",
+            "textPlain"     => "foo",
+            "textHtml"     => ""
+        ], $body->toJson());
+
         $body->setTextHtml($htmlPart);
+
+        $this->assertEquals([
+            "mailAccountId" => "dev",
+            "mailFolderId"  => "INBOX",
+            "id"            => "232",
+            "textPlain"     => "foo",
+            "textHtml"     => "<b>bar</b>"
+        ], $body->toJson());
 
         $this->assertSame($plainPart, $body->getTextPlain());
         $this->assertSame($htmlPart, $body->getTextHtml());

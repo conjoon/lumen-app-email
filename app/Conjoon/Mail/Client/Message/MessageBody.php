@@ -158,8 +158,8 @@ class MessageBody implements Jsonable {
         $keyJson = $this->getMessageKey()->toJson();
 
         return array_merge($keyJson, [
-            "textHtml" => $this->getTextHtml()->getContents(),
-            "textPlain" => $this->getTextPlain()->getContents()
+            "textHtml" => $this->getTextHtml() ? $this->getTextHtml()->getContents() : "",
+            "textPlain" => $this->getTextPlain() ? $this->getTextPlain()->getContents() : ""
         ]);
     }
 
