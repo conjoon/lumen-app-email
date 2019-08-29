@@ -26,10 +26,6 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-use Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
-
 
 /**
  * Interface MessagePartContentProcessor.

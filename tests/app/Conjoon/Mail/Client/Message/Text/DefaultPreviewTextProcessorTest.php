@@ -26,7 +26,7 @@
 
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor,
-    Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
+    Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor,
     Conjoon\Text\Converter,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
@@ -44,7 +44,7 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
     public function testInstance() {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(PreviewTextProcessor::class, $processor);
-        $this->assertInstanceOf(AbstractMessagePartContentProcessor::class, $processor);
+        $this->assertInstanceOf(DefaultMessagePartContentProcessor::class, $processor->getDefaultMessagePartContentProcessor());
     }
 
 
@@ -59,17 +59,17 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
         $textHtml = new MessagePart("<b>" . str_repeat("B",300) ."</b>", "UTF-8", "text/html");
 
         $processedTextPlain = $processor->process($textPlain, "UTF-8");
-        $this->assertSame(str_repeat("A",200), $processedTextPlain->getContents());
+        $this->assertSame("CALLED" . str_repeat("A",194), $processedTextPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml, "UTF-8");
-        $this->assertSame(str_repeat("B",200), $processedTextHtml->getContents());
+        $this->assertSame("CALLED" . str_repeat("B",194), $processedTextHtml->getContents());
 
         $this->assertSame($textPlain, $processedTextPlain);
         $this->assertSame($textHtml, $processedTextHtml);
 
         $textHtml = new MessagePart(" A > B", "UTF-8", "text/html");
         $processedTextHtml = $processor->process($textHtml, "UTF-8");
-        $this->assertSame("A &gt; B", $processedTextHtml->getContents());
+        $this->assertSame("CALLED A &gt; B", $processedTextHtml->getContents());
 
 
     }
@@ -82,9 +82,22 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
      * @return DefaultPreviewTextProcessor
      */
     protected function createProcessor() {
-        return new DefaultPreviewTextProcessor(
-            $this->createConverter(), $this->createHtmlReadableStrategy()
-        );
+
+        $proc = new class($this->createConverter(), $this->createHtmlReadableStrategy()) extends DefaultMessagePartContentProcessor {
+
+            public $def;
+
+            public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart {
+
+                $messagePart = parent::process($messagePart, $toCharset);
+
+                $messagePart->setContents(' CALLED' . $messagePart->getContents(), $toCharset);
+
+                return $messagePart;
+            }
+        };
+
+        return new DefaultPreviewTextProcessor($proc);
     }
 
     /**

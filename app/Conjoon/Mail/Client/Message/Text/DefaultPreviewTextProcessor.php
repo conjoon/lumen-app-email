@@ -33,8 +33,32 @@ use Conjoon\Mail\Client\Message\MessagePart;
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-class DefaultPreviewTextProcessor extends AbstractMessagePartContentProcessor implements PreviewTextProcessor {
+class DefaultPreviewTextProcessor implements PreviewTextProcessor {
 
+
+    /**
+     * @var DefaultMessagePartContentProcessor
+     */
+    protected $processor;
+
+
+    /**
+     * DefaultPreviewTextProcessor constructor.
+     * @param DefaultMessagePartContentProcessor $processor
+     */
+    public function __construct(DefaultMessagePartContentProcessor $processor) {
+        $this->processor = $processor;
+    }
+
+
+    /**
+     * Returns the DefaultMessagePartContentProcessor decorated by this PreviewTextProcessor.
+     *
+     * @return DefaultMessagePartContentProcessor
+     */
+    public function getDefaultMessagePartContentProcessor() {
+        return $this->processor;
+    }
 
 // +--------------------------------------
 // | MessagePartContentProcessor
@@ -48,9 +72,7 @@ class DefaultPreviewTextProcessor extends AbstractMessagePartContentProcessor im
      */
     public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart {
 
-        $messagePart = parent::process($messagePart, $toCharset);
-
-        parent::process($messagePart, $toCharset);
+        $messagePart = $this->processor->process($messagePart, $toCharset);
 
         $messagePart->setContents(
             htmlentities(
