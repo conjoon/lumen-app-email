@@ -28,6 +28,9 @@
 
 class VariousTest extends TestCase
 {
+
+    use TestTrait;
+
     /**
      * Get information and validate registered middleware for the app.
      *
@@ -84,15 +87,24 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MailFolderService']))
         );
 
-        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MessageItemService']));
+        $userStub = $this->getTemplateUserStub(['getMailAccount']);
+        $userStub->method('getMailAccount')
+                 ->with(null)
+                 ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
+        $this->app->auth->setUser($userStub);
+
+        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
         $this->assertInstanceOf(
-            \App\Imap\Service\DefaultMessageItemService::class,
+            \Conjoon\Mail\Client\Service\DefaultMessageItemService::class,
             $messageItemService
         );
 
-        $mailClient = $messageItemService->getClient();
+        $mailClient = $messageItemService->getMailClient();
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailClient);
-        $this->assertInstanceOf(\Conjoon\Text\CharsetConverter::class, $mailClient->getConverter());
+
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor::class, $messageItemService->getMessagePartContentProcessor());
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
 
         $this->assertInstanceOf(
             \App\Imap\Service\DefaultAttachmentService::class,

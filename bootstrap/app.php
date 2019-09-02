@@ -79,9 +79,26 @@ $app->singleton('App\Imap\Service\MailFolderService', function ($app) {
     return new App\Imap\Service\DefaultMailFolderService();
 });
 
-$app->singleton('App\Imap\Service\MessageItemService', function ($app) {
-    return new App\Imap\Service\DefaultMessageItemService(
-        new Conjoon\Mail\Client\Imap\HordeClient(new Conjoon\Text\CharsetConverter)
+$app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) {
+
+    $charsetConverter = new Conjoon\Text\CharsetConverter();
+
+    $defaultMessagePartContentProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor(
+        $charsetConverter,
+        new Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy
+    );
+
+    $defaultMessageItemFieldsProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor(
+        $charsetConverter
+    );
+
+    return new Conjoon\Mail\Client\Service\DefaultMessageItemService(
+        new Conjoon\Mail\Client\Imap\HordeClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId'))),
+        $defaultMessageItemFieldsProcessor,
+        $defaultMessagePartContentProcessor,
+        new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
+            $defaultMessagePartContentProcessor
+        )
     );
 });
 

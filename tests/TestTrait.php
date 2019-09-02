@@ -33,6 +33,19 @@
 trait TestTrait {
 
 
+    public function getTemplateUserStub(array $pMethods) {
+        $methods = array_map(function (\ReflectionMethod $m) {
+            return $m->getName();
+        }, (new \ReflectionClass(\Illuminate\Contracts\Auth\Authenticatable::class))->getMethods());
+
+        $methods = array_merge($methods, $pMethods);
+
+        return $this->getMockBuilder('\Illuminate\Contracts\Auth\Authenticatable')
+                    ->setMethods($methods)
+                    ->getMock();
+
+    }
+
     public function getTestUserStub() {
 
         $methods = array_map(function (\ReflectionMethod $m) {
