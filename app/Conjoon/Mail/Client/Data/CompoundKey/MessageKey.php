@@ -31,6 +31,26 @@ namespace Conjoon\Mail\Client\Data\CompoundKey;
 /**
  * Class MessageKey models a class for compound keys for identifying (IMAP) Messages.
  *
+ * @example
+ *
+ *    // plain constructor arguments
+ *    // the examples below all create a MessageKey with the same
+ *    // data
+ *    new MessageKey("dev", "INBOX", "123!);
+ *
+ *    // passing a MailAccount
+ *    new MessageKey(
+ *        new \Conjoon\Mail\Client\Data\MailAccount(["id" => "dev"]),
+ *        "INBOX",
+ *        "123"
+ *    );
+ *
+ *    // passing a FolderKey
+ *    new MessageKey(
+ *        new FolderKey("dev", "INBOX"),
+ *        "123"
+ *    );
+ *
  * @package Conjoon\Mail\Client\Data\CompoundKey
  */
 class MessageKey extends CompoundKey {
@@ -45,11 +65,22 @@ class MessageKey extends CompoundKey {
     /**
      * MessageKey constructor.
      *
-     * @param string|MailAccount $mailAccountId
+     * @param string|MailAccount|FolderKey $mailAccountId
      * @param string $mailFolderId
      * @param string $id
+     *
+     * @throws \InvalidArgumentException if $mailAccountId is not a FolderKey and $id is null
      */
-    public function __construct($mailAccountId, string $mailFolderId, string $id) {
+    public function __construct($mailAccountId, string $mailFolderId, string $id = null) {
+
+        if ($mailAccountId instanceof FolderKey) {
+            $id            = $mailFolderId;
+            $mailFolderId  = $mailAccountId->getId();
+            $mailAccountId = $mailAccountId->getMailAccountId();
+        } else if ($id === null) {
+            throw new \InvalidArgumentException("\"id\" must not be null.");
+        }
+
         parent::__construct($mailAccountId, $id);
 
         $this->mailFolderId = $mailFolderId;

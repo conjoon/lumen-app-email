@@ -25,6 +25,7 @@
  */
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\CompoundKey\CompoundKey,
     Conjoon\Mail\Client\Data\MailAccount;
 
@@ -64,5 +65,41 @@ class MessageKeyTest extends TestCase
     }
 
 
+    /**
+     * Test Constructor with FolderKey
+     */
+    public function testConstructorWithFolderKey() {
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $id = "123";
+
+        $obsoleteId = "FOOBAR";
+
+        $folderKey = new FolderKey($mailAccountId, $mailFolderId);
+        $key = new MessageKey($folderKey, $id);
+
+        $this->assertSame($mailAccountId, $key->getMailAccountId());
+        $this->assertSame($mailFolderId, $key->getMailFolderId());
+        $this->assertSame($id, $key->getId());
+
+        $key = new MessageKey($folderKey, $id, $obsoleteId);
+
+        $this->assertSame($mailAccountId, $key->getMailAccountId());
+        $this->assertSame($mailFolderId, $key->getMailFolderId());
+        $this->assertSame($id, $key->getId());
+        $this->assertNotSame($id, $obsoleteId);
+    }
+
+
+    /**
+     * Test Constructor with omitted id
+     */
+    public function testConstructorWithOmittedId() {
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+
+        $this->expectException(\InvalidArgumentException::class);
+        new MessageKey($mailAccountId, $mailFolderId);
+    }
 
 }
