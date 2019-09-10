@@ -37,10 +37,12 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @example
  *
+ *    $mp = new MessagePart("foo", "UTF-8", "text/plain");
+ *
  *    $item = new ListMessageItem(
  *              new MessageKey("dev", "INBOX", "232"),
  *              ["date" => new \DateTime()],
- *              new MessagePart("foo", "UTF-8", "text/plain")
+ *              $mp
  *            );
  *
  *    $item->getMessageKey();
@@ -50,6 +52,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * #toJson will return an additional property "previewText" with the contents of the
  * MessagePart.
+ *
+ *    $item->toJson()["previewText"]; // outputs $mp->getContents();
  *
  *
  * @package Conjoon\Mail\Client\Message
