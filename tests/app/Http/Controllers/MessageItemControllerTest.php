@@ -24,6 +24,16 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use Conjoon\Mail\Client\Service\MessageItemService,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\ListMessageItem;
+
+
 
 class MessageItemControllerTest extends TestCase
 {
@@ -41,17 +51,38 @@ class MessageItemControllerTest extends TestCase
     {
         $serviceStub = $this->initServiceStub();
 
+        $unreadCmp = 5;
+        $totalCmp  = 100;
+
+
+        $folderKey = new FolderKey(
+            $this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX"
+        );
+
+        $options = ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]];
+
+        $messageItemList = new MessageItemList();
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey($folderKey, "232"), [], new MessagePart("", "", "")
+        );
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey($folderKey, "233"), [], new MessagePart("", "", "")
+        );
 
         $serviceStub->expects($this->once())
-                   ->method('getMessageItemsFor')
-                   ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", [
-                       "start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]
-                   ])
-                   ->willReturn([
-                       "total" => 0,
-                       "data" => [],
-                       "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"]
-                   ]);
+                   ->method('getMessageItemList')
+                   ->with($folderKey, $options)
+                   ->willReturn($messageItemList);
+
+        $serviceStub->expects($this->once())
+            ->method('getUnreadMessageCount')
+            ->with($folderKey)
+            ->willReturn($unreadCmp);
+
+        $serviceStub->expects($this->once())
+            ->method('getTotalMessageCount')
+            ->with($folderKey)
+            ->willReturn($totalCmp);
 
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -61,9 +92,13 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "total"   => 0,
-            "meta" => ["cn_unreadCount" => 3, "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(), "mailFolderId" => "INBOX"],
-            "data"    => []
+            "total"   => $totalCmp,
+            "meta"    => [
+                "cn_unreadCount" => $unreadCmp,
+                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
+                "mailFolderId" => "INBOX"
+            ],
+            "data"    => $messageItemList->toJson()
           ]);
     }
 
@@ -79,16 +114,14 @@ class MessageItemControllerTest extends TestCase
     {
         $serviceStub = $this->initServiceStub();
 
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $messageBody = new MessageBody($messageKey);
+
         $serviceStub->expects($this->once())
-            ->method('getMessageBodyFor')
-            ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311")
-            ->willReturn([
-                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
-                "mailFolderId" => "INBOX",
-                "id"           => "311",
-                "textHtml"     => "foo",
-                "textPlain"    => "bar"
-             ]);
+            ->method('getMessageBody')
+            ->with($messageKey)
+            ->willReturn($messageBody);
 
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -98,13 +131,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => [
-                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
-                "mailFolderId" => "INBOX",
-                "id"           => "311",
-                "textHtml"     => "foo",
-                "textPlain"    => "bar"
-            ]
+            "data"    => $messageBody->toJson()
         ]);
     }
 
@@ -119,12 +146,14 @@ class MessageItemControllerTest extends TestCase
     {
         $serviceStub = $this->initServiceStub();
 
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $messageItem = new MessageItem($messageKey);
+
         $serviceStub->expects($this->once())
-            ->method('getMessageItemFor')
-            ->with($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311")
-            ->willReturn([
-                "dummy"
-            ]);
+            ->method('getMessageItem')
+            ->with($messageKey)
+            ->willReturn($messageItem);
 
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -134,9 +163,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => [
-                "dummy"
-            ]
+            "data"    => $messageItem->toJson()
         ]);
     }
 
@@ -152,7 +179,7 @@ class MessageItemControllerTest extends TestCase
         $serviceStub = $this->initServiceStub();
 
         $serviceStub->expects($this->never())
-                    ->method('getMessageItemFor');
+                    ->method('getMessageItem');
 
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -167,14 +194,21 @@ class MessageItemControllerTest extends TestCase
     }
 
 
+// +--------------------------
+// | Helper
+// +--------------------------
+
+    /**
+     * @return mixed
+     */
     protected function initServiceStub() {
 
-        $serviceStub = $this->getMockBuilder('App\Imap\Service\DefaultMessageItemService')
+        $serviceStub = $this->getMockBuilder('Conjoon\Mail\Client\Service\DefaultMessageItemService')
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->app->when(App\Http\Controllers\MessageItemController::class)
-            ->needs(App\Imap\Service\MessageItemService::class)
+            ->needs(MessageItemService::class)
             ->give(function () use ($serviceStub) {
                 return $serviceStub;
             });

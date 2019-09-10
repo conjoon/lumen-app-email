@@ -27,9 +27,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Imap\Service\MessageItemService;
-
-use Auth;
+use Conjoon\Mail\Client\Service\MessageItemService,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Auth;
 
 use Illuminate\Http\Request;
 
@@ -69,6 +70,9 @@ class MessageItemController extends Controller {
 
         $user = Auth::user();
 
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
         $sort = $request->input('sort');
         if ($sort) {
             $sort = json_decode($sort, true);
@@ -81,19 +85,25 @@ class MessageItemController extends Controller {
 
         $mailFolderId = urldecode($mailFolderId);
 
-        $data = $this->messageItemService->getMessageItemsFor(
-            $user->getMailAccount($mailAccountId), $mailFolderId, [
-                "start" => $start,
-                "limit" => $limit,
-                "sort"  => $sort
-            ]
-        );
+        $folderKey = new FolderKey($mailAccount, $mailFolderId);
+
+        $options = [
+            "start" => $start,
+            "limit" => $limit,
+            "sort"  => $sort
+        ];
+
+        $data = $messageItemService->getMessageItemList($folderKey, $options)->toJson();
 
         return response()->json([
             "success" => true,
-            "meta" => $data["meta"],
-            "total" => $data["total"],
-            "data" => $data["data"]
+            "meta" => [
+                 "cn_unreadCount" => $messageItemService->getUnreadMessageCount($folderKey),
+                 "mailFolderId"  =>  $mailFolderId,
+                 "mailAccountId" =>  $mailAccount->getId()
+            ],
+            "total" => $messageItemService->getTotalMessageCount($folderKey),
+            "data" => $data
         ]);
 
     }
@@ -110,19 +120,20 @@ class MessageItemController extends Controller {
 
         $user = Auth::user();
 
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
         // possible targets: MessageItem, MessageBody
         $target = $request->input('target');
 
         $mailFolderId = urldecode($mailFolderId);
 
+        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+
         if ($target === "MessageBody") {
-            $data = $this->messageItemService->getMessageBodyFor(
-                $user->getMailAccount($mailAccountId), $mailFolderId, $messageItemId
-            );
+            $item = $messageItemService->getMessageBody($messageKey);
         } else if ($target === "MessageItem") {
-            $data = $this->messageItemService->getMessageItemFor(
-                $user->getMailAccount($mailAccountId), $mailFolderId, $messageItemId
-            );
+            $item = $messageItemService->getMessageItem($messageKey);
         } else {
             return response()->json([
                 "success" => false,
@@ -133,7 +144,7 @@ class MessageItemController extends Controller {
 
         return response()->json([
             "success" => true,
-            "data" => $data
+            "data" => $item->toJson()
         ]);
 
     }
