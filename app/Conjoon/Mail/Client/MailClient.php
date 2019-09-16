@@ -29,15 +29,30 @@ namespace Conjoon\Mail\Client;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
+    Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageItemList;
+    Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Folder\MailFolderList;
 
 /**
  * Interface MailClient
  * @package Conjoon\Mail\Client
  */
 interface MailClient {
+
+
+    /**
+     * Returns a MailFolderList with ListMailFolders representing all
+     * mailboxes available for the specified MailAccount.
+     *
+     * @param MailAccount $mailAccount
+     *
+     * @return MailFolderList
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function getMailFolderList(MailAccount $mailAccount) :MailFolderList;
 
 
     /**
