@@ -27,10 +27,10 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
-use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 
 /**
- * Class ListMailFolder models MailFolder-informations for a specified MailAccount.
+ * Class ListMailFolder models MailFolder-informations for a specified MailAccount,
+ * including delimiter property.
  *
  * @example
  *
@@ -50,80 +50,13 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
  *
  * @package Conjoon\Mail\Client\Folder
  */
-class ListMailFolder {
-
-
-    /**
-     * @var FolderKey
-     */
-    protected $folderKey;
+class ListMailFolder extends AbstractMailFolder {
 
 
     /**
      * @var string
      */
     protected $delimiter;
-
-
-    /**
-     * @var string
-     */
-    protected $name;
-
-
-    /**
-     * @var int
-     */
-    protected $unreadCount;
-
-
-    /**
-     * ListMailFolder constructor.
-     *
-     * @param FolderKey $folderKey
-     * @param array|null $data
-     */
-    public function __construct(FolderKey $folderKey, array $data) {
-
-        $this->folderKey = $folderKey;
-
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $method = "set" . ucfirst($key);
-                $this->{$method}($value);
-            }
-        }
-
-    }
-
-
-    /**
-     * Returns the FolderKey of this ListMailFolder.
-     *
-     * @return FolderKey
-     */
-    public function getFolderKey() {
-        return $this->folderKey;
-    }
-
-
-    /**
-     * Sets the name for this ListMailFolder.
-     *
-     * @param $delimiter
-     */
-    protected function setName(string $name) {
-        $this->name = $name;
-    }
-
-
-    /**
-     * Returns the name for this ListMailFolder.
-     * @return string
-     */
-    public function getName() :string {
-        return $this->name;
-    }
 
 
     /**
@@ -142,26 +75,6 @@ class ListMailFolder {
      */
     public function getDelimiter() :string {
         return $this->delimiter;
-    }
-
-
-    /**
-     * Sets the unread count for this ListMailFolder.
-     *
-     * @param int $unreadCount
-     */
-    protected function setUnreadCount(int $unreadCount) {
-        $this->unreadCount = $unreadCount;
-    }
-
-
-    /**
-     * Returns the unread count for this ListMailFolder.
-     *
-     * @return int
-     */
-    public function getUnreadCount() :int {
-        return $this->unreadCount;
     }
 
 

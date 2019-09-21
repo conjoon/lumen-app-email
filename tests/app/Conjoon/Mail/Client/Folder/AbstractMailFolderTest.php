@@ -1,4 +1,3 @@
-
 <?php
 /**
  * conjoon
@@ -25,12 +24,11 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Folder\AbstractMailFolder,
+use Conjoon\Mail\Client\Folder\AbstractMailFolder,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 
 
-class ListMailFolderTest extends TestCase
+class AbstractMailFolderTest extends TestCase
 {
 
 
@@ -43,18 +41,42 @@ class ListMailFolderTest extends TestCase
      */
     public function testConstructor() {
 
-        $delimiter   = ".";
         $name        = "INBOX.Some Folder";
-        
+        $unreadCount = 23;
+
         $folderKey = new FolderKey("dev", $name);
-        $listMailFolder = new ListMailFolder(
+        $abstractMailFolder = $this->createMailFolder(
             $folderKey, [
-            "delimiter"   => $delimiter
+            "unreadCount" => $unreadCount,
+            "name"        => $name
         ]);
 
-        $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
+        $this->assertInstanceOf(AbstractMailFolder::class, $abstractMailFolder);
 
-        $this->assertSame($delimiter, $listMailFolder->getDelimiter());
+        $this->assertSame($folderKey, $abstractMailFolder->getFolderKey());
+        $this->assertSame($name, $abstractMailFolder->getName());
+        $this->assertSame($unreadCount, $abstractMailFolder->getUnreadCount());
+
     }
+
+
+// ---------------------
+//    Helper Functions
+// ---------------------
+
+
+    /**
+     * Returns an anonymous class extending AbstractMailFolder.
+     * @param FodlerKey $key
+     * @param array|null $data
+     * @return AbstractMailFolder
+     */
+    protected function createMailFolder(FolderKey $key, array $data = null) :AbstractMailFolder {
+        // Create a new instance from the Abstract Class
+        return new class($key, $data) extends AbstractMailFolder {
+
+        };
+    }
+
 
 }
