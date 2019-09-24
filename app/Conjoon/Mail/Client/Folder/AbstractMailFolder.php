@@ -41,6 +41,7 @@ abstract class AbstractMailFolder {
      */
     protected $folderKey;
 
+
     /**
      * @var string
      */
@@ -58,10 +59,26 @@ abstract class AbstractMailFolder {
      *
      * @param FolderKey $folderKey
      * @param array|null $data
+     *
+     * @throws \InvalidArgumentException if the name or unreadCount
+     * in $data is missing
      */
     public function __construct(FolderKey $folderKey, array $data) {
 
         $this->folderKey = $folderKey;
+
+        $missing = "";
+        if (!isset($data["unreadCount"])) {
+            $missing = "unreadCount";
+        } else if (!isset($data["name"])) {
+            $missing = "name";
+        }
+
+        if ($missing) {
+            throw new \InvalidArgumentException(
+                "value for property \"" . $missing . "\" missing"
+            );
+        }
 
         foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {

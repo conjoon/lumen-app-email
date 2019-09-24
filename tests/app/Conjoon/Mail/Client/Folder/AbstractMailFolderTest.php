@@ -56,7 +56,39 @@ class AbstractMailFolderTest extends TestCase
         $this->assertSame($folderKey, $abstractMailFolder->getFolderKey());
         $this->assertSame($name, $abstractMailFolder->getName());
         $this->assertSame($unreadCount, $abstractMailFolder->getUnreadCount());
+    }
 
+
+    /**
+     * Tests constructor with exception for missing unreadCount
+     */
+    public function testConstructor_exceptionUnreadCount() {
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("unreadCount");
+
+        $folderKey = new FolderKey("dev", "TEST");
+        $this->createMailFolder(
+            $folderKey, [
+            "name" => "TEST"
+        ]);
+    }
+
+
+    /**
+     * Tests constructor with exception for missing name
+     */
+    public function testConstructor_exceptionName() {
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("name");
+
+
+        $folderKey = new FolderKey("dev", "TEST");
+        $this->createMailFolder(
+            $folderKey, [
+            "unreadCount" => 0
+        ]);
     }
 
 

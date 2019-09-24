@@ -25,8 +25,10 @@
  */
 
 use Conjoon\Util\AbstractList,
+    Conjoon\Util\Jsonable,
     Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\MailFolderChildList;
+    Conjoon\Mail\Client\Folder\MailFolderChildList,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 
 
 class MailFolderChildListTest extends TestCase
@@ -44,9 +46,41 @@ class MailFolderChildListTest extends TestCase
 
         $mailFolderChildList = new MailFolderChildList();
         $this->assertInstanceOf(AbstractList::class, $mailFolderChildList);
+        $this->assertInstanceOf(Jsonable::class, $mailFolderChildList);
 
         $this->assertSame(MailFolder::class, $mailFolderChildList->getEntityType());
     }
 
+
+    /**
+     * Tests constructor
+     */
+    public function testToJson() {
+
+        $data = [
+            "name"        => "INBOX",
+            "unreadCount" => 5,
+            "folderType"  => MailFolder::TYPE_INBOX
+        ];
+
+        $folder = new MailFolder(
+            new FolderKey("dev", "INBOX"),
+            $data
+        );
+
+        $mailFolderChildList = new MailFolderChildList();
+
+        $mailFolderChildList[] = $folder;
+
+        $this->assertEquals([[
+            "mailAccountId" => "dev",
+            "id"            => "INBOX",
+            "folderType"  => MailFolder::TYPE_INBOX,
+            "unreadCount"   => 5,
+            "name"          => "INBOX",
+            "data"          => []
+        ]], $mailFolderChildList->toJson());
+
+    }
 
 }

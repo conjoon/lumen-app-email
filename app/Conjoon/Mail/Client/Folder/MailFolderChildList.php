@@ -27,7 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
-use Conjoon\Util\AbstractList;
+use Conjoon\Util\AbstractList,
+    Conjoon\Util\Jsonable;
 
 /**
  * Class MailFolderList organizes a list of ListMailFolders.
@@ -47,7 +48,7 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Folder
  */
-class MailFolderChildList extends AbstractList {
+class MailFolderChildList extends AbstractList implements Jsonable{
 
 
 
@@ -63,5 +64,23 @@ class MailFolderChildList extends AbstractList {
     }
 
 
+// -------------------------
+//  Jsonable
+// -------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function toJson() :array {
+
+        $data = [];
+
+        foreach ($this->data as $mailFolder) {
+            $data[] = $mailFolder->toJson();
+        }
+
+
+        return $data;
+    }
 
 }

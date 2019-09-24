@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+
 
 /**
  * Class ListMailFolder models MailFolder-informations for a specified MailAccount,
@@ -57,6 +59,23 @@ class ListMailFolder extends AbstractMailFolder {
      * @var string
      */
     protected $delimiter;
+
+
+    /**
+     * @inheritdoc
+     *
+     * @throws \InvalidArgumentException if delimiter in $data is missing
+     */
+    public function __construct(FolderKey $folderKey, array $data) {
+
+        if (!isset($data["delimiter"])) {
+            throw new \InvalidArgumentException(
+                "value for property \"delimiter\" missing"
+            );
+        }
+
+        parent::__construct($folderKey, $data);
+    }
 
 
     /**

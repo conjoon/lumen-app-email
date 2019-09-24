@@ -49,12 +49,34 @@ class ListMailFolderTest extends TestCase
         $folderKey = new FolderKey("dev", $name);
         $listMailFolder = new ListMailFolder(
             $folderKey, [
-            "delimiter"   => $delimiter
+            "delimiter"   => $delimiter,
+            "name"        => $name,
+            "unreadCount" => 0
         ]);
 
         $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
 
         $this->assertSame($delimiter, $listMailFolder->getDelimiter());
+    }
+
+
+    /**
+     * Tests constructor with exception for missing delimiter
+     */
+    public function testConstructor_exceptionDelimiter() {
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("delimiter");
+
+        $name        = "INBOX.Some Folder";
+
+        $folderKey = new FolderKey("dev", $name);
+        new ListMailFolder(
+            $folderKey, [
+            "name"        => $name,
+            "unreadCount" => 0
+        ]);
+
     }
 
 }
