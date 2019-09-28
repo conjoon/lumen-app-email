@@ -60,6 +60,11 @@ class ListMailFolder extends AbstractMailFolder {
      */
     protected $delimiter;
 
+    /**
+     * @var array
+     */
+    protected $attributes;
+
 
     /**
      * @inheritdoc
@@ -72,6 +77,10 @@ class ListMailFolder extends AbstractMailFolder {
             throw new \InvalidArgumentException(
                 "value for property \"delimiter\" missing"
             );
+        }
+
+        if (!isset($data["attributes"])) {
+            $data["attributes"] = [];
         }
 
         parent::__construct($folderKey, $data);
@@ -94,6 +103,25 @@ class ListMailFolder extends AbstractMailFolder {
      */
     public function getDelimiter() :string {
         return $this->delimiter;
+    }
+
+
+    /**
+     * Sets the attributes for this ListMailFolder.
+     *
+     * @param $delimiter
+     */
+    protected function setAttributes(array $attributes) {
+        $this->attributes = $attributes;
+    }
+
+
+    /**
+     * Returns the attributes for this ListMailFolder.
+     * @return array
+     */
+    public function getAttributes() :array {
+        return $this->attributes;
     }
 
 

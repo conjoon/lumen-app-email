@@ -57,6 +57,21 @@ class ListMailFolderTest extends TestCase
         $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
 
         $this->assertSame($delimiter, $listMailFolder->getDelimiter());
+        $this->assertSame([], $listMailFolder->getAttributes());
+
+        $attributes     = ["\nonexistent", "\noselect"];
+        $listMailFolder = new ListMailFolder(
+            $folderKey, [
+            "delimiter"   => $delimiter,
+            "name"        => $name,
+            "unreadCount" => 0,
+            "attributes"  => $attributes
+        ]);
+
+        $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
+
+        $this->assertSame($delimiter,  $listMailFolder->getDelimiter());
+        $this->assertSame($attributes, $listMailFolder->getAttributes());
     }
 
 
