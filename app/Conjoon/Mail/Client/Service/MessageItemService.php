@@ -128,7 +128,7 @@ interface MessageItemService {
     /**
      * Returns the MailClient used by this MessageService.
      *
-     * @return Converter
+     * @return MailClient
      */
     public function getMailClient() :MailClient;
 
