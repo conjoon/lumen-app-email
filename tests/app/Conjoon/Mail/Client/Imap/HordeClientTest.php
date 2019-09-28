@@ -338,8 +338,8 @@ class HordeClientTest extends TestCase {
             \Horde_Imap_Client::MBOX_ALL,
             ["attributes" => true]
         )->andReturn([
-            "INBOX" => ["delimiter" => ".", ],
-            "INBOX.Folder" => ["delimiter" => ":"]
+            "INBOX" => ["delimiter" => ".", "attributes" => []],
+            "INBOX.Folder" => ["delimiter" => ":", "attributes" => ["\\noselect"]]
         ]);
 
         $imapStub->shouldReceive('status')->with(
@@ -347,10 +347,10 @@ class HordeClientTest extends TestCase {
             \Horde_Imap_Client::STATUS_UNSEEN
         )->andReturn(["unseen" => 30]);
 
-        $imapStub->shouldReceive('status')->with(
+        $imapStub->shouldNotReceive('status')->with(
             "INBOX.Folder",
             \Horde_Imap_Client::STATUS_UNSEEN
-        )->andReturn(["unseen" => 2]);
+        );
 
 
         $client = $this->createClient();
@@ -363,12 +363,13 @@ class HordeClientTest extends TestCase {
         $this->assertSame("INBOX", $listMailFolder->getName());
         $this->assertSame(".", $listMailFolder->getDelimiter());
         $this->assertSame(30, $listMailFolder->getUnreadCount());
+        $this->assertSame([], $listMailFolder->getAttributes());
 
         $listMailFolder = $mailFolderList[1];
         $this->assertSame("INBOX.Folder", $listMailFolder->getName());
         $this->assertSame(":", $listMailFolder->getDelimiter());
-        $this->assertSame(2, $listMailFolder->getUnreadCount());
-
+        $this->assertSame(0, $listMailFolder->getUnreadCount());
+        $this->assertSame(["\\noselect"], $listMailFolder->getAttributes());
     }
 
 

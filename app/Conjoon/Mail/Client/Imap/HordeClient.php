@@ -115,7 +115,7 @@ class HordeClient implements MailClient {
 
             if (!$account) {
                 throw new ImapClientException(
-            "The passed \"key\" does not share the same id-value with " .
+                    "The passed \"key\" does not share the same id-value with " .
                     "the MailAccount this class was configured with."
                 );
             }
@@ -154,19 +154,23 @@ class HordeClient implements MailClient {
 
             foreach ($mailboxes as $folderId => $mailbox) {
 
-                $status = $client->status(
-                    $folderId,
-                    \Horde_Imap_Client::STATUS_UNSEEN
-                );
+                $status = ["unseen" => 0];
+
+                if ($this->isMailboxSelectable($mailbox)) {
+                    $status = $client->status(
+                        $folderId,
+                        \Horde_Imap_Client::STATUS_UNSEEN
+                    );
+                }
 
                 $folderKey = new FolderKey($mailAccount, $folderId);
                 $mailFolderList[] = new ListMailFolder($folderKey, [
-                    "name" => $folderId,
-                    "delimiter" => $mailbox["delimiter"],
-                    "unreadCount" => $status["unseen"]
+                    "name"        => $folderId,
+                    "delimiter"   => $mailbox["delimiter"],
+                    "unreadCount" => $status["unseen"],
+                    "attributes"  => $mailbox["attributes"]
                 ]);
             }
-
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
@@ -301,7 +305,7 @@ class HordeClient implements MailClient {
                 $body->setTextHtml($htmlPart);
             }
 
-            $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"],"text/plain");
+            $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"], "text/plain");
             $body->setTextPlain($plainPart);
 
 
@@ -333,7 +337,7 @@ class HordeClient implements MailClient {
         \Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) :array {
 
         $start = isset($options["start"]) ? intval($options["start"]) : -1;
-        $limit = isset($options["limit"])  ? intval($options["limit"]) : -1;
+        $limit = isset($options["limit"]) ? intval($options["limit"]) : -1;
 
         if ($start >= 0 && $limit > 0) {
             $rangeList = new \Horde_Imap_Client_Ids();
@@ -381,7 +385,7 @@ class HordeClient implements MailClient {
      *
      * @see queryItems
      */
-    protected function buildMessageItem(\Horde_Imap_Client_Socket $client,  FolderKey $key, $item) : MessageItem {
+    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item): MessageItem {
 
         $result = $result = $this->getItemStructure($client, $item, $key, []);
 
@@ -404,8 +408,8 @@ class HordeClient implements MailClient {
      *
      * @see queryItems
      */
-    protected function buildMessageItems(\Horde_Imap_Client_Socket $client,  FolderKey $key, array $items
-    ) :MessageItemList {
+    protected function buildMessageItems(\Horde_Imap_Client_Socket $client, FolderKey $key, array $items
+    ): MessageItemList {
 
         $messageItems = new MessageItemList;
 
@@ -659,7 +663,7 @@ class HordeClient implements MailClient {
         $value = "" . $value;
 
         $parts = explode(";", $value);
-        foreach($parts as $key => $part) {
+        foreach ($parts as $key => $part) {
             $part = trim($part);
 
             $subPart = explode("=", $part);
@@ -672,5 +676,18 @@ class HordeClient implements MailClient {
         return "";
     }
 
+
+    /**
+     * Helper function for determining if a mailbox is selectable.
+     * Will return false if querying the given mailbox would result
+     * in an error (server side).
+     *
+     * @param array $mailbox
+     * @return bool
+     */
+    protected function isMailboxSelectable(array $mailbox) {
+       return !in_array("\\noselect", $mailbox["attributes"]) &&
+              !in_array("\\nonexistent", $mailbox["attributes"]);
+    }
 
 }
