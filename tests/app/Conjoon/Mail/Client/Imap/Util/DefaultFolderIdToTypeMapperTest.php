@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Imap\Util\FolderIdToTypeMapper,
+use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
     Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper,
     Conjoon\Mail\Client\Folder\MailFolder,
     Conjoon\Mail\Client\Folder\ListMailFolder,

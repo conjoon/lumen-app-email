@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Imap\Util;
 
 use Conjoon\Mail\Client\Folder\MailFolder,
+    Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
     Conjoon\Mail\Client\Folder\ListMailFolder;
 
 
@@ -98,10 +99,18 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
 
         switch (strtoupper($name)) {
 
+// +------------------
+// | INBOX
+// +------------------
+            case "[GOOGLE MAIL]/ALLE NACHRICHTEN":
             case "INBOX":
                 $type = MailFolder::TYPE_INBOX;
                 break;
 
+// +------------------
+// | TRASH
+// +------------------
+            case "[GOOGLE MAIL]/PAPIERKORB":
             case "TRASH":
             case "INBOX".$delimiter."TRASH":
             case "INBOX".$delimiter."PAPIERKORB":
@@ -109,11 +118,19 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
                 $type = MailFolder::TYPE_TRASH;
                 break;
 
+// +------------------
+// | DRAFT
+// +------------------
+            case "[GOOGLE MAIL]/ENTWüRFE":
             case "DRAFTS":
             case "INBOX".$delimiter."DRAFTS":
                 $type = MailFolder::TYPE_DRAFT;
                 break;
 
+// +------------------
+// | SENT
+// +------------------
+            case "[GOOGLE MAIL]/GESENDET":
             case "SENT":
             case "INBOX".$delimiter."SENT":
             case "INBOX".$delimiter."SENT MESSAGES":
@@ -121,6 +138,10 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
                 $type = MailFolder::TYPE_SENT;
                 break;
 
+// +------------------
+// | JUNK
+// +------------------
+            case "[GOOGLE MAIL]/SPAM":
             case "JUNK":
             case "INBOX".$delimiter."JUNK":
             case "INBOX".$delimiter."SPAM":

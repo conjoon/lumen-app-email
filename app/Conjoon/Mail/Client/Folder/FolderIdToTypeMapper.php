@@ -25,15 +25,13 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Imap\Util;
-
-use Conjoon\Mail\Client\Folder\ListMailFolder;
+namespace Conjoon\Mail\Client\Folder;
 
 
 /**
  * Interface FolderIdToTypeMapper.
  *
- * @package Conjoon\Mail\Client\Imap\Util
+ * @package Conjoon\Mail\Client\Folder
  */
 interface FolderIdToTypeMapper {
 
