@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Imap\Service\MailFolderService;
+use Conjoon\Mail\Client\Service\MailFolderService;
 
 use Auth;
 
@@ -62,16 +62,21 @@ class MailFolderController extends Controller {
      * Returns all available MailFolders for the user that is currently
      * authenticated for the specified $mailAccountId.
      *
+     * @param string $mailAccountId
+     *
      * @return ResponseJson
      */
     public function index($mailAccountId) {
 
         $user = Auth::user();
 
+        $mailFolderService = $this->mailFolderService;
+        $mailAccount       = $user->getMailAccount($mailAccountId);
+
 
         return response()->json([
             "success" => true,
-            "data" => $this->mailFolderService->getMailFoldersFor($user->getMailAccount($mailAccountId))
+            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
         ]);
 
     }
