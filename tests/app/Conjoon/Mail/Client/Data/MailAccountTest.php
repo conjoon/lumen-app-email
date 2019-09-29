@@ -45,13 +45,22 @@ class MailAccountTest extends TestCase
         'outbox_port'     => 993,
         'outbox_user'     => 'outboxuser',
         'outbox_password' => 'outboxpassword',
-        'outbox_ssl'      => true
+        'outbox_ssl'      => true,
+        'root'            => '[Gmail]'
     ];
 
     public function testGetter()
     {
         $config = $this->accountConfig;
 
+        $oldRoot = $config['root'];
+        $this->assertSame('[Gmail]', $oldRoot);
+        unset($config['root']);
+
+        $account = new MailAccount($config);
+        $this->assertSame("INBOX", $account->getRoot());
+
+        $config["root"] = $oldRoot;
         $account = new MailAccount($config);
 
         foreach ($config as $property => $value) {
