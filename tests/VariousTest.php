@@ -71,6 +71,13 @@ class VariousTest extends TestCase
 
     public function testConcretes() {
 
+        $userStub = $this->getTemplateUserStub(['getMailAccount']);
+        $userStub->method('getMailAccount')
+            ->with(null)
+            ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
+        $this->app->auth->setUser($userStub);
+
+
 
         $reflection = new \ReflectionClass($this->app);
         $property = $reflection->getMethod('getConcrete');
@@ -82,16 +89,19 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
         );
 
-        $this->assertInstanceOf(
-            \App\Imap\Service\DefaultMailFolderService::class,
-            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\MailFolderService']))
-        );
 
-        $userStub = $this->getTemplateUserStub(['getMailAccount']);
-        $userStub->method('getMailAccount')
-                 ->with(null)
-                 ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
-        $this->app->auth->setUser($userStub);
+        $mailFolderService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MailFolderService']));
+        $mailFolderServiceMailClient = $mailFolderService->getMailClient();
+        $mailFolderTreeBuilder = $mailFolderService->getMailFolderTreeBuilder();
+        $folderIdToTypeMapper = $mailFolderTreeBuilder->getFolderIdToTypeMapper();
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Service\DefaultMailFolderService::class,
+            $mailFolderService
+        );
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailFolderServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder::class, $mailFolderTreeBuilder);
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper::class, $folderIdToTypeMapper);
+
 
         $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
         $this->assertInstanceOf(
@@ -99,8 +109,10 @@ class VariousTest extends TestCase
             $messageItemService
         );
 
-        $mailClient = $messageItemService->getMailClient();
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailClient);
+        $messageItemServiceMailClient = $messageItemService->getMailClient();
+        // make sure same instance is shared between Services
+        $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor::class, $messageItemService->getMessagePartContentProcessor());

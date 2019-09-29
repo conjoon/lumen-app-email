@@ -67,7 +67,7 @@ class DefaultMailFolderService implements MailFolderService {
      * Returns the MailFolderTreeBuilder used with this instance.
      * @return MailFolderTreeBuilder
      */
-    public function getMailFolderTreeBuilder() {
+    public function getMailFolderTreeBuilder() :MailFolderTreeBuilder{
         return $this->mailFolderTreeBuilder;
     }
 

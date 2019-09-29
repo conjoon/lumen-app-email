@@ -62,7 +62,7 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
     /**
      * @return FolderIdToTypeMapper
      */
-    public function getFolderIdToTypeMapper() {
+    public function getFolderIdToTypeMapper() : FolderIdToTypeMapper{
         return $this->folderIdToTypeMapper;
     }
 
