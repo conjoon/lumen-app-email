@@ -46,7 +46,7 @@ class MailAccountTest extends TestCase
         'outbox_user'     => 'outboxuser',
         'outbox_password' => 'outboxpassword',
         'outbox_ssl'      => true,
-        'root'            => '[Gmail]'
+        'root'            => ['[Gmail]']
     ];
 
     public function testGetter()
@@ -54,11 +54,11 @@ class MailAccountTest extends TestCase
         $config = $this->accountConfig;
 
         $oldRoot = $config['root'];
-        $this->assertSame('[Gmail]', $oldRoot);
+        $this->assertSame(['[Gmail]'], $oldRoot);
         unset($config['root']);
 
         $account = new MailAccount($config);
-        $this->assertSame("INBOX", $account->getRoot());
+        $this->assertSame(["INBOX"], $account->getRoot());
 
         $config["root"] = $oldRoot;
         $account = new MailAccount($config);

@@ -50,10 +50,10 @@ return [
         // the root mailbox. For most IMAP servers, this will
         // be "INBOX". Gmail users can use  "[Gmail]" instead.
         // You can also provide a separate mailbox named "conjoon".
-        // The root folder is the only folder that will be
+        // The root folders are the only folders which will be
         // queried and displayed in the folder hierarchy for the
         // Mail Account, along with its contents, including sub folders.
-        "root"            => "INBOX",
+        "root"            => ["INBOX"],
         // a regular expression that makes sure a user's email-address
         // is matched against "this" entry, e.g. a sign-in with the
         // username "dev@googlemail.com" would be associated with "this",

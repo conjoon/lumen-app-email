@@ -139,9 +139,9 @@ class MailAccount  {
     protected $outbox_ssl;
 
     /**
-     * @var string
+     * @var array
      */
-    protected $root = "INBOX";
+    protected $root = ["INBOX"];
 
     /**
      * MailAccount constructor.
