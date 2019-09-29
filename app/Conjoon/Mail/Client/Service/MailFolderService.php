@@ -25,30 +25,24 @@
  */
 declare(strict_types=1);
 
-namespace App\Imap\Service;
+namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Data\MailAccount,
+    Conjoon\Mail\Client\Folder\MailFolderChildList,
+    Conjoon\Mail\Client\MailClient;
 
 interface MailFolderService {
 
 
     /**
-     * Returns an array of Objects representing MailFolders for the specified
+     * Returns MailFolderChildList MailFolders for the specified
      * MailAccount.
      *
      * @param MailAccount $account The MailAccount for which the folder structure
      * should be returned.
      *
-     * @return array An array of the Mailbox-structure found on the server. Each
-     * entry must provide the following information:
-     * - id: A unique id for the MailFolder
-     * - mailAccountId: The id of the MailAccount to which this mailbox belongs
-     * - name: A human readable nameof the mailbox
-     * - unreadCount: An integer value representing the number of unread messages
-     * in this mailbox
-     * - cn_folderType: The type of this mailbox. Can be any of JUNK, TRASH, INBOX, SENT, DRAFT, FOLDER
-     * - data: an array of child folders providing the same structure, if any,
-     * otherwise an empty array
+     * @return MailFolderChildList An MailFolderChildList of the Mailbox-structure
+     * found on the server.
      * The order of the returned mailboxes are as follows:
      *  - The INBOX Mailbox comes always first, followed by
      *  - all system relevant mailboxes, such as JUNK, TRASH, SENT, DRAFT (Note: If those mailboxes
@@ -59,12 +53,17 @@ interface MailFolderService {
      * returned as root level if applicable.
      *
      *
-     * @throws \App\Imap\Service\MailFolderServiceException
-     *
      * @see \Horde_Imap_Client_Socket
      */
-    public function getMailFoldersFor(MailAccount $account) :array;
+    public function getMailFolderChildList(MailAccount $account) :MailFolderChildList;
 
+
+    /**
+     * Returns the MailClient used by this MessageService.
+     *
+     * @return MailClient
+     */
+    public function getMailClient() :MailClient;
 
 
 }
