@@ -25,60 +25,62 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace Conjoon\Mail\Client\Folder;
 
-use Conjoon\Mail\Client\Service\MailFolderService;
-
-use Auth;
-
-
+use Conjoon\Util\AbstractList,
+    Conjoon\Util\Jsonable;
 
 /**
- * Class MailFolderController
- * @package App\Http\Controllers
+ * Class MailFolderList organizes a list of ListMailFolders.
+ *
+ * @example
+ *
+ *    $list = new MailFolderChildList();
+ *
+ *    $mailFolder = new MailFolder(
+ *      new FolderKey("dev", "INBOX"), ["name" => "INBOX", "unreadCount" => 23]
+ *    );
+ *    $list[] = $listMailFolder;
+ *
+ *    foreach ($list as $key => $mItem) {
+ *        // iterating over the item
+ *    }
+ *
+ * @package Conjoon\Mail\Client\Folder
  */
-class MailFolderController extends Controller {
+class MailFolderChildList extends AbstractList implements Jsonable{
 
+
+
+// -------------------------
+//  AbstractList
+// -------------------------
 
     /**
-     * @var MailFolderService
+     * @inheritdoc
      */
-    protected $mailFolderService;
-
-
-    /**
-     * MailFolderController constructor.
-     *
-     * @param MailFolderService $mailFolderService
-     */
-    public function __construct(MailFolderService $mailFolderService) {
-
-        $this->mailFolderService = $mailFolderService;
-
+    public function getEntityType() :string{
+        return MailFolder::class;
     }
 
 
+// -------------------------
+//  Jsonable
+// -------------------------
+
     /**
-     * Returns all available MailFolders for the user that is currently
-     * authenticated for the specified $mailAccountId.
-     *
-     * @param string $mailAccountId
-     *
-     * @return ResponseJson
+     * @inheritdoc
      */
-    public function index($mailAccountId) {
+    public function toJson() :array {
 
-        $user = Auth::user();
+        $data = [];
 
-        $mailFolderService = $this->mailFolderService;
-        $mailAccount       = $user->getMailAccount($mailAccountId);
+        foreach ($this->data as $mailFolder) {
+            $data[] = $mailFolder->toJson();
+        }
 
 
-        return response()->json([
-            "success" => true,
-            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
-        ]);
-
+        return $data;
     }
 
 }

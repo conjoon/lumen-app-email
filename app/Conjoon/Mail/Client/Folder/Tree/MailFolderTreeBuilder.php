@@ -23,19 +23,36 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Imap\Service\MailFolderServiceException;
+namespace Conjoon\Mail\Client\Folder\Tree;
+
+use Conjoon\Mail\Client\Folder\MailFolderList,
+    Conjoon\Mail\Client\Folder\MailFolderChildList;
+
+/**
+ * Interface MailFolderTreeBuilder.
+ *
+ *
+ * @package Conjoon\Mail\Client\Folder\Tree
+ */
+interface MailFolderTreeBuilder {
 
 
-class MailFolderServiceExceptionTest extends TestCase {
+    /**
+     * Iterates through the list of ListMailFolders in $mailFolderList and returns
+     * a tree structure representing this list. The tree structure does not necessarily start
+     * with a root folder and allows for returning a MailFolderChildList which can either hold
+     * one entry (representing the root) or multiple entries.
+     *
+     * @param MailFolderList $mailFolderList
+     * @param array $root One or more global ids of the folders that should be used as the root folders.
+     * For most IMAP installations, this will be ["INBOX"].
+     *
+     * @return MailFolderChildList
+     */
+    public function listToTree(MailFolderList $mailFolderList, array $root) :MailFolderChildList;
 
-
-    public function testInstance() {
-
-        $exception = new MailFolderServiceException();
-
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
-    }
 
 
 }

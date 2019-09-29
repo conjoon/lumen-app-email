@@ -38,7 +38,9 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Message\MessageItemList;
+    Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Folder\MailFolderList,
+    Conjoon\Mail\Client\Folder\ListMailFolder;
 
 /**
  * Class HordeClient.
@@ -70,14 +72,21 @@ class HordeClient implements MailClient {
 
     /**
      * Returns the MailAccount providing connection info for the CompoundKey
-     * .
-     * @param CompoundKey $key
+     * or string (which will be treated as the id of the MailAccount to look up).
+     *
+     * @param CompoundKey|string $key
      *
      * @return MailAccount|null
      */
-    public function getMailAccount(CompoundKey $key) {
+    public function getMailAccount($key) {
 
-        if ($this->mailAccount->getId() !== $key->getMailAccountId()) {
+        $id = $key;
+
+        if ($key instanceof CompoundKey) {
+            $id = $key->getMailAccountId();
+        }
+
+        if ($this->mailAccount->getId() !== $id) {
             return null;
         }
 
@@ -88,26 +97,26 @@ class HordeClient implements MailClient {
     /**
      * Creates a \Horde_Imap_Client_Socket.
      * Looks up the MailAccount used by this instance and throws an Exception
-     * if the passed CompoundKey does not share the same mailAccountId with the id
-     * of "this" MailAccount.
+     * if the passed CompoundKey/id does not share the same mailAccountId/value
+     * with the id of "this" MailAccount.
      * Returns a \Horde_Imap_Client_Socket if connecting was successfull.
      *
-     * @param CompoundKey $key
+     * @param CompoundKey|string $key
      *
      * @return \Horde_Imap_Client_Socket
      *
      * @throws ImapClientException if the MailAccount used with this Client does not share
      * the same mailAccountId with the $key
      */
-    public function connect(CompoundKey $key) : \Horde_Imap_Client_Socket {
+    public function connect($key) : \Horde_Imap_Client_Socket {
 
         if (!$this->socket) {
             $account = $this->getMailAccount($key);
 
             if (!$account) {
                 throw new ImapClientException(
-            "The key's \"mailAccountId\" is not the same as the id of the MailAccount this " .
-                    "class was configured with."
+                    "The passed \"key\" does not share the same id-value with " .
+                    "the MailAccount this class was configured with."
                 );
             }
 
@@ -126,6 +135,51 @@ class HordeClient implements MailClient {
 // --------------------------
 //   MailClient- Interface
 // --------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function getMailFolderList(MailAccount $mailAccount) :MailFolderList {
+
+        try {
+            $client = $this->connect($mailAccount->getId());
+
+            $mailboxes = $client->listMailboxes(
+                "*",
+                \Horde_Imap_Client::MBOX_ALL,
+                ["attributes" => true]
+            );
+
+            $mailFolderList = new MailFolderList;
+
+            foreach ($mailboxes as $folderId => $mailbox) {
+
+                $status = ["unseen" => 0];
+
+                if ($this->isMailboxSelectable($mailbox)) {
+                    $status = $client->status(
+                        $folderId,
+                        \Horde_Imap_Client::STATUS_UNSEEN
+                    );
+                }
+
+                $folderKey = new FolderKey($mailAccount, $folderId);
+                $mailFolderList[] = new ListMailFolder($folderKey, [
+                    "name"        => $folderId,
+                    "delimiter"   => $mailbox["delimiter"],
+                    "unreadCount" => $status["unseen"],
+                    "attributes"  => $mailbox["attributes"]
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return $mailFolderList;
+    }
+
+
     /**
      * @inheritdoc
      */
@@ -251,7 +305,7 @@ class HordeClient implements MailClient {
                 $body->setTextHtml($htmlPart);
             }
 
-            $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"],"text/plain");
+            $plainPart = new MessagePart($d["plain"]["content"], $d["plain"]["charset"], "text/plain");
             $body->setTextPlain($plainPart);
 
 
@@ -283,7 +337,7 @@ class HordeClient implements MailClient {
         \Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) :array {
 
         $start = isset($options["start"]) ? intval($options["start"]) : -1;
-        $limit = isset($options["limit"])  ? intval($options["limit"]) : -1;
+        $limit = isset($options["limit"]) ? intval($options["limit"]) : -1;
 
         if ($start >= 0 && $limit > 0) {
             $rangeList = new \Horde_Imap_Client_Ids();
@@ -331,7 +385,7 @@ class HordeClient implements MailClient {
      *
      * @see queryItems
      */
-    protected function buildMessageItem(\Horde_Imap_Client_Socket $client,  FolderKey $key, $item) : MessageItem {
+    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item): MessageItem {
 
         $result = $result = $this->getItemStructure($client, $item, $key, []);
 
@@ -354,8 +408,8 @@ class HordeClient implements MailClient {
      *
      * @see queryItems
      */
-    protected function buildMessageItems(\Horde_Imap_Client_Socket $client,  FolderKey $key, array $items
-    ) :MessageItemList {
+    protected function buildMessageItems(\Horde_Imap_Client_Socket $client, FolderKey $key, array $items
+    ): MessageItemList {
 
         $messageItems = new MessageItemList;
 
@@ -609,7 +663,7 @@ class HordeClient implements MailClient {
         $value = "" . $value;
 
         $parts = explode(";", $value);
-        foreach($parts as $key => $part) {
+        foreach ($parts as $key => $part) {
             $part = trim($part);
 
             $subPart = explode("=", $part);
@@ -622,5 +676,18 @@ class HordeClient implements MailClient {
         return "";
     }
 
+
+    /**
+     * Helper function for determining if a mailbox is selectable.
+     * Will return false if querying the given mailbox would result
+     * in an error (server side).
+     *
+     * @param array $mailbox
+     * @return bool
+     */
+    protected function isMailboxSelectable(array $mailbox) {
+       return !in_array("\\noselect", $mailbox["attributes"]) &&
+              !in_array("\\nonexistent", $mailbox["attributes"]);
+    }
 
 }

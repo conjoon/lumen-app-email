@@ -61,6 +61,23 @@ $app->configure('imapserver');
 |
 */
 
+// helper function to make sure Services can share HordeClients for the same account
+$mailClients = [];
+$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients) {
+
+    $accountId = $account->getId();
+
+    if (isset($mailClients[$accountId])) {
+        return $mailClients[$accountId];
+    }
+
+
+    $mailClient = new Conjoon\Mail\Client\Imap\HordeClient($account);
+    $mailClients[$accountId] = $mailClient;
+    return $mailClient;
+};
+
+
 $app->singleton(
     Illuminate\Contracts\Debug\ExceptionHandler::class,
     App\Exceptions\Handler::class
@@ -75,12 +92,18 @@ $app->singleton('App\Imap\ImapUserRepository', function ($app) {
     return new App\Imap\DefaultImapUserRepository(config('imapserver'));
 });
 
-$app->singleton('App\Imap\Service\MailFolderService', function ($app) {
-    return new App\Imap\Service\DefaultMailFolderService();
+$app->singleton('Conjoon\Mail\Client\Service\MailFolderService', function ($app) use($getMailClient) {
+    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
+    return new Conjoon\Mail\Client\Service\DefaultMailFolderService(
+        $mailClient,
+        new Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder(
+            new Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper()
+        )
+    );
 });
 
-$app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) {
-
+$app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
+    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
 
     $defaultMessagePartContentProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor(
@@ -93,7 +116,7 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
     );
 
     return new Conjoon\Mail\Client\Service\DefaultMessageItemService(
-        new Conjoon\Mail\Client\Imap\HordeClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId'))),
+        $mailClient,
         $defaultMessageItemFieldsProcessor,
         $defaultMessagePartContentProcessor,
         new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(

@@ -25,14 +25,42 @@
  */
 declare(strict_types=1);
 
-namespace App\Imap\Service;
+namespace Conjoon\Mail\Client\Folder;
+
+use Conjoon\Util\AbstractList;
 
 /**
- * Class MailFolderServiceException
+ * Class MailFolderList organizes a list of ListMailFolders.
  *
- * @package App\Imap\Service
+ * @example
+ *
+ *    $list = new MailFolderList();
+ *
+ *    $listMailFolder = new ListMailFolder(
+ *      new FolderKey("dev", "INBOX"), ["delimiter" => ".", "name" => "INBOX", "unreadCount" => 23]
+ *    );
+ *    $list[] = $listMailFolder;
+ *
+ *    foreach ($list as $key => $mItem) {
+ *        // iterating over the item
+ *    }
+ *
+ * @package Conjoon\Mail\Client\Folder
  */
-class MailFolderServiceException extends \RuntimeException {
+class MailFolderList extends AbstractList {
+
+
+
+// -------------------------
+//  AbstractList
+// -------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function getEntityType() :string{
+        return ListMailFolder::class;
+    }
 
 
 

@@ -24,6 +24,9 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use Conjoon\Mail\Client\Folder\MailFolderChildList,
+    Conjoon\Mail\Client\Folder\MailFolder,
+    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 
 class MailFolderControllerTest extends TestCase
 {
@@ -39,20 +42,28 @@ class MailFolderControllerTest extends TestCase
      */
     public function testIndex_success()
     {
-        $repository = $this->getMockBuilder('App\Imap\Service\DefaultMailFolderService')
+        $service = $this->getMockBuilder('Conjoon\Mail\Client\Service\DefaultMailFolderService')
                            ->disableOriginalConstructor()
                            ->getMock();
 
         $this->app->when(App\Http\Controllers\MailFolderController::class)
-            ->needs(App\Imap\Service\MailFolderService::class)
-            ->give(function () use ($repository) {
-                return $repository;
+            ->needs(Conjoon\Mail\Client\Service\MailFolderService::class)
+            ->give(function () use ($service) {
+                return $service;
             });
 
-        $repository->expects($this->once())
-                   ->method('getMailFoldersFor')
+        $resultList   = new MailFolderChildList;
+        $resultList[] = new MailFolder(
+            new FolderKey("dev", "INBOX"),
+            ["name"        => "INBOX",
+             "unreadCount" => 2,
+             "folderType"  => MailFolder::TYPE_INBOX]
+        );
+
+        $service->expects($this->once())
+                   ->method('getMailFolderChildList')
                    ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
-                   ->willReturn(['testArray']);
+                   ->willReturn($resultList);
 
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -62,7 +73,7 @@ class MailFolderControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => ['testArray']
+            "data"    => $resultList->toJson()
           ]);
     }
 

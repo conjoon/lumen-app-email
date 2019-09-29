@@ -31,7 +31,9 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\ListMessageItem;
+    Conjoon\Mail\Client\Message\ListMessageItem,
+    Conjoon\Mail\Client\Folder\MailFolderList;
+;
 
 
 /**
@@ -70,6 +72,16 @@ class HordeClientTest extends TestCase {
             $mailAccount,
             $client->getMailAccount($key)
         );
+
+        $this->assertSame(
+            $mailAccount,
+            $client->getMailAccount($key->getMailAccountId())
+        );
+
+        $this->assertSame(
+            null,
+            $client->getMailAccount(89)
+        );
     }
 
 
@@ -104,6 +116,11 @@ class HordeClientTest extends TestCase {
         $socket2 = $client->connect($someKey2);
 
         $this->assertSame($socket, $socket2);
+
+        $socket3 = $client->connect($mailAccount->getId());
+
+        $this->assertSame($socket, $socket3);
+
     }
 
 
@@ -302,6 +319,59 @@ class HordeClientTest extends TestCase {
         $unreadCount = $client->getUnreadMessageCount($this->createFolderKey($account->getId(), "INBOX"));
         $this->assertSame(2, $unreadCount);
     }
+
+
+    /**
+     * Tests getMailFolderList
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMailFolderList() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive('listMailboxes')->with(
+            "*",
+            \Horde_Imap_Client::MBOX_ALL,
+            ["attributes" => true]
+        )->andReturn([
+            "INBOX" => ["delimiter" => ".", "attributes" => []],
+            "INBOX.Folder" => ["delimiter" => ":", "attributes" => ["\\noselect"]]
+        ]);
+
+        $imapStub->shouldReceive('status')->with(
+            "INBOX",
+            \Horde_Imap_Client::STATUS_UNSEEN
+        )->andReturn(["unseen" => 30]);
+
+        $imapStub->shouldNotReceive('status')->with(
+            "INBOX.Folder",
+            \Horde_Imap_Client::STATUS_UNSEEN
+        );
+
+
+        $client = $this->createClient();
+
+        $mailFolderList = $client->getMailFolderList($account);
+
+        $this->assertInstanceOf(MailFolderList::class, $mailFolderList);
+
+        $listMailFolder = $mailFolderList[0];
+        $this->assertSame("INBOX", $listMailFolder->getName());
+        $this->assertSame(".", $listMailFolder->getDelimiter());
+        $this->assertSame(30, $listMailFolder->getUnreadCount());
+        $this->assertSame([], $listMailFolder->getAttributes());
+
+        $listMailFolder = $mailFolderList[1];
+        $this->assertSame("INBOX.Folder", $listMailFolder->getName());
+        $this->assertSame(":", $listMailFolder->getDelimiter());
+        $this->assertSame(0, $listMailFolder->getUnreadCount());
+        $this->assertSame(["\\noselect"], $listMailFolder->getAttributes());
+    }
+
 
 
 // -------------------------------

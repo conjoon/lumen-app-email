@@ -23,17 +23,30 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Imap\Service;
+use Conjoon\Util\AbstractList,
+    Conjoon\Mail\Client\Folder\ListMailFolder,
+    Conjoon\Mail\Client\Folder\MailFolderList;
 
-/**
- * Class MessageItemServiceException
- *
- * @package App\Imap\Service
- */
-class MessageItemServiceException extends \RuntimeException {
 
+class MailFolderListTest extends TestCase
+{
+
+
+// ---------------------
+//    Tests
+// ---------------------
+
+    /**
+     * Tests constructor
+     */
+    public function testClass() {
+
+        $mailFolderList = new MailFolderList();
+        $this->assertInstanceOf(AbstractList::class, $mailFolderList);
+
+        $this->assertSame(ListMailFolder::class, $mailFolderList->getEntityType());
+    }
 
 
 }

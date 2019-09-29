@@ -23,22 +23,27 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Imap\Service\MessageItemServiceException;
+namespace Conjoon\Mail\Client\Folder;
+
 
 /**
- * Class MessageItemServiceExceptionTest
- * 
+ * Interface FolderIdToTypeMapper.
+ *
+ * @package Conjoon\Mail\Client\Folder
  */
-class MessageItemServiceExceptionTest extends TestCase {
+interface FolderIdToTypeMapper {
 
 
-    public function testInstance() {
-
-        $exception = new MessageItemServiceException();
-
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
-    }
+    /**
+     * Function to map a folder-id (global name) to a Folder-Type.
+     *
+     * @param ListMailFolder $listMailFolder
+     *
+     * @return string
+     */
+    public function getFolderType(ListMailFolder $listMailFolder) :string;
 
 
 }

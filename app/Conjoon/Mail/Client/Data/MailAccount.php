@@ -48,14 +48,15 @@ namespace Conjoon\Mail\Client\Data;
  *        'outbox_port'     => 993,
  *        'outbox_user'     => 'outboxuser',
  *        'outbox_password' => 'outboxpassword',
- *        'outbox_ssl'      => true
+ *        'outbox_ssl'      => true,
+ *        'root'            => "INBOX"
  *    ]);
  *
  *    $account->getOutboxSsl(); // true
  *    $account->getInboxPort(); // 993
  *    $account->getReplyTo();   // ['name' => 'John Smith', 'address' => 'dev@conjoon.org'],
  *
- *
+ * The property "root" allows for specifying a root mailbox and defaults to "INBOX".
  *
  * @package Conjoon\Mail\Client\Data
  */
@@ -137,6 +138,10 @@ class MailAccount  {
      */
     protected $outbox_ssl;
 
+    /**
+     * @var array
+     */
+    protected $root = ["INBOX"];
 
     /**
      * MailAccount constructor.
@@ -183,12 +188,13 @@ class MailAccount  {
             }
         }
 
+
         throw new \BadMethodCallException("no method \"".$method."\" found.");
     }
 
 
     /**
-     * Returns an Array reoresentation of this instance.
+     * Returns an Array representation of this instance.
      *
      * @inheritdoc
      */
@@ -208,7 +214,8 @@ class MailAccount  {
             "outbox_port"     => $this->getOutboxPort(),
             "outbox_user"     => $this->getOutboxUser(),
             "outbox_password" => $this->getOutboxPassword(),
-            "outbox_ssl"      => $this->getOutboxSsl()
+            "outbox_ssl"      => $this->getOutboxSsl(),
+            "root"            => $this->getRoot()
         ];
     }
 
