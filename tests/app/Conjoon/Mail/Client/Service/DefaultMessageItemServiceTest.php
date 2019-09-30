@@ -57,6 +57,10 @@ class DefaultMessageItemServiceTest extends TestCase {
 // ------------------
     /**
      * Tests constructor.
+     *
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testInstance() {
 
@@ -78,6 +82,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     /**
      * Multiple Message Item Test.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetMessageItemList() {
 
@@ -113,6 +120,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     /**
      * Single MessageItem Test
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetMessageItem() {
 
@@ -154,6 +164,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     /**
      * Single MessageBody Test
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetMessageBodyFor() {
 
@@ -193,6 +206,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     /**
      * Tests getTotalMessageCount()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetTotalMessageCount() {
         $service = $this->createService();
@@ -215,6 +231,9 @@ class DefaultMessageItemServiceTest extends TestCase {
 
     /**
      * Tests getUnreadMessageCount()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testUnreadMessageCount() {
         $service = $this->createService();
@@ -270,7 +289,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
-                        "getUnreadMessageCount", "getTotalMessageCount"])
+                        "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

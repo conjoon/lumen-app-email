@@ -39,6 +39,9 @@ class DefaultMailFolderServiceTest extends TestCase {
 
     /**
      * Test the instance
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testInstance() {
 
@@ -52,6 +55,9 @@ class DefaultMailFolderServiceTest extends TestCase {
      *
      * Test expects the list returned by the MailFolderTreeBuilder to be
      * returned by the Service without changing anything.
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetMailFolderChildList() {
 
