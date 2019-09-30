@@ -590,67 +590,88 @@ class HordeClient implements MailClient {
     protected function getContents(
         \Horde_Imap_Client_Socket $client, $messageStructure, MessageKey $key, array $options) :array {
 
-        $typeMap          = $messageStructure->contentTypeMap();
-        $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
-        foreach ($typeMap as $part => $type) {
-            $bodyQuery->bodyPart($part, array(
-                'peek'   => true
-            ));
-        }
 
         $ret             = [];
         $findHtml        = in_array("html", $options);
         $findPlain       = in_array("plain", $options);
         $findAttachments = in_array("hasAttachments", $options);
 
-        if ($findHtml) {
-            $ret["html"] = ["content" => "", "charset" => ""];
-        }
-        if ($findPlain) {
-            $ret["plain"] = ["content" => "", "charset" => ""];
-        }
+        $typeMap          = $messageStructure->contentTypeMap();
+        $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
+
         if ($findAttachments) {
             $ret["hasAttachments"] = false;
+            foreach ($typeMap as $part => $type) {
+                if (in_array($type, ["text/plain", "text/html"]) === false &&
+                    $messageStructure->getPart($part)->isAttachment()) {
+                    $ret["hasAttachments"] = true;
+                }
+            }
+        }
+
+        if (!$findHtml && !$findPlain) {
+            return $ret;
+        }
+
+        foreach ($typeMap as $part => $type) {
+            if (($type === "text/html" && $findHtml) ||
+                ($type === "text/plain" && $findPlain)) {
+                $bodyQuery->bodyPart($part, [
+                    'peek' => true
+                ]);
+            }
         }
 
         $messageData = $client->fetch(
             $key->getMailFolderId(), $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($key->getId())]
         )->first();
 
-        if ($messageData) {
-            $plainPartId = $messageStructure->findBody('plain');
-            $htmlPartId  = $messageStructure->findBody('html');
-
-            foreach ($typeMap as $part => $type) {
-
-                $body = $messageStructure->getPart($part);
-
-                if ($findAttachments && $body->isAttachment()) {
-                    $ret["hasAttachments"] = true;
-                    if (!$findHtml && !$findPlain) {
-                        break;
-                    }
-                }
-
-                if ($findHtml || $findPlain) {
-                    $content = $messageData->getBodyPart($part);
-                    if (!$messageData->getBodyPartDecode($part)) {
-                        // Decode the content.
-                        $body->setContents($content);
-                        $content = $body->getContents();
-                    }
-
-                    if ($findHtml && (string)$part === $htmlPartId) {
-                        $ret["html"] = ["content" => $content, "charset" => $body->getCharset()];
-                    } else if ($findPlain && (string)$part === $plainPartId) {
-                        $ret["plain"] = ["content" => $content, "charset" => $body->getCharset()];
-                    }
-                }
-
-            }
+        if ($findHtml) {
+            $ret["html"] = $this->getTextContent('html', $messageStructure, $messageData, $typeMap);
         }
 
+        if ($findPlain) {
+            $ret["plain"] = $this->getTextContent('plain', $messageStructure, $messageData, $typeMap);
+        }
+
+
         return $ret;
+    }
+
+
+    /**
+     * Helper function for getting content of a message part.
+     *
+     * @param $type
+     * @param $messageStructure
+     * @param $messageData
+     * @param $typeMap
+     *
+     * @return array
+     */
+    protected function getTextContent($type, $messageStructure, $messageData, $typeMap) {
+
+        $partId = $messageStructure->findBody($type);
+
+        foreach ($typeMap as $part => $type) {
+
+            if ((string)$part === $partId) {
+
+                $body    = $messageStructure->getPart($part);
+                $content = $messageData->getBodyPart($part);
+
+                if (!$messageData->getBodyPartDecode($part)) {
+                    // Decode the content.
+                    $body->setContents($content);
+                    $content = $body->getContents();
+                }
+
+                return ["content" => $content, "charset" => $body->getCharset()];
+            }
+
+        }
+
+        return ["content" => "", "charset" => ""];
     }
 
 
