@@ -28,7 +28,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageItemChildCompoundKey,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
 
-class MessageItemChildCompoundKeyTest extends TestCase
+class AttachmentKeyTest extends TestCase
 {
 
 
