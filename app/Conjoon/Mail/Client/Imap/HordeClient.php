@@ -411,7 +411,7 @@ class HordeClient implements MailClient {
             "type"     => $mimeType,
             "text"     => $fileName,
             "size"     => $part->getBytes(),
-            "content"  => $part->getContents(),
+            "content"  => base64_encode($part->getContents()),
             "encoding" => "base64"
         ]);
     }

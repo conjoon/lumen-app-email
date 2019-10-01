@@ -25,60 +25,55 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace Conjoon\Mail\Client\Attachment;
 
-use Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Auth,
-    Illuminate\Http\Request;
-
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
 /**
- * Class AttachmentController
- * @package App\Http\Controllers
+ * FileAttachment models a file email message attachment.
+ *
+ * @package Conjoon\Mail\Client\Attachment
  */
-class AttachmentController extends Controller {
-
+class FileAttachment extends AbstractAttachment {
 
     /**
-     * @var attachmentService
+     * @var string
      */
-    protected $attachmentService;
-
+    protected $content;
 
     /**
-     * AttachmentController constructor.
+     * @var string
+     */
+    protected $encoding;
+
+    /**
+     * Atatchment constructor.
      *
-     * @param AttachmentService $attachmentService
+     * @param AttachmentKey $attachmentKey
+     * @param array|null $data
+     *
+     * @throws \InvalidArgumentException if content or encoding  in $data is missing
      */
-    public function __construct(AttachmentService $attachmentService) {
+    public function __construct(AttachmentKey $attachmentKey, array $data) {
 
-        $this->attachmentService = $attachmentService;
+        $this->attachmentKey = $attachmentKey;
 
+        $missing = "";
+        if (!isset($data["content"])) {
+            $missing = "content";
+        } else if (!isset($data["encoding"])) {
+            $missing = "encoding";
+        }
+
+        if ($missing) {
+            throw new \InvalidArgumentException(
+                "value for property \"" . $missing . "\" missing"
+            );
+        }
+
+        parent::__construct($attachmentKey, $data);
     }
 
-
-    /**
-     * Returns all available Attachments for $mailAccountId, the specified
-     * $mailFolderId,
-     * and the specified $messageItemId
-     *
-     * @return ResponseJson
-     */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
-
-        $user = Auth::user();
-
-        $attachmentService = $this->attachmentService;
-        $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
-
-        return response()->json([
-            "success" => true,
-            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
-        ]);
-
-    }
 
 
 }

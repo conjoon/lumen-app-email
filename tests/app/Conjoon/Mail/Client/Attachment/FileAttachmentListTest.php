@@ -24,17 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\Service\AttachmentServiceException;
+use Conjoon\Util\AbstractList,
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
+    Conjoon\Mail\Client\Attachment\FileAttachment,
+    Conjoon\Mail\Client\Attachment\FileAttachmentList;
 
 
-class AttachmentServiceExceptionTest extends TestCase {
+class FileAttachmentListTest extends TestCase
+{
 
 
-    public function testInstance() {
+// ---------------------
+//    Tests
+// ---------------------
 
-        $exception = new AttachmentServiceException();
+    /**
+     * Tests constructor
+     */
+    public function testClass() {
 
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
+        $attachmentList = new FileAttachmentList();
+        $this->assertInstanceOf(AbstractList::class, $attachmentList);
+
+        $this->assertSame(FileAttachment::class, $attachmentList->getEntityType());
     }
 
 

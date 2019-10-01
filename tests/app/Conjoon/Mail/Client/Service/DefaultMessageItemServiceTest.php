@@ -289,7 +289,8 @@ class DefaultMessageItemServiceTest extends TestCase {
         return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
-                        "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList"])
+                        "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
+                        "getFileAttachmentList"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

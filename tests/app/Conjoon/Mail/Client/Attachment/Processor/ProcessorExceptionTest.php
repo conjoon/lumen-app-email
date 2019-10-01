@@ -24,24 +24,25 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\MailAccount;
+
+namespace Conjoon\Mail\Client\Atatchment\Processor;
+
+use Conjoon\Mail\Client\Attachment\Processor\ProcessorException,
+    Conjoon\Mail\Client\MailClientException;
+
+/**
+ * Class ProcessorExceptionTest
+ * 
+ */
+class ProcessorExceptionTest extends \TestCase {
 
 
-class ImapTraitTest extends TestCase {
+    public function testInstance() {
 
-    use TestTrait;
+        $exception = new ProcessorException();
 
-    public function testConcreteMethod()
-    {
-
-        $mock = $this->getMockForTrait('\App\Imap\Service\ImapTrait');
-
-        $socket = $mock->connect($this->getTestMailAccount("dev_sys_conjoon_org"));
-
-        $this->assertInstanceOf(
-            \Horde_Imap_Client_Socket::class, $socket
-        );
-
+        $this->assertInstanceOf(MailClientException::class, $exception);
     }
+
 
 }

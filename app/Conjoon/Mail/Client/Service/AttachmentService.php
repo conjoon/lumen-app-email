@@ -25,60 +25,37 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Auth,
-    Illuminate\Http\Request;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClient,
+    Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 
 
 /**
- * Class AttachmentController
- * @package App\Http\Controllers
+ * Interface AttachmentService
+ *
+ * @package Conjoon\Mail\Client\Service
  */
-class AttachmentController extends Controller {
+interface AttachmentService {
 
-
+    
     /**
-     * @var attachmentService
-     */
-    protected $attachmentService;
-
-
-    /**
-     * AttachmentController constructor.
+     * Returns a list of FileAttachmentItems for the specified MessageKey.
      *
-     * @param AttachmentService $attachmentService
+     * @param MessageKey $key
+     *
+     * @return FileAttachmentItemList
      */
-    public function __construct(AttachmentService $attachmentService) {
-
-        $this->attachmentService = $attachmentService;
-
-    }
+    public function getFileAttachmentItemList(MessageKey $key) :FileAttachmentItemList;
 
 
     /**
-     * Returns all available Attachments for $mailAccountId, the specified
-     * $mailFolderId,
-     * and the specified $messageItemId
+     * Returns the MailClient used by this Attachment.
      *
-     * @return ResponseJson
+     * @return MailClient
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
-
-        $user = Auth::user();
-
-        $attachmentService = $this->attachmentService;
-        $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
-
-        return response()->json([
-            "success" => true,
-            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
-        ]);
-
-    }
+    public function getMailClient() :MailClient;
 
 
 }
