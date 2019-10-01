@@ -35,7 +35,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageBody;
+    Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\Flag\FlagList;
 
 /**
  * Interface MessageItemService
@@ -99,6 +100,14 @@ interface MessageItemService {
      * @return int
      */
     public function getUnreadMessageCount(FolderKey $key) : int;
+
+
+    /**
+     * Sets the flags in $flagList for the Message identified with MessageKey.
+     *
+     * @return boolean
+     */
+    public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool;
 
 
     /**

@@ -31,7 +31,10 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\ListMessageItem;
+    Conjoon\Mail\Client\Message\ListMessageItem,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
 
 
 
@@ -193,6 +196,172 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
+    /**
+     * Tests put() to make sure method relies on proper
+     * request payload.
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_BadRequest_missingFlag()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageItem');
+
+        $this->assertEquals(400, $response->status());
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg"    => "Invalid request payload."
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure method relies on target-parameter.
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_BadRequest_missingTarget()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageBody');
+
+        $this->assertEquals(400, $response->status());
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg"    => "\"target\" must be specified with \"MessageItem\"."
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure setting flag works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_Flag()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $flagList = new FlagList();
+        $flagList[] = new SeenFlag(true);
+
+
+        $serviceStub->expects($this->once())
+            ->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(true);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageItem", "seen" => true]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => array_merge($messageKey->toJson(), [
+                "seen" => true
+            ])
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure setting flags (seen / flagged) works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_AllFlags()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $flagList = new FlagList();
+        $flagList[] = new SeenFlag(true);
+        $flagList[] = new FlaggedFlag(false);
+
+
+        $serviceStub->expects($this->once())
+            ->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(true);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageItem", "seen" => true, "flagged" => false]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => array_merge($messageKey->toJson(), [
+                "seen"    => true,
+                "flagged" => false
+            ])
+        ]);
+    }
+
+
+    /**
+     * Tests put() with failed Service
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_ServiceFail()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $flagList = new FlagList();
+        $flagList[] = new FlaggedFlag(false);
+
+
+        $serviceStub->expects($this->once())
+            ->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(false);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageItem", "flagged" => false]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "data"    => array_merge($messageKey->toJson(), [
+                "flagged" => false
+            ])
+        ]);
+    }
 
 // +--------------------------
 // | Helper

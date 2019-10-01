@@ -53,6 +53,10 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
         'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
         'MessageItemController@get'
     );
+    $router->put(
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+        'MessageItemController@put'
+    );
     $router->get(
         'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
         'AttachmentController@index'
