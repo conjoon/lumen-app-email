@@ -40,6 +40,9 @@ use Conjoon\Mail\Client\Attachment\Processor\ProcessorException,
 class InlineDataProcessorTest extends \TestCase {
 
 
+    /**
+     * Test class
+     */
     public function testInstance() {
 
         $processor = new InlineDataProcessor();
@@ -64,6 +67,32 @@ class InlineDataProcessorTest extends \TestCase {
         $this->assertSame("image/jpeg", $item->getType());
         $this->assertSame("data:application/octet-stream;base64," . $fileAttachment->getContent(), $item->getDownloadUrl());
         $this->assertSame("data:image/jpeg;base64," . $fileAttachment->getContent(), $item->getPreviewImgSrc());
+
+
+    }
+
+
+    /**
+     * Test missing previewImgSrc
+     */
+    public function testPreviewImgSrcMissing() {
+
+        $processor = new InlineDataProcessor();
+
+        $this->assertInstanceOf(FileAttachmentProcessor::class, $processor);
+
+        $attachmentKey = new AttachmentKey("dev", "INBOX", "123", "1");
+        $fileAttachment = new FileAttachment($attachmentKey, [
+            "size" => 123,
+            "content" => base64_encode("CONTENT"),
+            "encoding" => "base64",
+            "type" => "text/html",
+            "text" => "file1.jpg"
+        ]);
+
+        $item = $processor->process($fileAttachment);
+
+        $this->assertSame("", $item->getPreviewImgSrc());
 
 
     }

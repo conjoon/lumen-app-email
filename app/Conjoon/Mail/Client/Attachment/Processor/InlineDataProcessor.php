@@ -65,7 +65,7 @@ class InlineDataProcessor implements FileAttachmentProcessor {
             "downloadUrl"   => 'data:application/octet-stream;base64,' . $content,
             "previewImgSrc" => stripos($type, "image") === 0
                 ? "data:" . $type . ";base64," . $content
-                : null
+                : ""
         ];
 
         return new FileAttachmentItem($fileAttachment->getAttachmentKey(), $data);
