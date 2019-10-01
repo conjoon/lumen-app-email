@@ -37,7 +37,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\AbstractMessageItem;
+    Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\Message\Flag\FlagList;
 
 /**
  * Class DefaultMessageItemService.
@@ -175,6 +176,13 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function getTotalMessageCount(FolderKey $folderKey) :int {
         return $this->getMailClient()->getTotalMessageCount($folderKey);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool {
+        return $this->getMailClient()->setFlags($messageKey, $flagList);
     }
 
 

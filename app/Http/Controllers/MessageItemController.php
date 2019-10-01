@@ -30,6 +30,9 @@ namespace App\Http\Controllers;
 use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Auth;
 
 use Illuminate\Http\Request;
@@ -146,6 +149,70 @@ class MessageItemController extends Controller {
             "success" => true,
             "data" => $item->toJson()
         ]);
+
+    }
+
+
+    /**
+     * Changes data of a single MessageItem.
+     * Allows for specifying target=MessageItem and the flag-properties
+     * seen=true/false and/or flagged=true/false.
+     * Everything else returns a 405.
+     *
+     * @return ResponseJson
+     */
+    public function put(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
+        // possible targets: MessageItem
+        $target = $request->input('target');
+        // possible parameters: seen, flagged
+        $seen    = $request->input('seen');
+        $flagged = $request->input('flagged');
+
+        $mailFolderId = urldecode($mailFolderId);
+        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+
+        if ($target !== "MessageItem") {
+            return response()->json([
+                "success" => false,
+                "msg" =>  "\"target\" must be specified with \"MessageItem\"."
+            ], 400);
+        }
+
+        if (!is_bool($seen) && !is_bool($flagged)) {
+            return response()->json([
+                "success" => false,
+                "msg"     =>  "Invalid request payload.",
+                "flagged" => $flagged,
+                "seen"    => $seen
+            ], 400);
+        }
+
+        $flagList   = new FlagList();
+        $response   = [];
+        if ($seen !== null) {
+            $flagList[] = new SeenFlag($seen);
+            $response["seen"] = $seen;
+        }
+        if ($flagged !== null) {
+            $flagList[] = new FlaggedFlag($flagged);
+            $response["flagged"] = $flagged;
+        }
+
+        $result = $messageItemService->setFlags($messageKey, $flagList);
+
+        return response()->json([
+            "success" => $result,
+            "data"    => array_merge(
+                $messageKey ->toJson(),
+                $response
+            )
+        ], 200);
 
     }
 

@@ -43,6 +43,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Folder\ListMailFolder,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Attachment\FileAttachment,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
 /**
@@ -388,6 +389,42 @@ class HordeClient implements MailClient {
         return $attachmentList;
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function setFlags(MessageKey $key, Flaglist $flagList) : bool{
+        try {
+            $client = $this->connect($key);
+
+            $messageItemId = $key->getId();
+            $mailFolderId  = $key->getMailFolderId();
+
+            $ids = new \Horde_Imap_Client_Ids([$messageItemId]);
+
+            $options = [
+                'ids' => $ids
+            ];
+
+            foreach ($flagList as $flag) {
+
+                $key = $flag->getValue() ? "add" : "remove";
+
+                if (!isset($options[$key])) {
+                    $options[$key] = [];
+                }
+
+                $options[$key][] = $flag->getName();
+            }
+
+            $client->store($mailFolderId, $options);
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return true;
+    }
 
 // -------------------
 //   Helper

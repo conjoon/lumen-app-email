@@ -32,8 +32,11 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Folder\MailFolderList;
-;
+    Conjoon\Mail\Client\Folder\MailFolderList,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+
 
 
 /**
@@ -411,6 +414,41 @@ class HordeClientTest extends TestCase {
     }
 
 
+
+    /**
+     * Tests setFlags
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSetFlags() {
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $messageItemId = "123";
+        $mailFolderId  = "INBOX";
+
+        $imapStub->shouldReceive('store')->with(
+            $mailFolderId, [
+                "ids"    => new \Horde_Imap_Client_Ids([$messageItemId]),
+                "add"    => ["\\Seen"],
+                "remove" => ["\\Flagged"]
+            ]
+        )->andReturn(true);
+
+        $client = $this->createClient();
+
+        $flagList = new FlagList();
+        $flagList[] = new SeenFlag(true);
+        $flagList[] = new FlaggedFlag(false);
+
+        $result = $client->setFlags(
+            $this->createMessageKey($account->getId(), $mailFolderId, $messageItemId),
+            $flagList
+        );
+        $this->assertSame(true, $result);
+    }
 
 // -------------------------------
 //  Helper

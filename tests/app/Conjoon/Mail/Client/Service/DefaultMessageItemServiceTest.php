@@ -37,6 +37,8 @@ use
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
@@ -251,6 +253,33 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame(311, $service->getUnreadMessageCount($folderKey));
     }
 
+
+    /**
+     * Tests setFlags()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSetFlags() {
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $flagList = new FlagList();
+        $flagList[] = new SeenFlag(true);
+
+        $clientStub = $service->getMailClient();
+        $clientStub->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(false);
+
+        $this->assertSame(false, $service->setFlags($messageKey, $flagList));
+    }
+
 // ------------------
 //     Test Helper
 // ------------------
@@ -290,7 +319,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList"])
+                        "getFileAttachmentList", "setFlags"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

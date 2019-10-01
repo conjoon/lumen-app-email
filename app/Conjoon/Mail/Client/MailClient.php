@@ -34,6 +34,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Folder\MailFolderList;
 
 /**
@@ -129,5 +130,17 @@ interface MailClient {
      */
     public function getFileAttachmentList(MessageKey $key) : FileAttachmentList;
 
+
+    /**
+     * Sets the flags specified in FlagList for the message represented by MessageKey.
+     *
+     * @param MessageKey $key
+     * @param FlagList $flagList
+     *
+     * @return bool if the operatoin succeeded, otherwise false
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function setFlags(MessageKey $key, FlagList $flagList) : bool;
 
 }
