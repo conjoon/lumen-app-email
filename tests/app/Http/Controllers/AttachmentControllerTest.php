@@ -24,6 +24,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
+    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
 class AttachmentControllerTest extends TestCase
 {
@@ -38,30 +42,42 @@ class AttachmentControllerTest extends TestCase
      */
     public function testIndex_success()
     {
-        $service = $this->getMockBuilder('App\Imap\Service\DefaultAttachmentService')
+        $service = $this->getMockBuilder('Conjoon\Mail\Client\Service\DefaultAttachmentService')
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->app->when(App\Http\Controllers\AttachmentController::class)
-            ->needs(App\Imap\Service\AttachmentService::class)
+            ->needs(Conjoon\Mail\Client\Service\AttachmentService::class)
             ->give(function () use ($service) {
                 return $service;
             });
 
+        $messageKey = new MessageKey("dev", "INBOX", "123");
+
+        $resultList   = new FileAttachmentItemList;
+        $resultList[] = new FileAttachmentItem(
+            new AttachmentKey("dev", "INBOX", "123", "1"),
+            ["size" => 0,
+             "type" => "text/plain",
+             "text"  => "file",
+            "downloadUrl" => "",
+            "previewImgSrc" => ""]
+        );
+
         $service->expects($this->once())
-                ->method('getAttachmentsFor')
-                ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
-                ->willReturn(['testArray']);
+            ->method('getFileAttachmentItemList')
+            ->with($messageKey)
+            ->willReturn($resultList);
 
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/1/Attachments');
+            ->call('GET', 'cn_mail/MailAccounts/dev/MailFolders/INBOX/MessageItems/123/Attachments');
 
         $this->assertEquals(200, $response->status());
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => ['testArray']
+            "data"    => $resultList->toJson()
         ]);
 
     }

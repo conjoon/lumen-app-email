@@ -23,37 +23,35 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Imap\Service;
+namespace Conjoon\Mail\Client\Attachment\Processor;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Attachment\FileAttachment,
+    Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+
 
 /**
- * Trait ImapTrait
+ * Interface FileAttachmentProcessor.
+ * Contract for converting a FileAttachment to a FileAttachmentItem to provide
+ * a download and preview for the contents of a FileAttachment.
  *
- * @package App\Imap\Service
+ * @package Conjoon\Mail\Client\Attachment\Processor
  */
-trait ImapTrait {
+interface FileAttachmentProcessor {
 
     /**
-     * Creates a \Horde_Imap_Client_Socket with the specified account informations.
+     * Processes the FileAttachment ad returns a FileAttachmentItem
+     * with the properties previewImgSrc and downloadUrl computed by the content and
+     * encoding of the FileAttachment.
+     * Both entities need to share the same AttachmentKey-informations.
      *
-     * @param MailAccount $account
+     * @param FileAttachment $fileAttachment
      *
-     * @return \Horde_Imap_Client_Socket
+     * @return FileAttachmentItem
+     *
+     * @throws ProcessorException if any error occurs.
      */
-    public function connect(MailAccount $account) : \Horde_Imap_Client_Socket {
+    public function process(FileAttachment $fileAttachment) : FileAttachmentItem;
 
-
-        return new \Horde_Imap_Client_Socket(array(
-            'username' => $account->getInboxUser(),
-            'password' => $account->getInboxPassword(),
-            'hostspec' => $account->getInboxAddress(),
-            'port'     => $account->getInboxPort(),
-            'secure'   => $account->getInboxSsl() ? 'ssl' : null
-        ));
-
-    }
 
 }

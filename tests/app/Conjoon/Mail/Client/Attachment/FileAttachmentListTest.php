@@ -23,17 +23,31 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Imap\Service;
+use Conjoon\Util\AbstractList,
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
+    Conjoon\Mail\Client\Attachment\FileAttachment,
+    Conjoon\Mail\Client\Attachment\FileAttachmentList;
 
-/**
- * Class AttachmentServiceException
- *
- * @package App\Imap\Service
- */
-class AttachmentServiceException extends \RuntimeException {
 
+class FileAttachmentListTest extends TestCase
+{
+
+
+// ---------------------
+//    Tests
+// ---------------------
+
+    /**
+     * Tests constructor
+     */
+    public function testClass() {
+
+        $attachmentList = new FileAttachmentList();
+        $this->assertInstanceOf(AbstractList::class, $attachmentList);
+
+        $this->assertSame(FileAttachment::class, $attachmentList->getEntityType());
+    }
 
 
 }

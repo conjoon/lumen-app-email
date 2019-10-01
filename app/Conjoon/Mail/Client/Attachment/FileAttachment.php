@@ -23,19 +23,57 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Imap\Service\AttachmentServiceException;
+namespace Conjoon\Mail\Client\Attachment;
 
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
-class AttachmentServiceExceptionTest extends TestCase {
+/**
+ * FileAttachment models a file email message attachment.
+ *
+ * @package Conjoon\Mail\Client\Attachment
+ */
+class FileAttachment extends AbstractAttachment {
 
+    /**
+     * @var string
+     */
+    protected $content;
 
-    public function testInstance() {
+    /**
+     * @var string
+     */
+    protected $encoding;
 
-        $exception = new AttachmentServiceException();
+    /**
+     * Atatchment constructor.
+     *
+     * @param AttachmentKey $attachmentKey
+     * @param array|null $data
+     *
+     * @throws \InvalidArgumentException if content or encoding  in $data is missing
+     */
+    public function __construct(AttachmentKey $attachmentKey, array $data) {
 
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
+        $this->attachmentKey = $attachmentKey;
+
+        $missing = "";
+        if (!isset($data["content"])) {
+            $missing = "content";
+        } else if (!isset($data["encoding"])) {
+            $missing = "encoding";
+        }
+
+        if ($missing) {
+            throw new \InvalidArgumentException(
+                "value for property \"" . $missing . "\" missing"
+            );
+        }
+
+        parent::__construct($attachmentKey, $data);
     }
+
 
 
 }

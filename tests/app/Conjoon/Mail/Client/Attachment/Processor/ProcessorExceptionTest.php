@@ -23,42 +23,26 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Imap\Service;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+namespace Conjoon\Mail\Client\Atatchment\Processor;
+
+use Conjoon\Mail\Client\Attachment\Processor\ProcessorException,
+    Conjoon\Mail\Client\MailClientException;
 
 /**
- * Interface AttachmentService
- *
- * @package App\Imap\Service
+ * Class ProcessorExceptionTest
+ * 
  */
-interface AttachmentService {
+class ProcessorExceptionTest extends \TestCase {
 
-    
-    /**
-     * Returns a list of Attachments for the specified $mailFolderId and $messageItemId
-     * for the specified $account. If the Message does not exist, null wil be returned.
-     *
-     * - type (string)
-     * - text (string)
-     * - size (int)
-     * - previewImgSrc (string)) an URI to download the resource for an image preview or base64-encoded
-     * inline data for an image representing the contents of this attachment
-     * - id (string)
-     * - mailAccountId (string)
-     * - mailFolderId (string)
-     * - parentMessageItemId (string) the messageItemId to which this attachment belongs
-     * - downloadUrl (string) an URI to download the resource or base64-encoded inline data
-     *
-     * @param MailAccount $account
-     * @param string $mailFolderId
-     * @param string $messageItemId
-     *
-     * @return array An array of attachment data
-     */
-    public function getAttachmentsFor(MailAccount $account, string $mailFolderId, string $messageitemId) :array;
+
+    public function testInstance() {
+
+        $exception = new ProcessorException();
+
+        $this->assertInstanceOf(MailClientException::class, $exception);
+    }
 
 
 }

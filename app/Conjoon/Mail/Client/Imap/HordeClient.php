@@ -40,7 +40,10 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Folder\ListMailFolder;
+    Conjoon\Mail\Client\Folder\ListMailFolder,
+    Conjoon\Mail\Client\Attachment\FileAttachmentList,
+    Conjoon\Mail\Client\Attachment\FileAttachment,
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 
 /**
  * Class HordeClient.
@@ -318,9 +321,102 @@ class HordeClient implements MailClient {
     }
 
 
+    /**
+     * @inheritdoc
+     */
+    public function getFileAttachmentList(MessageKey $key) :FileAttachmentList {
+
+        try {
+            $client = $this->connect($key);
+
+            $messageItemId = $key->getId();
+            $mailFolderId  = $key->getMailFolderId();
+
+            $query = new \Horde_Imap_Client_Fetch_Query();
+            $query->structure();
+
+            $uid = new \Horde_Imap_Client_Ids($messageItemId);
+
+            $list = $client->fetch($mailFolderId, $query, array(
+                'ids' => $uid
+            ));
+
+            $serverItem = $list->first();
+
+            $messageStructure = $serverItem->getStructure();
+            $typeMap          = $messageStructure->contentTypeMap();
+            $bodyQuery        = new \Horde_Imap_Client_Fetch_Query();
+
+            foreach ($typeMap as $part => $type) {
+                if ($messageStructure->getPart($part)->isAttachment()) {
+                    $bodyQuery->bodyPart($part, array(
+                        'peek'   => true
+                    ));
+                }
+            }
+
+            $messageData = $client->fetch(
+                $mailFolderId, $bodyQuery, ['ids' => new \Horde_Imap_Client_Ids($messageItemId)]
+            )->first();
+
+            $attachmentList = new FileAttachmentList;
+
+            if ($messageData) {
+
+                $id = 0;
+                foreach ($typeMap as $typePart => $type) {
+
+                    $stream = $messageData->getBodyPart($typePart, true);
+
+                    $part = $messageStructure->getPart($typePart);
+                    $part->setContents($stream, array('usestream' => true));
+
+                    if (!!$part->getName($typePart)) {
+                        $filename = $part->getName($typePart);
+                        $attachmentList[] = $this->buildAttachment(
+                            $key, $part, $filename, (string)++$id
+                        );
+                    }
+
+                }
+            }
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return $attachmentList;
+    }
+
+
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Builds an attachment from the specified data.
+     *
+     * @param MessageKey $key
+     * @param $part
+     * @param $fileName
+     * @param $id
+     *
+     * @return FileAttachment
+     */
+    protected function buildAttachment(MessageKey $key, \Horde_Mime_Part $part, string $fileName, string $id) :FileAttachment {
+
+        $mimeType = $part->getType();
+
+        return new FileAttachment(new AttachmentKey($key, $id), [
+            "type"     => $mimeType,
+            "text"     => $fileName,
+            "size"     => $part->getBytes(),
+            "content"  => base64_encode($part->getContents()),
+            "encoding" => "base64"
+        ]);
+    }
+
+
 
     /**
      * Fetches a list of messages from the server, considering start & limit options passed

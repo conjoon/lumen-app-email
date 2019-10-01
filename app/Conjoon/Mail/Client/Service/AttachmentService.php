@@ -25,60 +25,37 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Attachment;
+namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Util\AbstractList;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClient,
+    Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+
 
 /**
- * Class AttachmentList organizes a list of Attachments.
+ * Interface AttachmentService
  *
- * @example
- *
- *    $list = new AttachmentList();
- *
- *    $item = new ListAttachment(new MessageKey("dev", "INBOX", "232"));
- *    $list[] = $item;
- *
- *    foreach ($list as $key => $mItem) {
- *        // iterating over the item
- *    }
- *
- * @package Conjoon\Mail\Client\Attachment
+ * @package Conjoon\Mail\Client\Service
  */
-class AttachmentList extends AbstractList implements Jsonable {
+interface AttachmentService {
 
+    
+    /**
+     * Returns a list of FileAttachmentItems for the specified MessageKey.
+     *
+     * @param MessageKey $key
+     *
+     * @return FileAttachmentItemList
+     */
+    public function getFileAttachmentItemList(MessageKey $key) :FileAttachmentItemList;
 
-
-// -------------------------
-//  AbstractList
-// -------------------------
 
     /**
-     * @inheritdoc
+     * Returns the MailClient used by this Attachment.
+     *
+     * @return MailClient
      */
-    public function getEntityType() :string{
-        return Attachment::class;
-    }
-
-
-// --------------------------------
-//  Jsonable interface
-// --------------------------------
-
-    /**
-     * @return array
-     */
-    public function toJson() :array{
-
-        $data = [];
-
-        foreach ($this->data as $key => $item) {
-            $data[] = $item->toJson();
-        }
-
-        return $data;
-    }
+    public function getMailClient() :MailClient;
 
 
 }

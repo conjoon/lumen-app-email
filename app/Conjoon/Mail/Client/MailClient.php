@@ -30,6 +30,7 @@ namespace Conjoon\Mail\Client;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\MailAccount,
+    Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageItemList,
@@ -115,6 +116,18 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
     public function getUnreadMessageCount(FolderKey $key) : int;
+
+
+    /**
+     * Returns the FileAttachments in an FileAttachmentList for the specified message.
+     *
+     * @param MessageKey $key
+     *
+     * @return FileAttachmentList
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function getFileAttachmentList(MessageKey $key) : FileAttachmentList;
 
 
 }

@@ -25,59 +25,49 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace Conjoon\Mail\Client\Attachment;
 
-use Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Auth,
-    Illuminate\Http\Request;
-
+use Conjoon\Util\Jsonable,
+    Conjoon\Util\AbstractList;
 
 /**
- * Class AttachmentController
- * @package App\Http\Controllers
+ * Class FileAttachmentItemList organizes a list of FileAttachmentItems.
+ *
+ *
+ * @package Conjoon\Mail\Client\Attachment
  */
-class AttachmentController extends Controller {
+class FileAttachmentItemList extends AbstractList implements Jsonable {
 
+
+
+// -------------------------
+//  AbstractList
+// -------------------------
 
     /**
-     * @var attachmentService
+     * @inheritdoc
      */
-    protected $attachmentService;
-
-
-    /**
-     * AttachmentController constructor.
-     *
-     * @param AttachmentService $attachmentService
-     */
-    public function __construct(AttachmentService $attachmentService) {
-
-        $this->attachmentService = $attachmentService;
-
+    public function getEntityType() :string{
+        return FileAttachmentItem::class;
     }
 
 
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
     /**
-     * Returns all available Attachments for $mailAccountId, the specified
-     * $mailFolderId,
-     * and the specified $messageItemId
-     *
-     * @return ResponseJson
+     * @return array
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+    public function toJson() :array{
 
-        $user = Auth::user();
+        $data = [];
 
-        $attachmentService = $this->attachmentService;
-        $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+        foreach ($this->data as $key => $item) {
+            $data[] = $item->toJson();
+        }
 
-        return response()->json([
-            "success" => true,
-            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
-        ]);
-
+        return $data;
     }
 
 

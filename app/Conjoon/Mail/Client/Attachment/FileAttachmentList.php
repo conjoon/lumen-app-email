@@ -23,25 +23,32 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use App\Imap\MailAccount;
+namespace Conjoon\Mail\Client\Attachment;
+
+use Conjoon\Util\AbstractList;
+
+/**
+ * Class FileAttachmentList organizes a list of FileAttachments.
+ *
+ * @package Conjoon\Mail\Client\Attachment
+ */
+class FileAttachmentList extends AbstractList {
 
 
-class ImapTraitTest extends TestCase {
 
-    use TestTrait;
+// -------------------------
+//  AbstractList
+// -------------------------
 
-    public function testConcreteMethod()
-    {
-
-        $mock = $this->getMockForTrait('\App\Imap\Service\ImapTrait');
-
-        $socket = $mock->connect($this->getTestMailAccount("dev_sys_conjoon_org"));
-
-        $this->assertInstanceOf(
-            \Horde_Imap_Client_Socket::class, $socket
-        );
-
+    /**
+     * @inheritdoc
+     */
+    public function getEntityType() :string{
+        return FileAttachment::class;
     }
+
+
 
 }

@@ -31,31 +31,12 @@ use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Util\Jsonable;
 
 /**
- * Attachment models an email message attachment.
+ * FileAttachmentItem models a downloadable  email message file-attachment,
+ * providing a preview-src and a download url.
  *
  * @package Conjoon\Mail\Client\Attachment
  */
-class  Attachment implements Jsonable {
-
-    /**
-     * @var AttachmentKey
-     */
-    protected $attachmentKey;
-
-    /**
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * @var string
-     */
-    protected $text;
-
-    /**
-     * @var integer
-     */
-    protected $size;
+class FileAttachmentItem extends AbstractAttachment implements Jsonable {
 
     /**
      * @var string
@@ -68,7 +49,7 @@ class  Attachment implements Jsonable {
     protected $previewImgSrc;
 
     /**
-     * Atatchment constructor.
+     * DownloadableAttachment constructor.
      *
      * @param AttachmentKey $attachmentKey
      * @param array|null $data
@@ -81,14 +62,8 @@ class  Attachment implements Jsonable {
         $this->attachmentKey = $attachmentKey;
 
         $missing = "";
-        if (!isset($data["text"])) {
-            $missing = "text";
-        } else if (!isset($data["type"])) {
-            $missing = "type";
-        } else if (!isset($data["downloadUrl"])) {
+        if (!isset($data["downloadUrl"])) {
             $missing = "downloadUrl";
-        } else if (!isset($data["size"])) {
-            $missing = "size";
         } else if (!isset($data["previewImgSrc"])) {
             $missing = "previewImgSrc";
         }
@@ -99,58 +74,7 @@ class  Attachment implements Jsonable {
             );
         }
 
-        foreach ($data as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->{$key} = $value;
-            }
-        }
-
-    }
-
-
-    /**
-     * Returns the atatchment key for this attachment.
-     *
-     * @return AttachmentKey
-     */
-    public function getAttachmentKey() :AttachmentKey {
-        return $this->attachmentKey;
-    }
-
-
-    /**
-     * Makes sure defined properties in this class are accessible via getter method calls.
-     * If needed, camelized methods are resolved to their underscored representations in this
-     * class.
-     *
-     * @param String $method
-     * @param Mixed $arguments
-     *
-     * @return mixed
-     *
-     * @throws \BadMethodCallException if a method is called for which no property exists
-     */
-    public function __call($method, $arguments) {
-
-        if (strpos($method, 'get') === 0) {
-            $property = lcfirst(substr($method, 3));
-
-            if (property_exists($this, $property)) {
-                return $this->{$property};
-            }
-        }
-
-        throw new \BadMethodCallException("no method \"".$method."\" found.");
-    }
-
-
-    /**
-     * Sets the size (in bytes) of this attachment.
-     *
-     * @param int $size
-     */
-    public function setSize(int $size) {
-        $this->size = $size;
+        parent::__construct($attachmentKey, $data);
     }
 
 
