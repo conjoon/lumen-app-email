@@ -27,11 +27,11 @@
 use Conjoon\Util\AbstractList,
     Conjoon\Util\Jsonable,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Attachment\Attachment,
-    Conjoon\Mail\Client\Attachment\AttachmentList;
+    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
+    Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 
 
-class AttachmentListTest extends TestCase
+class FileAttachmentItemListTest extends TestCase
 {
 
 
@@ -44,11 +44,11 @@ class AttachmentListTest extends TestCase
      */
     public function testClass() {
 
-        $attachmentList = new AttachmentList();
+        $attachmentList = new FileAttachmentItemList();
         $this->assertInstanceOf(AbstractList::class, $attachmentList);
         $this->assertInstanceOf(Jsonable::class, $attachmentList);
 
-        $this->assertSame(Attachment::class, $attachmentList->getEntityType());
+        $this->assertSame(FileAttachmentItem::class, $attachmentList->getEntityType());
     }
 
 
@@ -60,7 +60,7 @@ class AttachmentListTest extends TestCase
         $attachment1 = $this->createAttachment();
         $attachment2 = $this->createAttachment();
 
-        $attachmentList = new AttachmentList();
+        $attachmentList = new FileAttachmentItemList();
         $attachmentList[] = $attachment1;
         $attachmentList[] = $attachment2;
 
@@ -78,9 +78,9 @@ class AttachmentListTest extends TestCase
     /**
      * @return Attachment
      */
-    protected function createAttachment() :Attachment {
+    protected function createAttachment() :FileAttachmentItem {
 
-        return new Attachment(
+        return new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
             ["type"          => "1",
              "text"          => "2",

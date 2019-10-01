@@ -373,6 +373,44 @@ class HordeClientTest extends TestCase {
     }
 
 
+    /**
+     * Test getFileAttachmentList()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetFileAttachmentList() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $mailFolderId  = "INBOX";
+        $messageItemId = "123";
+
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $fetchResults = unserialize('O:31:"Horde_Imap_Client_Fetch_Results":3:{s:5:"_data";a:1:{i:155117;O:28:"Horde_Imap_Client_Data_Fetch":1:{s:5:"_data";a:3:{i:14;i:103958;i:13;i:155117;i:1;C:15:"Horde_Mime_Part":1372:{a:10:{i:0;i:2;i:1;N;i:2;s:1:" ";i:3;N;i:4;C:18:"Horde_Mime_Headers":490:{a:3:{i:0;i:3;i:1;a:2:{s:19:"Content-Disposition";C:50:"Horde_Mime_Headers_ContentParam_ContentDisposition":96:{a:3:{s:7:"_params";a:0:{}s:5:"_name";s:19:"Content-Disposition";s:7:"_values";a:1:{i:0;s:0:"";}}}s:12:"Content-Type";C:43:"Horde_Mime_Headers_ContentParam_ContentType":191:{a:3:{s:7:"_params";a:2:{s:7:"charset";s:8:"us-ascii";s:8:"boundary";s:34:"=_0ee451bb88ceef8dab403daf6c4b30cb";}s:5:"_name";s:12:"Content-Type";s:7:"_values";a:1:{i:0;s:15:"multipart/mixed";}}}}i:2;s:1:" ";}}i:5;a:0:{}i:6;s:1:"0";i:7;a:1:{i:0;C:15:"Horde_Mime_Part":717:{a:10:{i:0;i:2;i:1;s:5:"60918";i:2;s:1:" ";i:3;N;i:4;C:18:"Horde_Mime_Headers":575:{a:3:{i:0;i:3;i:1;a:2:{s:19:"Content-Disposition";C:50:"Horde_Mime_Headers_ContentParam_ContentDisposition":188:{a:3:{s:7:"_params";a:2:{s:4:"size";s:5:"60918";s:8:"filename";s:35:"Image Pasted at 2019-9-30 14-57.png";}s:5:"_name";s:19:"Content-Disposition";s:7:"_values";a:1:{i:0;s:10:"attachment";}}}s:12:"Content-Type";C:43:"Horde_Mime_Headers_ContentParam_ContentType":183:{a:3:{s:7:"_params";a:2:{s:7:"charset";s:8:"us-ascii";s:4:"name";s:35:"Image Pasted at 2019-9-30 14-57.png";}s:5:"_name";s:12:"Content-Type";s:7:"_values";a:1:{i:0;s:10:"image/jpeg";}}}}i:2;s:1:" ";}}i:5;a:0:{}i:6;s:1:"1";i:7;a:0:{}i:8;i:0;i:9;s:6:"base64";}}}i:8;i:0;i:9;s:6:"binary";}}}}}s:8:"_keyType";i:2;s:8:"_obClass";s:28:"Horde_Imap_Client_Data_Fetch";}');
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive('fetch')->with(
+            $mailFolderId,
+            \Mockery::any(),
+            \Mockery::any()
+        )->andReturn($fetchResults);
+
+        $client = $this->createClient();
+
+        $fileAttachmentList = $client->getFileAttachmentList($messageKey);
+
+        $this->assertSame(1, count($fileAttachmentList));
+
+        $fileAttachment = $fileAttachmentList[0];
+
+        $this->assertSame("image/jpeg",                          $fileAttachment->getType());
+        $this->assertSame("Image Pasted at 2019-9-30 14-57.png", $fileAttachment->getText());
+    }
+
+
 
 // -------------------------------
 //  Helper

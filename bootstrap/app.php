@@ -102,6 +102,15 @@ $app->singleton('Conjoon\Mail\Client\Service\MailFolderService', function ($app)
     );
 });
 
+
+$app->singleton('Conjoon\Mail\Client\Service\AttachmentService', function ($app) use($getMailClient) {
+    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
+    return new Conjoon\Mail\Client\Service\DefaultAttachmentService(
+        $mailClient, new Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor
+    );
+});
+
+
 $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
@@ -125,9 +134,6 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
     );
 });
 
-$app->singleton('App\Imap\Service\AttachmentService', function ($app) {
-    return new App\Imap\Service\DefaultAttachmentService();
-});
 
 
 /*

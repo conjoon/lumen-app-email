@@ -27,11 +27,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Imap\Service\AttachmentService;
-
-use Auth;
-
-use Illuminate\Http\Request;
+use Conjoon\Mail\Client\Service\AttachmentService,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Auth,
+    Illuminate\Http\Request;
 
 
 /**
@@ -67,6 +66,19 @@ class AttachmentController extends Controller {
      * @return ResponseJson
      */
     public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+
+        $user = Auth::user();
+
+        $attachmentService = $this->attachmentService;
+        $mailAccount       = $user->getMailAccount($mailAccountId);
+        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+
+        return response()->json([
+            "success" => true,
+            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
+        ]);
+
+
 
         $user = Auth::user();
 

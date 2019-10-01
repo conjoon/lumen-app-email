@@ -25,40 +25,30 @@
  */
 declare(strict_types=1);
 
-namespace App\Imap\Service;
+namespace Conjoon\Mail\Client\Attachment;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Util\AbstractList;
 
 /**
- * Interface AttachmentService
+ * Class FileAttachmentList organizes a list of FileAttachments.
  *
- * @package App\Imap\Service
+ * @package Conjoon\Mail\Client\Attachment
  */
-interface AttachmentService {
+class FileAttachmentList extends AbstractList {
 
-    
+
+
+// -------------------------
+//  AbstractList
+// -------------------------
+
     /**
-     * Returns a list of Attachments for the specified $mailFolderId and $messageItemId
-     * for the specified $account. If the Message does not exist, null wil be returned.
-     *
-     * - type (string)
-     * - text (string)
-     * - size (int)
-     * - previewImgSrc (string)) an URI to download the resource for an image preview or base64-encoded
-     * inline data for an image representing the contents of this attachment
-     * - id (string)
-     * - mailAccountId (string)
-     * - mailFolderId (string)
-     * - parentMessageItemId (string) the messageItemId to which this attachment belongs
-     * - downloadUrl (string) an URI to download the resource or base64-encoded inline data
-     *
-     * @param MailAccount $account
-     * @param string $mailFolderId
-     * @param string $messageItemId
-     *
-     * @return array An array of attachment data
+     * @inheritdoc
      */
-    public function getAttachmentsFor(MailAccount $account, string $mailFolderId, string $messageitemId) :array;
+    public function getEntityType() :string{
+        return FileAttachment::class;
+    }
+
 
 
 }

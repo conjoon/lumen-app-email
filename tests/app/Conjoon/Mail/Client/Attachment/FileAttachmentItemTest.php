@@ -26,10 +26,11 @@
 
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Attachment\Attachment;
+    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
+    Conjoon\Mail\Client\Attachment\AbstractAttachment;
 
 
-class AttachmentTest extends TestCase
+class FileAttachmentItemTest extends TestCase
 {
 
 
@@ -48,7 +49,7 @@ class AttachmentTest extends TestCase
         $downloadUrl   = "url/image.jpg";
         $previewImgSrc = "url/image/previewImg.jpg";
 
-        $attachment = new Attachment(
+        $attachment = new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
             ["type" => $type,
             "text" => $text,
@@ -58,10 +59,8 @@ class AttachmentTest extends TestCase
         );
 
         $this->assertInstanceOf(Jsonable::class, $attachment);
+        $this->assertInstanceOf(AbstractAttachment::class, $attachment);
 
-        $this->assertSame($type,          $attachment->getType());
-        $this->assertSame($text,          $attachment->getText());
-        $this->assertSame($size,          $attachment->getSize());
         $this->assertSame($downloadUrl,   $attachment->getDownloadUrl());
         $this->assertSame($previewImgSrc, $attachment->getPreviewImgSrc());
 
@@ -81,63 +80,6 @@ class AttachmentTest extends TestCase
 
 
     /**
-     * Tests constructor with exception for missing type
-     */
-    public function testConstructor_exceptionType() {
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("type");
-
-        new Attachment(
-            new AttachmentKey("dev", "INBOX", "123", "1"),
-            [//type" => "1",
-             "text" => "2",
-             "size" => 3,
-             "downloadUrl" => "4",
-             "previewImgSrc" => "5"]
-        );
-    }
-
-
-    /**
-     * Tests constructor with exception for missing text
-     */
-    public function testConstructor_exceptionText() {
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("text");
-
-        new Attachment(
-            new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
-             //   "text" => "2",
-                "size" => 3,
-                "downloadUrl" => "4",
-                "previewImgSrc" => "5"]
-        );
-    }
-
-
-    /**
-     * Tests constructor with exception for missing size
-     */
-    public function testConstructor_exceptionSize() {
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("size");
-
-        new Attachment(
-            new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
-                   "text" => "2",
-                //"size" => 3,
-                "downloadUrl" => "4",
-                "previewImgSrc" => "5"]
-        );
-    }
-
-
-    /**
      * Tests constructor with exception for missing downloadUrl
      */
     public function testConstructor_exceptionDownloadUrl() {
@@ -145,7 +87,7 @@ class AttachmentTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("downloadUrl");
 
-        new Attachment(
+        new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
             ["type" => "1",
                 "text" => "2",
@@ -164,7 +106,7 @@ class AttachmentTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("previewImgSrc");
 
-        new Attachment(
+        new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
             ["type" => "1",
                 "text" => "2",

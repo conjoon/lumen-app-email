@@ -89,6 +89,16 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
         );
 
+        $attachmentService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\AttachmentService']));
+        $attachmentServiceMailClient = $attachmentService->getMailClient();
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Service\DefaultAttachmentService::class,
+            $attachmentService
+        );
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor::class,
+            $attachmentService->getFileAttachmentProcessor()
+        );
 
         $mailFolderService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MailFolderService']));
         $mailFolderServiceMailClient = $mailFolderService->getMailClient();
@@ -102,6 +112,8 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(\Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder::class, $mailFolderTreeBuilder);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper::class, $folderIdToTypeMapper);
 
+        // sharing the same client
+        $this->assertSame($attachmentServiceMailClient, $mailFolderServiceMailClient);
 
         $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
         $this->assertInstanceOf(
@@ -110,7 +122,8 @@ class VariousTest extends TestCase
         );
 
         $messageItemServiceMailClient = $messageItemService->getMailClient();
-        // make sure same instance is shared between Services
+
+        // sharing the same client
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
@@ -118,10 +131,6 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor::class, $messageItemService->getMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
 
-        $this->assertInstanceOf(
-            \App\Imap\Service\DefaultAttachmentService::class,
-            $this->app->build($property->invokeArgs($this->app, ['App\Imap\Service\DefaultAttachmentService']))
-        );
 
     }
 }
