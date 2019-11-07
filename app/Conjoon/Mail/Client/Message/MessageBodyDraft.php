@@ -27,15 +27,16 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Util\Jsonable;
 
 /**
  * Class MessageBody models a simplified representation of  mail message
- * body-content informations which is identified by an id..
+ * body-content informations that is not identified by an id yet, i.e. because
+ * it represents the MessageBody of a draft.
  *
  * @example
  *
- *    $body = new MessageBody(new MessageKey("dev", "INBOX", "232"));
+ *    $body = new MessageBodyDraft();
  *
  *    $plainPart = new MessagePart("foo", "ISO-8859-1");
  *    $htmlPart = new MessagePart("<b>bar</b>", "UTF-8");
@@ -48,33 +49,59 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBody extends MessageBodyDraft {
+class MessageBodyDraft implements Jsonable {
 
 
     /**
-     * @var MessageKey
+     * @var MessagePart
      */
-    protected $messageKey;
+    protected $textHtml;
+
+    /**
+     * @var MessagePart
+     */
+    protected $textPlain;
 
 
     /**
-     * MessageBody constructor.
+     * Sets the "textHtml" property of this body.
      *
-     * @param MessageKey $messageKey
+     * @param MessagePart $textHtml
+     * @return $this
      */
-    public function __construct(MessageKey $messageKey) {
-
-        $this->messageKey = $messageKey;
+    public function setTextHtml(MessagePart $textHtml) {
+        $this->textHtml = $textHtml;
+        return $this;
     }
 
 
     /**
-     * Returns the MessageKey of this MessageBody.
-     *
-     * @return MessageKey
+     * Returns the textHtml property of this body.
+     * @return MessagePart
      */
-    public function getMessageKey() {
-        return $this->messageKey;
+    public function getTextHtml() {
+        return $this->textHtml;
+    }
+
+
+    /**
+     * Sets the "textPlain" property of this body.
+     *
+     * @param MessagePart $textPlain
+     * @return $this
+     */
+    public function setTextPlain(MessagePart $textPlain) {
+        $this->textPlain = $textPlain;
+        return $this;
+    }
+
+
+    /**
+     * Returns the textPlain property of this body.
+     * @return MessagePart
+     */
+    public function getTextPlain() {
+        return $this->textPlain;
     }
 
 
@@ -83,13 +110,26 @@ class MessageBody extends MessageBodyDraft {
 // --------------------------------
 
     /**
-     * @inheritdoc
+     * Returns an array representing this MessageBodyDraft.
+     *
+     * Each entry in the returning array must consist of the following key/value-pairs:
+     *
+     * - textHtml (string) - this instances textHtml part's content-value
+     * - textPlain (string) - this instances textPlain part's content-value
+     *
+     * Implementing APIs should make sure to properly encode the content of the parts
+     * from the given charset to UTF-8 to prevent errors when trying to send the resulting
+     * array as JSON to interested clients.
+     *
+     * @return array
+     *
      */
     public function toJson() :array{
 
-        $keyJson = $this->getMessageKey()->toJson();
-
-        return array_merge($keyJson, parent::toJson());
+        return [
+            "textHtml" => $this->getTextHtml() ? $this->getTextHtml()->getContents() : "",
+            "textPlain" => $this->getTextPlain() ? $this->getTextPlain()->getContents() : ""
+        ];
     }
 
 
