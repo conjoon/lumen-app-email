@@ -29,7 +29,9 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Imap\ImapClientException,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Folder\MailFolderList,
@@ -414,7 +416,6 @@ class HordeClientTest extends TestCase {
     }
 
 
-
     /**
      * Tests setFlags
      *
@@ -449,6 +450,69 @@ class HordeClientTest extends TestCase {
         );
         $this->assertSame(true, $result);
     }
+
+
+    /**
+     * Tests setFlags
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBody() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $folderKey = new FolderKey($account, $mailFolderId);
+        $messageItemId = "989786";
+        $rawMessage = "MOCKED RAW MESSAGE";
+
+        $messageBodyDraft = new MessageBodyDraft();
+        $htmlPart = new MessagePart("foo", "UTF-8", "text/html");
+        $plainPart = new MessagePart("bar", "UTF-8", "text/plain");
+        $messageBodyDraft->setTextHtml($htmlPart);
+        $messageBodyDraft->setTextPlain($plainPart);
+
+        $mailStub = \Mockery::mock('overload:'.\Horde_Mime_Mail::class);
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        // Mail mock
+        $mailStub->shouldReceive("addHeader")->with(
+            "User-Agent", "php-conjoon", true
+        );
+        $mailStub->shouldReceive('setBody')->with(
+            $plainPart->getContents(), $plainPart->getCharset()
+        );
+        $mailStub->shouldReceive('setBody')->with(
+            $plainPart->getContents(), $plainPart->getCharset()
+        );
+        $mailStub->shouldReceive('setHtmlBody')->with(
+            $htmlPart->getContents(), $htmlPart->getCharset(), false
+        );
+        $mailStub->shouldReceive('getRaw')->with(
+            false
+        )->andReturn($rawMessage);
+
+        $mailStub->shouldReceive('send')->withArgs(
+            function ($transport, $resend, $flowed) {
+                return $transport instanceof \Horde_Mail_Transport_Null && $resend === false && $flowed === false;
+            }
+        );
+
+        // socket mock
+        $imapStub->shouldReceive('append')->with(
+            $folderKey->getId(), [["data" => $rawMessage]]
+        )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
+
+        $client = $this->createClient();
+
+        $res = $client->createMessageBody($folderKey, $messageBodyDraft);
+
+        $this->assertSame($res->getMailAccountId(), $account->getId());
+        $this->assertSame($res->getMailFolderId(), $mailFolderId);
+        $this->assertSame($res->getId(), $messageItemId);
+
+    }
+
 
 // -------------------------------
 //  Helper

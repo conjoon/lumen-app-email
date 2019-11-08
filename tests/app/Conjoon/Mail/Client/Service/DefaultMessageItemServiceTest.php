@@ -319,7 +319,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList", "setFlags"])
+                        "getFileAttachmentList", "setFlags", "createMessageBody"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

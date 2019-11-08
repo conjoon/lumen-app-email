@@ -30,6 +30,7 @@ namespace Conjoon\Mail\Client\Imap;
 use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
@@ -424,6 +425,36 @@ class HordeClient implements MailClient {
         }
 
         return true;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function createMessageBody(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageKey {
+
+        try {
+            $client = $this->connect($key);
+
+            $mail = new \Horde_Mime_Mail();
+            $plain = $messageBodyDraft->getTextPlain();
+            $html  = $messageBodyDraft->getTextHtml();
+
+            $mail->addHeader("User-Agent", "php-conjoon", true);
+            $mail->setBody($plain->getContents(), $plain->getCharset());
+            $mail->setHtmlBody($html->getContents(), $html->getCharset(), false);
+
+            $mail->send(new \Horde_Mail_Transport_Null, false, false);
+            $rawMessage = $mail->getRaw(false);
+
+            $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
+
+            return new MessageKey($key->getMailAccountId(), $key->getId(), "" . $ids->ids[0]);
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
     }
 
 // -------------------

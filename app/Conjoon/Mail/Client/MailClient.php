@@ -33,6 +33,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Folder\MailFolderList;
@@ -79,6 +80,19 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
     public function getMessageBody(MessageKey $key) :?MessageBody;
+
+
+    /**
+     * Appends a new Message to the specified Folder with the data found in MessageBody.
+     *
+     * @param FolderKey $key
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageKey The MessageKey created for the appended message.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function createMessageBody(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageKey;
 
 
     /**
