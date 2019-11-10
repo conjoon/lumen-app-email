@@ -23,34 +23,26 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy,
-    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+namespace Conjoon\Mail\Client\Reader;
 
-
-class PurifiedHtmlStrategyTest extends TestCase {
-
-
-    public function testClass() {
-
-        $strategy = new PurifiedHtmlStrategy();
-        $this->assertInstanceOf(HtmlReadableStrategy::class, $strategy);
-        $this->assertInstanceOf(HtmlTextStrategy::class, $strategy);
-    }
+/**
+ * DefaultPlainReadableStrategy.
+ *
+ * Strips all html-tags and makes sure proper line breaks are applied if necessary.
+ *
+ * @package Conjoon\Mail\Client\Reader
+ */
+class DefaultPlainReadableStrategy implements PlainReadableStrategy {
 
 
-    public function testProcess() {
+    /**
+     * @inheritdoc
+     */
+    public function process(string $text) :string {
 
-        $strategy = new PurifiedHtmlStrategy();
-        $text = "randomstring";
-
-        $this->assertSame($text, $strategy->process($text));
-
-
-        $text = "<html><head></head><body>Test</body></html>html>";
-        $this->assertSame("Test", $strategy->process($text));
-
+        return $text;
     }
 
 

@@ -24,13 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
+    Conjoon\Mail\Client\Reader\PlainReadableStrategy,
+    Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
 
 
-/**
- * Class DefaultMessagePartContentProcessorTest
- * 
- */
-class DefaultMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest {
+class DefaultPlainReadableStrategyTest extends TestCase {
+
+
+    public function testClass() {
+
+        $strategy = new DefaultPlainReadableStrategy();
+        $this->assertInstanceOf(PlainReadableStrategy::class, $strategy);
+        $this->assertInstanceOf(PlainTextStrategy::class, $strategy);
+    }
+
+
+    public function testProcess() {
+
+        $strategy = new DefaultPlainReadableStrategy();
+        $text = "notosrandomstring";
+
+        $this->assertSame($text, $strategy->process($text));
+    }
 
 
 

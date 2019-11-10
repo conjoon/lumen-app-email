@@ -24,18 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Conjoon\Mail\Client\Message\Text;
+namespace Conjoon\Mail\Client\Reader;
+
+use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
+    Conjoon\Text\Converter;
 
 
 /**
- * Interface MessagePartContentProcessor.
- * Contract for converting the contents of a MessagePart to a target charset.
- * Implementing classes are free to add any additional functionality for converting the
- * contents to a readable version required by the client.
+ * ReadableMessagePartContentProcessor.
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-class DefaultMessagePartContentProcessor extends AbstractMessagePartContentProcessor{
+class ReadableMessagePartContentProcessor extends AbstractMessagePartContentProcessor{
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct(Converter $converter,
+                                PlainReadableStrategy $plainTextStrategy,
+                                HtmlReadableStrategy $htmlTextStrategy)  {
+
+        parent::__construct($converter, $plainTextStrategy, $htmlTextStrategy);
+    }
+
 
 
 }

@@ -23,36 +23,19 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy,
-    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+namespace Conjoon\Mail\Client\Reader;
 
+use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
 
-class PurifiedHtmlStrategyTest extends TestCase {
-
-
-    public function testClass() {
-
-        $strategy = new PurifiedHtmlStrategy();
-        $this->assertInstanceOf(HtmlReadableStrategy::class, $strategy);
-        $this->assertInstanceOf(HtmlTextStrategy::class, $strategy);
-    }
-
-
-    public function testProcess() {
-
-        $strategy = new PurifiedHtmlStrategy();
-        $text = "randomstring";
-
-        $this->assertSame($text, $strategy->process($text));
-
-
-        $text = "<html><head></head><body>Test</body></html>html>";
-        $this->assertSame("Test", $strategy->process($text));
-
-    }
-
+/**
+ * Interface PlainReadableStrategy
+ *
+ *
+ * @package Conjoon\Mail\Client\Reader
+ */
+interface PlainReadableStrategy extends PlainTextStrategy {
 
 
 }
