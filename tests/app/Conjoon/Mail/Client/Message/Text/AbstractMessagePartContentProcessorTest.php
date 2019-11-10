@@ -29,7 +29,8 @@ use Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\ProcessorException,
     Conjoon\Text\Converter,
     Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+    Conjoon\Mail\Client\Message\Text\PlainTextStrategy,
+    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
 
 /**
  * Class DefaultMessagePartContentProcessorTest
@@ -73,7 +74,7 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
         $textHtml = new MessagePart("html", "FROMUTF-8", "text/html");
 
         $processedTextPlain = $processor->process($textPlain, "ABC");
-        $this->assertSame("plain FROMUTF-8 ABC", $textPlain->getContents());
+        $this->assertSame("PLAINplain FROMUTF-8 ABC", $textPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml, "ABC");
         $this->assertSame("<HTMLREADABLE>html FROMUTF-8 ABC", $textHtml->getContents());
@@ -90,7 +91,11 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
      * @return DefaultMessagePartContentProcessor
      */
     protected function createProcessor() {
-        return new class($this->createConverter(), $this->createHtmlReadableStrategy()) extends AbstractMessagePartContentProcessor{
+
+        return new class(
+            $this->createConverter(),
+            $this->createPlainTextStrategy(),
+            $this->createHtmlTextStrategy()) extends AbstractMessagePartContentProcessor{
 
         };
     }
@@ -112,11 +117,24 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
     /**
      * @return HtmlReadableStrategy
      */
-    protected function createHtmlReadableStrategy() :HtmlReadableStrategy{
+    protected function createHtmlTextStrategy() :HtmlTextStrategy{
 
-        return new class implements HtmlReadableStrategy {
+        return new class implements HtmlTextStrategy {
             public function process(string $text) :string {
                 return "<HTMLREADABLE>" . $text ;
+            }
+        };
+
+    }
+
+    /**
+     * @return PlainReadableStrategy
+     */
+    protected function createPlainTextStrategy() :PlainTextStrategy{
+
+        return new class implements PlainTextStrategy {
+            public function process(string $text) :string {
+                return "PLAIN" . $text ;
             }
         };
 
