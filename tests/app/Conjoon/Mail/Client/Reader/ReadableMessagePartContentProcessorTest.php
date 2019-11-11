@@ -83,7 +83,7 @@ class ReadableMessagePartContentProcessorTest extends AbstractMessagePartContent
 
         return new class implements HtmlReadableStrategy {
             public function process(string $text) :string {
-                return "<HTMLREADABLE>" . $text ;
+                return "<HTML>" . $text ;
             }
         };
 

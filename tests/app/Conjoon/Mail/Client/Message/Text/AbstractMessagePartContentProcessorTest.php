@@ -77,7 +77,7 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
         $this->assertSame("PLAINplain FROMUTF-8 ABC", $textPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml, "ABC");
-        $this->assertSame("<HTMLREADABLE>html FROMUTF-8 ABC", $textHtml->getContents());
+        $this->assertSame("<HTML>html FROMUTF-8 ABC", $textHtml->getContents());
 
         $this->assertSame($textPlain, $processedTextPlain);
         $this->assertSame($textHtml, $processedTextHtml);
@@ -121,7 +121,7 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
 
         return new class implements HtmlTextStrategy {
             public function process(string $text) :string {
-                return "<HTMLREADABLE>" . $text ;
+                return "<HTML>" . $text ;
             }
         };
 
