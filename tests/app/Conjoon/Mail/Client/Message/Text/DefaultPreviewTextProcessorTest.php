@@ -26,16 +26,18 @@
 
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor,
-    Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Text\Converter,
     Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Message\Text\ProcessorException,
+    Conjoon\Mail\Client\Reader\PlainReadableStrategy,
     Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
 
 /**
  * Class PreviewTextProcessorTest
  * 
  */
-class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessorTest {
+class DefaultPreviewTextProcessorTest extends TestCase{
 
 
     /**
@@ -44,8 +46,24 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
     public function testInstance() {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(PreviewTextProcessor::class, $processor);
-        $this->assertInstanceOf(DefaultMessagePartContentProcessor::class, $processor->getDefaultMessagePartContentProcessor());
+        $this->assertInstanceOf(ReadableMessagePartContentProcessor::class, $processor->getReadableMessagePartContentProcessor());
     }
+
+
+    /**
+     * Test process w/ exception
+     */
+    public function testProcess_exception() {
+
+        $this->expectException(ProcessorException::class);
+
+        $processor = $this->createProcessor();
+
+        $mp = new MessagePart("foo", "UTF-8", "image/jpg");
+
+        $processor->process($mp);
+    }
+
 
 
     /**
@@ -83,7 +101,10 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
      */
     protected function createProcessor() {
 
-        $proc = new class($this->createConverter(), $this->createHtmlReadableStrategy()) extends DefaultMessagePartContentProcessor {
+        $proc = new class(
+            $this->createConverter(),
+            $this->createPlainReadableStrategy(),
+            $this->createHtmlReadableStrategy()) extends ReadableMessagePartContentProcessor {
 
             public $def;
 
@@ -119,6 +140,19 @@ class DefaultPreviewTextProcessorTest extends DefaultMessagePartContentProcessor
     protected function createHtmlReadableStrategy() :HtmlReadableStrategy{
 
         return new class implements HtmlReadableStrategy {
+            public function process(string $text) :string {
+                return $text;
+            }
+        };
+
+    }
+
+    /**
+     * @return PlainReadableStrategy
+     */
+    protected function createPlainReadableStrategy() :PlainReadableStrategy{
+
+        return new class implements PlainReadableStrategy {
             public function process(string $text) :string {
                 return $text;
             }

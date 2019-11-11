@@ -26,7 +26,8 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
 
 /**
  * Class PreviewProcessor
@@ -44,19 +45,19 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor {
 
     /**
      * DefaultPreviewTextProcessor constructor.
-     * @param DefaultMessagePartContentProcessor $processor
+     * @param ReadableMessagePartContentProcessor $processor
      */
-    public function __construct(DefaultMessagePartContentProcessor $processor) {
+    public function __construct(ReadableMessagePartContentProcessor $processor) {
         $this->processor = $processor;
     }
 
 
     /**
-     * Returns the DefaultMessagePartContentProcessor decorated by this PreviewTextProcessor.
+     * Returns the ReadableMessagePartContentProcessor decorated by this PreviewTextProcessor.
      *
-     * @return DefaultMessagePartContentProcessor
+     * @return ReadableMessagePartContentProcessor
      */
-    public function getDefaultMessagePartContentProcessor() {
+    public function getReadableMessagePartContentProcessor() {
         return $this->processor;
     }
 
