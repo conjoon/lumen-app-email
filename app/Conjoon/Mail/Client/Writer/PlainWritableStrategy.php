@@ -38,16 +38,4 @@ use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
 interface PlainWritableStrategy extends PlainTextStrategy {
 
 
-    /**
-     * Processes the specified text to make sure it is in a human readable
-     * format.
-     *
-     * @param string $text
-     *
-     * @return string
-     */
-    public function process(string $text) :string;
-
-
-
 }
