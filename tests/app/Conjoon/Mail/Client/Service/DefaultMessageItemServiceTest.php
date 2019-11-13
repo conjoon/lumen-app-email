@@ -31,6 +31,7 @@ use
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
@@ -40,8 +41,14 @@ use
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
+    Conjoon\Text\CharsetConverter,
+    Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
+    Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
+    Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
+    Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 
 
@@ -66,17 +73,19 @@ class DefaultMessageItemServiceTest extends TestCase {
      */
     public function testInstance() {
 
-        $mP = $this->getMessagePartContentProcessor();
+        $rP = $this->getReadableMessagePartContentProcessor();
+        $wP = $this->getWritableMessagePartContentProcessor();
         $pP = $this->getPreviewTextProcessor();
         $miP = $this->getMessageItemFieldsProcessor();
 
 
-        $service = $this->createService($miP, $mP, $pP);
+        $service = $this->createService($miP, $rP, $wP, $pP);
 
         $this->assertInstanceOf(MessageItemService::class, $service);
         $this->assertInstanceOf(MailClient::class, $service->getMailClient());
 
-        $this->assertSame($mP, $service->getMessagePartContentProcessor());
+        $this->assertSame($rP, $service->getReadableMessagePartContentProcessor());
+        $this->assertSame($wP, $service->getWritableMessagePartContentProcessor());
         $this->assertSame($pP, $service->getPreviewTextProcessor());
         $this->assertSame($miP, $service->getMessageItemFieldsProcessor());
     }
@@ -184,25 +193,20 @@ class DefaultMessageItemServiceTest extends TestCase {
         $clientStub->method('getMessageBody')
             ->with($messageKey)
             ->willReturn(
-                $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId)
+                $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId, "plain")
             );
 
 
         $body = $service->getMessageBody($messageKey);
 
-        $cmpBody = $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId);
-
         $this->assertSame($messageItemId, $body->getMessageKey()->getId());
-        $this->assertEquals($cmpBody->getMessageKey(), $body->getMessageKey());
 
         $this->assertTrue($body->getTextPlain() == true);
         $this->assertTrue($body->getTextHtml() == true);
 
-        $this->assertNull($cmpBody->getTextPlain());
-        $this->assertNull($cmpBody->getTextHtml());
 
-        $this->assertSame("foo", $body->getTextPlain()->getContents());
-        $this->assertSame("foo", $body->getTextHtml()->getContents());
+        $this->assertSame("READtext/plainplain", $body->getTextPlain()->getContents());
+        $this->assertSame("READtext/plainplain", $body->getTextHtml()->getContents());
     }
 
 
@@ -213,6 +217,7 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @preserveGlobalState disabled
      */
     public function testGetTotalMessageCount() {
+
         $service = $this->createService();
 
         $mailFolderId = "INBOX";
@@ -280,6 +285,50 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame(false, $service->setFlags($messageKey, $flagList));
     }
 
+
+    /**
+     * Tests createMessageBody()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBody() {
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $folderKey  = $this->createFolderKey($account, $mailFolderId);
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('createMessageBody')
+            ->with($folderKey)
+            ->willReturn($messageKey);
+
+        $messageBody = $service->createMessageBody($folderKey,"a", "");
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+
+        $messageBody = $service->createMessageBody($folderKey,"", "a");
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+
+        $messageBody = $service->createMessageBody($folderKey,"a", "b");
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/htmlb", $messageBody->getTextHtml()->getContents());
+
+        $messageBody = $service->createMessageBody($folderKey,"", "");
+        $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
+
+        //  $this->assertInstanceOf(MessageBody::class, $messageBody);
+
+    }
+
+
 // ------------------
 //     Test Helper
 // ------------------
@@ -329,23 +378,47 @@ class DefaultMessageItemServiceTest extends TestCase {
      * Helper function for creating the service.
      * @return DefaultMessageItemService
      */
-    protected function createService($messageItemFieldsProcessor = null, $messagePartContentProcessor = null, $previewTextProcessor = null) {
+    protected function createService($messageItemFieldsProcessor = null,
+                                     $readableMessagePartContentProcessor = null,
+                                     $writableMessagePartContentProcessor = null,
+                                     $previewTextProcessor = null) {
         return new DefaultMessageItemService(
             $this->getMailClientMock(),
             $messageItemFieldsProcessor ? $messageItemFieldsProcessor : $this->getMessageItemFieldsProcessor(),
-            $messagePartContentProcessor ? $messagePartContentProcessor : $this->getMessagePartContentProcessor(),
+            $readableMessagePartContentProcessor ? $readableMessagePartContentProcessor : $this->getReadableMessagePartContentProcessor(),
+            $writableMessagePartContentProcessor ? $writableMessagePartContentProcessor : $this->getWritableMessagePartContentProcessor(),
             $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor()
         );
     }
 
 
     /**
-     * @return MessagePartContentProcessor
+     * @return ReadableMessagePartContentProcessor
      */
-    protected function getMessagePartContentProcessor() :MessagePartContentProcessor{
-        return new class implements MessagePartContentProcessor {
+    protected function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor{
+        return new class(
+            new CharsetConverter(),
+            new DefaultPlainReadableStrategy,
+            new PurifiedHtmlStrategy
+        ) extends ReadableMessagePartContentProcessor {
             public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
-                $messagePart->setContents("foo", "ISO-8859-1");
+                $messagePart->setContents("READ" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
+                return $messagePart;
+            }
+        };
+    }
+
+    /**
+     * @return WritableMessagePartContentProcessor
+     */
+    protected function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor{
+        return new class(
+            new CharsetConverter(),
+            new DefaultPlainWritableStrategy,
+            new DefaultHtmlWritableStrategy
+        ) extends WritableMessagePartContentProcessor {
+            public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
+                $messagePart->setContents("WRITTEN" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
                 return $messagePart;
             }
         };
@@ -420,12 +493,20 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @param $messageItemId
      * @return array
      */
-    protected function buildTestMessageBody($mailAccountId, $mailFolderId, $messageItemId) {
+    protected function buildTestMessageBody($mailAccountId, $mailFolderId, $messageItemId, $plain = "", $html = "") {
 
         $messageKey = new MessageKey($mailAccountId, $mailFolderId, $messageItemId);
 
         $mb = new MessageBody($messageKey);
-        
+
+        if ($html) {
+            $mb->setTextHtml(new MessagePart($html, "UTF-8", "text/html"));
+        }
+
+        if ($plain) {
+            $mb->setTextPlain(new MessagePart($plain, "UTF-8", "text/plain"));
+        }
+
         return $mb;
 
     }

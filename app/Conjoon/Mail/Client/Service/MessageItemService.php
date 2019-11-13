@@ -30,7 +30,8 @@ namespace Conjoon\Mail\Client\Service;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
@@ -49,7 +50,7 @@ interface MessageItemService {
 
     
     /**
-     * Returns a MessageItemListServiceObject containing the MessageItems for the
+     * Returns a MessageItemList containing the MessageItems for the
      * specified MailAccount and the MailFolder.
      * 
      * @param FolderKey $key
@@ -63,7 +64,7 @@ interface MessageItemService {
 
 
     /**
-     * Returns a single MessageItemServiceObject.
+     * Returns a single MessageItem.
      *
      * @param MessageKey $key
      *
@@ -73,13 +74,25 @@ interface MessageItemService {
 
 
     /**
-     * Returns a single MessageBodyServiceObject.
+     * Returns a single MessageBody.
      *
      * @param MessageKey $key
      *
      * @return MessageBody
      */
     public function getMessageBody(MessageKey $key) :MessageBody;
+
+
+    /**
+     * Creates a single MessageBody and returns it along with the generated MessageKey.
+     *
+     * @param FolderKey $key
+     * @param string $textPlain
+     * @param string $textHtml
+     *
+     * @return MessageBody
+     */
+    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :MessageBody;
 
 
     /**
@@ -119,11 +132,19 @@ interface MessageItemService {
 
 
     /**
-     * Returns the MessagePartContentProcessor used by this MessageService.
+     * Returns the ReadableMessagePartContentProcessor used by this MessageService.
      *
-     * @return MessagePartContentProcessor
+     * @return ReadableMessagePartContentProcessor
      */
-    public function getMessagePartContentProcessor() :MessagePartContentProcessor;
+    public function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor;
+
+
+    /**
+     * Returns the WritableMessagePartContentProcessor used by this MessageService.
+     *
+     * @return WritableMessagePartContentProcessor
+     */
+    public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor;
 
 
     /**
