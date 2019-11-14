@@ -12,5 +12,5 @@ phpunit included in the vendor directory:
 - ```cn_imapuser/auth``` **POST** (*app-cn_imapuser*)
 - ```cn_mail/MailAccounts``` **GET** (*app-cn_mail*) 
 - ```cn_mail/MailAccounts/{mailAccountId}/MailFolders``` **GET** (*app-cn_mail*)
-- ```cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems``` **GET** (*app-cn_mail*)
+- ```cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems``` **GET/POST** (*app-cn_mail*)
 - ```cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}``` **GET/PUT** (*app-cn_mail*)
