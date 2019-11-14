@@ -115,9 +115,16 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
 
-    $defaultMessagePartContentProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor(
+    $readableMessagePartContentProcessor = new Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor(
         $charsetConverter,
+        new Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
         new Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy
+    );
+
+    $writableMessagePartContentProcessor = new Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor(
+        $charsetConverter,
+        new Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
+        new Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy
     );
 
     $defaultMessageItemFieldsProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor(
@@ -127,9 +134,10 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
     return new Conjoon\Mail\Client\Service\DefaultMessageItemService(
         $mailClient,
         $defaultMessageItemFieldsProcessor,
-        $defaultMessagePartContentProcessor,
+        $readableMessagePartContentProcessor,
+        $writableMessagePartContentProcessor,
         new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
-            $defaultMessagePartContentProcessor
+            $readableMessagePartContentProcessor
         )
     );
 });
