@@ -31,7 +31,7 @@ use
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
@@ -324,10 +324,32 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
 
-        //  $this->assertInstanceOf(MessageBody::class, $messageBody);
-
     }
 
+
+    /**
+     * Tests createMessageBody()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBody_returning_null() {
+        $service = $this->createService();
+
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $folderKey    = $this->createFolderKey($account, $mailFolderId);
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('createMessageBody')
+            ->with($folderKey)
+            ->willThrowException(new MailClientException);
+
+        $messageBody = $service->createMessageBody($folderKey,"a", "");
+        $this->assertNull($messageBody);
+    }
 
 // ------------------
 //     Test Helper

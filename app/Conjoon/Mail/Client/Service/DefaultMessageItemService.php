@@ -38,6 +38,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList;
@@ -208,7 +209,7 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :MessageBody {
+    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :?MessageBody {
 
         $messageBodyDraft = new MessageBodyDraft();
 
@@ -224,11 +225,15 @@ class DefaultMessageItemService implements MessageItemService {
 
         $this->processMessageBodyDraft($messageBodyDraft);
 
-        $messageKey = $this->getMailClient()->createMessageBody($key, $messageBodyDraft);
+        $messageBody = null;
+        try {
+            $messageKey = $this->getMailClient()->createMessageBody($key, $messageBodyDraft);
 
-        $messageBody = new MessageBody($messageKey);
-        $messageBody->setTextPlain($messageBodyDraft->getTextPlain());
-        $messageBody->setTextHtml($messageBodyDraft->getTextHtml());
+            $messageBody = new MessageBody($messageKey);
+            $messageBody->setTextPlain($messageBodyDraft->getTextPlain());
+            $messageBody->setTextHtml($messageBodyDraft->getTextHtml());
+        } catch (MailClientException $e) {
+        }
 
         return $messageBody;
     }

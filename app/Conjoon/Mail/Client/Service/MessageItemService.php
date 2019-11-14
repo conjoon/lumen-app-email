@@ -85,6 +85,7 @@ interface MessageItemService {
 
     /**
      * Creates a single MessageBody and returns it along with the generated MessageKey.
+     * Returns null if the MessageBody could not be created.
      *
      * @param FolderKey $key
      * @param string $textPlain
@@ -92,7 +93,7 @@ interface MessageItemService {
      *
      * @return MessageBody
      */
-    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :MessageBody;
+    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :?MessageBody;
 
 
     /**
