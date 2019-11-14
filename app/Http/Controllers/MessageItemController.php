@@ -216,4 +216,57 @@ class MessageItemController extends Controller {
 
     }
 
+
+    /**
+     * Posts new MessageBody data to the specified $mailFolderId for the account identified by
+     * $mailAccountId, creating an entirely new Message
+     *
+     * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     *
+     * @return ResponseJson
+     */
+    public function post(Request $request, $mailAccountId, $mailFolderId) {
+
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
+        // possible targets: MessageBody
+        $target = $request->input('target');
+        // possible parameters: textHtml, textPlain
+        $textPlain = $request->input('textPlain');
+        $textHtml  = $request->input('textHtml');
+
+        $mailFolderId = urldecode($mailFolderId);
+        $folderKey = new FolderKey($mailAccount, $mailFolderId);
+
+        if ($target !== "MessageBody") {
+            return response()->json([
+                "success" => false,
+                "msg" =>  "\"target\" must be specified with \"MessageBody\"."
+            ], 400);
+        }
+
+        $messageBody = $messageItemService->createMessageBody($folderKey, $textPlain, $textHtml);
+
+        if (!$messageBody) {
+            return response()->json([
+                "success" => false,
+                "msg"     => "Creating the MessageBody failed."
+            ], 400);
+        }
+
+        return response()->json([
+            "success" => !!$messageBody ,
+            "data"    => array_merge(
+                $messageBody->getMessageKey()->toJson()
+            )
+        ], 200);
+
+    }
+
+
 }

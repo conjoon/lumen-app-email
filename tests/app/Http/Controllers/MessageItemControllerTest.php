@@ -30,6 +30,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList,
@@ -362,6 +363,105 @@ class MessageItemControllerTest extends TestCase
             ])
         ]);
     }
+
+
+    /**
+     * Tests post() to make sure creating a MessageBody works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPost_MessageBody()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+        $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml   = "HTML";
+        $textPlain  = "PLAIN";
+        $messageBody = new MessageBody($messageKey);
+        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
+        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
+
+        $serviceStub->expects($this->once())
+            ->method('createMessageBody')
+            ->with($folderKey, $textPlain, $textHtml)
+            ->willReturn($messageBody);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->post(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems',
+                ["target" => "MessageBody", "textHtml" => $textHtml, "textPlain" => $textPlain]
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $messageBody->getMessageKey()->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests post() with wrong target.
+     *
+     *
+     * @return void
+     */
+    public function testPost_MessageBody_noMessageBody()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $serviceStub->expects($this->never())
+            ->method('createMessageBody');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('POST', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems');
+
+        $this->assertEquals(400, $response->status());
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg"    => "\"target\" must be specified with \"MessageBody\"."
+        ]);
+
+    }
+
+
+    /**
+     * Tests post() to make sure response is okay when no MessageBody as created.
+     *
+     * @return void
+     */
+    public function testPost_MessageBodyNotCreated()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml   = "HTML";
+        $textPlain  = "PLAIN";
+
+        $serviceStub->expects($this->once())
+            ->method('createMessageBody')
+            ->with($folderKey, $textPlain, $textHtml)
+            ->willReturn(null);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call(
+                'POST',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?target=MessageBody&textHtml=' .
+                $textHtml . "&textPlain=" . $textPlain
+            );
+
+        $this->assertEquals(400, $response->status());
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg"    => "Creating the MessageBody failed."
+        ]);
+    }
+
 
 // +--------------------------
 // | Helper
