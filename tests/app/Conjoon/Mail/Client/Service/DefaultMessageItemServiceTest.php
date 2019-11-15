@@ -40,6 +40,7 @@ use
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
@@ -308,6 +309,10 @@ class DefaultMessageItemServiceTest extends TestCase {
             ->with($folderKey)
             ->willReturn($messageKey);
 
+
+        $clientStub->expects($this->never())
+                   ->method('setFlags');
+
         $messageBody = $service->createMessageBody($folderKey,"a", "");
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
         $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
@@ -323,12 +328,45 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageBody = $service->createMessageBody($folderKey,"", "");
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
-
     }
 
 
     /**
-     * Tests createMessageBody()
+     * Tests testCreateMessageBody_withDraftFlag()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBody_withDraftFlag() {
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $folderKey  = $this->createFolderKey($account, $mailFolderId);
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('createMessageBody')
+                   ->with($folderKey)
+                   ->willReturn($messageKey);
+
+        $flagList = new FlagList;
+        $flagList[0] = new DraftFlag(true);
+
+        $clientStub->expects($this->once())
+                   ->method("setFlags")
+                   ->with($messageKey, $this->equalTo($flagList));
+
+        $service->createMessageBody($folderKey,"a", "", true);
+    }
+
+
+
+    /**
+     * Tests testCreateMessageBody_returning_null()
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled

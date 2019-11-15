@@ -90,10 +90,12 @@ interface MessageItemService {
      * @param FolderKey $key
      * @param string $textPlain
      * @param string $textHtml
+     * @param boolean $createDraftFlag true to make sure the created message is flagged as a draft.
+     * Defaults to false.
      *
      * @return MessageBody
      */
-    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null) :?MessageBody;
+    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null, $createDraftFlag = false) :?MessageBody;
 
 
     /**
