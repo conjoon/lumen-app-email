@@ -250,7 +250,8 @@ class MessageItemController extends Controller {
             ], 400);
         }
 
-        $messageBody = $messageItemService->createMessageBody($folderKey, $textPlain, $textHtml);
+        $messageBody = $messageItemService->createMessageBody(
+            $folderKey, $textPlain, $textHtml, true);
 
         if (!$messageBody) {
             return response()->json([

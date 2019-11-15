@@ -385,7 +385,7 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method('createMessageBody')
-            ->with($folderKey, $textPlain, $textHtml)
+            ->with($folderKey, $textPlain, $textHtml, true)
             ->willReturn($messageBody);
 
         $response = $this->actingAs($this->getTestUserStub())
