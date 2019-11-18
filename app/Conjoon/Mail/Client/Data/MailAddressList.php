@@ -28,7 +28,9 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Data;
 
 use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable;
+    Conjoon\Util\Jsonable,
+    Conjoon\Util\JsonDecodable,
+    Conjoon\Util\Stringable;
 
 /**
  * Class MailAddressList organizes a list of MailAddresses.
@@ -46,8 +48,68 @@ use Conjoon\Util\AbstractList,
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddressList extends AbstractList implements Jsonable {
+class MailAddressList extends AbstractList implements JsonDecodable, Stringable {
 
+
+// --------------------------------
+//  JsonDecodable interface
+// --------------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromJsonString(string $value) :? Jsonable {
+
+        $val = json_decode($value, true);
+
+        if (!$val) {
+            return null;
+        }
+
+        $list = new self;
+
+        foreach ($val as $entry) {
+            $address = MailAddress::fromJsonString(json_encode($entry));
+
+            if (!$address) {
+                continue;
+            }
+
+            $list[]  = $address;
+        }
+
+        if (count($list) === 0) {
+            return null;
+        }
+        return $list;
+    }
+
+
+
+// --------------------------------
+//  Stringable interface
+// --------------------------------
+    /**
+     * Returns a string representation of this email address list.
+     *
+     * @example
+     *   $list = new MailAddressList();
+     *   $list[] = new MailAddress("PeterParker@newyork.com", "Peter Parker");
+     *   $list[] = new MailAddress("PeterGriffin@quahog.com", "Peter Griffin");
+     *
+     *   $list->toString(); // returns "Peter Parker <PeterParker@newyork.com>, Peter Griffin <PeterGriffin@quahog.com>"
+     *
+     * @return string
+     */
+    public function toString() :string {
+
+        $data = [];
+        foreach ($this->data as $address) {
+            $data[] = $address->toString();
+        }
+
+        return implode(", ", $data);
+    }
 
 
 // --------------------------------

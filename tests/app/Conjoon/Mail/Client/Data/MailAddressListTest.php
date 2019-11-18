@@ -27,7 +27,8 @@
 use Conjoon\Util\AbstractList,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Util\Jsonable;
+    Conjoon\Util\Jsonable,
+    Conjoon\Util\JsonDecodable;
 
 
 class MailAddressListTest extends TestCase
@@ -46,6 +47,7 @@ class MailAddressListTest extends TestCase
         $mailAddressList = new MailAddressList();
         $this->assertInstanceOf(AbstractList::class, $mailAddressList);
         $this->assertInstanceOf(Jsonable::class, $mailAddressList);
+        $this->assertInstanceOf(JsonDecodable::class, $mailAddressList);
 
 
         $this->assertSame(MailAddress::class, $mailAddressList->getEntityType());
@@ -59,7 +61,6 @@ class MailAddressListTest extends TestCase
     public function testToJson() {
 
         $mailAddressList = new MailAddressList;
-
         $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
@@ -67,6 +68,45 @@ class MailAddressListTest extends TestCase
             $mailAddressList[0]->toJson(),
             $mailAddressList[1]->toJson()
         ], $mailAddressList->toJson());
+    }
+
+
+    /**
+     * fromJsonString
+     */
+    public function testFromJsonString() {
+
+        $mailAddressList = new MailAddressList;
+        $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
+        $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
+
+        $jsonString = json_encode($mailAddressList->toJson());
+        $this->assertEquals($mailAddressList, MailAddressList::fromJsonString($jsonString));
+
+        $jsonString = json_encode([]);
+        $this->assertNull(MailAddressList::fromJsonString($jsonString));
+
+        $jsonString = "{khlhoi:1)";
+        $this->assertNull(MailAddressList::fromJsonString($jsonString));
+
+        $jsonString = "[{\"name\" : \"foo\"}]";
+        $this->assertNull(MailAddressList::fromJsonString($jsonString));
+    }
+
+    /**
+     * toString
+     */
+    public function testToString() {
+
+        $mailAddressList = new MailAddressList;
+        $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
+        $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
+
+        $this->assertSame(
+            $mailAddressList[0]->toString() . ", " . $mailAddressList[1]->toString(),
+            $mailAddressList->toString()
+        );
+
     }
 
 }
