@@ -40,9 +40,9 @@ interface JsonDecodable extends Jsonable {
      *
      * @param string $value
      *
-     * @return Jsonable
+     * @return Jsonable returns null if the passed string could not be json-decoded
      */
-    public static function fromJsonString(string $value) :Jsonable;
+    public static function fromJsonString(string $value) :?Jsonable;
 
 
 }

@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\Jsonable;
+use Conjoon\Util\Jsonable,
+    Conjoon\Util\Stringable,
+    Conjoon\Util\JsonDecodable;
 
 /**
  * Class MailAddress models a Mail Address, containing a "name" and an "address".
@@ -41,7 +43,7 @@ use Conjoon\Util\Jsonable;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddress  implements Jsonable {
+class MailAddress  implements Stringable, JsonDecodable {
 
 
     /**
@@ -80,6 +82,51 @@ class MailAddress  implements Jsonable {
      */
     public function getAddress() :string {
         return $this->address;
+    }
+
+
+// --------------------------------
+//  JsonDecodable interface
+// --------------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromJsonString(string $value) :? Jsonable {
+
+        $val = json_decode($value, true);
+
+        if (!$val || !isset($val["address"])) {
+            return null;
+        }
+
+        $address = $val["address"];
+        $name    = isset($val["name"]) ? $val["name"] : $val["address"];
+
+        return new self($address, $name);
+    }
+
+
+// --------------------------------
+//  Stringable interface
+// --------------------------------
+
+    /**
+     * Returns a string representation of this email address.
+     *
+     * @example
+     *   $address = new MailAddress("PeterParker@newyork.com", "Peter Parker");
+     *
+     *   $address->toString(); // returns "Peter Parker <PeterParker@newyork.com>"
+     *
+     * @return string
+     */
+    public function toString() :string {
+
+        $address = $this->getAddress();
+        $name    = $this->getName();
+
+        return $name . " <" . $address . ">";
     }
 
 
