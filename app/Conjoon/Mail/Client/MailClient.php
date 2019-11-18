@@ -32,6 +32,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItemList,
@@ -93,6 +94,19 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
     public function createMessageBody(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageKey;
+
+
+    /**
+     * Updates envelope information of a Message, if the Message is a draft Message.
+     *
+     * @param MessageKey $messageKey
+     * @param MessageItemDraft $messageItemDraft
+     *
+     * @return MessageItemDraft The MessageItemDraft updated, along with its MessageKey.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function updateMessageDraft(MessageKey $messageKey, MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**

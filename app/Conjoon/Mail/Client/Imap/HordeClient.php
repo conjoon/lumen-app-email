@@ -38,6 +38,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Folder\MailFolderList,
@@ -450,6 +451,61 @@ class HordeClient implements MailClient {
             $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
 
             return new MessageKey($key->getMailAccountId(), $key->getId(), "" . $ids->ids[0]);
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageDraft(MessageKey $messageKey, MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+
+        try {
+            $client = $this->connect($messageKey);
+
+            $id = $messageKey->getId();
+
+            $mailFolderId = $messageKey->getMailFolderId();
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchResult = $client->fetch($messageKey->getMailFolderId(), $fetchQuery, ['ids' => $rangeList]);
+
+            $msg = $fetchResult[$id]->getFullMsg(false);
+
+            $part    = \Horde_Mime_Part::parseMessage($msg);
+            $headers = \Horde_Mime_Headers::parseHeaders($msg);
+
+            $mid = $messageItemDraft;
+            // set headers
+            $mid->getSubject() && $headers->addHeader("Subject", $mid->getSubject());
+            $mid->getFrom() && $headers->addHeader("From", $mid->getFrom()->toString());
+            $mid->getTo() && $headers->addHeader("To", $mid->getTo()->toString());
+            $mid->getCc() && $headers->addHeader("Cc", $mid->getCc()->toString());
+            $mid->getBcc() && $headers->addHeader("Bcc", $mid->getBcc()->toString());
+            $mid->getDate() && $headers->addHeader("Date", $mid->getDate()->format("r"));
+
+            $fullText = trim($headers->toString()) . "\n\n" . trim($part->toString());
+
+            $ids    = $client->append($mailFolderId, [["data" => $fullText]]);
+            $newKey = new MessageKey($messageKey->getMailAccountId(), $messageKey->getMailFolderId(), "" . $ids->ids[0]);
+
+            $this->setFlags($newKey, $mid->getFlagList());
+
+            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+
+            $messageItemDraft->setMessageKey($newKey);
+
+            return $messageItemDraft;
+
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }

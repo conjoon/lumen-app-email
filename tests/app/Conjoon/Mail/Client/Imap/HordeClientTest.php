@@ -25,12 +25,15 @@
  */
 
 use Conjoon\Mail\Client\Imap\HordeClient,
+    Conjoon\Mail\Client\Data\MailAddress,
+    Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Imap\ImapClientException,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\ListMessageItem,
@@ -453,7 +456,7 @@ class HordeClientTest extends TestCase {
 
 
     /**
-     * Tests setFlags
+     * Tests createMessageBody
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
@@ -513,7 +516,110 @@ class HordeClientTest extends TestCase {
 
     }
 
+    /**
+     * Tests updateMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageDraft() {
 
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+        $resultMessageKey = new MessageKey($account, $mailFolderId, "abcd");
+
+
+        $to = new MailAddressList();
+        $to[] = new MailAddress("test@test.com", "test");
+
+        $cc = new MailAddressList();
+        $cc[] = new MailAddress("test@dropi.org", "test");
+        $cc[] = new MailAddress("test2@dropi.org", "test2");
+
+        $bcc = new MailAddressList();
+        $bcc[] = new MailAddress("test@test.com", "test");
+
+
+        $messageItemDraft = new MessageItemDraft([
+            "subject" => "foo",
+            "from" => new MailAddress("testa@fobbar.com", "test"),
+            "to" => $to,
+            "cc" => $cc,
+            "bcc" => $bcc,
+            "date" => new \DateTime("@1234566"),
+            "replyTo" => new MailAddress("test@foobar.com", "test")
+        ]);
+
+        $mid = $messageItemDraft;
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $resultList = new \Horde_Imap_Client_Ids();
+        $resultList->add($resultMessageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $fetchResult = [];
+        $fetchResult[$messageKey->getId()] = new class() {
+            public function getFullMsg($bool) {
+                return "";
+            }
+        };
+
+        $imapStub->shouldReceive("fetch")
+                  ->with(
+                      $messageKey->getMailFolderId(),
+                      \Mockery::any(),
+                      ['ids' => $rangeList]
+                      )
+                  ->andReturn($fetchResult);
+
+        $fullMsg = [
+            "Subject: foo",
+            "From: ". $mid->getFrom()->toString(),
+            "To: ". $mid->getTo()->toString(),
+            "Cc: ". $mid->getCc()->toString(),
+            "Bcc: ". $mid->getBcc()->toString(),
+            "Date: ". $mid->getDate()->format("r")
+        ];
+
+        $fullMsg = implode($fullMsg, "\n") . "\n\n";
+
+        $imapStub->shouldReceive("append")
+            ->with(
+                $messageKey->getMailFolderId(),
+                [["data" => $fullMsg]]
+            )
+            ->andReturn($resultList);
+
+        $imapStub->shouldReceive("store")
+            ->with(
+                $messageKey->getMailFolderId(),
+                ["ids" => $resultList,
+                 "add" => ["\Draft"],
+                 "remove" => ["\Seen", "\Flagged"]
+                ]
+            );
+
+
+        $imapStub->shouldReceive("expunge")
+                 ->with(
+                     $messageKey->getMailFolderId(),
+                     ["delete" => true, "ids" => $rangeList]
+                 );
+
+        $client = $this->createClient();
+
+        $res = $client->updateMessageDraft($messageKey, $messageItemDraft);
+
+
+        $this->assertSame($res, $messageItemDraft);
+        $this->assertEquals($res->getMessageKey(), $resultMessageKey);
+    }
+    
 // -------------------------------
 //  Helper
 // -------------------------------
