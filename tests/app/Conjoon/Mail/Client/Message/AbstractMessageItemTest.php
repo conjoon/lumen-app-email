@@ -25,6 +25,10 @@
  */
 
 use Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Util\Jsonable,
@@ -173,6 +177,49 @@ class AbstractMessageItemTest extends TestCase
         $messageItem = $this->createMessageItem(["from" => null]);
 
         $this->assertSame(null, $messageItem->getFrom());
+
+    }
+
+    /**
+     * getFlagList()
+     */
+    public function testGetFlagList() {
+
+        $item = $this->createMessageItem($this->getItemConfig());
+
+        $flagList = $item->getFlagList();
+
+        $this->assertInstanceOf(FlagList::class, $flagList);
+
+        $caught = 0;
+
+        foreach ($flagList as $flag) {
+
+            switch (true) {
+
+                case ($flag instanceof DraftFlag):
+                    if ($flag->getValue() === false) {
+                        $caught++;
+                    }
+                    break;
+
+                case ($flag instanceof SeenFlag):
+                    if ($flag->getValue() === false) {
+                        $caught++;
+                    }
+                    break;
+
+                case ($flag instanceof FlaggedFlag):
+                    if ($flag->getValue() === true) {
+                        $caught++;
+                    }
+                    break;
+
+            }
+
+        }
+
+        $this->assertSame(3, $caught);
 
     }
 
