@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
  * Class MessageItem models envelope informations of a Message.
@@ -36,5 +37,92 @@ namespace Conjoon\Mail\Client\Message;
  */
 class MessageItem extends AbstractMessageItem {
 
+
+    /**
+     * @var int
+     */
+    protected $size;
+
+    /**
+     * @var bool
+     */
+    protected $hasAttachments;
+
+    /**
+     * @var string
+     */
+    protected $charset;
+
+
+    /**
+     * MessageItem constructor.
+     *
+     * @param MessageKey $messageKey
+     * @param array $data
+     *
+     * @throws \TypeError if any of the submitted values for the properties do not match
+     * their expected type
+     */
+    public function __construct(MessageKey $messageKey, array $data = null) {
+
+        $this->setMessageKey($messageKey);
+
+        parent::__construct($data);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    protected function checkType($property, $value) {
+
+        switch ($property) {
+            case "charset":
+                if (!is_string($value)) {
+                    return "string";
+                }
+                break;
+
+            case "size":
+                if (!is_int($value)) {
+                    return "int";
+                }
+                break;
+
+            case "hasAttachments":
+                if (!is_bool($value)) {
+                    return "bool";
+                }
+                break;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    protected function setMessageKey(MessageKey $messageKey) :AbstractMessageItem {
+        $this->messageKey = $messageKey;
+        return $this;
+    }
+
+// --------------------------------
+//  Jsonable interface
+// --------------------------------
+
+    /**
+     * Returns an array representing this MessageItem.
+     *
+     * @return array
+     */
+    public function toJson() :array{
+
+        return array_merge(parent::toJson(), [
+            'size'           => $this->getSize(),
+            'hasAttachments' => $this->getHasAttachments()
+        ]);
+    }
 
 }

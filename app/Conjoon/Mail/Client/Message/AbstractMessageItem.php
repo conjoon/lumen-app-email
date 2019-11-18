@@ -27,10 +27,14 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\MailAddressList,
+use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Util\Jsonable;
+    Conjoon\Util\Jsonable,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
  * Class MessageItem models simplified envelope informations for a Mail Message.
@@ -40,18 +44,15 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  *    class MessageItem extends AbstractMessageItem  {}
  *
  *    $item = new MessageItem(
- *              new MessageKey("dev", "INBOX", "232"),
  *              ["date" => new \DateTime()]
  *            );
  *
- *    $item->getMessageKey();
  *    $item->setSubject("Foo");
  *    $item->getSubject(); // "Foo"
  *
  * @package Conjoon\Mail\Client\Message
  */
 abstract class AbstractMessageItem implements Jsonable {
-
 
     /**
      * @var MessageKey
@@ -67,11 +68,6 @@ abstract class AbstractMessageItem implements Jsonable {
      * @var MailAddressList
      */
     protected $to;
-
-    /**
-     * @var int
-     */
-    protected $size;
 
     /**
      * @var string
@@ -108,29 +104,16 @@ abstract class AbstractMessageItem implements Jsonable {
      */
     protected $recent;
 
-    /**
-     * @var bool
-     */
-    protected $hasAttachments;
-
-    /**
-     * @var string
-     */
-    protected $charset;
-
 
     /**
      * MessageItem constructor.
      *
-     * @param MessageKey $messageKey
      * @param array $data
      *
      * @throws \TypeError if any of the submitted values for the properties do not match
      * their expected type
      */
-    public function __construct(MessageKey $messageKey, array $data = null) {
-
-        $this->messageKey = $messageKey;
+    public function __construct(array $data = null) {
 
         if (!$data) {
             return;
@@ -144,6 +127,16 @@ abstract class AbstractMessageItem implements Jsonable {
 
         }
     }
+
+
+    /**
+     * Sets the MessageKey for this instance.
+     *
+     * @param MessageKey $messageKey
+     *
+     * @return AbstractMessageItem $this
+     */
+    abstract protected function setMessageKey(MessageKey $messageKey) :AbstractMessageItem;
 
 
     /**
@@ -215,38 +208,11 @@ abstract class AbstractMessageItem implements Jsonable {
                     !in_array($property, ['messageKey'])) {
 
                     $value = $arguments[0];
-                    $typeFail = "";
 
-                    switch ($property) {
-                        case "subject":
-                        case "charset":
-                        if (!is_string($value)) {
-                                $typeFail = "string";
-                            }
-                            break;
-
-                        case "size":
-                            if (!is_int($value)) {
-                                $typeFail = "int";
-                            }
-                            break;
-
-                        case "seen":
-                        case "recent":
-                        case "draft":
-                        case "flagged":
-                        case "answered":
-                        case "hasAttachments":
-                            if (!is_bool($value)) {
-                                $typeFail = "bool";
-                            }
-                            break;
-
-                    }
-
-                    if ($typeFail !== "") {
+                    if (($typeFail = $this->checkType($property, $value)) !== true) {
                         throw new \TypeError("Wrong type for \"$property\" submitted");
                     }
+
 
                     $this->{$property} = $value;
                     return $this;
@@ -260,42 +226,70 @@ abstract class AbstractMessageItem implements Jsonable {
     }
 
 
+    /**
+     * Returns a FlagList representation of all flags set for this MessageItem.
+     *
+     * @return FlagList
+     */
+    public function getFlagList() :FlagList {
+        $flagList   = new FlagList();
+        $flagList[] = new DraftFlag($this->getDraft());
+        $flagList[] = new SeenFlag($this->getSeen());
+        $flagList[] = new FlaggedFlag($this->getFlagged());
+
+        return $flagList;
+    }
+
+
+    /**
+     * Helper for __call to determine if the proper type for a property is submitted
+     * when using magic set* methods.
+     *
+     * @param string $property
+     * @param mixed $value
+     *
+     * @return bool|string Returns true if the passed $value matches the expected type
+     * of $property, otherwise a string containing the expected type.
+     */
+    protected function checkType($property, $value) {
+        switch ($property) {
+            case "subject":
+                if (!is_string($value)) {
+                    return "string";
+                }
+                break;
+
+            case "seen":
+            case "recent":
+            case "draft":
+            case "flagged":
+            case "answered":
+                if (!is_bool($value)) {
+                    return "bool";
+                }
+                break;
+        }
+
+        return true;
+    }
+
+
 // --------------------------------
 //  Jsonable interface
 // --------------------------------
 
     /**
-     * Returns an array representing this MessageItemList.
-     *
-     * Each entry in the returning array must consist of the following key/value-pairs:
-     *
-     * - subject (string)
-     * - date (string) The date of the message in the format "Y-m-d H:i"
-     * - from (array) - The JSON representation od MailAddress
-     * - seen (bool)
-     * - answered (bool)
-     * - flagged (bool)
-     * - draft (bool)
-     * - recent (bool)
-     * - hasAttachments (bool)
-     * - to (array) - The JSON representation od MailAddressList
-     * - previewText (string)
-     * - size (integer) The size of the message in bytes
-     * - mailFolderId (string)
-     * - mailAccountId (string)
-     * - id (string)
+     * Returns an array representing this MessageItem.
      *
      * @return array
      */
     public function toJson() :array{
 
-        return [
-            'mailAccountId'  => $this->getMessageKey()->getMailAccountId(),
-            'mailFolderId'   => $this->getMessageKey()->getMailFolderId(),
-            'id'             => $this->getMessageKey()->getId(),
+        $mk = $this->getMessageKey();
+
+        return array_merge($mk ? $mk->toJson() : [], [
             'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
             'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
-            'size'           => $this->getSize(),
             'subject'        => $this->getSubject(),
             'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01"))->format("Y-m-d H:i:s"),
             'seen'           => $this->getSeen(),
@@ -303,8 +297,7 @@ abstract class AbstractMessageItem implements Jsonable {
             'draft'          => $this->getDraft(),
             'flagged'        => $this->getFlagged(),
             'recent'         => $this->getRecent(),
-            'hasAttachments' => $this->getHasAttachments()
-        ];
+        ]);
     }
 
 

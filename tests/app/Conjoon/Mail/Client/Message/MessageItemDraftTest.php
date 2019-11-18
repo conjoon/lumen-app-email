@@ -25,13 +25,14 @@
  */
 
 use Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\MailClientException;
 
 
-class AbstractMessageItemTest extends TestCase
+class MessageItemDraftTest extends TestCase
 {
 
 
@@ -41,45 +42,36 @@ class AbstractMessageItemTest extends TestCase
 // ---------------------
 
     /**
-     * Tests constructor
+     * Tests instance
      */
     public function testConstructor() {
 
         $messageItem = $this->createMessageItem();
-        $this->assertInstanceOf(Jsonable::class, $messageItem);
+        $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
+
+
     }
 
-
     /**
-     * Test class.
+     * Tests setMessageKey
      */
-    public function testClass() {
+    public function testSetMessageKey() {
 
-        $item = $this->getItemConfig();
+        $messageKey = $this->createMessageKey();
+        $messageItem = $this->createMessageItem();
 
-        $messageItem = $this->createMessageItem($item);
+        $messageItem->setMessageKey($messageKey);
+        $this->assertSame($messageKey, $messageItem->getMessageKey());
 
-        foreach ($item as $key => $value) {
-
-            $method = "get" . ucfirst($key);
-
-            switch ($key) {
-                case 'date':
-                    $this->assertNotSame($item["date"], $messageItem->getDate());
-                    $this->assertEquals($item["date"], $messageItem->getDate());
-                    break;
-                case 'from':
-                    $this->assertNotSame($item["from"], $messageItem->getFrom());
-                    $this->assertEquals($item["from"], $messageItem->getFrom());
-                    break;
-                case 'to':
-                    $this->assertNotSame($item["to"], $messageItem->getTo());
-                    $this->assertEquals($item["to"], $messageItem->getTo());
-                    break;
-                default :
-                    $this->assertSame($messageItem->{$method}(), $item[$key], $key);
-            }
+        $exc = null;
+        try {
+            $messageItem->setMessageKey($messageKey);
+        } catch (MailClientException $e) {
+            $exc = $e;
         }
+
+        $this->assertSame("\"messageKey\" was already set.", $exc->getMessage());
+
     }
 
 
@@ -118,17 +110,9 @@ class AbstractMessageItemTest extends TestCase
 
         };
 
-        $testException("subject", "int");
-        $testException("seen", "string");
-        $testException("answered", "string");
-        $testException("recent", "string");
         $testException("draft", "string");
-        $testException("flagged", "string");
-        $testException("from", "");
-        $testException("to", "");
-        $testException("date", "");
 
-        $this->assertSame(9, count($caught));
+        $this->assertSame(1, count($caught));
     }
 
 
@@ -140,39 +124,37 @@ class AbstractMessageItemTest extends TestCase
 
         $messageItem = $this->createMessageItem($item);
 
+        $messageKey = $this->createMessageKey();
+        $messageItem->setMessageKey($messageKey);
         $keys = array_keys($item);
 
 
         foreach ($keys as $key) {
-            if ($key === "from" || $key === "to") {
+            if ($key === "replyTo" || $key === "cc"  || $key === "bcc") {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
-            } else if ($key == "date") {
-                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $messageItem->toJson()[$key]);
             } else{
                 $this->assertSame($item[$key], $messageItem->toJson()[$key]);
             }
         }
 
 
+        $messageItem = $this->createMessageItem($item);
+        $messageKey = $this->createMessageKey();
+        $messageItem->setMessageKey($messageKey);
+
+        $json    = $messageItem->toJson();
+        $keyJson = $messageKey->toJson();
+
+        $this->assertSame($json["id"], $keyJson["id"]);
+        $this->assertSame($json["mailAccountId"], $keyJson["mailAccountId"]);
+        $this->assertSame($json["mailFolderId"], $keyJson["mailFolderId"]);
+
         $messageItem = $this->createMessageItem();
+        $json        = $messageItem->toJson();
 
-        $json = $messageItem->toJson();
-
-        $this->assertSame("1970-01-01 00:00:00", $json["date"]);
-        $this->assertSame([], $json["to"]);
-        $this->assertSame([], $json["from"]);
-
-    }
-
-
-    /**
-     * Test setFrom /w null
-     */
-    public function testSetFromWithNull() {
-
-        $messageItem = $this->createMessageItem(["from" => null]);
-
-        $this->assertSame(null, $messageItem->getFrom());
+        $this->assertSame([], $json["replyTo"]);
+        $this->assertSame([], $json["cc"]);
+        $this->assertSame([], $json["bcc"]);
 
     }
 
@@ -180,53 +162,74 @@ class AbstractMessageItemTest extends TestCase
 //    Helper Functions
 // ---------------------
 
-
-    /**
-     * Returns an anonymous class extending AbstractMessageItem.
-     *
-     * @param array|null $data
-     * @return AbstractMessageItem
-     */
-    protected function createMessageItem(array $data = null) :AbstractMessageItem {
-        // Create a new instance from the Abstract Class
-       return new class($data) extends AbstractMessageItem {public function setMessageKey(MessageKey $key):AbstractMessageItem{}};
-    }
-
     /**
      * Returns an MessageItem as array.
      */
     protected function getItemConfig() {
 
         return [
-            'from'           => $this->createFrom(),
-            'to'             => $this->createTo(),
-            'subject'        => "SUBJECT",
-            'date'           => new \DateTime(),
-            'seen'           => false,
-            'answered'       => true,
-            'draft'          => false,
-            'flagged'        => true,
-            'recent'         => false
+            'cc'      => $this->createCc(),
+            'bcc'     => $this->createBcc(),
+            'replyTo' => $this->createReplyTo(),
+            'draft'   => true
         ];
 
     }
 
 
     /**
-     * Returns a MailAddress to be used with the "from" property of the MessageItem
+     * Returns a MessageItemDraft.
+     *
+     * @param array|null $data
+     * @return AbstractMessageItem
+     */
+    protected function createMessageItem(array $data = null) :MessageItemDraft {
+        // Create a new instance from the Abstract Class
+       return new MessageItemDraft($data);
+    }
+
+
+    /**
+     * Returns a MessageKey.
+     *
+     * @param string $mailFolderId
+     * @param string $id
+     *
+     * @return MessageKey
+     */
+    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+        return new MessageKey($mailAccountId, $mailFolderId, $id);
+    }
+
+    /**
+     * Returns a MailAddress to be used with the "replyTo" property of the MessageItem
      * to test.
      *
      * @return MailAddress
      */
-    protected function createFrom() :MailAddress {
+    protected function createReplyTo() :MailAddress {
         return new MailAddress("peterParker@newyork.com", "Peter Parker");
     }
 
     /**
-     * Returns a MailAddressList to be used with the "to" property of the MessageItem
+     * Returns a MailAddressList to be used with the "cc" property of the MessageItem
      * @return MailAddressList
      */
-    protected function createTo() : MailAddressList {
+    protected function createCc() : MailAddressList {
+
+        $list = new MailAddressList;
+
+        $list[] = new MailAddress("name1", "name1@address.testcomdomaindev");
+        $list[] = new MailAddress("name2", "name2@address.testcomdomaindev");
+
+        return $list;
+    }
+
+    /**
+     * Returns a MailAddressList to be used with the "bcc" property of the MessageItem
+     * @return MailAddressList
+     */
+    protected function createBcc() : MailAddressList {
 
         $list = new MailAddressList;
 

@@ -46,12 +46,90 @@ class MessageItemTest extends TestCase
         $messageKey = $this->createMessageKey();
         $messageItem = $this->createMessageItem($messageKey);
         $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
+
+        $this->assertSame($messageKey, $messageItem->getMessageKey());
     }
 
+    /**
+     * Test type exceptions.
+     */
+    public function testTypeException() {
+
+        $caught = [];
+
+        $testException = function($key, $type) use (&$caught) {
+
+            $item = $this->getItemConfig();
+
+            switch ($type) {
+                case "int":
+                    $item[$key] = (int)$item[$key];
+                    break;
+                case "string":
+                    $item[$key] = (string)$item[$key];
+                    break;
+
+                default:
+                    $item[$key] = $type;
+                    break;
+            }
+
+            try {
+                $this->createMessageItem($this->createMessageKey(), $item);
+            } catch (\TypeError $e) {
+                if (in_array($e->getMessage(), $caught)) {
+                    return;
+                }
+                $caught[] = $e->getMessage();
+            }
+
+        };
+
+        $testException("charset", "int");
+        $testException("hasAttachments", "string");
+        $testException("size", "string");
+
+        $this->assertSame(3, count($caught));
+    }
+
+
+    /**
+     * toJson()
+     */
+    public function testToJson() {
+
+        $messageKey = $this->createMessageKey();
+        $item       = $this->createMessageItem($this->createMessageKey(), $this->getItemConfig());
+
+        $json = $item->toJson();
+
+
+        $subset = array_merge($messageKey->toJson(), $this->getItemConfig());
+        unset($subset["charset"]);
+
+        foreach ($subset as $entry => $value) {
+            $this->assertSame($value, $json[$entry]);
+        }
+
+
+    }
 
 // ---------------------
 //    Helper Functions
 // ---------------------
+
+    /**
+     * Returns an MessageItem as array.
+     */
+    protected function getItemConfig() {
+
+        return [
+            'charset'        => "ISO-8859-1",
+            'size'           => 83,
+            'hasAttachments' => true
+        ];
+
+    }
 
 
     /**
