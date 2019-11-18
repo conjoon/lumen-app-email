@@ -32,8 +32,7 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\MailClientException;
 
 
-class MessageItemDraftTest extends TestCase
-{
+class MessageItemDraftTest extends TestCase {
 
 
 
@@ -49,6 +48,7 @@ class MessageItemDraftTest extends TestCase
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
 
+        $this->assertTrue($messageItem->getDraft());
 
     }
 
