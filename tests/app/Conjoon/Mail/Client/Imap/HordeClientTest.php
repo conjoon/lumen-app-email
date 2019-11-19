@@ -583,6 +583,7 @@ class HordeClientTest extends TestCase {
             "To: ". $mid->getTo()->toString(),
             "Cc: ". $mid->getCc()->toString(),
             "Bcc: ". $mid->getBcc()->toString(),
+            "Reply-To: ". $mid->getReplyTo()->toString(),
             "Date: ". $mid->getDate()->format("r")
         ];
 

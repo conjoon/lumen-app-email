@@ -491,6 +491,7 @@ class HordeClient implements MailClient {
             $mid->getTo() && $headers->addHeader("To", $mid->getTo()->toString());
             $mid->getCc() && $headers->addHeader("Cc", $mid->getCc()->toString());
             $mid->getBcc() && $headers->addHeader("Bcc", $mid->getBcc()->toString());
+            $mid->getReplyTo() && $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
             $mid->getDate() && $headers->addHeader("Date", $mid->getDate()->format("r"));
 
             $fullText = trim($headers->toString()) . "\n\n" . trim($part->toString());
