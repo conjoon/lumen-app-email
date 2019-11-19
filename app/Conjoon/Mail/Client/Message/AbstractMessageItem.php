@@ -82,7 +82,7 @@ abstract class AbstractMessageItem implements Jsonable {
     /**
      * @var bool
      */
-    protected $seen;
+    protected $seen = false;
 
     /**
      * @var bool
@@ -92,12 +92,12 @@ abstract class AbstractMessageItem implements Jsonable {
     /**
      * @var bool
      */
-    protected $draft;
+    protected $draft = false;
 
     /**
      * @var bool
      */
-    protected $flagged;
+    protected $flagged = false;
 
     /**
      * @var bool

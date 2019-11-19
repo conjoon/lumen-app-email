@@ -51,6 +51,11 @@ class AbstractMessageItemTest extends TestCase
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(Jsonable::class, $messageItem);
+
+        $this->assertFalse($messageItem->getSeen());
+        $this->assertFalse($messageItem->getFlagged());
+        $this->assertFalse($messageItem->getDraft());
+
     }
 
 
