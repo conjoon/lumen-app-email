@@ -129,6 +129,9 @@ class VariousTest extends TestCase
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer::class, $messageItemServiceMailClient->getMessageBodyDraftToTextTransformer());
+
+
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());

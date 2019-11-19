@@ -46,7 +46,8 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
+    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer;
 
 /**
  * Class HordeClient.
@@ -68,11 +69,29 @@ class HordeClient implements MailClient {
     protected $socket;
 
     /**
-     * HordeClient constructor.
-     * @param MailAccount $account
+     * @var MessageBodyDraftToTextTransformer
      */
-    public function __construct(MailAccount $account) {
+    protected $messageBodyDraftToTextTransformer;
+
+    /**
+     * HordeClient constructor.
+     *
+     * @param MailAccount $account
+     * @param MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer
+     */
+    public function __construct(MailAccount $account, MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer) {
         $this->mailAccount = $account;
+        $this->messageBodyDraftToTextTransformer = $messageBodyDraftToTextTransformer;
+    }
+
+
+    /**
+     * Returns the MessageBodyDraftToTextTransformer this instance was configured with.
+     *
+     * @return MessageBodyDraftToTextTransformer
+     */
+    public function getMessageBodyDraftToTextTransformer() :MessageBodyDraftToTextTransformer {
+        return $this->messageBodyDraftToTextTransformer;
     }
 
 
@@ -437,16 +456,7 @@ class HordeClient implements MailClient {
         try {
             $client = $this->connect($key);
 
-            $mail = new \Horde_Mime_Mail();
-            $plain = $messageBodyDraft->getTextPlain();
-            $html  = $messageBodyDraft->getTextHtml();
-
-            $mail->addHeader("User-Agent", "php-conjoon", true);
-            $mail->setBody($plain->getContents(), $plain->getCharset());
-            $mail->setHtmlBody($html->getContents(), $html->getCharset(), false);
-
-            $mail->send(new \Horde_Mail_Transport_Null, false, false);
-            $rawMessage = $mail->getRaw(false);
+            $rawMessage = $this->getMessageBodyDraftToTextTransformer()->transform($messageBodyDraft);
 
             $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
 

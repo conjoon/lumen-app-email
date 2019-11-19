@@ -40,8 +40,8 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Folder\MailFolderList,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
-
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer;
 
 
 /**
@@ -455,6 +455,7 @@ class HordeClientTest extends TestCase {
     }
 
 
+
     /**
      * Tests createMessageBody
      *
@@ -475,45 +476,18 @@ class HordeClientTest extends TestCase {
         $messageBodyDraft->setTextHtml($htmlPart);
         $messageBodyDraft->setTextPlain($plainPart);
 
-        $mailStub = \Mockery::mock('overload:'.\Horde_Mime_Mail::class);
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
-        // Mail mock
-        $mailStub->shouldReceive("addHeader")->with(
-            "User-Agent", "php-conjoon", true
-        );
-        $mailStub->shouldReceive('setBody')->with(
-            $plainPart->getContents(), $plainPart->getCharset()
-        );
-        $mailStub->shouldReceive('setBody')->with(
-            $plainPart->getContents(), $plainPart->getCharset()
-        );
-        $mailStub->shouldReceive('setHtmlBody')->with(
-            $htmlPart->getContents(), $htmlPart->getCharset(), false
-        );
-        $mailStub->shouldReceive('getRaw')->with(
-            false
-        )->andReturn($rawMessage);
-
-        $mailStub->shouldReceive('send')->withArgs(
-            function ($transport, $resend, $flowed) {
-                return $transport instanceof \Horde_Mail_Transport_Null && $resend === false && $flowed === false;
-            }
-        );
-
-        // socket mock
         $imapStub->shouldReceive('append')->with(
-            $folderKey->getId(), [["data" => $rawMessage]]
+            $folderKey->getId(), [["data" => "FULL_TXT_MSG"]]
         )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
 
         $client = $this->createClient();
-
         $res = $client->createMessageBody($folderKey, $messageBodyDraft);
 
         $this->assertSame($res->getMailAccountId(), $account->getId());
         $this->assertSame($res->getMailFolderId(), $mailFolderId);
         $this->assertSame($res->getId(), $messageItemId);
-
     }
 
     /**
@@ -647,16 +621,38 @@ class HordeClientTest extends TestCase {
         return new MessageKey($mid, $fid, $id);
     }
 
+
+    /**
+     * @return MessageBodyDraftToTextTransformer
+     */
+    protected function createMessageBodyDraftToTextTransformer() :MessageBodyDraftToTextTransformer {
+
+        return new class() implements MessageBodyDraftToTextTransformer {
+
+            public function transform(MessageBodyDraft $draft) :string {
+                return "FULL_TXT_MSG";
+            }
+
+        };
+
+    }
+
+
     /**
      * Creates an instance of HordeClient.
      *
      * @return HordeCient
      */
-    protected function createClient($mailAccount = null) :HordeClient {
+    protected function createClient($mailAccount = null, $messageBodyDraftToTextTransformer = null) :HordeClient {
 
         if (!$mailAccount) {
             $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         }
-        return new HordeClient($mailAccount);
+
+        if (!$messageBodyDraftToTextTransformer) {
+            $messageBodyDraftToTextTransformer = $this->createMessageBodyDraftToTextTransformer();
+        }
+
+        return new HordeClient($mailAccount, $messageBodyDraftToTextTransformer);
     }
 }

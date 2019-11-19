@@ -63,7 +63,9 @@ $app->configure('imapserver');
 
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
-$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients) {
+$hordeTransformer = new Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer;
+
+$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients, &$hordeTransformer) {
 
     $accountId = $account->getId();
 
@@ -72,7 +74,7 @@ $getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$m
     }
 
 
-    $mailClient = new Conjoon\Mail\Client\Imap\HordeClient($account);
+    $mailClient = new Conjoon\Mail\Client\Imap\HordeClient($account, $hordeTransformer);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };
