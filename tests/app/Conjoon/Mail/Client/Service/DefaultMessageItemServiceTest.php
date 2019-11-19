@@ -30,6 +30,7 @@ use
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\ListMessageItem,
@@ -44,6 +45,7 @@ use
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Text\CharsetConverter,
     Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
@@ -78,9 +80,9 @@ class DefaultMessageItemServiceTest extends TestCase {
         $wP = $this->getWritableMessagePartContentProcessor();
         $pP = $this->getPreviewTextProcessor();
         $miP = $this->getMessageItemFieldsProcessor();
+        $midp = $this->getMessageItemDraftWriter();
 
-
-        $service = $this->createService($miP, $rP, $wP, $pP);
+        $service = $this->createService($miP, $rP, $wP, $pP, $midp);
 
         $this->assertInstanceOf(MessageItemService::class, $service);
         $this->assertInstanceOf(MailClient::class, $service->getMailClient());
@@ -89,6 +91,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame($wP, $service->getWritableMessagePartContentProcessor());
         $this->assertSame($pP, $service->getPreviewTextProcessor());
         $this->assertSame($miP, $service->getMessageItemFieldsProcessor());
+        $this->assertSame($midp, $service->getMessageItemDraftWriter());
     }
 
 
@@ -376,7 +379,6 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId = "INBOX";
-        $id           = "123";
         $folderKey    = $this->createFolderKey($account, $mailFolderId);
 
         $clientStub = $service->getMailClient();
@@ -387,6 +389,66 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $messageBody = $service->createMessageBody($folderKey,"a", "");
         $this->assertNull($messageBody);
+    }
+
+    /**
+     * Tests updateMessageDraft()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageDraft() {
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $newId        = "1234";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+        $newKey = $this->createMessageKey($account, $mailFolderId, $newId);
+
+        $messageItemDraft = new MessageItemDraft();
+        $messageItemDraft->setMessageKey($newKey);
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('updateMessageDraft')
+            ->with($messageKey)
+            ->willReturn($messageItemDraft);
+
+        $data = [];
+
+        $messageItemDraft = $service->updateMessageDraft($messageKey, $data);
+        $this->assertSame($newKey, $messageItemDraft->getMessageKey());
+    }
+
+
+    /**
+     * Tests testUpdateMessageDraft_returning_null()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageDraft_returning_null() {
+
+        $service = $this->createService();
+
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $data = [];
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('updateMessageDraft')
+                   ->with($messageKey)
+                   ->willThrowException(new MailClientException);
+
+        $messageItemDraft = $service->updateMessageDraft($messageKey, $data);
+        $this->assertNull($messageItemDraft);
     }
 
 // ------------------
@@ -428,7 +490,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList", "setFlags", "createMessageBody"])
+                        "getFileAttachmentList", "setFlags", "createMessageBody", "updateMessageDraft"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }
@@ -441,13 +503,15 @@ class DefaultMessageItemServiceTest extends TestCase {
     protected function createService($messageItemFieldsProcessor = null,
                                      $readableMessagePartContentProcessor = null,
                                      $writableMessagePartContentProcessor = null,
-                                     $previewTextProcessor = null) {
+                                     $previewTextProcessor = null,
+                                     $messageItemDraftWriter = null) {
         return new DefaultMessageItemService(
             $this->getMailClientMock(),
             $messageItemFieldsProcessor ? $messageItemFieldsProcessor : $this->getMessageItemFieldsProcessor(),
             $readableMessagePartContentProcessor ? $readableMessagePartContentProcessor : $this->getReadableMessagePartContentProcessor(),
             $writableMessagePartContentProcessor ? $writableMessagePartContentProcessor : $this->getWritableMessagePartContentProcessor(),
-            $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor()
+            $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor(),
+            $messageItemDraftWriter ? $messageItemDraftWriter : $this->getMessageItemDraftWriter()
         );
     }
 
@@ -480,6 +544,17 @@ class DefaultMessageItemServiceTest extends TestCase {
             public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
                 $messagePart->setContents("WRITTEN" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
                 return $messagePart;
+            }
+        };
+    }
+
+    /**
+     * @return MessageItemDraftWriter
+     */
+    protected function getMessageItemDraftWriter() :MessageItemDraftWriter{
+        return new class implements MessageItemDraftWriter {
+            public function process(array $data) :MessageItemDraft{
+                return new MessageItemDraft;
             }
         };
     }

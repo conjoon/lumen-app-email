@@ -33,9 +33,11 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
     Conjoon\Mail\Client\MailClientException,
@@ -74,6 +76,10 @@ class DefaultMessageItemService implements MessageItemService {
      */
     protected $writableMessagePartContentProcessor;
 
+    /**
+     * @var MessageItemDraftWriter
+     */
+    protected $messageItemDraftWriter;
 
     /**
      * @var MessageItemFieldsProcessor
@@ -89,18 +95,21 @@ class DefaultMessageItemService implements MessageItemService {
      * @param ReadableMessagePartContentProcessor $readableMessagePartContentProcessor
      * @param WritableMessagePartContentProcessor $writableMessagePartContentProcessor
      * @param PreviewTextProcessor $previewTextProcessor
+     * @param MessageItemDraftWriter $messageItemDraftWriter
      */
     public function __construct(
         MailClient $mailClient,
         MessageItemFieldsProcessor $messageItemFieldsProcessor,
         ReadableMessagePartContentProcessor $readableMessagePartContentProcessor,
         WritableMessagePartContentProcessor $writableMessagePartContentProcessor,
-        PreviewTextProcessor $previewTextProcessor) {
+        PreviewTextProcessor $previewTextProcessor,
+        MessageItemDraftWriter $messageItemDraftWriter) {
         $this->messageItemFieldsProcessor = $messageItemFieldsProcessor;
         $this->mailClient = $mailClient;
         $this->readableMessagePartContentProcessor = $readableMessagePartContentProcessor;
         $this->writableMessagePartContentProcessor = $writableMessagePartContentProcessor;
         $this->previewTextProcessor = $previewTextProcessor;
+        $this->messageItemDraftWriter = $messageItemDraftWriter;
     }
 
 
@@ -144,6 +153,14 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor {
         return $this->writableMessagePartContentProcessor;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemDraftWriter() :MessageItemDraftWriter {
+        return $this->messageItemDraftWriter;
     }
 
 
@@ -240,10 +257,32 @@ class DefaultMessageItemService implements MessageItemService {
             $messageBody->setTextPlain($messageBodyDraft->getTextPlain());
             $messageBody->setTextHtml($messageBodyDraft->getTextHtml());
         } catch (MailClientException $e) {
+            // intentionally left empty
         }
 
         return $messageBody;
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageDraft(MessageKey $messageKey, array $data) :?MessageItemDraft {
+
+
+        $messageItemDraft = $this->getMessageItemDraftWriter()->process($data);
+
+        $updated = null;
+
+        try {
+            $updated = $this->getMailClient()->updateMessageDraft($messageKey, $messageItemDraft);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $updated;
+    }
+
 
 // -----------------------
 // Helper

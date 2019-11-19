@@ -133,6 +133,7 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\DefaultMessageItemDraftWriter::class, $messageItemService->getMessageItemDraftWriter());
 
 
     }

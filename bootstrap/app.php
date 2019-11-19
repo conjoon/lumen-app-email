@@ -138,7 +138,8 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
         $writableMessagePartContentProcessor,
         new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
             $readableMessagePartContentProcessor
-        )
+        ),
+        new Conjoon\Mail\Client\Writer\DefaultMessageItemDraftWriter()
     );
 });
 
