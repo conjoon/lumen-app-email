@@ -155,8 +155,21 @@ class MessageItemController extends Controller {
 
     /**
      * Changes data of a single MessageItem.
-     * Allows for specifying target=MessageItem and the flag-properties
-     * seen=true/false and/or flagged=true/false.
+     * Allows for specifying target=MessageItem or target=MessageDraft.
+     * If the target MessageItem is specified, the flag-properties
+     * seen=true/false and/or flagged=true/false can be set.
+     * If the target is MessageDraft, the following parameters are expected:
+     *
+     * - id - compound key information
+     * - mailAccountId - compound key information
+     * - mailFolderId - compound key information
+     * - bcc
+     * - cc
+     * - date
+     * - from
+     * - subject
+     * - to
+     *
      * Everything else returns a 405.
      *
      * @return ResponseJson
@@ -170,49 +183,75 @@ class MessageItemController extends Controller {
 
         // possible targets: MessageItem
         $target = $request->input('target');
-        // possible parameters: seen, flagged
-        $seen    = $request->input('seen');
-        $flagged = $request->input('flagged');
 
         $mailFolderId = urldecode($mailFolderId);
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
-        if ($target !== "MessageItem") {
-            return response()->json([
-                "success" => false,
-                "msg" =>  "\"target\" must be specified with \"MessageItem\"."
-            ], 400);
-        }
+        switch ($target) {
 
-        if (!is_bool($seen) && !is_bool($flagged)) {
-            return response()->json([
-                "success" => false,
-                "msg"     =>  "Invalid request payload.",
-                "flagged" => $flagged,
-                "seen"    => $seen
-            ], 400);
-        }
+            case "MessageDraft":
 
-        $flagList   = new FlagList();
-        $response   = [];
-        if ($seen !== null) {
-            $flagList[] = new SeenFlag($seen);
-            $response["seen"] = $seen;
-        }
-        if ($flagged !== null) {
-            $flagList[] = new FlaggedFlag($flagged);
-            $response["flagged"] = $flagged;
-        }
+                $keys = ["subject", "date", "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"];
+                $data = $request->only($keys);
 
-        $result = $messageItemService->setFlags($messageKey, $flagList);
+                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageKey, $data);
 
-        return response()->json([
-            "success" => $result,
-            "data"    => array_merge(
-                $messageKey ->toJson(),
-                $response
-            )
-        ], 200);
+                $resp = [
+                    "success" => !!$updatedMessageItemDraft
+                ];
+                if ($updatedMessageItemDraft) {
+                    $resp["data"] = $updatedMessageItemDraft->toJson();
+                } else {
+                    $resp["msg"] = "Updating the MessageDraft failed.";
+                }
+                return response()->json($resp, 200);
+
+                break;
+
+            case "MessageItem":
+
+                $seen    = $request->input('seen');
+                $flagged = $request->input('flagged');
+
+                if (!is_bool($seen) && !is_bool($flagged)) {
+                    return response()->json([
+                        "success" => false,
+                        "msg"     =>  "Invalid request payload.",
+                        "flagged" => $flagged,
+                        "seen"    => $seen
+                    ], 400);
+                }
+
+                $flagList   = new FlagList();
+                $response   = [];
+                if ($seen !== null) {
+                    $flagList[] = new SeenFlag($seen);
+                    $response["seen"] = $seen;
+                }
+                if ($flagged !== null) {
+                    $flagList[] = new FlaggedFlag($flagged);
+                    $response["flagged"] = $flagged;
+                }
+
+                $result = $messageItemService->setFlags($messageKey, $flagList);
+
+                return response()->json([
+                    "success" => $result,
+                    "data"    => array_merge(
+                        $messageKey ->toJson(),
+                        $response
+                    )
+                ], 200);
+
+                break;
+
+            default:
+                return response()->json([
+                    "success" => false,
+                    "msg" =>  "\"target\" must be specified with \"MessageDraft\" or \"MessageItem\"."
+                ], 400);
+                break;
+        }
 
     }
 
@@ -262,9 +301,7 @@ class MessageItemController extends Controller {
 
         return response()->json([
             "success" => !!$messageBody ,
-            "data"    => array_merge(
-                $messageBody->getMessageKey()->toJson()
-            )
+            "data"    => $messageBody->toJson()
         ], 200);
 
     }

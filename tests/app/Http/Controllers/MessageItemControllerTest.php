@@ -30,7 +30,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList,
@@ -244,7 +244,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "\"target\" must be specified with \"MessageItem\"."
+            "msg"    => "\"target\" must be specified with \"MessageDraft\" or \"MessageItem\"."
         ]);
     }
 
@@ -398,7 +398,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => $messageBody->getMessageKey()->toJson()
+            "data"    => $messageBody->toJson()
         ]);
     }
 
@@ -462,6 +462,85 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
+
+    /**
+     * Tests put() to make sure setting MessageDraft-data works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageDraft_data()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+        $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
+
+        $messageItemDraft = new MessageItemDraft;
+        $messageItemDraft->setMessageKey($newMessageKey);
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
+            "subject" => "Hello World!",
+            "to"      => $to
+        ];
+
+        $serviceStub->expects($this->once())
+            ->method('updateMessageDraft')
+            ->with($messageKey, $data)
+            ->willReturn($messageItemDraft);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $messageItemDraft->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests post() to make sure response is okay when no MessageBody as created.
+     *
+     * @return void
+     */
+    public function testPut_MessageDraftNotCreated()
+    {
+        $serviceStub = $this->initServiceStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
+            "subject" => "Hello World!",
+            "to"      => $to
+        ];
+
+        $serviceStub->expects($this->once())
+            ->method('updateMessageDraft')
+            ->with($messageKey, $data)
+            ->willReturn(null);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "msg"     => "Updating the MessageDraft failed."
+        ]);
+    }
 
 // +--------------------------
 // | Helper
