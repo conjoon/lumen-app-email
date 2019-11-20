@@ -110,7 +110,7 @@ class VariousTest extends TestCase
             \Conjoon\Mail\Client\Service\DefaultMailFolderService::class,
             $mailFolderService
         );
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailFolderServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Imap\HordeClient::class, $mailFolderServiceMailClient);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder::class, $mailFolderTreeBuilder);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper::class, $folderIdToTypeMapper);
 
@@ -127,7 +127,7 @@ class VariousTest extends TestCase
 
         // sharing the same client
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer::class, $messageItemServiceMailClient->getMessageBodyDraftToTextTransformer());
         $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Writer\HordeHeaderWriter::class, $messageItemServiceMailClient->getHeaderWriter());

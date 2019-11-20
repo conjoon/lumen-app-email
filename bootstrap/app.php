@@ -75,7 +75,7 @@ $getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$m
     }
 
 
-    $mailClient = new Conjoon\Mail\Client\Imap\HordeClient($account, $hordeTransformer, $hordeHeaderWriter);
+    $mailClient = new Conjoon\Horde\Mail\Client\Imap\HordeClient($account, $hordeTransformer, $hordeHeaderWriter);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };

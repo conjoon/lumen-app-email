@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Imap;
+namespace Conjoon\Horde\Mail\Client\Imap;
 
 use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAccount,
@@ -48,7 +48,8 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
-    Conjoon\Mail\Client\Writer\HeaderWriter;
+    Conjoon\Mail\Client\Writer\HeaderWriter,
+    Conjoon\Mail\Client\Imap\ImapClientException;
 
 /**
  * Class HordeClient.
