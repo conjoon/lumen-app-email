@@ -41,7 +41,8 @@ use Conjoon\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer;
+    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
+    Conjoon\Mail\Client\Writer\HeaderWriter;
 
 
 /**
@@ -479,7 +480,7 @@ class HordeClientTest extends TestCase {
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive('append')->with(
-            $folderKey->getId(), [["data" => "FULL_TXT_MSG"]]
+            $folderKey->getId(), [["data" => "__HEADER__FULL_TXT_MSG"]]
         )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
 
         $client = $this->createClient();
@@ -539,7 +540,7 @@ class HordeClientTest extends TestCase {
         $fetchResult = [];
         $fetchResult[$messageKey->getId()] = new class() {
             public function getFullMsg($bool) {
-                return "";
+                return "BODY";
             }
         };
 
@@ -551,17 +552,7 @@ class HordeClientTest extends TestCase {
                       )
                   ->andReturn($fetchResult);
 
-        $fullMsg = [
-            "Subject: foo",
-            "From: ". $mid->getFrom()->toString(),
-            "To: ". $mid->getTo()->toString(),
-            "Cc: ". $mid->getCc()->toString(),
-            "Bcc: ". $mid->getBcc()->toString(),
-            "Reply-To: ". $mid->getReplyTo()->toString(),
-            "Date: ". $mid->getDate()->format("r")
-        ];
-
-        $fullMsg = implode($fullMsg, "\n") . "\n\n";
+        $fullMsg = "__HEADER__BODY";
 
         $imapStub->shouldReceive("append")
             ->with(
@@ -637,13 +628,28 @@ class HordeClientTest extends TestCase {
 
     }
 
+    /**
+     * @return MessageBodyDraftToTextTransformer
+     */
+    protected function createHeaderWriter() :HeaderWriter {
+
+        return new class() implements HeaderWriter {
+
+            public function write(string $target, MessageItemDraft $draft = null) :string {
+                return "__HEADER__" . $target;
+            }
+
+        };
+
+    }
+
 
     /**
      * Creates an instance of HordeClient.
      *
      * @return HordeCient
      */
-    protected function createClient($mailAccount = null, $messageBodyDraftToTextTransformer = null) :HordeClient {
+    protected function createClient($mailAccount = null, $messageBodyDraftToTextTransformer = null, $headerWriter = null) :HordeClient {
 
         if (!$mailAccount) {
             $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
@@ -653,6 +659,10 @@ class HordeClientTest extends TestCase {
             $messageBodyDraftToTextTransformer = $this->createMessageBodyDraftToTextTransformer();
         }
 
-        return new HordeClient($mailAccount, $messageBodyDraftToTextTransformer);
+        if (!$headerWriter) {
+            $headerWriter = $this->createHeaderWriter();
+        }
+
+        return new HordeClient($mailAccount, $messageBodyDraftToTextTransformer, $headerWriter);
     }
 }

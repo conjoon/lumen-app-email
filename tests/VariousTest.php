@@ -130,7 +130,7 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer::class, $messageItemServiceMailClient->getMessageBodyDraftToTextTransformer());
-
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Writer\HordeHeaderWriter::class, $messageItemServiceMailClient->getHeaderWriter());
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());

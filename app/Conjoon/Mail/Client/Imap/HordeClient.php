@@ -47,7 +47,8 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer;
+    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
+    Conjoon\Mail\Client\Writer\HeaderWriter;
 
 /**
  * Class HordeClient.
@@ -74,14 +75,25 @@ class HordeClient implements MailClient {
     protected $messageBodyDraftToTextTransformer;
 
     /**
+     * @var HeaderWriter
+     */
+    protected $headerWriter;
+
+
+    /**
      * HordeClient constructor.
      *
      * @param MailAccount $account
      * @param MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer
+     * @param HeaderWriter $headerWriter
      */
-    public function __construct(MailAccount $account, MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer) {
-        $this->mailAccount = $account;
+    public function __construct(
+        MailAccount $account,
+        MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer,
+        HeaderWriter $headerWriter) {
+        $this->mailAccount                       = $account;
         $this->messageBodyDraftToTextTransformer = $messageBodyDraftToTextTransformer;
+        $this->headerWriter                      = $headerWriter;
     }
 
 
@@ -92,6 +104,16 @@ class HordeClient implements MailClient {
      */
     public function getMessageBodyDraftToTextTransformer() :MessageBodyDraftToTextTransformer {
         return $this->messageBodyDraftToTextTransformer;
+    }
+
+
+    /**
+     * Returns the HeaderWriter this instance was configured with.
+     *
+     * @return HeaderWriter
+     */
+    public function getHeaderWriter() :HeaderWriter {
+        return $this->headerWriter;
     }
 
 
@@ -457,6 +479,7 @@ class HordeClient implements MailClient {
             $client = $this->connect($key);
 
             $rawMessage = $this->getMessageBodyDraftToTextTransformer()->transform($messageBodyDraft);
+            $rawMessage = $this->getHeaderWriter()->write($rawMessage);
 
             $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
 
@@ -491,25 +514,12 @@ class HordeClient implements MailClient {
 
             $msg = $fetchResult[$id]->getFullMsg(false);
 
-            $part    = \Horde_Mime_Part::parseMessage($msg);
-            $headers = \Horde_Mime_Headers::parseHeaders($msg);
-
-            $mid = $messageItemDraft;
-            // set headers
-            $mid->getSubject() && $headers->addHeader("Subject", $mid->getSubject());
-            $mid->getFrom() && $headers->addHeader("From", $mid->getFrom()->toString());
-            $mid->getTo() && $headers->addHeader("To", $mid->getTo()->toString());
-            $mid->getCc() && $headers->addHeader("Cc", $mid->getCc()->toString());
-            $mid->getBcc() && $headers->addHeader("Bcc", $mid->getBcc()->toString());
-            $mid->getReplyTo() && $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
-            $mid->getDate() && $headers->addHeader("Date", $mid->getDate()->format("r"));
-
-            $fullText = trim($headers->toString()) . "\n\n" . trim($part->toString());
+            $fullText = $this->getHeaderWriter()->write($msg, $messageItemDraft);
 
             $ids    = $client->append($mailFolderId, [["data" => $fullText]]);
             $newKey = new MessageKey($messageKey->getMailAccountId(), $messageKey->getMailFolderId(), "" . $ids->ids[0]);
 
-            $this->setFlags($newKey, $mid->getFlagList());
+            $this->setFlags($newKey, $messageItemDraft->getFlagList());
 
             $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
 
