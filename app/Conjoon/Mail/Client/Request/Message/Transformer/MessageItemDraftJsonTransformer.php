@@ -25,27 +25,25 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Writer;
+namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
-use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Request\JsonTransformer,
+    Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
- * Interface provides contract for processing an array containing plain data
- * to a MessageItemDraft.
+ * Interface provides contract for processing an associative array containing
+ * plain data to a MessageItemDraft.
  *
- * @package Conjoon\Mail\Client\Writer
+ * @package Conjoon\Mail\Client\Request\Message\Transformer
  */
-interface MessageItemDraftWriter  {
-
+interface MessageItemDraftJsonTransformer extends JsonTransformer {
 
     /**
-     * Processes the data which is assumed to be an associative array and
-     * created a MessagItemDraft out of it.
+     * Returns a MessageItemDraft that was created from the data found in $data.
      *
      * @param array $data
-     *
      * @return MessageItemDraft
      */
-    public function process(array $data) : MessageItemDraft;
+    public function transform(array $data) : MessageItemDraft;
 
 }

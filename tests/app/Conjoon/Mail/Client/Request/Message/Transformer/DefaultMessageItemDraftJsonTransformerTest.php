@@ -24,26 +24,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Writer\DefaultMessageItemDraftWriter,
+use Conjoon\Mail\Client\Request\JsonTransformer,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
+    Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 
-class DefaultMessageItemDraftWriterTest extends TestCase {
+class DefaultMessageItemDraftJsonTransformerTest extends TestCase {
 
 
     public function testClass() {
 
-        $writer = new DefaultMessageItemDraftWriter();
-        $this->assertInstanceOf(MessageItemDraftWriter::class, $writer);
+        $writer = new DefaultMessageItemDraftJsonTransformer();
+        $this->assertInstanceOf(MessageItemDraftJsonTransformer::class, $writer);
+        $this->assertInstanceOf(JsonTransformer::class, $writer);
     }
 
 
     public function testProcess() {
 
-        $writer = new DefaultMessageItemDraftWriter();
+        $writer = new DefaultMessageItemDraftJsonTransformer();
 
         $data = [
             "seen"    => true,
@@ -57,7 +60,7 @@ class DefaultMessageItemDraftWriterTest extends TestCase {
             "date"    => "12332489"
         ];
 
-        $draft = $writer->process($data);
+        $draft = $writer->transform($data);
 
         $this->assertInstanceOf(MessageItemDraft::class, $draft);
 

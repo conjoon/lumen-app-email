@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Writer;
+namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
 use Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
@@ -34,15 +34,15 @@ use Conjoon\Mail\Client\Data\MailAddress,
 /**
  * Class DefaultMessageItemDraftWriter
  *
- * @package Conjoon\Mail\Client\Writer
+ * @package Conjoon\Mail\Client\Message\Request\Transformer
  */
-class DefaultMessageItemDraftWriter implements MessageItemDraftWriter {
+class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTransformer {
 
 
     /**
      * @inheritdoc
      */
-    public function process(array $data) : MessageItemDraft {
+    public function transform(array $data) : MessageItemDraft {
 
         $draftData = [];
 
