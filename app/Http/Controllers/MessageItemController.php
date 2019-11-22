@@ -33,6 +33,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Auth;
 
 use Illuminate\Http\Request;
@@ -46,20 +47,28 @@ class MessageItemController extends Controller {
 
 
     /**
-     * @var messageItemService
+     * @var MessageItemService
      */
     protected $messageItemService;
+
+    /**
+     * @var JsonArrayToMessageItemDraftTransformer
+     */
+    protected $messageItemDraftJsonTransformer;
 
 
     /**
      * MessageItemController constructor.
      *
      * @param MessageItemService $messageItemService
+     * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
      */
-    public function __construct(MessageItemService $messageItemService) {
+    public function __construct(MessageItemService $messageItemService,
+                                MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
+    ) {
 
         $this->messageItemService = $messageItemService;
-
+        $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
     }
 
 
@@ -194,7 +203,8 @@ class MessageItemController extends Controller {
                 $keys = ["subject", "date", "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"];
                 $data = $request->only($keys);
 
-                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageKey, $data);
+                $messageItemDraft        = $this->messageItemDraftJsonTransformer->transform($data);
+                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageKey, $messageItemDraft);
 
                 $resp = [
                     "success" => !!$updatedMessageItemDraft

@@ -91,6 +91,11 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
         );
 
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer::class,
+            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer']))
+        );
+
         $attachmentService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\AttachmentService']));
         $attachmentServiceMailClient = $attachmentService->getMailClient();
         $this->assertInstanceOf(
@@ -129,14 +134,13 @@ class VariousTest extends TestCase
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
         $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
 
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer::class, $messageItemServiceMailClient->getMessageBodyDraftToTextTransformer());
-        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Writer\HordeHeaderWriter::class, $messageItemServiceMailClient->getHeaderWriter());
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer::class, $messageItemServiceMailClient->getBodyComposer());
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer::class, $messageItemServiceMailClient->getHeaderComposer());
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\DefaultMessageItemDraftWriter::class, $messageItemService->getMessageItemDraftWriter());
 
 
     }

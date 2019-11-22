@@ -32,7 +32,6 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
@@ -101,24 +100,18 @@ interface MessageItemService {
 
 
     /**
-     * Updated the Message with the specified data (if the message is flagged as "draft") and returns the MessageKey.
+     * Updated the Message with the specified MessageItemDraft (if the message is flagged as "draft") and returns the
+     * updated MessageItemDraft.
      * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
-     * need to create an entirely new Message if data needs to be adjusted, so the returned MessageKey might not
-     * equal to the specified MessageKey.
-     * The key/values in $data is arbitrary, but should at least contain the following information:
-     * - subject (string)
-     * - date (string, unix timestamp)
-     * - from (string representation of @see \Conjoon\Mail\Client\Data\MailAddress)
-     * - to (string representation of @see \Conjoon\Mail\Client\Data\MailAddressList)
-     * - cc (string representation of @see \Conjoon\Mail\Client\Data\MailAddressList)
-     * - bcc (string representation of @see \Conjoon\Mail\Client\Data\MailAddressList)
+     * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
+     * MessageItemDraft might not equal to the specified MessageKey.
      *
      * @param MessageKey $key
-     * @param array $data
+     * @param MessageItemDraft $messageItemDraft
      *
      * @return MessageItemDraft|null
      */
-    public function updateMessageDraft(MessageKey $key, array $data) :?MessageItemDraft;
+    public function updateMessageDraft(MessageKey $key, MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**
@@ -174,14 +167,6 @@ interface MessageItemService {
      * @return WritableMessagePartContentProcessor
      */
     public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor;
-
-
-    /**
-     * Returns the MessageItemDraftWriter used by this MessageService.
-     *
-     * @return MessageItemDraftWriter
-     */
-    public function getMessageItemDraftWriter() :MessageItemDraftWriter;
 
 
     /**

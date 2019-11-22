@@ -35,7 +35,8 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
 
 
 
@@ -54,6 +55,7 @@ class MessageItemControllerTest extends TestCase
     public function testIndex_success()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $unreadCmp = 5;
         $totalCmp  = 100;
@@ -117,6 +119,7 @@ class MessageItemControllerTest extends TestCase
     public function testGet_MessageBody_success()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -149,6 +152,7 @@ class MessageItemControllerTest extends TestCase
     public function testGet_MessageItem_success()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -181,6 +185,7 @@ class MessageItemControllerTest extends TestCase
     public function testGet_MessageItem_BadRequest()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $serviceStub->expects($this->never())
                     ->method('getMessageItem');
@@ -207,6 +212,7 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageItem_BadRequest_missingFlag()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $serviceStub->expects($this->never())
             ->method('setFlags');
@@ -233,6 +239,7 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageItem_BadRequest_missingTarget()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $serviceStub->expects($this->never())
             ->method('setFlags');
@@ -258,6 +265,7 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageItem_Flag()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -296,6 +304,7 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageItem_AllFlags()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -336,6 +345,7 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageItem_ServiceFail()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -374,6 +384,7 @@ class MessageItemControllerTest extends TestCase
     public function testPost_MessageBody()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
         $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
@@ -412,6 +423,7 @@ class MessageItemControllerTest extends TestCase
     public function testPost_MessageBody_noMessageBody()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $serviceStub->expects($this->never())
             ->method('createMessageBody');
@@ -437,6 +449,7 @@ class MessageItemControllerTest extends TestCase
     public function testPost_MessageBodyNotCreated()
     {
         $serviceStub = $this->initServiceStub();
+        $this->initTransformerStub();
 
         $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
         $textHtml   = "HTML";
@@ -471,10 +484,13 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPut_MessageDraft_data()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub     = $this->initServiceStub();
+        $transformerStub = $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
         $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
+
+        $transformDraft = new MessageItemDraft;
 
         $messageItemDraft = new MessageItemDraft;
         $messageItemDraft->setMessageKey($newMessageKey);
@@ -485,9 +501,14 @@ class MessageItemControllerTest extends TestCase
             "to"      => $to
         ];
 
+        $transformerStub->expects($this->once())
+                        ->method("transform")
+                        ->with($data)
+                        ->willReturn($transformDraft);
+
         $serviceStub->expects($this->once())
             ->method('updateMessageDraft')
-            ->with($messageKey, $data)
+            ->with($messageKey, $transformDraft)
             ->willReturn($messageItemDraft);
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -513,9 +534,11 @@ class MessageItemControllerTest extends TestCase
     public function testPut_MessageDraftNotCreated()
     {
         $serviceStub = $this->initServiceStub();
+        $transformerStub = $this->initTransformerStub();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
+        $transformDraft = new MessageItemDraft;
 
         $to = json_encode(["address" => "dev@conjoon.org"]);
         $data = [
@@ -523,9 +546,15 @@ class MessageItemControllerTest extends TestCase
             "to"      => $to
         ];
 
+        $transformerStub->expects($this->once())
+            ->method("transform")
+            ->with($data)
+            ->willReturn($transformDraft);
+
+
         $serviceStub->expects($this->once())
             ->method('updateMessageDraft')
-            ->with($messageKey, $data)
+            ->with($messageKey, $transformDraft)
             ->willReturn(null);
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -546,6 +575,26 @@ class MessageItemControllerTest extends TestCase
 // | Helper
 // +--------------------------
 
+
+    /**
+     * @return mixed
+     */
+    protected function initTransformerStub() {
+
+        $jsonStub = $this->getMockBuilder('Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->app->when(App\Http\Controllers\MessageItemController::class)
+            ->needs(MessageItemDraftJsonTransformer::class)
+            ->give(function () use ($jsonStub) {
+                return $jsonStub;
+            });
+
+        return $jsonStub;
+    }
+
+
     /**
      * @return mixed
      */
@@ -562,7 +611,6 @@ class MessageItemControllerTest extends TestCase
             });
 
         return $serviceStub;
-
     }
 
 }

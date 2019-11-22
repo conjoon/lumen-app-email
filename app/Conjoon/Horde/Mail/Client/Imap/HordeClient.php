@@ -47,8 +47,8 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
-    Conjoon\Mail\Client\Writer\HeaderWriter,
+    Conjoon\Mail\Client\Message\Composer\BodyComposer,
+    Conjoon\Mail\Client\Message\Composer\HeaderComposer,
     Conjoon\Mail\Client\Imap\ImapClientException;
 
 /**
@@ -71,50 +71,50 @@ class HordeClient implements MailClient {
     protected $socket;
 
     /**
-     * @var MessageBodyDraftToTextTransformer
+     * @var BodyComposer
      */
-    protected $messageBodyDraftToTextTransformer;
+    protected $bodyComposer;
 
     /**
-     * @var HeaderWriter
+     * @var HeaderComposer
      */
-    protected $headerWriter;
+    protected $headerComposer;
 
 
     /**
      * HordeClient constructor.
      *
      * @param MailAccount $account
-     * @param MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer
-     * @param HeaderWriter $headerWriter
+     * @param BodyComposer $bodyComposer
+     * @param HeaderComposer $headerComposer
      */
     public function __construct(
         MailAccount $account,
-        MessageBodyDraftToTextTransformer $messageBodyDraftToTextTransformer,
-        HeaderWriter $headerWriter) {
-        $this->mailAccount                       = $account;
-        $this->messageBodyDraftToTextTransformer = $messageBodyDraftToTextTransformer;
-        $this->headerWriter                      = $headerWriter;
+        BodyComposer $bodyComposer,
+        HeaderComposer $headerComposer) {
+        $this->mailAccount    = $account;
+        $this->bodyComposer   = $bodyComposer;
+        $this->headerComposer = $headerComposer;
     }
 
 
     /**
-     * Returns the MessageBodyDraftToTextTransformer this instance was configured with.
+     * Returns the BodyComposer this instance was configured with.
      *
-     * @return MessageBodyDraftToTextTransformer
+     * @return BodyComposer
      */
-    public function getMessageBodyDraftToTextTransformer() :MessageBodyDraftToTextTransformer {
-        return $this->messageBodyDraftToTextTransformer;
+    public function getBodyComposer() :BodyComposer {
+        return $this->bodyComposer;
     }
 
 
     /**
-     * Returns the HeaderWriter this instance was configured with.
+     * Returns the HeaderComposer this instance was configured with.
      *
-     * @return HeaderWriter
+     * @return HeaderComposer
      */
-    public function getHeaderWriter() :HeaderWriter {
-        return $this->headerWriter;
+    public function getHeaderComposer() :HeaderComposer {
+        return $this->headerComposer;
     }
 
 
@@ -479,8 +479,8 @@ class HordeClient implements MailClient {
         try {
             $client = $this->connect($key);
 
-            $rawMessage = $this->getMessageBodyDraftToTextTransformer()->transform($messageBodyDraft);
-            $rawMessage = $this->getHeaderWriter()->write($rawMessage);
+            $rawMessage = $this->getBodyComposer()->compose($messageBodyDraft);
+            $rawMessage = $this->getHeaderComposer()->compose($rawMessage);
 
             $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
 
@@ -515,7 +515,7 @@ class HordeClient implements MailClient {
 
             $msg = $fetchResult[$id]->getFullMsg(false);
 
-            $fullText = $this->getHeaderWriter()->write($msg, $messageItemDraft);
+            $fullText = $this->getHeaderComposer()->compose($msg, $messageItemDraft);
 
             $ids    = $client->append($mailFolderId, [["data" => $fullText]]);
             $newKey = new MessageKey($messageKey->getMailAccountId(), $messageKey->getMailFolderId(), "" . $ids->ids[0]);

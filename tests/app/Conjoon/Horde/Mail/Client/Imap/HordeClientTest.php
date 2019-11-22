@@ -41,8 +41,8 @@ use Conjoon\Horde\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
-    Conjoon\Mail\Client\Writer\HeaderWriter;
+    Conjoon\Mail\Client\Message\Composer\BodyComposer,
+    Conjoon\Mail\Client\Message\Composer\HeaderComposer;
 
 
 /**
@@ -614,13 +614,13 @@ class HordeClientTest extends TestCase {
 
 
     /**
-     * @return MessageBodyDraftToTextTransformer
+     * @return BodyComposer
      */
-    protected function createMessageBodyDraftToTextTransformer() :MessageBodyDraftToTextTransformer {
+    protected function createBodyComposer() :BodyComposer {
 
-        return new class() implements MessageBodyDraftToTextTransformer {
+        return new class() implements BodyComposer {
 
-            public function transform(MessageBodyDraft $draft) :string {
+            public function compose(MessageBodyDraft $draft) :string {
                 return "FULL_TXT_MSG";
             }
 
@@ -629,13 +629,13 @@ class HordeClientTest extends TestCase {
     }
 
     /**
-     * @return MessageBodyDraftToTextTransformer
+     * @return HeaderComposer
      */
-    protected function createHeaderWriter() :HeaderWriter {
+    protected function createHeaderComposer() :HeaderComposer {
 
-        return new class() implements HeaderWriter {
+        return new class() implements HeaderComposer {
 
-            public function write(string $target, MessageItemDraft $draft = null) :string {
+            public function compose(string $target, MessageItemDraft $draft = null) :string {
                 return "__HEADER__" . $target;
             }
 
@@ -649,20 +649,20 @@ class HordeClientTest extends TestCase {
      *
      * @return HordeCient
      */
-    protected function createClient($mailAccount = null, $messageBodyDraftToTextTransformer = null, $headerWriter = null) :HordeClient {
+    protected function createClient($mailAccount = null, $bodyComposer = null, $headerComposer = null) :HordeClient {
 
         if (!$mailAccount) {
             $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         }
 
-        if (!$messageBodyDraftToTextTransformer) {
-            $messageBodyDraftToTextTransformer = $this->createMessageBodyDraftToTextTransformer();
+        if (!$bodyComposer) {
+            $bodyComposer = $this->createBodyComposer();
         }
 
-        if (!$headerWriter) {
-            $headerWriter = $this->createHeaderWriter();
+        if (!$headerComposer) {
+            $headerComposer = $this->createHeaderComposer();
         }
 
-        return new HordeClient($mailAccount, $messageBodyDraftToTextTransformer, $headerWriter);
+        return new HordeClient($mailAccount, $bodyComposer, $headerComposer);
     }
 }

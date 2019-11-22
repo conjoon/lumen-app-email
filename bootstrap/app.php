@@ -63,10 +63,10 @@ $app->configure('imapserver');
 
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
-$hordeTransformer = new Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer;
-$hordeHeaderWriter = new Conjoon\Horde\Mail\Client\Writer\HordeHeaderWriter;
+$hordeBodyComposer   = new Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
+$hordeHeaderComposer = new Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 
-$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients, &$hordeTransformer, &$hordeHeaderWriter) {
+$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
 
     $accountId = $account->getId();
 
@@ -75,7 +75,7 @@ $getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$m
     }
 
 
-    $mailClient = new Conjoon\Horde\Mail\Client\Imap\HordeClient($account, $hordeTransformer, $hordeHeaderWriter);
+    $mailClient = new Conjoon\Horde\Mail\Client\Imap\HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };
@@ -114,6 +114,11 @@ $app->singleton('Conjoon\Mail\Client\Service\AttachmentService', function ($app)
 });
 
 
+$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer',  function ($app) {
+    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
+});
+
+
 $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
@@ -141,8 +146,7 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
         $writableMessagePartContentProcessor,
         new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
             $readableMessagePartContentProcessor
-        ),
-        new Conjoon\Mail\Client\Writer\DefaultMessageItemDraftWriter()
+        )
     );
 });
 

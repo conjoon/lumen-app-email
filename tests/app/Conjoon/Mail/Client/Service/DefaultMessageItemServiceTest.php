@@ -45,7 +45,6 @@ use
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Text\CharsetConverter,
     Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
@@ -80,9 +79,8 @@ class DefaultMessageItemServiceTest extends TestCase {
         $wP = $this->getWritableMessagePartContentProcessor();
         $pP = $this->getPreviewTextProcessor();
         $miP = $this->getMessageItemFieldsProcessor();
-        $midp = $this->getMessageItemDraftWriter();
 
-        $service = $this->createService($miP, $rP, $wP, $pP, $midp);
+        $service = $this->createService($miP, $rP, $wP, $pP);
 
         $this->assertInstanceOf(MessageItemService::class, $service);
         $this->assertInstanceOf(MailClient::class, $service->getMailClient());
@@ -91,7 +89,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame($wP, $service->getWritableMessagePartContentProcessor());
         $this->assertSame($pP, $service->getPreviewTextProcessor());
         $this->assertSame($miP, $service->getMessageItemFieldsProcessor());
-        $this->assertSame($midp, $service->getMessageItemDraftWriter());
+
     }
 
 
@@ -408,6 +406,8 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
         $newKey = $this->createMessageKey($account, $mailFolderId, $newId);
 
+        $transformDraft = new MessageItemDraft();
+
         $messageItemDraft = new MessageItemDraft();
         $messageItemDraft->setMessageKey($newKey);
 
@@ -417,9 +417,7 @@ class DefaultMessageItemServiceTest extends TestCase {
             ->with($messageKey)
             ->willReturn($messageItemDraft);
 
-        $data = [];
-
-        $messageItemDraft = $service->updateMessageDraft($messageKey, $data);
+        $messageItemDraft = $service->updateMessageDraft($messageKey, $transformDraft);
         $this->assertSame($newKey, $messageItemDraft->getMessageKey());
     }
 
@@ -439,7 +437,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $id           = "123";
         $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
 
-        $data = [];
+        $transformDraft = new MessageItemDraft();
 
         $clientStub = $service->getMailClient();
 
@@ -447,7 +445,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                    ->with($messageKey)
                    ->willThrowException(new MailClientException);
 
-        $messageItemDraft = $service->updateMessageDraft($messageKey, $data);
+        $messageItemDraft = $service->updateMessageDraft($messageKey, $transformDraft);
         $this->assertNull($messageItemDraft);
     }
 
@@ -503,15 +501,13 @@ class DefaultMessageItemServiceTest extends TestCase {
     protected function createService($messageItemFieldsProcessor = null,
                                      $readableMessagePartContentProcessor = null,
                                      $writableMessagePartContentProcessor = null,
-                                     $previewTextProcessor = null,
-                                     $messageItemDraftWriter = null) {
+                                     $previewTextProcessor = null) {
         return new DefaultMessageItemService(
             $this->getMailClientMock(),
             $messageItemFieldsProcessor ? $messageItemFieldsProcessor : $this->getMessageItemFieldsProcessor(),
             $readableMessagePartContentProcessor ? $readableMessagePartContentProcessor : $this->getReadableMessagePartContentProcessor(),
             $writableMessagePartContentProcessor ? $writableMessagePartContentProcessor : $this->getWritableMessagePartContentProcessor(),
-            $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor(),
-            $messageItemDraftWriter ? $messageItemDraftWriter : $this->getMessageItemDraftWriter()
+            $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor()
         );
     }
 
@@ -544,17 +540,6 @@ class DefaultMessageItemServiceTest extends TestCase {
             public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
                 $messagePart->setContents("WRITTEN" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
                 return $messagePart;
-            }
-        };
-    }
-
-    /**
-     * @return MessageItemDraftWriter
-     */
-    protected function getMessageItemDraftWriter() :MessageItemDraftWriter{
-        return new class implements MessageItemDraftWriter {
-            public function process(array $data) :MessageItemDraft{
-                return new MessageItemDraft;
             }
         };
     }
