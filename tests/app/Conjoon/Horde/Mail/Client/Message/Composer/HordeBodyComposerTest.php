@@ -24,24 +24,24 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Text\MessageBodyDraftToTextTransformer,
-    Conjoon\Mail\Client\Message\Text\HordeMessageBodyDraftToTextTransformer,
+use Conjoon\Mail\Client\Message\Composer\BodyComposer,
+    Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessagePart;
 
 /**
- * Class HordeMessageBodyDraftToTextTransformerTest
+ * Class HordeBodyComposerTest
  *
  */
-class HordeMessageBodyDraftToTextTransformerTest extends TestCase {
+class HordeBodyComposerTest extends TestCase {
 
 
     /**
      * Test instance.
      */
     public function testInstance() {
-        $transformer = $this->createTransformer();
-        $this->assertInstanceOf(MessageBodyDraftToTextTransformer::class, $transformer);
+        $composer = $this->createComposer();
+        $this->assertInstanceOf(BodyComposer::class, $composer);
     }
 
 
@@ -56,7 +56,7 @@ class HordeMessageBodyDraftToTextTransformerTest extends TestCase {
         $messageBodyDraft->setTextHtml($htmlPart);
         $messageBodyDraft->setTextPlain($plainPart);
 
-        $transformer = $this->createTransformer();
+        $composer = $this->createComposer();
 
         $txt = ["Content-Type: multipart/alternative;",
             "MIME-Version: 1.0",
@@ -75,7 +75,7 @@ class HordeMessageBodyDraftToTextTransformerTest extends TestCase {
 
 
 
-        $result = $transformer->transform($messageBodyDraft);
+        $result = $composer->compose($messageBodyDraft);
 
         $result = explode("\n", $result);
         $caught = 0;
@@ -100,8 +100,8 @@ class HordeMessageBodyDraftToTextTransformerTest extends TestCase {
     /**
      * @return HordeMessageBodyDraftToTextTransformer
      */
-    protected function createTransformer() :HordeMessageBodyDraftToTextTransformer {
+    protected function createComposer() :HordeBodyComposer {
 
-        return new HordeMessageBodyDraftToTextTransformer();
+        return new HordeBodyComposer();
     }
 }

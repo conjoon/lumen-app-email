@@ -24,26 +24,30 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Writer\HeaderWriter,
-    Conjoon\Horde\Mail\Client\Writer\HordeHeaderWriter,
+use Conjoon\Mail\Client\Message\Composer\HeaderComposer,
+    Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList;
 
 
-class HordeHeaderWriterTest extends TestCase {
+/**
+ * Class HordeHeaderComposerTest
+ *
+ */
+class HordeHeaderComposerTest extends TestCase {
 
 
     public function testClass() {
 
-        $strategy = new HordeHeaderWriter();
-        $this->assertInstanceOf(HeaderWriter::class, $strategy);
+        $strategy = new HordeHeaderComposer();
+        $this->assertInstanceOf(HeaderComposer::class, $strategy);
     }
 
 
     public function testWrite() {
 
-        $writer = new HordeHeaderWriter();
+        $composer = new HordeHeaderComposer();
 
         $messageItemDraft = new MessageItemDraft();
         $messageItemDraft->setSubject("Test");
@@ -55,7 +59,7 @@ class HordeHeaderWriterTest extends TestCase {
         ];
         $msgText = implode("\n", $msgText);
         $result  = implode("\n", $result) . "\n\n";
-        $this->assertSame($result, $writer->write($msgText, $messageItemDraft));
+        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
 
 
         $messageItemDraft = new MessageItemDraft();
@@ -80,7 +84,7 @@ class HordeHeaderWriterTest extends TestCase {
         ];
         $msgText = implode("\n", $msgText);
         $result  = implode("\n", $result) . "\n\n";
-        $this->assertSame($result, $writer->write($msgText, $messageItemDraft));
+        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
     }
 
 

@@ -25,52 +25,32 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Message\Text;
+namespace Conjoon\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
- * Class HordeMessageBodyDraftToTextTransformer
+ * Interface HeaderComposer
  *
- * @package Conjoon\Mail\Client\Message\Text
+ * @package Conjoon\Mail\Client\Message\Composer
  */
-class HordeMessageBodyDraftToTextTransformer implements MessageBodyDraftToTextTransformer {
+interface HeaderComposer {
 
 
     /**
-     * @inheritdoc
+     * Writes the header fields in source to $target which is assumed to be the
+     * raw full text representing an email message. The resulting header text must be
+     * RFC 822/2822/3490/5322 compliant.
+     * If $source is null, no header information is available for $target. Implementing
+     * APIs are advised to update the header information in $target with default values, then,
+     * such as the Date.
+     *
+     * @param string $target
+     * @param MessageItemDraft|null $source
+     *
+     * @return string
      */
-    public function transform(MessageBodyDraft $messageBodyDraft) :string {
-
-        $plain = $messageBodyDraft->getTextPlain();
-        $html  = $messageBodyDraft->getTextHtml();
-
-        $basepart = new \Horde_Mime_Part();
-        $basepart->setType('multipart/alternative');
-        $basepart->isBasePart(true);
-
-        $htmlBody = new \Horde_Mime_Part();
-        $htmlBody->setType('text/html');
-        $htmlBody->setCharset($html->getCharset());
-        $htmlBody->setContents($html->getContents());
-
-        $plainBody = new \Horde_Mime_Part();
-        $plainBody->setType('text/plain');
-        $plainBody->setCharset($plain->getCharset());
-        $plainBody->setContents($plain->getContents());
-
-        $basepart[] = $htmlBody;
-        $basepart[] = $plainBody;
-
-        $headers = $basepart->addMimeHeaders();
-
-        $txt = trim($headers->toString()) .
-               "\n\n" .
-               trim($basepart->toString());
-
-        return $txt;
-
-    }
+    public function compose(string $target, MessageItemDraft $source = null) :string;
 
 
 }

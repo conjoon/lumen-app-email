@@ -25,23 +25,23 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Horde\Mail\Client\Writer;
+namespace Conjoon\Horde\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Writer\HeaderWriter,
+use Conjoon\Mail\Client\Message\Composer\HeaderComposer,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
- * Class HordeHeaderWriter
+ * Class HordeHeaderComposer
  *
- * @package Conjoon\HordeMail\Client\Writer
+ * @package Conjoon\Horde\Mail\Client\Message\Composer
  */
-class HordeHeaderWriter implements HeaderWriter {
+class HordeHeaderComposer implements HeaderComposer {
 
 
     /**
      * @inheritdoc
      */
-    public function write(string $target, MessageItemDraft $source = null) :string {
+    public function compose(string $target, MessageItemDraft $source = null) :string {
 
         $part    = \Horde_Mime_Part::parseMessage($target);
         $headers = \Horde_Mime_Headers::parseHeaders($target);

@@ -25,28 +25,34 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Writer;
+namespace Conjoon\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
 
 /**
- * Interface HeaderWriter
+ * Interface BodyComposer
  *
- * @package Conjoon\Mail\Client\Writer
+ * Contract for transforming a MessageBodyDraft to a full text email message.
+ *
+ *
+ * @package Conjoon\Mail\Client\Message\Composer
  */
-interface HeaderWriter {
+interface BodyComposer {
 
 
     /**
-     * Writes the header fields in source to $target which is assumed to be the
-     * raw full text representing an email message.
+     * Processes the $messageBodyDraft and returns a raw Email Message,
+     * properly set up with default-headers and the body. The resulting body
+     * should contain all parts defined in $messageBodyDraft.
+     * The created header should be RFC 822/2822/3490/5322 compliant.
+     * Since no header information are available in a MessageBodyDraft, implementing
+     * APIs should take care of meaningful default-headers, such as Date and User-Agent.
      *
-     * @param string $target
-     * @param MessageItemDraft|null $source
+     * @param MessageBodyDraft $messageBodyDraft
      *
-     * @return string
+     * @return string A valid MIME message text
      */
-    public function write(string $target, MessageItemDraft $source = null) :string;
+    public function compose(MessageBodyDraft $messageBodyDraft) :string;
 
 
 }
