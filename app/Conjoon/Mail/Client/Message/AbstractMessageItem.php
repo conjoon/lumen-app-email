@@ -108,16 +108,21 @@ abstract class AbstractMessageItem implements Jsonable {
     /**
      * MessageItem constructor.
      *
+     * @param MessageKey $messageKey
      * @param array $data
+     *
      *
      * @throws \TypeError if any of the submitted values for the properties do not match
      * their expected type
      */
-    public function __construct(array $data = null) {
+    public function __construct(MessageKey $messageKey, array $data = null) {
+
+        $this->messageKey = $messageKey;
 
         if (!$data) {
             return;
         }
+
 
         foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {
@@ -127,16 +132,6 @@ abstract class AbstractMessageItem implements Jsonable {
 
         }
     }
-
-
-    /**
-     * Sets the MessageKey for this instance.
-     *
-     * @param MessageKey $messageKey
-     *
-     * @return AbstractMessageItem $this
-     */
-    abstract protected function setMessageKey(MessageKey $messageKey) :AbstractMessageItem;
 
 
     /**
@@ -287,7 +282,7 @@ abstract class AbstractMessageItem implements Jsonable {
 
         $mk = $this->getMessageKey();
 
-        return array_merge($mk ? $mk->toJson() : [], [
+        return array_merge($mk->toJson(), [
             'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
             'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
             'subject'        => $this->getSubject(),

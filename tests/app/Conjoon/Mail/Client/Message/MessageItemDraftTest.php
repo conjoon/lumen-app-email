@@ -57,20 +57,42 @@ class MessageItemDraftTest extends TestCase {
      */
     public function testSetMessageKey() {
 
-        $messageKey = $this->createMessageKey();
-        $messageItem = $this->createMessageItem();
+        $messageKey = $this->createMessageKey("a", "b", "c");
+        $messageItem = $this->createMessageItem(null, $this->getItemConfig());
 
-        $messageItem->setMessageKey($messageKey);
-        $this->assertSame($messageKey, $messageItem->getMessageKey());
+        $newItem = $messageItem->setMessageKey($messageKey);
+        $this->assertSame($messageKey, $newItem->getMessageKey());
+        $this->assertNotSame($messageKey, $messageItem->getMessageKey());
+        $this->assertNotSame($newItem, $messageItem);
 
-        $exc = null;
-        try {
-            $messageItem->setMessageKey($messageKey);
-        } catch (MailClientException $e) {
-            $exc = $e;
+        $newJson = $newItem->toJson();
+        $oldJson = $messageItem->toJson();
+
+        $expCaught = count(array_keys($oldJson)) - 3; // w/o messageKey data
+
+        $caught = 0;
+
+        foreach ($oldJson as $key => $value) {
+
+            $getter = "get" . ucfirst($key);
+
+            if (in_array($key, ["id", "mailAccountId", "mailFolderId"])) {
+                continue;
+            }
+
+            if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
+                $this->assertNotSame($newItem->{$getter}(), $messageItem->{$getter}());
+                $this->assertEquals($newItem->{$getter}(), $messageItem->{$getter}());
+                $caught++;
+            } else {
+                $this->assertSame($newItem->{$getter}(), $messageItem->{$getter}());
+                $caught++;
+            }
+
         }
 
-        $this->assertSame("\"messageKey\" was already set.", $exc->getMessage());
+        $this->assertTrue($expCaught > 0);
+        $this->assertSame($caught, $expCaught);
 
     }
 
@@ -122,15 +144,14 @@ class MessageItemDraftTest extends TestCase {
     public function testToJson() {
         $item = $this->getItemConfig();
 
-        $messageItem = $this->createMessageItem($item);
-
         $messageKey = $this->createMessageKey();
-        $messageItem->setMessageKey($messageKey);
+
+        $messageItem = $this->createMessageItem($messageKey, $item);
+
         $keys = array_keys($item);
 
-
         foreach ($keys as $key) {
-            if ($key === "replyTo" || $key === "cc"  || $key === "bcc") {
+            if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
             } else{
                 $this->assertSame($item[$key], $messageItem->toJson()[$key]);
@@ -138,9 +159,9 @@ class MessageItemDraftTest extends TestCase {
         }
 
 
-        $messageItem = $this->createMessageItem($item);
         $messageKey = $this->createMessageKey();
-        $messageItem->setMessageKey($messageKey);
+        $messageItem = $this->createMessageItem($messageKey, $item);
+
 
         $json    = $messageItem->toJson();
         $keyJson = $messageKey->toJson();
@@ -168,6 +189,9 @@ class MessageItemDraftTest extends TestCase {
     protected function getItemConfig() {
 
         return [
+            'from'    => $this->createFrom(),
+            'replyTo' => $this->createReplyTo(),
+            'to'      => $this->createTo(),
             'cc'      => $this->createCc(),
             'bcc'     => $this->createBcc(),
             'replyTo' => $this->createReplyTo(),
@@ -183,9 +207,12 @@ class MessageItemDraftTest extends TestCase {
      * @param array|null $data
      * @return AbstractMessageItem
      */
-    protected function createMessageItem(array $data = null) :MessageItemDraft {
-        // Create a new instance from the Abstract Class
-       return new MessageItemDraft($data);
+    protected function createMessageItem(MessageKey $key = null, array $data = null) :MessageItemDraft {
+        if (!$key) {
+            $key = $this->createMessageKey();
+        }
+
+       return new MessageItemDraft($key, $data);
     }
 
 
@@ -202,6 +229,17 @@ class MessageItemDraftTest extends TestCase {
     }
 
     /**
+     * Returns a MailAddress to be used with the "from" property of the MessageItem
+     * to test.
+     *
+     * @return MailAddress
+     */
+    protected function createFrom() :MailAddress {
+        return new MailAddress("from@from.com", "From From");
+    }
+
+
+    /**
      * Returns a MailAddress to be used with the "replyTo" property of the MessageItem
      * to test.
      *
@@ -209,6 +247,20 @@ class MessageItemDraftTest extends TestCase {
      */
     protected function createReplyTo() :MailAddress {
         return new MailAddress("peterParker@newyork.com", "Peter Parker");
+    }
+
+    /**
+     * Returns a MailAddressList to be used with the "to" property of the MessageItem
+     * @return MailAddressList
+     */
+    protected function createTo() : MailAddressList {
+
+        $list = new MailAddressList;
+
+        $list[] = new MailAddress("to1", "to1@address.testcomdomaindev");
+        $list[] = new MailAddress("to2", "to2@address.testcomdomaindev");
+
+        return $list;
     }
 
     /**

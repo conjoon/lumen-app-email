@@ -55,23 +55,6 @@ class MessageItem extends AbstractMessageItem {
 
 
     /**
-     * MessageItem constructor.
-     *
-     * @param MessageKey $messageKey
-     * @param array $data
-     *
-     * @throws \TypeError if any of the submitted values for the properties do not match
-     * their expected type
-     */
-    public function __construct(MessageKey $messageKey, array $data = null) {
-
-        $this->setMessageKey($messageKey);
-
-        parent::__construct($data);
-    }
-
-
-    /**
      * @inheritdoc
      */
     protected function checkType($property, $value) {
@@ -100,13 +83,6 @@ class MessageItem extends AbstractMessageItem {
     }
 
 
-    /**
-     * @inheritdoc
-     */
-    protected function setMessageKey(MessageKey $messageKey) :AbstractMessageItem {
-        $this->messageKey = $messageKey;
-        return $this;
-    }
 
 // --------------------------------
 //  Jsonable interface

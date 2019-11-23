@@ -66,7 +66,7 @@ class AbstractMessageItemTest extends TestCase
 
         $item = $this->getItemConfig();
 
-        $messageItem = $this->createMessageItem($item);
+        $messageItem = $this->createMessageItem(null, $item);
 
         foreach ($item as $key => $value) {
 
@@ -117,7 +117,7 @@ class AbstractMessageItemTest extends TestCase
             }
 
             try {
-                $this->createMessageItem($item);
+                $this->createMessageItem(null, $item);
             } catch (\TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
@@ -147,20 +147,25 @@ class AbstractMessageItemTest extends TestCase
     public function testToJson() {
         $item = $this->getItemConfig();
 
-        $messageItem = $this->createMessageItem($item);
+        $messageItem = $this->createMessageItem(null, $item);
 
         $keys = array_keys($item);
 
+        $json = $messageItem->toJson();
 
         foreach ($keys as $key) {
             if ($key === "from" || $key === "to") {
-                $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
+                $this->assertEquals($item[$key]->toJson(), $json[$key]);
             } else if ($key == "date") {
-                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $messageItem->toJson()[$key]);
+                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $json[$key]);
             } else{
-                $this->assertSame($item[$key], $messageItem->toJson()[$key]);
+                $this->assertSame($item[$key], $json[$key]);
             }
         }
+
+        $this->assertSame($json["id"], $messageItem->getMessageKey()->getId());
+        $this->assertSame($json["mailFolderId"], $messageItem->getMessageKey()->getMailFolderId());
+        $this->assertSame($json["mailAccountId"], $messageItem->getMessageKey()->getMailAccountId());
 
 
         $messageItem = $this->createMessageItem();
@@ -179,7 +184,7 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testSetFromWithNull() {
 
-        $messageItem = $this->createMessageItem(["from" => null]);
+        $messageItem = $this->createMessageItem(null, ["from" => null]);
 
         $this->assertSame(null, $messageItem->getFrom());
 
@@ -190,7 +195,7 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testGetFlagList() {
 
-        $item = $this->createMessageItem($this->getItemConfig());
+        $item = $this->createMessageItem(null, $this->getItemConfig());
 
         $flagList = $item->getFlagList();
 
@@ -237,12 +242,29 @@ class AbstractMessageItemTest extends TestCase
      * Returns an anonymous class extending AbstractMessageItem.
      *
      * @param array|null $data
+     * @parsm MessageKey $key
+     *
      * @return AbstractMessageItem
      */
-    protected function createMessageItem(array $data = null) :AbstractMessageItem {
+    protected function createMessageItem(MessageKey $key = null, array $data = null) :AbstractMessageItem {
         // Create a new instance from the Abstract Class
-       return new class($data) extends AbstractMessageItem {public function setMessageKey(MessageKey $key):AbstractMessageItem{}};
+        if (!$key) {
+            $key = $this->createMessageKey();
+        }
+       return new class($key, $data) extends AbstractMessageItem {};
     }
+
+
+    /**
+     * Returns a MessageKey
+     *
+     * @return MessageKey
+     */
+    protected function createMessageKey() :MessageKey {
+        // Create a new instance from the Abstract Class
+        return new MessageKey("a", "b", "c");
+    }
+
 
     /**
      * Returns an MessageItem as array.

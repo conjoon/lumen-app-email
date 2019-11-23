@@ -29,8 +29,7 @@ namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClientException;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 
 /**
@@ -63,19 +62,44 @@ class MessageItemDraft extends AbstractMessageItem {
 
 
     /**
-     * Sets the "messageKey" property of this message.
-     * Throws an exception if the messageKey was already set.
+     * Sets the "messageKey" by creating a new MessageItemDraft with the specified
+     * key and returning a new instance with this data.
+     * No references to any data of the original instance will be available.
      *
      * @param MessageKey $messageKey
      *
      * @return $this
      */
-    public function setMessageKey(MessageKey $messageKey) :AbstractMessageItem {
-        if ($this->messageKey) {
-            throw new MailClientException("\"messageKey\" was already set.");
+    public function setMessageKey(MessageKey $messageKey) :MessageItemDraft {
+
+        $d = $this->toJson();
+
+        $draft = new self($messageKey);
+
+        foreach ($d as $key => $value) {
+
+            if (in_array($key, ["id", "mailAccountId", "mailFolderId"])) {
+                continue;
+            }
+
+            $setter = "set" . ucfirst($key);
+            $getter = "get" . ucfirst($key);
+            $copyable = $this->{$getter}();
+
+            if ($copyable === null) {
+                continue;
+            }
+
+            if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
+                if ($copyable) {
+                    $draft->{$setter}($copyable->copy());
+                }
+            } else {
+                $draft->{$setter}($this->{$getter}());
+            }
         }
-        $this->messageKey = $messageKey;
-        return $this;
+
+        return $draft;
     }
 
 
