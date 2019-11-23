@@ -28,7 +28,8 @@ use Conjoon\Util\AbstractList,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Util\Jsonable,
-    Conjoon\Util\JsonDecodable;
+    Conjoon\Util\JsonDecodable,
+    Conjoon\Util\Copyable;
 
 
 class MailAddressListTest extends TestCase
@@ -48,6 +49,7 @@ class MailAddressListTest extends TestCase
         $this->assertInstanceOf(AbstractList::class, $mailAddressList);
         $this->assertInstanceOf(Jsonable::class, $mailAddressList);
         $this->assertInstanceOf(JsonDecodable::class, $mailAddressList);
+        $this->assertInstanceOf(Copyable::class, $mailAddressList);
 
 
         $this->assertSame(MailAddress::class, $mailAddressList->getEntityType());
