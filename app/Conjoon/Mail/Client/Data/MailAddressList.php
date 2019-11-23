@@ -30,7 +30,8 @@ namespace Conjoon\Mail\Client\Data;
 use Conjoon\Util\AbstractList,
     Conjoon\Util\Jsonable,
     Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Stringable;
+    Conjoon\Util\Stringable,
+    Conjoon\Util\Copyable;
 
 /**
  * Class MailAddressList organizes a list of MailAddresses.
@@ -48,7 +49,28 @@ use Conjoon\Util\AbstractList,
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddressList extends AbstractList implements JsonDecodable, Stringable {
+class MailAddressList extends AbstractList implements JsonDecodable, Stringable, Copyable {
+
+
+// --------------------------------
+//  Copyable interface
+// --------------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function copy() : MailAddressList {
+
+        $list = new MailAddressList;
+
+        foreach ($this as $entry) {
+            $list[] = $entry->copy();
+        }
+
+        $this->rewind();
+        return $list;
+    }
+
 
 
 // --------------------------------

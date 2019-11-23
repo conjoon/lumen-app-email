@@ -27,7 +27,8 @@
 use Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Util\Jsonable,
     Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Stringable;
+    Conjoon\Util\Stringable,
+    Conjoon\Util\Copyable;
 
 
 class MailAddressTest extends TestCase
@@ -49,6 +50,7 @@ class MailAddressTest extends TestCase
         $this->assertInstanceOf(Jsonable::class, $mailAddress);
         $this->assertInstanceOf(Stringable::class, $mailAddress);
         $this->assertInstanceOf(JsonDecodable::class, $mailAddress);
+        $this->assertInstanceOf(Copyable::class, $mailAddress);
         $this->assertSame($address, $mailAddress->getAddress());
         $this->assertSame($name, $mailAddress->getName());
 
@@ -92,8 +94,22 @@ class MailAddressTest extends TestCase
 
         $this->assertSame("foo", $address->getName());
         $this->assertSame("foo", $address->getAddress());
+    }
 
+    /**
+     * copy()
+     */
+    public function testCopy() {
 
+        $name = "Peter Parker";
+        $address = "peter.parker@newyork.com";
+        $mailAddress = new MailAddress($address, $name);
+
+        $address1 = $mailAddress->copy();
+
+        $this->assertSame($address1->getAddress(), $mailAddress->getAddress());
+        $this->assertSame($address1->getName(), $mailAddress->getName());
+        $this->assertNotSame($address1, $mailAddress);
     }
 
 }

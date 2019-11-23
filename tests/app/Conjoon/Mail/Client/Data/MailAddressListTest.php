@@ -109,4 +109,19 @@ class MailAddressListTest extends TestCase
 
     }
 
+    /**
+     *
+     */
+    public function testCopy() {
+
+        $mailAddressList = new MailAddressList;
+        $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
+        $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
+
+        $copy = $mailAddressList->copy();
+        $this->assertEquals($copy, $mailAddressList);
+        $this->assertNotSame($copy, $mailAddressList);
+
+    }
+
 }
