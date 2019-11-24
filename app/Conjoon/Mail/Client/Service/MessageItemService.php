@@ -104,14 +104,13 @@ interface MessageItemService {
      * updated MessageItemDraft.
      * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
      * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
-     * MessageItemDraft might not equal to the specified MessageKey.
+     * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
      *
-     * @param MessageKey $key
      * @param MessageItemDraft $messageItemDraft
      *
      * @return MessageItemDraft|null
      */
-    public function updateMessageDraft(MessageKey $key, MessageItemDraft $messageItemDraft) :?MessageItemDraft;
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**

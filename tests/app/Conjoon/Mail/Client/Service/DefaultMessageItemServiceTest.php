@@ -404,21 +404,19 @@ class DefaultMessageItemServiceTest extends TestCase {
         $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
-        $newKey = $this->createMessageKey($account, $mailFolderId, $newId);
+        $newKey     = $this->createMessageKey($account, $mailFolderId, $newId);
 
-        $transformDraft = new MessageItemDraft();
-
-        $messageItemDraft = new MessageItemDraft();
-        $messageItemDraft->setMessageKey($newKey);
+        $messageItemDraft = new MessageItemDraft($messageKey);
+        $transformDraft   = new MessageItemDraft($newKey);
 
         $clientStub = $service->getMailClient();
 
         $clientStub->method('updateMessageDraft')
-            ->with($messageKey)
-            ->willReturn($messageItemDraft);
+            ->with($messageItemDraft)
+            ->willReturn($transformDraft);
 
-        $messageItemDraft = $service->updateMessageDraft($messageKey, $transformDraft);
-        $this->assertSame($newKey, $messageItemDraft->getMessageKey());
+        $res = $service->updateMessageDraft($messageItemDraft);
+        $this->assertSame($newKey, $res->getMessageKey());
     }
 
 
@@ -437,15 +435,15 @@ class DefaultMessageItemServiceTest extends TestCase {
         $id           = "123";
         $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
 
-        $transformDraft = new MessageItemDraft();
+        $transformDraft = new MessageItemDraft($messageKey);
 
         $clientStub = $service->getMailClient();
 
         $clientStub->method('updateMessageDraft')
-                   ->with($messageKey)
+                   ->with($transformDraft)
                    ->willThrowException(new MailClientException);
 
-        $messageItemDraft = $service->updateMessageDraft($messageKey, $transformDraft);
+        $messageItemDraft = $service->updateMessageDraft($transformDraft);
         $this->assertNull($messageItemDraft);
     }
 

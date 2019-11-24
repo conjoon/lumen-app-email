@@ -250,12 +250,12 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function updateMessageDraft(MessageKey $messageKey, MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
 
         $updated = null;
 
         try {
-            $updated = $this->getMailClient()->updateMessageDraft($messageKey, $messageItemDraft);
+            $updated = $this->getMailClient()->updateMessageDraft($messageItemDraft);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
