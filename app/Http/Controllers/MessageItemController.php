@@ -200,11 +200,14 @@ class MessageItemController extends Controller {
 
             case "MessageDraft":
 
-                $keys = ["subject", "date", "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"];
+                $keys = [
+                    "mailAccountId", "mailFolderId", "id", "subject", "date",
+                    "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"
+                ];
                 $data = $request->only($keys);
 
                 $messageItemDraft        = $this->messageItemDraftJsonTransformer->transform($data);
-                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageKey, $messageItemDraft);
+                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageItemDraft);
 
                 $resp = [
                     "success" => !!$updatedMessageItemDraft

@@ -490,16 +490,14 @@ class MessageItemControllerTest extends TestCase
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
         $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
 
-        $transformDraft = new MessageItemDraft;
-
-        $messageItemDraft = new MessageItemDraft;
-        $messageItemDraft->setMessageKey($newMessageKey);
-
         $to = json_encode(["address" => "dev@conjoon.org"]);
         $data = [
             "subject" => "Hello World!",
             "to"      => $to
         ];
+
+        $transformDraft = new MessageItemDraft($messageKey);
+        $messageItemDraft = new MessageItemDraft($newMessageKey);
 
         $transformerStub->expects($this->once())
                         ->method("transform")
@@ -508,7 +506,7 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method('updateMessageDraft')
-            ->with($messageKey, $transformDraft)
+            ->with($transformDraft)
             ->willReturn($messageItemDraft);
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -538,7 +536,7 @@ class MessageItemControllerTest extends TestCase
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
-        $transformDraft = new MessageItemDraft;
+        $transformDraft = new MessageItemDraft($messageKey);
 
         $to = json_encode(["address" => "dev@conjoon.org"]);
         $data = [
@@ -554,7 +552,7 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method('updateMessageDraft')
-            ->with($messageKey, $transformDraft)
+            ->with($transformDraft)
             ->willReturn(null);
 
         $response = $this->actingAs($this->getTestUserStub())
