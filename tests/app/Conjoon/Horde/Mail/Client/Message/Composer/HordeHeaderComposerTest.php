@@ -24,8 +24,9 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Composer\HeaderComposer,
-    Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer,
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer,
+    Conjoon\Mail\Client\Message\Composer\HeaderComposer,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList;
@@ -49,7 +50,7 @@ class HordeHeaderComposerTest extends TestCase {
 
         $composer = new HordeHeaderComposer();
 
-        $messageItemDraft = new MessageItemDraft();
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
         $messageItemDraft->setSubject("Test");
         $msgText = ["Subject: foobar"];
         $result  = [
@@ -62,7 +63,7 @@ class HordeHeaderComposerTest extends TestCase {
         $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
 
 
-        $messageItemDraft = new MessageItemDraft();
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
         $messageItemDraft->setSubject("Test");
         $messageItemDraft->setTo($this->createAddress("to"));
         $messageItemDraft->setCc($this->createAddress("cc"));
