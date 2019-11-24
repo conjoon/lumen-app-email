@@ -30,6 +30,7 @@ use Conjoon\Mail\Client\Request\JsonTransformer,
     Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Mail\Client\Request\JsonTransformerException,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 
@@ -44,11 +45,22 @@ class DefaultMessageItemDraftJsonTransformerTest extends TestCase {
     }
 
 
-    public function testProcess() {
+    public function testTransform_exception() {
+
+        $this->expectException(JsonTransformerException::class);
+        $writer = new DefaultMessageItemDraftJsonTransformer();
+        $writer->transform([]);
+    }
+
+
+    public function testTransform() {
 
         $writer = new DefaultMessageItemDraftJsonTransformer();
 
         $data = [
+            "mailAccountId" => "a",
+            "mailFolderId"  => "b",
+            "id"            => "c",
             "seen"    => true,
             "flagged" => true,
             "from"    => json_encode($this->createFrom()->toJson()),
@@ -64,6 +76,9 @@ class DefaultMessageItemDraftJsonTransformerTest extends TestCase {
 
         $this->assertInstanceOf(MessageItemDraft::class, $draft);
 
+        $this->assertSame($data["mailAccountId"], $draft->getMessageKey()->getMailAccountId());
+        $this->assertSame($data["mailFolderId"], $draft->getMessageKey()->getMailFolderId());
+        $this->assertSame($data["id"], $draft->getMessageKey()->getId());
         $this->assertSame($data["subject"], $draft->getSubject());
         $this->assertSame($data["flagged"], $draft->getFlagged());
         $this->assertSame($data["seen"], $draft->getSeen());
@@ -72,6 +87,49 @@ class DefaultMessageItemDraftJsonTransformerTest extends TestCase {
         $this->assertSame($data["to"], json_encode($draft->getTo()->toJson()));
         $this->assertSame($data["cc"], json_encode($draft->getCc()->toJson()));
         $this->assertSame($data["bcc"], json_encode($draft->getBcc()->toJson()));
+        $this->assertSame($data["date"], "" . $draft->getDate()->getTimestamp());
+
+    }
+
+
+    public function testTransform_allDataMissing() {
+
+        $writer = new DefaultMessageItemDraftJsonTransformer();
+
+        $data = [
+            "mailAccountId" => "a",
+            "mailFolderId"  => "b",
+            "id"            => "c",
+            "seen"    => false,
+            "flagged" => false,
+            "from"    => null,
+            "replyTo" => null,
+            "to"      => null,
+            "cc"      => null,
+            "bcc"     => null,
+            "subject" => null,
+            "date"    => "" . (new \DateTime())->getTimestamp()
+        ];
+
+        $draft = $writer->transform([
+            "mailAccountId" => "a",
+            "mailFolderId"  => "b",
+            "id"            => "c"
+        ]);
+
+        $this->assertInstanceOf(MessageItemDraft::class, $draft);
+
+        $this->assertSame($data["mailAccountId"], $draft->getMessageKey()->getMailAccountId());
+        $this->assertSame($data["mailFolderId"], $draft->getMessageKey()->getMailFolderId());
+        $this->assertSame($data["id"], $draft->getMessageKey()->getId());
+        $this->assertSame($data["subject"], $draft->getSubject());
+        $this->assertSame($data["flagged"], $draft->getFlagged());
+        $this->assertSame($data["seen"], $draft->getSeen());
+        $this->assertSame($data["from"], $draft->getFrom());
+        $this->assertSame($data["replyTo"], $draft->getReplyTo());
+        $this->assertSame($data["to"], $draft->getTo());
+        $this->assertSame($data["cc"], $draft->getCc());
+        $this->assertSame($data["bcc"], $draft->getBcc());
         $this->assertSame($data["date"], "" . $draft->getDate()->getTimestamp());
 
     }

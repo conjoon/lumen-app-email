@@ -29,10 +29,15 @@ namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
 use Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Request\JsonTransformerException,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
  * Class DefaultMessageItemDraftWriter
+ * This implementation will at least set the "date" field to the value of NOW if the
+ * field is missing in the $data-array. All other fields will only be set if they are
+ * available in $data.
  *
  * @package Conjoon\Mail\Client\Message\Request\Transformer
  */
@@ -44,12 +49,28 @@ class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTran
      */
     public function transform(array $data) : MessageItemDraft {
 
+        if (!isset($data["mailAccountId"]) || !isset($data["mailFolderId"]) || !isset($data["id"])) {
+            throw new JsonTransformerException(
+                "Missing compound key information. " .
+                "Fields \"mailAccountId\", \"mailFolderId\", and \"id\" must be set."
+            );
+        }
+
         $draftData = [];
 
-        $draftData["date"] = new \DateTime("@" . $data["date"]);
+        if (isset($data["date"])) {
+            $draftData["date"] = new \DateTime("@" . $data["date"]);
+        } else {
+            $draftData["date"] = new \DateTime();
+        }
 
-        $draftData["seen"] = $data["seen"];
-        $draftData["flagged"] = $data["flagged"];
+        if (isset($data["seen"])) {
+            $draftData["seen"] = $data["seen"];
+        }
+
+        if (isset($data["flagged"])) {
+            $draftData["flagged"] = $data["flagged"];
+        }
 
         if (isset($data["subject"])) {
             $draftData["subject"] = $data["subject"];
@@ -70,7 +91,9 @@ class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTran
             $draftData["bcc"] = $bcc;
         }
 
-        return new MessageItemDraft($draftData);
+        $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
+
+        return new MessageItemDraft($messageKey, $draftData);
     }
 
 }

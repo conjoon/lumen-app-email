@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
 use Conjoon\Mail\Client\Request\JsonTransformer,
+    Conjoon\Mail\Client\Request\JsonTransformerException,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
@@ -40,9 +41,13 @@ interface MessageItemDraftJsonTransformer extends JsonTransformer {
 
     /**
      * Returns a MessageItemDraft that was created from the data found in $data.
+     * id, mailAccountId and mailFolderId are mandatory fields. This method will
+     * throw an exception if any of these fields are missing.
      *
      * @param array $data
      * @return MessageItemDraft
+     *
+     * @throws JsonTransformerException
      */
     public function transform(array $data) : MessageItemDraft;
 
