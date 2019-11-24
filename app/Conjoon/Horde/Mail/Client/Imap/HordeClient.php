@@ -496,9 +496,11 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function updateMessageDraft(MessageKey $messageKey, MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
 
         try {
+            $messageKey = $messageItemDraft->getMessageKey();
+
             $client = $this->connect($messageKey);
 
             $id = $messageKey->getId();
@@ -524,9 +526,7 @@ class HordeClient implements MailClient {
 
             $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
 
-            $messageItemDraft->setMessageKey($newKey);
-
-            return $messageItemDraft;
+            return $messageItemDraft->setMessageKey($newKey);
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);

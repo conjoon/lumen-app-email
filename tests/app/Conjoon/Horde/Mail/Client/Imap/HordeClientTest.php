@@ -517,7 +517,7 @@ class HordeClientTest extends TestCase {
         $bcc[] = new MailAddress("test@test.com", "test");
 
 
-        $messageItemDraft = new MessageItemDraft([
+        $messageItemDraft = new MessageItemDraft($messageKey, [
             "subject" => "foo",
             "from" => new MailAddress("testa@fobbar.com", "test"),
             "to" => $to,
@@ -527,7 +527,6 @@ class HordeClientTest extends TestCase {
             "replyTo" => new MailAddress("test@foobar.com", "test")
         ]);
 
-        $mid = $messageItemDraft;
 
         $rangeList = new \Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
@@ -579,10 +578,17 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $res = $client->updateMessageDraft($messageKey, $messageItemDraft);
+        $res = $client->updateMessageDraft($messageItemDraft);
 
+        $aJson = $messageItemDraft->toJson();
+        $bJson = $res->toJson();
 
-        $this->assertSame($res, $messageItemDraft);
+        unset($aJson["id"]);
+        unset($bJson["id"]);
+
+        $this->assertEquals($aJson, $bJson);
+
+        $this->assertNotSame($res, $messageItemDraft);
         $this->assertEquals($res->getMessageKey(), $resultMessageKey);
     }
     

@@ -99,14 +99,14 @@ interface MailClient {
     /**
      * Updates envelope information of a Message, if the Message is a draft Message.
      *
-     * @param MessageKey $messageKey
      * @param MessageItemDraft $messageItemDraft
      *
-     * @return MessageItemDraft The MessageItemDraft updated, along with its MessageKey.
+     * @return MessageItemDraft The MessageItemDraft updated, along with its MessageKey, which
+     * might not equal to the MessageKey in $messageItemDraft.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function updateMessageDraft(MessageKey $messageKey, MessageItemDraft $messageItemDraft) :?MessageItemDraft;
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**
