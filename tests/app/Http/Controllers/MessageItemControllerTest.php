@@ -402,7 +402,7 @@ class MessageItemControllerTest extends TestCase
         $response = $this->actingAs($this->getTestUserStub())
             ->post(
                 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems',
-                ["target" => "MessageBody", "textHtml" => $textHtml, "textPlain" => $textPlain]
+                ["target" => "MessageBodyDraft", "textHtml" => $textHtml, "textPlain" => $textPlain]
             );
 
         $response->assertResponseOk();
@@ -435,7 +435,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "\"target\" must be specified with \"MessageBody\"."
+            "msg"    => "\"target\" must be specified with \"MessageBodyDraft\"."
         ]);
 
     }
@@ -463,7 +463,7 @@ class MessageItemControllerTest extends TestCase
         $response = $this->actingAs($this->getTestUserStub())
             ->call(
                 'POST',
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?target=MessageBody&textHtml=' .
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?target=MessageBodyDraft&textHtml=' .
                 $textHtml . "&textPlain=" . $textPlain
             );
 

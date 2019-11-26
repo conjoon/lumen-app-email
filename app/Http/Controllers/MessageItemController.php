@@ -295,10 +295,10 @@ class MessageItemController extends Controller {
         $mailFolderId = urldecode($mailFolderId);
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
-        if ($target !== "MessageBody") {
+        if ($target !== "MessageBodyDraft") {
             return response()->json([
                 "success" => false,
-                "msg" =>  "\"target\" must be specified with \"MessageBody\"."
+                "msg" =>  "\"target\" must be specified with \"MessageBodyDraft\"."
             ], 400);
         }
 
