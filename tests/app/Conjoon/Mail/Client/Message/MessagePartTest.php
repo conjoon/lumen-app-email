@@ -24,7 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Util\Copyable;
 
 
 class MessagePartTest extends TestCase
@@ -42,7 +43,7 @@ class MessagePartTest extends TestCase
 
         $messagePart = new MessagePart("foo", "bar", "text/html");
 
-        $this->assertInstanceOf(MessagePart::class, $messagePart);
+        $this->assertInstanceOf(Copyable::class, $messagePart);
 
         $this->assertSame("foo", $messagePart->getContents());
         $this->assertSame("bar", $messagePart->getCharset());
@@ -54,6 +55,9 @@ class MessagePartTest extends TestCase
         $this->assertSame("charset", $messagePart->getCharset());
         $this->assertSame("text/html", $messagePart->getMimeType());
 
+        $copy = $messagePart->copy();
+        $this->assertNotSame($copy, $messagePart);
+        $this->assertEquals($copy, $messagePart);
     }
 
 

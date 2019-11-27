@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
+use Conjoon\Util\Copyable;
+
 
 /**
  * Class MessagePart models a simplified representation of a Mail Message Part,
@@ -44,7 +46,7 @@ namespace Conjoon\Mail\Client\Message;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessagePart  {
+class MessagePart implements Copyable  {
 
     /**
      * @vr string
@@ -142,6 +144,20 @@ class MessagePart  {
      */
     public function getMimeType() {
         return $this->mimeType;
+    }
+
+
+// +----------------------------
+// | Interface Copyable
+// +----------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function copy() :MessagePart {
+
+        return new MessagePart($this->getContents(), $this->getCharset(), $this->getMimeType());
+
     }
 
 
