@@ -46,6 +46,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Mail\Client\Message\Composer\BodyComposer,
     Conjoon\Mail\Client\Message\Composer\HeaderComposer,
@@ -437,7 +438,7 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function setFlags(MessageKey $key, Flaglist $flagList) : bool{
+    public function setFlags(MessageKey $key, FlagList $flagList) : bool{
         try {
             $client = $this->connect($key);
 
@@ -474,7 +475,13 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function createMessageBody(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageKey {
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        if ($messageBodyDraft->getMessageKey()) {
+            throw new ImapClientException(
+                "Cannot create a MessageBodyDraft that already has a MessageKey"
+            );
+        }
 
         try {
             $client = $this->connect($key);
@@ -484,7 +491,13 @@ class HordeClient implements MailClient {
 
             $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
 
-            return new MessageKey($key->getMailAccountId(), $key->getId(), "" . $ids->ids[0]);
+            $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), "" . $ids->ids[0]);
+
+            $flagList = new FlagList();
+            $flagList[] = new DraftFlag(true);
+            $this->setFlags($messageKey, $flagList);
+
+            return $messageBodyDraft->setMessageKey($messageKey);
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }

@@ -455,21 +455,39 @@ class HordeClientTest extends TestCase {
         $this->assertSame(true, $result);
     }
 
-
-
     /**
-     * Tests createMessageBody
+     * Tests createMessageBody with a MessageBodyDraft that already has a MessageKey
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBody() {
+    public function testCreateMessageBodyDraft_hasMessageKey() {
+
+        $this->expectException(ImapClientException::class);
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $folderKey = new FolderKey($account, $mailFolderId);
+        $client = $this->createClient();
+        $client->createMessageBodyDraft(
+            $folderKey, new MessageBodyDraft(new MessageKey("a", "b", "c"))
+        );
+
+    }
+
+
+    /**
+     * Tests createMessageBodyDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBodyDraft() {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId  = "INBOX";
         $folderKey = new FolderKey($account, $mailFolderId);
         $messageItemId = "989786";
-        $rawMessage = "MOCKED RAW MESSAGE";
 
         $messageBodyDraft = new MessageBodyDraft();
         $htmlPart = new MessagePart("foo", "UTF-8", "text/html");
@@ -483,12 +501,21 @@ class HordeClientTest extends TestCase {
             $folderKey->getId(), [["data" => "__HEADER__FULL_TXT_MSG"]]
         )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
 
-        $client = $this->createClient();
-        $res = $client->createMessageBody($folderKey, $messageBodyDraft);
+        $imapStub->shouldReceive('store')->with(
+            $mailFolderId, [
+                "ids"    => new \Horde_Imap_Client_Ids([$messageItemId]),
+                "add"    => ["\\Draft"]
+            ]
+        );
 
-        $this->assertSame($res->getMailAccountId(), $account->getId());
-        $this->assertSame($res->getMailFolderId(), $mailFolderId);
-        $this->assertSame($res->getId(), $messageItemId);
+
+        $client = $this->createClient();
+        $res = $client->createMessageBodyDraft($folderKey, $messageBodyDraft);
+
+        $this->assertNotSame($res, $messageBodyDraft);
+        $this->assertSame($res->getMessageKey()->getMailAccountId(), $account->getId());
+        $this->assertSame($res->getMessageKey()->getMailFolderId(), $mailFolderId);
+        $this->assertSame($res->getMessageKey()->getId(), $messageItemId);
     }
 
     /**
