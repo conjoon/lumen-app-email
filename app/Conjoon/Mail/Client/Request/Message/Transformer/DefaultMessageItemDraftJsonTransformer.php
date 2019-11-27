@@ -34,7 +34,7 @@ use Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
- * Class DefaultMessageItemDraftWriter
+ * Class DefaultMessageItemDraftJsonTransformer
  * This implementation will at least set the "date" field to the value of NOW if the
  * field is missing in the $data-array. All other fields will only be set if they are
  * available in $data.
