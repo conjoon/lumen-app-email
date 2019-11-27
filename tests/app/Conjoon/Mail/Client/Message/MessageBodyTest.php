@@ -25,7 +25,7 @@
  */
 
 use Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
+    Conjoon\Mail\Client\Message\AbstractMessageBody,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
@@ -46,7 +46,7 @@ class MessageBodyTest extends TestCase
 
         $body = new MessageBody($messageKey);
 
-        $this->assertInstanceOf(MessageBodyDraft::class, $body);
+        $this->assertInstanceOf(AbstractMessageBody::class, $body);
 
         $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
         $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");

@@ -25,7 +25,9 @@
  */
 
 use Conjoon\Mail\Client\Message\MessageBodyDraft,
+    Conjoon\Mail\Client\Message\AbstractMessageBody,
     Conjoon\Mail\Client\Message\MessagePart,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Util\Jsonable;
 
 
@@ -44,6 +46,7 @@ class MessageBodyDraftTest extends TestCase
         $body = new MessageBodyDraft();
 
         $this->assertInstanceOf(Jsonable::class, $body);
+        $this->assertInstanceOf(AbstractMessageBody::class, $body);
 
         $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
         $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
@@ -69,6 +72,41 @@ class MessageBodyDraftTest extends TestCase
 
         $this->assertSame($plainPart, $body->getTextPlain());
         $this->assertSame($htmlPart, $body->getTextHtml());
+
+
+        $body = new MessageBodyDraft(new MessageKey("a", "b", "c"));
+
+        $this->assertEquals([
+            "mailAccountId" => "a",
+            "mailFolderId" => "b",
+            "id" => "c",
+            "textPlain"     => "",
+            "textHtml"     => ""
+        ], $body->toJson());
+
+    }
+
+
+    /**
+     * Test setMessageKey()
+     */
+    public function testSetMessageKey() {
+
+        $body = new MessageBodyDraft(new MessageKey("a", "b", "c"));
+
+        $plainPart = new MessagePart("foo", "ISO-8859-1", "text/plain");
+        $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
+
+        $body->setTextPlain($plainPart);
+        $body->setTextHtml($htmlPart);
+
+        $newKey = new MessageKey("x", "y", "z");
+        $copy = $body->setMessageKey($newKey);
+
+        $this->assertNotSame($copy, $body);
+        $this->assertSame($copy->getMessageKey(), $newKey);
+        $this->assertEquals($copy->getTextPlain(), $body->getTextPlain());
+        $this->assertEquals($copy->getTextHtml(), $body->getTextHtml());
 
     }
 

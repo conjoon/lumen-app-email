@@ -30,8 +30,7 @@ namespace Conjoon\Mail\Client\Message;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
- * Class MessageBody models a simplified representation of  mail message
- * body-content informations which is identified by an id..
+ * Class MessageBody.
  *
  * @example
  *
@@ -48,13 +47,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBody extends MessageBodyDraft {
-
-
-    /**
-     * @var MessageKey
-     */
-    protected $messageKey;
+class MessageBody extends AbstractMessageBody {
 
 
     /**
@@ -65,31 +58,6 @@ class MessageBody extends MessageBodyDraft {
     public function __construct(MessageKey $messageKey) {
 
         $this->messageKey = $messageKey;
-    }
-
-
-    /**
-     * Returns the MessageKey of this MessageBody.
-     *
-     * @return MessageKey
-     */
-    public function getMessageKey() {
-        return $this->messageKey;
-    }
-
-
-// --------------------------------
-//  Jsonable interface
-// --------------------------------
-
-    /**
-     * @inheritdoc
-     */
-    public function toJson() :array{
-
-        $keyJson = $this->getMessageKey()->toJson();
-
-        return array_merge($keyJson, parent::toJson());
     }
 
 

@@ -27,111 +27,49 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Util\Jsonable;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
- * Class MessageBody models a simplified representation of  mail message
- * body-content informations that is not identified by an id yet, i.e. because
- * it represents the MessageBody of a draft.
+ * Class MessageBodyDraft represents a draft of a MessageBody, that may have a MessageKey
+ * if it is a draft physically associated with a message. This class allows for changing
+ * the MessageKey, ultimately returning a new instance of a MessageBodyDraft if the
+ * key was changed.
  *
  * @example
  *
- *    $body = new MessageBodyDraft();
+ *    $body = new MessageBodyDraft(new MessageKey("a", "b", "c"));
  *
- *    $plainPart = new MessagePart("foo", "ISO-8859-1");
- *    $htmlPart = new MessagePart("<b>bar</b>", "UTF-8");
+ *    *
+ *    $keyedDraft = $body->setMessageKey(new MessageKey("x", "y", "z"));
  *
- *    $body->setTextPlain($plainPart);
- *    $body->setTextHtml($htmlPart);
- *
- *    $body->getTextPlain();// $plainPart
- *    $body->getTextHtml(); // $htmlPart
+ *    $keyedDraft !== $body; // true
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBodyDraft implements Jsonable {
+class MessageBodyDraft extends AbstractMessageBody {
 
-
-    /**
-     * @var MessagePart
-     */
-    protected $textHtml;
-
-    /**
-     * @var MessagePart
-     */
-    protected $textPlain;
 
 
     /**
-     * Sets the "textHtml" property of this body.
+     * Sets the "messageKey" by creating a new MessageBodyDraft with the specified
+     * key and returning a new instance with this data.
+     * No references to any data of the original instance will be available.
      *
-     * @param MessagePart $textHtml
+     * @param MessageKey $messageKey
+     *
      * @return $this
      */
-    public function setTextHtml(MessagePart $textHtml) {
-        $this->textHtml = $textHtml;
-        return $this;
+    public function setMessageKey(MessageKey $messageKey) :MessageBodyDraft {
+
+        $plain = $this->getTextPlain() ? $this->getTextPlain()->copy() : null;
+        $html  = $this->getTextHtml() ? $this->getTextHtml()->copy() : null;
+
+        $copy = new self($messageKey);
+
+        $html && $copy->setTextHtml($html);
+        $plain && $copy->setTextPlain($plain);
+
+        return $copy;
     }
-
-
-    /**
-     * Returns the textHtml property of this body.
-     * @return MessagePart
-     */
-    public function getTextHtml() {
-        return $this->textHtml;
-    }
-
-
-    /**
-     * Sets the "textPlain" property of this body.
-     *
-     * @param MessagePart $textPlain
-     * @return $this
-     */
-    public function setTextPlain(MessagePart $textPlain) {
-        $this->textPlain = $textPlain;
-        return $this;
-    }
-
-
-    /**
-     * Returns the textPlain property of this body.
-     * @return MessagePart
-     */
-    public function getTextPlain() {
-        return $this->textPlain;
-    }
-
-
-// --------------------------------
-//  Jsonable interface
-// --------------------------------
-
-    /**
-     * Returns an array representing this MessageBodyDraft.
-     *
-     * Each entry in the returning array must consist of the following key/value-pairs:
-     *
-     * - textHtml (string) - this instances textHtml part's content-value
-     * - textPlain (string) - this instances textPlain part's content-value
-     *
-     * Implementing APIs should make sure to properly encode the content of the parts
-     * from the given charset to UTF-8 to prevent errors when trying to send the resulting
-     * array as JSON to interested clients.
-     *
-     * @return array
-     *
-     */
-    public function toJson() :array{
-
-        return [
-            "textHtml" => $this->getTextHtml() ? $this->getTextHtml()->getContents() : "",
-            "textPlain" => $this->getTextPlain() ? $this->getTextPlain()->getContents() : ""
-        ];
-    }
-
-
 
 }
