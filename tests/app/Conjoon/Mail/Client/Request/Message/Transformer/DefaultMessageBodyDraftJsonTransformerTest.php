@@ -44,14 +44,6 @@ class DefaultMessageBodyDraftJsonTransformerTest extends TestCase {
     }
 
 
-    public function testTransform_exception() {
-
-        $this->expectException(JsonTransformerException::class);
-        $writer = new DefaultMessageBodyDraftJsonTransformer();
-        $writer->transform([]);
-    }
-
-
     public function testTransform() {
 
         $writer = new DefaultMessageBodyDraftJsonTransformer();
@@ -80,6 +72,25 @@ class DefaultMessageBodyDraftJsonTransformerTest extends TestCase {
         $this->assertSame("text/plain", $draft->getTextPlain()->getMimeType());
         $this->assertSame("text/html", $draft->getTextHtml()->getMimeType());
 
+    }
+
+
+    public function testTransform_noKey() {
+
+        $writer = new DefaultMessageBodyDraftJsonTransformer();
+
+        $data = [
+            "textHtml"      => "foo",
+            "textPlain"     => "bar"
+        ];
+
+        $draft = $writer->transform($data);
+
+        $this->assertInstanceOf(MessageBodyDraft::class, $draft);
+
+        $this->assertNull($draft->getMessageKey());
+        $this->assertSame($data["textHtml"], $draft->getTextHtml()->getContents());
+        $this->assertSame($data["textPlain"], $draft->getTextPlain()->getContents());
     }
 
 

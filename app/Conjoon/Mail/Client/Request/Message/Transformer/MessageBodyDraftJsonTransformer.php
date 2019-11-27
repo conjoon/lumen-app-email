@@ -41,13 +41,11 @@ interface MessageBodyDraftJsonTransformer extends JsonTransformer {
 
     /**
      * Returns a MessageBodyDraft that was created from the data found in $data.
-     * id, mailAccountId and mailFolderId are mandatory fields. This method will
-     * throw an exception if any of these fields are missing.
+     * If id, mailAccountId and mailFolderId are available, a MessageKey will be set for
+     * the MessageBodyDraft.
      *
      * @param array $data
-     * @return MessageItemDraft
-     *
-     * @throws JsonTransformerException
+     * @return MessageBodyDraft
      */
     public function transform(array $data) : MessageBodyDraft;
 

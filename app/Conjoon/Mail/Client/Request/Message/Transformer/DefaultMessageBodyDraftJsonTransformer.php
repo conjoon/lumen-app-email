@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Request\JsonTransformerException,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBodyDraft;
 
@@ -45,13 +44,6 @@ class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTran
      */
     public function transform(array $data) : MessageBodyDraft {
 
-        if (!isset($data["mailAccountId"]) || !isset($data["mailFolderId"]) || !isset($data["id"])) {
-            throw new JsonTransformerException(
-                "Missing compound key information. " .
-                "Fields \"mailAccountId\", \"mailFolderId\", and \"id\" must be set."
-            );
-        }
-
         $textHtml = null;
         $textPlain = null;
 
@@ -63,7 +55,11 @@ class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTran
             $textHtml = new MessagePart($data["textHtml"], "UTF-8", "text/html");
         }
 
-        $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
+        $messageKey = null;
+
+        if (isset($data["mailAccountId"]) && isset($data["mailFolderId"]) && isset($data["id"])) {
+            $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
+        }
 
         $messageBodyDraft = new MessageBodyDraft($messageKey);
         $textHtml && $messageBodyDraft->setTextHtml($textHtml);
