@@ -27,7 +27,6 @@
 use Conjoon\Mail\Client\Request\JsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer,
-    Conjoon\Mail\Client\Writer\MessageItemDraftWriter,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Request\JsonTransformerException,
