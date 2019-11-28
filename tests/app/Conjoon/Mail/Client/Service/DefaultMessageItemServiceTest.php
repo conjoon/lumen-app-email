@@ -27,11 +27,13 @@
 use
     Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Service\DefaultMessageItemService,
+    Conjoon\Mail\Client\Service\ServiceException,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
@@ -41,7 +43,6 @@ use
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
@@ -289,81 +290,88 @@ class DefaultMessageItemServiceTest extends TestCase {
 
 
     /**
-     * Tests createMessageBody()
+     * Tests testCreateMessageBodyDraft_exception()
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBody() {
+    public function testCreateMessageBodyDraft_exception() {
         $service = $this->createService();
+
+        $this->expectException(ServiceException::class);
 
         $mailFolderId = "INBOX";
         $id           = "123";
         $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $folderKey  = $this->createFolderKey($account, $mailFolderId);
-        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+        $messageBodyDraft = new MessageBodyDraft($this->createMessageKey($account, $mailFolderId, $id));
 
-        $clientStub = $service->getMailClient();
-
-        $clientStub->method('createMessageBody')
-            ->with($folderKey)
-            ->willReturn($messageKey);
-
-
-        $clientStub->expects($this->never())
-                   ->method('setFlags');
-
-        $messageBody = $service->createMessageBody($folderKey,"a", "");
-        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
-        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
-
-        $messageBody = $service->createMessageBody($folderKey,"", "a");
-        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
-        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
-
-        $messageBody = $service->createMessageBody($folderKey,"a", "b");
-        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
-        $this->assertSame("WRITTENtext/htmlb", $messageBody->getTextHtml()->getContents());
-
-        $messageBody = $service->createMessageBody($folderKey,"", "");
-        $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
-        $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
+        $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
     }
 
 
     /**
-     * Tests testCreateMessageBody_withDraftFlag()
+     * Tests createMessageBodyDraft()
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBody_withDraftFlag() {
-        $service = $this->createService();
+    public function testCreateMessageBodyDraft() {
 
         $mailFolderId = "INBOX";
         $id           = "123";
         $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $folderKey    = $this->createFolderKey($account, $mailFolderId);
 
-        $folderKey  = $this->createFolderKey($account, $mailFolderId);
-        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+        $clientMockedMethod = function($folderKey, $messageBodyDraft) use ($account, $mailFolderId, $id) {
+            return $messageBodyDraft->setMessageKey($this->createMessageKey($account, $mailFolderId, $id));
+        };
 
+
+        $service    = $this->createService();
         $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft();
+        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
+        $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
 
-        $clientStub->method('createMessageBody')
-                   ->with($folderKey)
-                   ->willReturn($messageKey);
 
-        $flagList = new FlagList;
-        $flagList[0] = new DraftFlag(true);
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft();
+        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
+        $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
 
-        $clientStub->expects($this->once())
-                   ->method("setFlags")
-                   ->with($messageKey, $this->equalTo($flagList));
 
-        $service->createMessageBody($folderKey,"a", "", true);
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft();
+        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
+        $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
+        $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/htmlb", $messageBody->getTextHtml()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
+
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft();
+        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
+        $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
     }
-
 
 
     /**
@@ -381,12 +389,15 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub = $service->getMailClient();
 
-        $clientStub->method('createMessageBody')
-            ->with($folderKey)
+        $messageBodyDraft = new MessageBodyDraft();
+        $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
+
+        $clientStub->method('createMessageBodyDraft')
+            ->with($folderKey, $messageBodyDraft)
             ->willThrowException(new MailClientException);
 
-        $messageBody = $service->createMessageBody($folderKey,"a", "");
-        $this->assertNull($messageBody);
+        $result = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
+        $this->assertNull($result);
     }
 
     /**
@@ -486,7 +497,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList", "setFlags", "createMessageBody", "updateMessageDraft"])
+                        "getFileAttachmentList", "setFlags", "createMessageBodyDraft", "updateMessageDraft"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

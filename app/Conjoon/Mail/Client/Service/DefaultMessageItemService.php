@@ -42,8 +42,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag;
+    Conjoon\Mail\Client\Message\Flag\FlagList;
 
 /**
  * Class DefaultMessageItemService.
@@ -210,40 +209,23 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null, $createDraftFlag = false) :?MessageBody {
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
 
-        $messageBodyDraft = new MessageBodyDraft();
-
-        if ($textPlain) {
-            $plainPart = new MessagePart($textPlain, "UTF-8", "text/plain");
-            $messageBodyDraft->setTextPlain($plainPart);
-        }
-
-        if ($textHtml) {
-            $htmlPart = new MessagePart($textHtml, "UTF-8", "text/html");
-            $messageBodyDraft->setTextHtml($htmlPart);
+        if ($messageBodyDraft->getMessageKey()) {
+            throw new ServiceException(
+                "Cannot create a MessageBodyDraft that has a MessageKey"
+            );
         }
 
         $this->processMessageBodyDraft($messageBodyDraft);
 
-        $messageBody = null;
         try {
-            $messageKey = $this->getMailClient()->createMessageBody($key, $messageBodyDraft);
-
-            if ($createDraftFlag === true) {
-                $flagList   = new FlagList();
-                $flagList[] = new DraftFlag(true);
-                $this->getMailClient()->setFlags($messageKey, $flagList);
-            }
-
-            $messageBody = new MessageBody($messageKey);
-            $messageBody->setTextPlain($messageBodyDraft->getTextPlain());
-            $messageBody->setTextHtml($messageBodyDraft->getTextHtml());
+            return $this->getMailClient()->createMessageBodyDraft($key, $messageBodyDraft);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
 
-        return $messageBody;
+        return null;
     }
 
 

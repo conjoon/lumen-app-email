@@ -38,6 +38,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\Flag\FlagList;
 
 /**
@@ -85,18 +86,18 @@ interface MessageItemService {
 
 
     /**
-     * Creates a single MessageBody and returns it along with the generated MessageKey.
-     * Returns null if the MessageBody could not be created.
+     * Creates a single MessageBodyDraft and returns it along with the generated MessageKey.
+     * Returns null if the MessageBodyDraft could not be created.
+     * The created message will be marked as a draft.
      *
      * @param FolderKey $key
-     * @param string $textPlain
-     * @param string $textHtml
-     * @param boolean $createDraftFlag true to make sure the created message is flagged as a draft.
-     * Defaults to false.
+     * @param MessageBodyDraft $draft The draft to create
      *
-     * @return MessageBody
+     * @return MessageBodyDraft
+     *
+     * @throws ServiceException if $draft already has a MessageKey
      */
-    public function createMessageBody(FolderKey $key, string $textPlain = null, string $textHtml = null, $createDraftFlag = false) :?MessageBody;
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $draft) :?MessageBodyDraft;
 
 
     /**
