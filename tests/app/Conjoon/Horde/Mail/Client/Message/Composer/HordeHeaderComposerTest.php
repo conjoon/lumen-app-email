@@ -89,6 +89,42 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
+    /**
+     * Makes sure header fields are not removed if target fields are not
+     * explicitely defined.
+     */
+    public function testFieldsAreNotRemoved() {
+
+        $composer = new HordeHeaderComposer();
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+
+        $msgText = [
+            "Subject: foobar",
+            "From: a",
+            "Reply-To: b",
+            "To: c",
+            "Cc: d",
+            "Bcc: e",
+        ];
+        $result  = [
+            "Subject: foobar",
+            "From: a",
+            "Reply-To: b",
+            "To: c",
+            "Cc: d",
+            "Bcc: e",
+            "Date: " . (new \DateTime())->format("r"),
+            "User-Agent: php-conjoon"
+        ];
+        $msgText = implode("\n", $msgText);
+        $result  = implode("\n", $result) . "\n\n";
+        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
+
+    }
+
+
+
 // +-----------------------------------
 // | Helper
 // +-----------------------------------

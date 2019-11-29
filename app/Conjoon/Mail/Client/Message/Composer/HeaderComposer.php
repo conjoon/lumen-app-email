@@ -44,6 +44,7 @@ interface HeaderComposer {
      * If $source is null, no header information is available for $target. Implementing
      * APIs are advised to update the header information in $target with default values, then,
      * such as the Date.
+     * Existing fields should not be removed if they are not available in $source.
      *
      * @param string $target
      * @param MessageItemDraft|null $source

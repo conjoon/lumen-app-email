@@ -50,17 +50,46 @@ class HordeHeaderComposer implements HeaderComposer {
 
         if ($mid) {
             // set headers
-            $mid->getSubject() && $headers->addHeader("Subject", $mid->getSubject());
-            $mid->getFrom() && $headers->addHeader("From", $mid->getFrom()->toString());
-            $mid->getReplyTo() && $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
-            $mid->getTo() && $headers->addHeader("To", $mid->getTo()->toString());
-            $mid->getCc() && $headers->addHeader("Cc", $mid->getCc()->toString());
-            $mid->getBcc() && $headers->addHeader("Bcc", $mid->getBcc()->toString());
-            $mid->getDate() && $headers->addHeader("Date", $mid->getDate()->format("r"));
+            if ($mid->getSubject()) {
+                 $headers->removeHeader("Subject");
+                 $headers->addHeader("Subject", $mid->getSubject());
+            }
+
+            if ($mid->getFrom()) {
+                $headers->removeHeader("From");
+                $headers->addHeader("From", $mid->getFrom()->toString());
+            }
+
+            if ($mid->getReplyTo()) {
+                $headers->removeHeader("Reply-To");
+                $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
+            }
+
+            if ($mid->getTo()) {
+                $headers->removeHeader("To");
+                $headers->addHeader("To", $mid->getTo()->toString());
+            }
+
+            if ($mid->getCc()) {
+                $headers->removeHeader("Cc");
+                $headers->addHeader("Cc", $mid->getCc()->toString());
+            }
+
+            if ($mid->getBcc()) {
+                $headers->removeHeader("Bcc");
+                $headers->addHeader("Bcc", $mid->getBcc()->toString());
+            }
+
+            if ($mid->getDate()) {
+                $headers->removeHeader("Date");
+                $headers->addHeader("Date", $mid->getDate()->format("r"));
+            }
+
         }
 
         if (!$mid || !$mid->getDate()) {
-            $headers->addHeader("Date", (new \DateTime())->format("r"));
+            $date = new \DateTime();
+            $headers->addHeader("Date", $date->format("r"));
         }
 
         $headers->addHeader("User-Agent", "php-conjoon");
