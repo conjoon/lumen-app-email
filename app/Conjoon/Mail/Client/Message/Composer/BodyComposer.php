@@ -42,17 +42,16 @@ interface BodyComposer {
 
     /**
      * Processes the $messageBodyDraft and returns a raw Email Message,
-     * properly set up with default-headers and the body. The resulting body
+     * properly set up with required multipart/alternative headers and the body. The resulting body
      * should contain all parts defined in $messageBodyDraft.
      * The created header should be RFC 822/2822/3490/5322 compliant.
-     * Since no header information are available in a MessageBodyDraft, implementing
-     * APIs should take care of meaningful default-headers, such as Date and User-Agent.
      *
+     * @param string $target The raw email message for which the MessageBody should be composed
      * @param MessageBodyDraft $messageBodyDraft
      *
      * @return string A valid MIME message text
      */
-    public function compose(MessageBodyDraft $messageBodyDraft) :string;
+    public function compose(string $target, MessageBodyDraft $messageBodyDraft) :string;
 
 
 }

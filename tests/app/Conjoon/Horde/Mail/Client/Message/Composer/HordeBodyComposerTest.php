@@ -73,14 +73,28 @@ class HordeBodyComposerTest extends TestCase {
             "bar",
             "--="];
 
+        $default = ["Content-Type: multipart/alternative; boundary=\"_zu6MNuSkrIrVCCCyolqPVoz\"",
+            "MIME-Version: 1.0",
+            "",
+            "This message is in MIME format.",
+            "",
+            "--=_zu6MNuSkrIrVCCCyolqPVoz",
+            "Content-Type: text/html; charset=utf-8",
+            "",
+            "foo",
+            "--=_zu6MNuSkrIrVCCCyolqPVoz",
+            "Content-Type: text/plain; charset=utf-8",
+            "",
+            "bar",
+            "--=_zu6MNuSkrIrVCCCyolqPVoz--"];
 
-
-        $result = $composer->compose($messageBodyDraft);
+        $result = $composer->compose(implode("\n", $default), $messageBodyDraft);
 
         $result = explode("\n", $result);
         $caught = 0;
         foreach ($result as $idx => $line) {
             if (in_array($idx, [0, 5, 9, 13])) {
+                $this->assertNotSame($default[$idx], $line);
                 $this->assertContains($txt[$idx], $line);
                 $caught++;
             } else {

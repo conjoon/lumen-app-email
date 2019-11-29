@@ -41,7 +41,10 @@ class HordeBodyComposer implements BodyComposer {
     /**
      * @inheritdoc
      */
-    public function compose(MessageBodyDraft $messageBodyDraft) :string {
+    public function compose(string $target, MessageBodyDraft $messageBodyDraft) :string {
+
+
+        $headers = \Horde_Mime_Headers::parseHeaders($target);
 
         $plain = $messageBodyDraft->getTextPlain();
         $html  = $messageBodyDraft->getTextHtml();
@@ -63,7 +66,7 @@ class HordeBodyComposer implements BodyComposer {
         $basepart[] = $htmlBody;
         $basepart[] = $plainBody;
 
-        $headers = $basepart->addMimeHeaders();
+        $headers = $basepart->addMimeHeaders(["headers" => $headers]);
 
         $txt = trim($headers->toString()) .
                "\n\n" .
