@@ -484,25 +484,65 @@ class HordeClient implements MailClient {
         }
 
         try {
+            $mailAccountId = $key->getMailAccountId();
+            $mailFolderId  = $key->getId();
+
             $client = $this->connect($key);
 
-            $rawMessage = $this->getBodyComposer()->compose($messageBodyDraft);
-            $rawMessage = $this->getHeaderComposer()->compose($rawMessage);
-
-            $ids = $client->append($key->getId(), [["data" =>$rawMessage]]);
-
-            $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), "" . $ids->ids[0]);
-
-            $flagList = new FlagList();
-            $flagList[] = new DraftFlag(true);
-            $this->setFlags($messageKey, $flagList);
-
-            return $messageBodyDraft->setMessageKey($messageKey);
+            return $this->appendAsDraft(
+                $client, $mailAccountId, $mailFolderId, "", $messageBodyDraft
+            );
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }
 
         return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        $key = $messageBodyDraft->getMessageKey();
+
+        if (!$key) {
+            throw new ImapClientException(
+                "Cannot update a MessageBodyDraft that doesn't have a MessageKey"
+            );
+        }
+
+        try {
+
+            $mailFolderId  = $key->getMailFolderId();
+            $mailAccountId = $key->getMailAccountId();
+            $id            = $key->getId();
+
+            $client = $this->connect($key);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+            $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+            $target = $fetchResult[$id]->getFullMsg(false);
+
+            $newDraft = $this->appendAsDraft(
+                $client, $mailAccountId, $mailFolderId, $target, $messageBodyDraft
+            );
+
+            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+
+            return $newDraft;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
+
     }
 
 
@@ -527,7 +567,6 @@ class HordeClient implements MailClient {
             $rangeList->add($id);
 
             $fetchResult = $client->fetch($messageKey->getMailFolderId(), $fetchQuery, ['ids' => $rangeList]);
-
             $msg = $fetchResult[$id]->getFullMsg(false);
 
             $fullText = $this->getHeaderComposer()->compose($msg, $messageItemDraft);
@@ -551,6 +590,34 @@ class HordeClient implements MailClient {
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Appends the specified $rawMessage to $mailFolderId and returns a new MessageBodyDraft with the
+     * created MessageKey.
+     *
+     * @param \Horde_Imap_Client_Socket $client
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $rawMessage
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft
+     */
+    protected function appendAsDraft(\Horde_Imap_Client_Socket $client, string $mailAccountId, string $mailFolderId, string $target, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        $rawMessage = $this->getBodyComposer()->compose($target, $messageBodyDraft);
+        $rawMessage = $this->getHeaderComposer()->compose($rawMessage);
+
+        $ids = $client->append($mailFolderId, [["data" =>$rawMessage]]);
+        $messageKey = new MessageKey($mailAccountId, $mailFolderId, "" . $ids->ids[0]);
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(true);
+        $this->setFlags($messageKey, $flagList);
+
+        return $messageBodyDraft->setMessageKey($messageKey);
+    }
+
 
     /**
      * Builds an attachment from the specified data.

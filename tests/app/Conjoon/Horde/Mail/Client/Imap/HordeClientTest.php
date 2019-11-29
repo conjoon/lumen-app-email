@@ -498,7 +498,7 @@ class HordeClientTest extends TestCase {
         $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive('append')->with(
-            $folderKey->getId(), [["data" => "__HEADER__FULL_TXT_MSG"]]
+            $folderKey->getId(), [["data" => "__HEADER__\n\nFULL_TXT_MSG"]]
         )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
 
         $imapStub->shouldReceive('store')->with(
@@ -516,6 +516,90 @@ class HordeClientTest extends TestCase {
         $this->assertSame($res->getMessageKey()->getMailAccountId(), $account->getId());
         $this->assertSame($res->getMessageKey()->getMailFolderId(), $mailFolderId);
         $this->assertSame($res->getMessageKey()->getId(), $messageItemId);
+    }
+
+
+    /**
+     * Tests updateMessageBodyDraft with a MessageBodyDraft that has no MessageKey
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testCreateMessageBodyDraft_hasNoMessageKey() {
+
+        $this->expectException(ImapClientException::class);
+
+        $client = $this->createClient();
+        $client->updateMessageBodyDraft(new MessageBodyDraft());
+
+    }
+
+
+    /**
+     * Tests updateMessageBodyDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageBodyDraft() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $messageItemId = "989786";
+        $createdId     = "u";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $messageBodyDraft = new MessageBodyDraft($messageKey);
+        $htmlPart = new MessagePart("foo", "UTF-8", "text/html");
+        $plainPart = new MessagePart("bar", "UTF-8", "text/plain");
+        $messageBodyDraft->setTextHtml($htmlPart);
+        $messageBodyDraft->setTextPlain($plainPart);
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive('append')->with(
+            $messageKey->getMailFolderId(), [["data" => "__HEADER__\n\nFETCHED\n\nFULL_TXT_MSG"]]
+        )->andReturn(new \Horde_Imap_Client_Ids([$createdId]));
+
+
+        $imapStub->shouldReceive('store')->with(
+            $mailFolderId, [
+                "ids"    => new \Horde_Imap_Client_Ids([$createdId]),
+                "add"    => ["\\Draft"]
+            ]
+        );
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageItemId);
+
+        $fetchResult = [];
+        $fetchResult[$messageKey->getId()] = new class() {
+            public function getFullMsg($bool) {
+                return "FETCHED";
+            }
+        };
+        $imapStub->shouldReceive("fetch")
+            ->with(
+                $messageKey->getMailFolderId(),
+                \Mockery::any(),
+                ['ids' => $rangeList]
+            )
+            ->andReturn($fetchResult);
+
+        $imapStub->shouldReceive("expunge")
+            ->with(
+                $messageKey->getMailFolderId(),
+                ["delete" => true, "ids" => $rangeList]
+            );
+
+
+        $client = $this->createClient();
+        $res = $client->updateMessageBodyDraft($messageBodyDraft);
+
+        $this->assertNotSame($res, $messageBodyDraft);
+        $this->assertSame($res->getMessageKey()->getMailAccountId(), $account->getId());
+        $this->assertSame($res->getMessageKey()->getMailFolderId(), $mailFolderId);
+        $this->assertSame($res->getMessageKey()->getId(), $createdId);
     }
 
     /**
@@ -578,7 +662,7 @@ class HordeClientTest extends TestCase {
                       )
                   ->andReturn($fetchResult);
 
-        $fullMsg = "__HEADER__BODY";
+        $fullMsg = "__HEADER__\n\nBODY";
 
         $imapStub->shouldReceive("append")
             ->with(
@@ -653,8 +737,8 @@ class HordeClientTest extends TestCase {
 
         return new class() implements BodyComposer {
 
-            public function compose(MessageBodyDraft $draft) :string {
-                return "FULL_TXT_MSG";
+            public function compose(string $target, MessageBodyDraft $draft) :string {
+                return trim($target) . "\n\n" . "FULL_TXT_MSG";
             }
 
         };
@@ -669,7 +753,7 @@ class HordeClientTest extends TestCase {
         return new class() implements HeaderComposer {
 
             public function compose(string $target, MessageItemDraft $draft = null) :string {
-                return "__HEADER__" . $target;
+                return "__HEADER__" . "\n\n" . trim($target);
             }
 
         };

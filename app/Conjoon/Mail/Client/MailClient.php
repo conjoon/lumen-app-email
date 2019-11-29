@@ -99,6 +99,19 @@ interface MailClient {
 
 
     /**
+     * Updates the MessageBody of the specified message.
+     *
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft the created MessageBodyDraft
+     *
+     * @throws MailClientException if any exception occurs, or of the MessageBodyDraft does not have a
+     * MessageKey
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :MessageBodyDraft;
+
+
+    /**
      * Updates envelope information of a Message, if the Message is a draft Message.
      *
      * @param MessageItemDraft $messageItemDraft
