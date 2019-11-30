@@ -34,6 +34,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
     Auth;
 
 use Illuminate\Http\Request;
@@ -47,14 +48,20 @@ class MessageItemController extends Controller {
 
 
     /**
-     * @var MessageItemService
+     * @type MessageItemService
      */
     protected $messageItemService;
 
     /**
-     * @var JsonArrayToMessageItemDraftTransformer
+     * @type MessageItemDraftJsonTransformer
      */
     protected $messageItemDraftJsonTransformer;
+
+
+    /**
+     * @type MessagebodyDraftJsonTransformer
+     */
+    protected $messageBodyDraftJsonTransformer;
 
 
     /**
@@ -62,13 +69,16 @@ class MessageItemController extends Controller {
      *
      * @param MessageItemService $messageItemService
      * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
+     * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
      */
     public function __construct(MessageItemService $messageItemService,
-                                MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
+                                MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
+                                MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer
     ) {
 
-        $this->messageItemService = $messageItemService;
+        $this->messageItemService              = $messageItemService;
         $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
+        $this->messageBodyDraftJsonTransformer = $messageBodyDraftJsonTransformer;
     }
 
 
@@ -163,8 +173,8 @@ class MessageItemController extends Controller {
 
 
     /**
-     * Changes data of a single MessageItem.
-     * Allows for specifying target=MessageItem or target=MessageDraft.
+     * Changes data of a single MessageItem or a MessageBody.
+     * Allows for specifying target=MessageItem, target=MessageDraft or target=MessageBodyDraft.
      * If the target MessageItem is specified, the flag-properties
      * seen=true/false and/or flagged=true/false can be set.
      * If the target is MessageDraft, the following parameters are expected:
@@ -178,6 +188,7 @@ class MessageItemController extends Controller {
      * - from
      * - subject
      * - to
+     * For target=MessageBodyDraft, one of (or both) textPlain/textHtml-parameters should be set.
      *
      * Everything else returns a 405.
      *
@@ -197,6 +208,27 @@ class MessageItemController extends Controller {
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         switch ($target) {
+
+
+            case "MessageBodyDraft":
+                $keys = [
+                    "mailAccountId", "mailFolderId", "id", "textHtml", "textPlain"
+                ];
+                $data = $request->only($keys);
+
+                $messageBody        = $this->messageBodyDraftJsonTransformer->transform($data);
+                $updatedMessageBody = $messageItemService->updateMessageBodyDraft($messageBody);
+
+                $resp = ["success" => !!$updatedMessageBody];
+                if ($updatedMessageBody) {
+                    $resp["data"] = $updatedMessageBody->toJson();
+                } else {
+                    $resp["msg"] = "Updating the MessageBodyDraft failed.";
+                }
+                return response()->json($resp, 200);
+                break;
+
+
 
             case "MessageDraft":
 
@@ -261,7 +293,7 @@ class MessageItemController extends Controller {
             default:
                 return response()->json([
                     "success" => false,
-                    "msg" =>  "\"target\" must be specified with \"MessageDraft\" or \"MessageItem\"."
+                    "msg" =>  "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
                 ], 400);
                 break;
         }
@@ -288,12 +320,6 @@ class MessageItemController extends Controller {
 
         // possible targets: MessageBody
         $target = $request->input('target');
-        // possible parameters: textHtml, textPlain
-        $textPlain = $request->input('textPlain');
-        $textHtml  = $request->input('textHtml');
-
-        $mailFolderId = urldecode($mailFolderId);
-        $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
         if ($target !== "MessageBodyDraft") {
             return response()->json([
@@ -302,10 +328,17 @@ class MessageItemController extends Controller {
             ], 400);
         }
 
-        $messageBody = $messageItemService->createMessageBody(
-            $folderKey, $textPlain, $textHtml, true);
+        $mailFolderId = urldecode($mailFolderId);
+        $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
-        if (!$messageBody) {
+        $keys = ["textHtml", "textPlain"];
+        $data = $request->only($keys);
+
+        $messageBody             = $this->messageBodyDraftJsonTransformer->transform($data);
+
+        $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
+
+        if (!$createdMessageBodyDraft) {
             return response()->json([
                 "success" => false,
                 "msg"     => "Creating the MessageBody failed."
@@ -313,8 +346,8 @@ class MessageItemController extends Controller {
         }
 
         return response()->json([
-            "success" => !!$messageBody ,
-            "data"    => $messageBody->toJson()
+            "success" => !!$createdMessageBodyDraft ,
+            "data"    => $createdMessageBodyDraft->toJson()
         ], 200);
 
     }
