@@ -118,6 +118,9 @@ $app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraf
     return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 });
 
+$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer',  function ($app) {
+    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
+});
 
 $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));

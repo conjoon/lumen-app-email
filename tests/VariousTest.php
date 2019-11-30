@@ -96,6 +96,11 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer']))
         );
 
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer::class,
+            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer']))
+        );
+
         $attachmentService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\AttachmentService']));
         $attachmentServiceMailClient = $attachmentService->getMailClient();
         $this->assertInstanceOf(
