@@ -101,11 +101,28 @@ interface MessageItemService {
 
 
     /**
+     * Updates the MessageBodyDraft with the data.
+     * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
+     * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
+     * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
+     * The MessageBodyDraft will explicitely get flagged as a "draft".
+     *
+     * @param MessageBodyDraft $draft The draft to create
+     *
+     * @return MessageBodyDraft
+     *
+     * @throws ServiceException if $draft has no messageKey
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $draft) :?MessageBodyDraft;
+
+
+    /**
      * Updated the Message with the specified MessageItemDraft (if the message is flagged as "draft") and returns the
      * updated MessageItemDraft.
      * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
      * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
      * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
+     * The MessageBodyDraft will explicitely get flagged as a "draft".
      *
      * @param MessageItemDraft $messageItemDraft
      *

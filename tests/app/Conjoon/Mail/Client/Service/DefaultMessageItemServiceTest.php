@@ -458,6 +458,116 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNull($messageItemDraft);
     }
 
+
+    /**
+     * Tests testUpdateMessageBodyDraft_exception()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageBodyDraft_exception() {
+        $service = $this->createService();
+
+        $this->expectException(ServiceException::class);
+
+        $messageBodyDraft = new MessageBodyDraft();
+
+        $service->updateMessageBodyDraft($messageBodyDraft);
+    }
+
+
+    /**
+     * Tests testUpdateMessageBodyDraft_returning_null()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageBodyDraft_returning_null() {
+
+        $service = $this->createService();
+
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $messageBodyDraft = new MessageBodyDraft($messageKey);
+
+        $clientStub = $service->getMailClient();
+
+        $clientStub->method('updateMessageBodyDraft')
+            ->with($messageBodyDraft)
+            ->willThrowException(new MailClientException);
+
+        $newDraft = $service->updateMessageBodyDraft($messageBodyDraft);
+        $this->assertNull($newDraft);
+    }
+
+
+    /**
+     * Tests updateMessageBodyDraft()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testUpdateMessageBodyDraft() {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $newId        = "abc";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $getKey       = function() use($account, $mailFolderId, $id){return $this->createMessageKey($account, $mailFolderId, $id);};
+
+        $clientMockedMethod = function($messageBodyDraft) use ($account, $mailFolderId, $newId) {
+            return $messageBodyDraft->setMessageKey($this->createMessageKey($account, $mailFolderId, $newId));
+        };
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft($getKey());
+        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
+        $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
+
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft($getKey());
+        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
+        $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
+        $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
+
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft($getKey());
+        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
+        $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
+        $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
+        $this->assertSame("WRITTENtext/plaina", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/htmlb", $messageBody->getTextHtml()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
+
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $messageBodyDraft = new MessageBodyDraft($getKey());
+        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
+        $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
+        $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
+        $this->assertNotSame($messageBodyDraft, $messageBody);
+    }
+
+
+
 // ------------------
 //     Test Helper
 // ------------------
@@ -497,7 +607,8 @@ class DefaultMessageItemServiceTest extends TestCase {
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList", "setFlags", "createMessageBodyDraft", "updateMessageDraft"])
+                        "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
+                        "updateMessageDraft", "updateMessageBodyDraft"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

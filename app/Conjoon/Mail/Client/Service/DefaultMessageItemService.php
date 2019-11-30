@@ -232,6 +232,29 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
+
+        if (!$messageBodyDraft->getMessageKey()) {
+            throw new ServiceException(
+                "Cannot update a MessageBodyDraft that has no MessageKey"
+            );
+        }
+
+        $this->processMessageBodyDraft($messageBodyDraft);
+
+        try {
+            return $this->getMailClient()->updateMessageBodyDraft($messageBodyDraft);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
 
         $updated = null;
