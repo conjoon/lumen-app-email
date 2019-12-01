@@ -93,7 +93,7 @@ class ListMessageItem extends MessageItem {
 //  Jsonable interface
 // --------------------------------
 
-     /**
+    /**
      * @inheritdoc
      */
     public function toJson() :array{

@@ -32,7 +32,8 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Util\Modifiable;
 
 
 class AbstractMessageItemTest extends TestCase
@@ -51,10 +52,11 @@ class AbstractMessageItemTest extends TestCase
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(Jsonable::class, $messageItem);
+        $this->assertInstanceOf(Modifiable::class, $messageItem);
 
-        $this->assertFalse($messageItem->getSeen());
-        $this->assertFalse($messageItem->getFlagged());
-        $this->assertFalse($messageItem->getDraft());
+        $this->assertNull($messageItem->getSeen());
+        $this->assertNull($messageItem->getFlagged());
+        $this->assertNull($messageItem->getDraft());
 
     }
 
@@ -67,6 +69,8 @@ class AbstractMessageItemTest extends TestCase
         $item = $this->getItemConfig();
 
         $messageItem = $this->createMessageItem(null, $item);
+
+        $this->assertSame([], $messageItem->getModifiedFields());
 
         foreach ($item as $key => $value) {
 
@@ -232,6 +236,33 @@ class AbstractMessageItemTest extends TestCase
         $this->assertSame(3, $caught);
 
     }
+
+
+    /**
+     * Tests modifiable
+     */
+    public function testModifiable() {
+
+        $messageKey  = $this->createMessageKey();
+        $messageItem = $this->createMessageItem($messageKey);
+
+        $conf = $this->getItemConfig();
+        $mod  = [];
+        $it   = 0;
+
+        $fieldLength = count(array_keys($conf));
+        $this->assertTrue($fieldLength > 0);
+
+        $this->assertSame($mod, $messageItem->getModifiedFields());
+        foreach ($conf as $field => $value) {
+            $messageItem->{"set" . ucfirst($field)}($value);
+            $mod[] = $field;
+            $this->assertSame($mod, $messageItem->getModifiedFields());
+            $it++;
+        }
+        $this->assertSame($fieldLength, $it);
+    }
+
 
 // ---------------------
 //    Helper Functions

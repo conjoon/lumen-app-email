@@ -29,7 +29,7 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\MailClientException;
+    Conjoon\Util\Modifiable;
 
 
 class MessageItemDraftTest extends TestCase {
@@ -47,6 +47,7 @@ class MessageItemDraftTest extends TestCase {
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
+        $this->assertInstanceOf(Modifiable::class, $messageItem);
 
         $this->assertTrue($messageItem->getDraft());
 
@@ -64,6 +65,9 @@ class MessageItemDraftTest extends TestCase {
         $this->assertSame($messageKey, $newItem->getMessageKey());
         $this->assertNotSame($messageKey, $messageItem->getMessageKey());
         $this->assertNotSame($newItem, $messageItem);
+
+        $this->assertSame([], $messageItem->getModifiedFields());
+        $this->assertSame([], $newItem->getModifiedFields());
 
         $newJson = $newItem->toJson();
         $oldJson = $messageItem->toJson();
@@ -177,6 +181,26 @@ class MessageItemDraftTest extends TestCase {
         $this->assertSame([], $json["cc"]);
         $this->assertSame([], $json["bcc"]);
 
+    }
+
+
+    /**
+     * Tests modifiable
+     */
+    public function testModifiable() {
+
+        $messageKey  = $this->createMessageKey();
+        $messageItem = $this->createMessageItem($messageKey);
+
+        $this->assertSame([], $messageItem->getModifiedFields());
+        $messageItem->setCc($this->getItemConfig()["cc"]);
+        $this->assertSame(["cc"], $messageItem->getModifiedFields());
+
+        $messageItem->setBcc($this->getItemConfig()["bcc"]);
+        $this->assertSame(["cc", "bcc"], $messageItem->getModifiedFields());
+
+        $messageItem->setReplyTo($this->getItemConfig()["replyTo"]);
+        $this->assertSame(["cc", "bcc", "replyTo"], $messageItem->getModifiedFields());
     }
 
 // ---------------------

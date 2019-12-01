@@ -30,6 +30,8 @@ namespace Conjoon\Mail\Client\Message;
 use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Util\Jsonable,
+    Conjoon\Util\Modifiable,
+    Conjoon\Util\ModifiableTrait,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
@@ -52,7 +54,9 @@ use Conjoon\Mail\Client\Data\MailAddressList,
  *
  * @package Conjoon\Mail\Client\Message
  */
-abstract class AbstractMessageItem implements Jsonable {
+abstract class AbstractMessageItem implements Jsonable, Modifiable {
+
+    use ModifiableTrait;
 
     /**
      * @var MessageKey
@@ -82,7 +86,7 @@ abstract class AbstractMessageItem implements Jsonable {
     /**
      * @var bool
      */
-    protected $seen = false;
+    protected $seen;
 
     /**
      * @var bool
@@ -92,12 +96,12 @@ abstract class AbstractMessageItem implements Jsonable {
     /**
      * @var bool
      */
-    protected $draft = false;
+    protected $draft;
 
     /**
      * @var bool
      */
-    protected $flagged = false;
+    protected $flagged;
 
     /**
      * @var bool
@@ -123,14 +127,14 @@ abstract class AbstractMessageItem implements Jsonable {
             return;
         }
 
-
+        $this->suspendModifiable();
         foreach ($data as $key => $value) {
             if (property_exists($this, $key)) {
                 $method = "set" . ucfirst($key);
                 $this->{$method}($value);
             }
-
         }
+        $this->resumeModifiable();
     }
 
 
@@ -142,6 +146,7 @@ abstract class AbstractMessageItem implements Jsonable {
      * @return $this
      */
     public function setTo(MailAddressList $mailAddressList) {
+        $this->addModified("to");
         $this->to = clone($mailAddressList);
         return $this;
     }
@@ -155,6 +160,7 @@ abstract class AbstractMessageItem implements Jsonable {
      * @return $this
      */
     public function setFrom(MailAddress $mailAddress = null) {
+        $this->addModified("from");
         $this->from = $mailAddress === null ? null : clone($mailAddress);
         return $this;
     }
@@ -168,6 +174,7 @@ abstract class AbstractMessageItem implements Jsonable {
      * @return $this
      */
     public function setDate(\DateTime $date) {
+        $this->addModified("date");
         $this->date = clone($date);
         return $this;
     }
@@ -208,7 +215,7 @@ abstract class AbstractMessageItem implements Jsonable {
                         throw new \TypeError("Wrong type for \"$property\" submitted");
                     }
 
-
+                    $this->addModified($property);
                     $this->{$property} = $value;
                     return $this;
                 }
@@ -294,7 +301,6 @@ abstract class AbstractMessageItem implements Jsonable {
             'recent'         => $this->getRecent(),
         ]);
     }
-
 
 
 

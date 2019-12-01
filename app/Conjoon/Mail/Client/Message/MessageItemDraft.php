@@ -65,6 +65,7 @@ class MessageItemDraft extends AbstractMessageItem {
      * Sets the "messageKey" by creating a new MessageItemDraft with the specified
      * key and returning a new instance with this data.
      * No references to any data of the original instance will be available.
+     * The state of Modifiable will not carry over.
      *
      * @param MessageKey $messageKey
      *
@@ -76,6 +77,7 @@ class MessageItemDraft extends AbstractMessageItem {
 
         $draft = new self($messageKey);
 
+        $draft->suspendModifiable();
         foreach ($d as $key => $value) {
 
             if (in_array($key, ["id", "mailAccountId", "mailFolderId"])) {
@@ -98,7 +100,7 @@ class MessageItemDraft extends AbstractMessageItem {
                 $draft->{$setter}($this->{$getter}());
             }
         }
-
+        $draft->resumeModifiable();
         return $draft;
     }
 
@@ -111,6 +113,7 @@ class MessageItemDraft extends AbstractMessageItem {
      * @return $this
      */
     public function setCc(MailAddressList $mailAddressList) {
+        $this->addModified("cc");
         $this->cc = clone($mailAddressList);
         return $this;
     }
@@ -124,6 +127,7 @@ class MessageItemDraft extends AbstractMessageItem {
      * @return $this
      */
     public function setBcc(MailAddressList $mailAddressList) {
+        $this->addModified("bcc");
         $this->bcc = clone($mailAddressList);
         return $this;
     }
@@ -137,6 +141,7 @@ class MessageItemDraft extends AbstractMessageItem {
      * @return $this
      */
     public function setReplyTo(MailAddress $replyTo = null) {
+        $this->addModified("replyTo");
         $this->replyTo = $replyTo === null ? null : clone($replyTo);
         return $this;
     }
@@ -145,10 +150,9 @@ class MessageItemDraft extends AbstractMessageItem {
 // --------------------------------
 //  Jsonable interface
 // --------------------------------
+
     /**
-     * Returns an array representing this MessageItem.
-     *
-     * @return array
+     * @inheritdoc
      */
     public function toJson() :array{
 
@@ -158,4 +162,5 @@ class MessageItemDraft extends AbstractMessageItem {
             'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : []
         ]);
     }
+
 }
