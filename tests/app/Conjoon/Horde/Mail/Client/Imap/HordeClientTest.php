@@ -675,8 +675,7 @@ class HordeClientTest extends TestCase {
             ->with(
                 $messageKey->getMailFolderId(),
                 ["ids" => $resultList,
-                 "add" => ["\Draft"],
-                 "remove" => ["\Seen", "\Flagged"]
+                 "add" => ["\Draft"]
                 ]
             );
 

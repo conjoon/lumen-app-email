@@ -235,9 +235,10 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     public function getFlagList() :FlagList {
         $flagList   = new FlagList();
-        $flagList[] = new DraftFlag($this->getDraft());
-        $flagList[] = new SeenFlag($this->getSeen());
-        $flagList[] = new FlaggedFlag($this->getFlagged());
+
+        $this->getDraft() !== null && $flagList[] = new DraftFlag($this->getDraft());
+        $this->getSeen() !== null && $flagList[] = new SeenFlag($this->getSeen());
+        $this->getFlagged() !== null && $flagList[] = new FlaggedFlag($this->getFlagged());
 
         return $flagList;
     }

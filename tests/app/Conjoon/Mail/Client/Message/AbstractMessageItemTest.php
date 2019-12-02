@@ -239,6 +239,19 @@ class AbstractMessageItemTest extends TestCase
 
 
     /**
+     * getFlagList()
+     */
+    public function testGetFlagList_empty() {
+
+        $item = $this->createMessageItem();
+
+        $flagList = $item->getFlagList();
+
+        $this->assertTrue(count($flagList) === 0);
+    }
+
+
+    /**
      * Tests modifiable
      */
     public function testModifiable() {
