@@ -46,7 +46,7 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
-    public function testWrite() {
+    public function testWrite_1() {
 
         $composer = new HordeHeaderComposer();
 
@@ -56,11 +56,17 @@ class HordeHeaderComposerTest extends TestCase {
         $result  = [
             "Subject: Test",
             "Date: " . (new \DateTime())->format("r"),
-            "User-Agent: php-conjoon"
+            "User-Agent: php-conjoon",
+            "",
+            ""
         ];
         $msgText = implode("\n", $msgText);
-        $result  = implode("\n", $result) . "\n\n";
-        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
+        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
+    }
+
+    public function testWrite_2() {
+
+        $composer = new HordeHeaderComposer();
 
 
         $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
@@ -81,11 +87,12 @@ class HordeHeaderComposerTest extends TestCase {
             "Cc: " . $this->createAddress("cc")->toString(),
             "Bcc: " . $this->createAddress("bcc")->toString(),
             "Date: " . (new \DateTime())->format("r"),
-            "User-Agent: php-conjoon"
+            "User-Agent: php-conjoon",
+            "",
+            ""
         ];
         $msgText = implode("\n", $msgText);
-        $result  = implode("\n", $result) . "\n\n";
-        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
+        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
     }
 
 
@@ -115,11 +122,13 @@ class HordeHeaderComposerTest extends TestCase {
             "Cc: d",
             "Bcc: e",
             "Date: " . (new \DateTime())->format("r"),
-            "User-Agent: php-conjoon"
+            "User-Agent: php-conjoon",
+            "",
+            ""
         ];
         $msgText = implode("\n", $msgText);
-        $result  = implode("\n", $result) . "\n\n";
-        $this->assertSame($result, $composer->compose($msgText, $messageItemDraft));
+        $result  = $result;
+        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
 
     }
 

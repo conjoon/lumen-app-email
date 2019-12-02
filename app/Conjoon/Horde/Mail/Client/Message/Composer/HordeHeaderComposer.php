@@ -49,40 +49,37 @@ class HordeHeaderComposer implements HeaderComposer {
         $mid = $source;
 
         if ($mid) {
-            // set headers
-            if ($mid->getSubject()) {
-                 $headers->removeHeader("Subject");
-                 $headers->addHeader("Subject", $mid->getSubject());
-            }
 
-            if ($mid->getFrom()) {
-                $headers->removeHeader("From");
-                $headers->addHeader("From", $mid->getFrom()->toString());
-            }
+            $modified = $mid->getModifiedFields();
 
-            if ($mid->getReplyTo()) {
-                $headers->removeHeader("Reply-To");
-                $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
-            }
+            foreach ($modified as $field) {
 
-            if ($mid->getTo()) {
-                $headers->removeHeader("To");
-                $headers->addHeader("To", $mid->getTo()->toString());
-            }
+                switch ($field) {
 
-            if ($mid->getCc()) {
-                $headers->removeHeader("Cc");
-                $headers->addHeader("Cc", $mid->getCc()->toString());
-            }
+                    case "replyTo":
+                        $headers->removeHeader("Reply-To");
+                        $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
+                        break;
 
-            if ($mid->getBcc()) {
-                $headers->removeHeader("Bcc");
-                $headers->addHeader("Bcc", $mid->getBcc()->toString());
-            }
+                    case "subject":
+                        $headers->removeHeader("Subject");
+                        $headers->addHeader("Subject", $mid->getSubject());
+                        break;
 
-            if ($mid->getDate()) {
-                $headers->removeHeader("Date");
-                $headers->addHeader("Date", $mid->getDate()->format("r"));
+                    case "date":
+                        $headers->removeHeader("Date");
+                        $headers->addHeader("Date", $mid->getDate()->format("r"));
+                        break;
+
+                    default:
+                        $getter      = "get" . ucfirst($field);
+                        $headerField = ucfirst($field);
+                        $headers->removeHeader($headerField);
+                        $headers->addHeader($headerField, $mid->{$getter}()->toString());
+                        break;
+                }
+
+
             }
 
         }
