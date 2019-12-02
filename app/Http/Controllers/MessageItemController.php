@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
+    Conjoon\Util\ArrayUtil,
     Auth;
 
 use Illuminate\Http\Request;
@@ -50,18 +51,18 @@ class MessageItemController extends Controller {
     /**
      * @type MessageItemService
      */
-    protected $messageItemService;
+    protected MessageItemService $messageItemService;
 
     /**
      * @type MessageItemDraftJsonTransformer
      */
-    protected $messageItemDraftJsonTransformer;
+    protected MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer;
 
 
     /**
      * @type MessagebodyDraftJsonTransformer
      */
-    protected $messageBodyDraftJsonTransformer;
+    protected MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer;
 
 
     /**
@@ -245,7 +246,7 @@ class MessageItemController extends Controller {
                     "success" => !!$updatedMessageItemDraft
                 ];
                 if ($updatedMessageItemDraft) {
-                    $resp["data"] = $updatedMessageItemDraft->toJson();
+                    $resp["data"] = ArrayUtil::intersect($updatedMessageItemDraft->toJson(), array_keys($data));
                 } else {
                     $resp["msg"] = "Updating the MessageDraft failed.";
                 }

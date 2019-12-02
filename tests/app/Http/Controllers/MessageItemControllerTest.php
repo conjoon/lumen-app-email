@@ -38,7 +38,8 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
-    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
+    Conjoon\Util\ArrayUtil;
 
 
 
@@ -556,7 +557,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => $messageItemDraft->toJson()
+            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), ["subject", "to"])
         ]);
     }
 
