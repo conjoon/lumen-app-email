@@ -38,6 +38,9 @@ use Conjoon\Mail\Client\Data\MailAddress,
  * This implementation will at least set the "date" field to the value of NOW if the
  * field is missing in the $data-array. All other fields will only be set if they are
  * available in $data.
+ * This implementation considers the Modifiable state of a MessageItemDraft and
+ * will not pass the values to the constructor to make sure the data changed here is marked as
+ * modified.
  *
  * @package Conjoon\Mail\Client\Message\Request\Transformer
  */
@@ -56,44 +59,48 @@ class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTran
             );
         }
 
-        $draftData = [];
-
-        if (isset($data["date"])) {
-            $draftData["date"] = new \DateTime("@" . $data["date"]);
-        } else {
-            $draftData["date"] = new \DateTime();
-        }
-
-        if (isset($data["seen"])) {
-            $draftData["seen"] = $data["seen"];
-        }
-
-        if (isset($data["flagged"])) {
-            $draftData["flagged"] = $data["flagged"];
-        }
-
-        if (isset($data["subject"])) {
-            $draftData["subject"] = $data["subject"];
-        }
-        if (isset($data["from"]) && ($from = MailAddress::fromJsonString($data["from"]))) {
-            $draftData["from"] = $from;
-        }
-        if (isset($data["replyTo"]) && ($replyTo = MailAddress::fromJsonString($data["replyTo"]))) {
-            $draftData["replyTo"] = $replyTo;
-        }
-        if (isset($data["to"]) && ($to = MailAddressList::fromJsonString($data["to"]))) {
-            $draftData["to"] = $to;
-        }
-        if (isset($data["cc"]) && ($cc = MailAddressList::fromJsonString($data["cc"]))) {
-            $draftData["cc"] = $cc;
-        }
-        if (isset($data["bcc"]) && ($bcc = MailAddressList::fromJsonString($data["bcc"]))) {
-            $draftData["bcc"] = $bcc;
-        }
-
+        // consider Modifiable and do not pass to constructor
         $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
+        $draft      = new MessageItemDraft($messageKey);
 
-        return new MessageItemDraft($messageKey, $draftData);
+        foreach($data as $field => $value) {
+
+            if (in_array($field, ["mailAccountId", "mailFolderId", "id"])) {
+                continue;
+            }
+
+            $setter = "set" . ucfirst($field);
+
+            switch ($field) {
+
+                case "from":
+                case "replyTo":
+                    $add = MailAddress::fromJsonString($value);
+                    $draft->{$setter}($add);
+                    break;
+
+                case "to":
+                case "cc":
+                case "bcc":
+                    $add = MailAddressList::fromJsonString($value);
+                    $draft->{$setter}($add);
+                    break;
+
+                case "date":
+                    $draft->{$setter}(new \DateTime("@" . $data["date"]));
+                    break;
+
+                default:
+                    $draft->{$setter}($value);
+                    break;
+            }
+        }
+
+        if (!$draft->getDate()) {
+            $draft->setDate(new \DateTime());
+        }
+
+        return $draft;
     }
 
 }
