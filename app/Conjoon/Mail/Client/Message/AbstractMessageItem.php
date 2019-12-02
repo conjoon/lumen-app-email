@@ -110,6 +110,20 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
 
 
     /**
+     * Returns true is the specified field is a header field.
+     *
+     * @param $field
+     *
+     * @return boolean
+     */
+    public static function isHeaderField($field) {
+
+        return in_array($field, ["from", "to", "subject", "date"]);
+
+    }
+
+
+    /**
      * MessageItem constructor.
      *
      * @param MessageKey $messageKey
@@ -145,9 +159,9 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * @param MailAddressList $mailAddressList
      * @return $this
      */
-    public function setTo(MailAddressList $mailAddressList) {
+    public function setTo(MailAddressList $mailAddressList = null) {
         $this->addModified("to");
-        $this->to = clone($mailAddressList);
+        $this->to = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
     }
 

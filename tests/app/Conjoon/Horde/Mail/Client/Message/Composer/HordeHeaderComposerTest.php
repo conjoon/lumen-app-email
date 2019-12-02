@@ -132,7 +132,48 @@ class HordeHeaderComposerTest extends TestCase {
 
     }
 
+    /**
+     * Makes sure everything works as expected if header address fields are null
+     */
+    public function testNullAddress() {
 
+        $composer = new HordeHeaderComposer();
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+
+
+        $messageItemDraft->setFrom(null);
+        $messageItemDraft->setReplyTo(null);
+        $messageItemDraft->setCc(null);
+        $messageItemDraft->setBcc(null);
+        $messageItemDraft->setTo(null);
+
+        $result  = [
+            "Date: " . (new \DateTime())->format("r"),
+            "User-Agent: php-conjoon",
+            "",
+            ""
+        ];
+        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose("", $messageItemDraft)));
+    }
+
+    public function testStringable() {
+
+        $composer = new HordeHeaderComposer();
+
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+        $messageItemDraft->setSeen(true);
+
+        $result  = [
+            "Date: " . (new \DateTime())->format("r"),
+            "User-Agent: php-conjoon",
+            "",
+            ""
+        ];
+
+        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose("", $messageItemDraft)));
+    }
 
 // +-----------------------------------
 // | Helper

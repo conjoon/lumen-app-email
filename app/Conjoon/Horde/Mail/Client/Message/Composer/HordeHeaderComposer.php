@@ -28,7 +28,8 @@ declare(strict_types=1);
 namespace Conjoon\Horde\Mail\Client\Message\Composer;
 
 use Conjoon\Mail\Client\Message\Composer\HeaderComposer,
-    Conjoon\Mail\Client\Message\MessageItemDraft;
+    Conjoon\Mail\Client\Message\MessageItemDraft,
+    Conjoon\Util\Stringable;
 
 /**
  * Class HordeHeaderComposer
@@ -54,12 +55,11 @@ class HordeHeaderComposer implements HeaderComposer {
 
             foreach ($modified as $field) {
 
-                switch ($field) {
+                if (!MessageItemDraft::isHeaderField($field)) {
+                    continue;
+                }
 
-                    case "replyTo":
-                        $headers->removeHeader("Reply-To");
-                        $headers->addHeader("Reply-To", $mid->getReplyTo()->toString());
-                        break;
+                switch ($field) {
 
                     case "subject":
                         $headers->removeHeader("Subject");
@@ -71,17 +71,33 @@ class HordeHeaderComposer implements HeaderComposer {
                         $headers->addHeader("Date", $mid->getDate()->format("r"));
                         break;
 
+                    case "replyTo":
+                        $headers->removeHeader("Reply-To");
+                        $retrieved = $mid->getReplyTo();
+                        if ($retrieved) {
+                            $headers->addHeader("Reply-To", $retrieved->toString());
+                        }
+                        break;
+
                     default:
                         $getter      = "get" . ucfirst($field);
                         $headerField = ucfirst($field);
                         $headers->removeHeader($headerField);
-                        $headers->addHeader($headerField, $mid->{$getter}()->toString());
+                        $retrieved = $mid->{$getter}();
+
+                        if ($retrieved === null) {
+                            break;
+                        }
+
+                        if ($retrieved instanceof Stringable) {
+                            $headers->addHeader($headerField, $retrieved->toString());
+                        } else {
+                            $headers->addHeader($headerField, $retrieved);
+                        }
+
                         break;
                 }
-
-
             }
-
         }
 
         if (!$mid || !$mid->getDate()) {
@@ -93,8 +109,6 @@ class HordeHeaderComposer implements HeaderComposer {
 
 
         return trim($headers->toString()) . "\n\n" . trim($part->toString());
-
-
     }
 
 

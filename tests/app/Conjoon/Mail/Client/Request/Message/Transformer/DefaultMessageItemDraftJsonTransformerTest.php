@@ -134,6 +134,45 @@ class DefaultMessageItemDraftJsonTransformerTest extends TestCase {
     }
 
 
+    public function testTransform_nullAddress() {
+
+        $writer = new DefaultMessageItemDraftJsonTransformer();
+
+        $data = [
+            "mailAccountId" => "a",
+            "mailFolderId"  => "b",
+            "id"            => "c",
+            "from"    => null,
+            "replyTo" => null,
+            "to"      => null,
+            "cc"      => null,
+            "bcc"     => null
+        ];
+
+        $draft = $writer->transform([
+            "mailAccountId" => "a",
+            "mailFolderId"  => "b",
+            "id"            => "c",
+            "from"          => "[]",
+            "replyTo"       => "[]",
+            "to"            => "[]",
+            "cc"            => "[]",
+            "bcc"           => "[]"
+        ]);
+
+        $this->assertInstanceOf(MessageItemDraft::class, $draft);
+
+        $this->assertSame($data["mailAccountId"], $draft->getMessageKey()->getMailAccountId());
+        $this->assertSame($data["mailFolderId"], $draft->getMessageKey()->getMailFolderId());
+        $this->assertSame($data["id"], $draft->getMessageKey()->getId());
+        $this->assertSame($data["from"], $draft->getFrom());
+        $this->assertSame($data["replyTo"], $draft->getReplyTo());
+        $this->assertSame($data["to"], $draft->getTo());
+        $this->assertSame($data["cc"], $draft->getCc());
+        $this->assertSame($data["bcc"], $draft->getBcc());
+    }
+
+
 // +--------------------------------------
 // | Helper
 // +--------------------------------------

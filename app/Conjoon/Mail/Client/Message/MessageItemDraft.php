@@ -60,6 +60,15 @@ class MessageItemDraft extends AbstractMessageItem {
      */
     protected $draft = true;
 
+    /**
+     * @inheritdoc
+     */
+    public static function isHeaderField($field) {
+
+        return parent::isHeaderField($field) || in_array($field, ["cc", "bcc", "replyTo"]);
+
+    }
+
 
     /**
      * Sets the "messageKey" by creating a new MessageItemDraft with the specified
@@ -112,9 +121,9 @@ class MessageItemDraft extends AbstractMessageItem {
      * @param MailAddressList $mailAddressList
      * @return $this
      */
-    public function setCc(MailAddressList $mailAddressList) {
+    public function setCc(MailAddressList $mailAddressList = null) {
         $this->addModified("cc");
-        $this->cc = clone($mailAddressList);
+        $this->cc = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
     }
 
@@ -126,9 +135,9 @@ class MessageItemDraft extends AbstractMessageItem {
      * @param MailAddressList $mailAddressList
      * @return $this
      */
-    public function setBcc(MailAddressList $mailAddressList) {
+    public function setBcc(MailAddressList $mailAddressList = null) {
         $this->addModified("bcc");
-        $this->bcc = clone($mailAddressList);
+        $this->bcc = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
     }
 

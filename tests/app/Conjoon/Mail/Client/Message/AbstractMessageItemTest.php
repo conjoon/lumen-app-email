@@ -277,6 +277,25 @@ class AbstractMessageItemTest extends TestCase
     }
 
 
+    /**
+     * Tests isHeaderField
+     */
+    public function testIsHeaderField() {
+
+        $fields = ["from", "to", "subject", "date"];
+
+        foreach ($fields as $field) {
+            $this->assertTrue(AbstractMessageItem::isHeaderField($field));
+        }
+
+        $fields = ["recent", "seen", "flagged", "answered"];
+
+        foreach ($fields as $field) {
+            $this->assertFalse(AbstractMessageItem::isHeaderField($field));
+        }
+    }
+
+
 // ---------------------
 //    Helper Functions
 // ---------------------

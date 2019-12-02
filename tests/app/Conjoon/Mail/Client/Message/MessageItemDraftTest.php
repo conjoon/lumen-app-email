@@ -185,8 +185,8 @@ class MessageItemDraftTest extends TestCase {
 
 
     /**
-     * Tests modifiable
-     */
+ * Tests modifiable
+ */
     public function testModifiable() {
 
         $messageKey  = $this->createMessageKey();
@@ -202,6 +202,64 @@ class MessageItemDraftTest extends TestCase {
         $messageItem->setReplyTo($this->getItemConfig()["replyTo"]);
         $this->assertSame(["cc", "bcc", "replyTo"], $messageItem->getModifiedFields());
     }
+
+
+    /**
+     * Tests various nullable address header fields
+     */
+    public function testAddressesNull() {
+
+        $messageItem = $this->createMessageItem(null, $this->getItemConfig());
+
+        $modified = $messageItem->getModifiedFields();
+        $this->assertFalse(in_array("from", $modified));
+        $this->assertFalse(in_array("replyTo", $modified));
+        $this->assertFalse(in_array("to", $modified));
+        $this->assertFalse(in_array("cc", $modified));
+        $this->assertFalse(in_array("bcc", $modified));
+
+        $messageItem->setFrom(null);
+        $messageItem->setReplyTo(null);
+        $messageItem->setTo(null);
+        $messageItem->setCc(null);
+        $messageItem->setBcc(null);
+
+        $json = $messageItem->toJson();
+
+        $this->assertSame([], $json["from"]);
+        $this->assertSame([], $json["replyTo"]);
+        $this->assertSame([], $json["to"]);
+        $this->assertSame([], $json["cc"]);
+        $this->assertSame([], $json["bcc"]);
+
+        $modified = $messageItem->getModifiedFields();
+        $this->assertTrue(in_array("from", $modified));
+        $this->assertTrue(in_array("replyTo", $modified));
+        $this->assertTrue(in_array("to", $modified));
+        $this->assertTrue(in_array("cc", $modified));
+        $this->assertTrue(in_array("bcc", $modified));
+
+    }
+
+
+    /**
+     * Tests isHeaderField
+     */
+    public function testIsHeaderField() {
+
+        $fields = ["from", "to", "subject", "date", "replyTo", "cc", "bcc"];
+
+        foreach ($fields as $field) {
+            $this->assertTrue(MessageItemDraft::isHeaderField($field));
+        }
+
+        $fields = ["recent", "seen", "flagged", "answered", "draft", "foobar"];
+
+        foreach ($fields as $field) {
+            $this->assertFalse(MessageItemDraft::isHeaderField($field));
+        }
+    }
+
 
 // ---------------------
 //    Helper Functions
