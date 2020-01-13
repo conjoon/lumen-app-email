@@ -108,6 +108,10 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     protected $recent;
 
+    /**
+     * @var string
+     */
+    protected $charset;
 
     /**
      * Returns true is the specified field is a header field.
@@ -270,6 +274,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     protected function checkType($property, $value) {
         switch ($property) {
+            case "charset":
             case "subject":
                 if (!is_string($value)) {
                     return "string";

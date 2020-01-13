@@ -48,11 +48,6 @@ class MessageItem extends AbstractMessageItem {
      */
     protected $hasAttachments;
 
-    /**
-     * @var string
-     */
-    protected $charset;
-
 
     /**
      * @inheritdoc
@@ -60,11 +55,6 @@ class MessageItem extends AbstractMessageItem {
     protected function checkType($property, $value) {
 
         switch ($property) {
-            case "charset":
-                if (!is_string($value)) {
-                    return "string";
-                }
-                break;
 
             case "size":
                 if (!is_int($value)) {

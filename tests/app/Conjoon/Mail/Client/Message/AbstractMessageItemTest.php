@@ -58,6 +58,7 @@ class AbstractMessageItemTest extends TestCase
         $this->assertNull($messageItem->getFlagged());
         $this->assertNull($messageItem->getDraft());
 
+        $this->assertNull($messageItem->getCharset());
     }
 
 
@@ -140,8 +141,9 @@ class AbstractMessageItemTest extends TestCase
         $testException("from", "");
         $testException("to", "");
         $testException("date", "");
+        $testException("charset", "int");
 
-        $this->assertSame(9, count($caught));
+        $this->assertSame(10, count($caught));
     }
 
 
@@ -162,7 +164,9 @@ class AbstractMessageItemTest extends TestCase
                 $this->assertEquals($item[$key]->toJson(), $json[$key]);
             } else if ($key == "date") {
                 $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $json[$key]);
-            } else{
+            } else if ($key == "charset") {
+                $this->assertArrayNotHasKey($key, $json);
+            } else {
                 $this->assertSame($item[$key], $json[$key]);
             }
         }
@@ -343,7 +347,8 @@ class AbstractMessageItemTest extends TestCase
             'answered'       => true,
             'draft'          => false,
             'flagged'        => true,
-            'recent'         => false
+            'recent'         => false,
+            'charset'        => "ISO-8859-1"
         ];
 
     }

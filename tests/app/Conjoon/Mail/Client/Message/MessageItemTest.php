@@ -85,11 +85,10 @@ class MessageItemTest extends TestCase
 
         };
 
-        $testException("charset", "int");
         $testException("hasAttachments", "string");
         $testException("size", "string");
 
-        $this->assertSame(3, count($caught));
+        $this->assertSame(2, count($caught));
     }
 
 
