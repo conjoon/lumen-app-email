@@ -304,11 +304,46 @@ class HordeClient implements MailClient {
                 $client,
                 new \Horde_Imap_Client_Ids($key->getId()), $mailFolderId, []
             );
-            $messageItem = $this->buildMessageItem(
-                $client, new FolderKey($key->getMailAccountId(), $mailFolderId), $fetchedItems[0]
+            $ret = $this->buildMessageItem(
+                $client, new FolderKey($key->getMailAccountId(), $mailFolderId), $fetchedItems[0],
+                ["hasAttachments", "size"]
             );
+            $messageItem = new MessageItem($ret["messageKey"], $ret["data"]);
 
             return $messageItem;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return $response;
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
+
+        try {
+
+            $client = $this->connect($key);
+            $mailFolderId = $key->getMailFolderId();
+            $fetchedItems = $this->fetchMessageItems(
+                $client,
+                new \Horde_Imap_Client_Ids($key->getId()), $mailFolderId, []
+            );
+            $ret = $this->buildMessageItem(
+                $client,
+                new FolderKey($key->getMailAccountId(), $mailFolderId),
+                $fetchedItems[0],
+                ["cc", "bcc", "replyTo"]
+            );
+
+            $messageItemDraft = new MessageItemDraft($ret["messageKey"], $ret["data"]);
+
+            return $messageItemDraft;
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
@@ -702,19 +737,21 @@ class HordeClient implements MailClient {
      * @param \Horde_Imap_Client_Socket $client
      * @param FolderKey $key
      * @param $item
+     * @param array $options Additional field options to retrieve, such as "cc", "bcc", "replyTo"
      *
-     * @return MessageItem
+     * @return array an array indexed with "messageKey" and "data" which should both be used to create
+     * concrete instances of MessageItem/MessageItemDraft
      *
      * @see queryItems
      */
-    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item): MessageItem {
+    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item, array $options = []): array {
 
-        $result = $result = $this->getItemStructure($client, $item, $key, []);
+        $result = $result = $this->getItemStructure($client, $item, $key, $options);
 
-        return new MessageItem(
-            $result["messageKey"],
-            $result["data"]
-        );
+        return [
+            "messageKey" => $result["messageKey"],
+            "data"       => $result["data"]
+        ];
 
     }
 
@@ -735,7 +772,7 @@ class HordeClient implements MailClient {
 
         $messageItems = new MessageItemList;
 
-        $options = ["plain", "html"];
+        $options = ["plain", "html", "hasAttachments", "size"];
 
         foreach ($items as $item) {
 
@@ -789,49 +826,37 @@ class HordeClient implements MailClient {
         $envelope = $item->getEnvelope();
         $flags    = $item->getFlags();
 
-
-        $charset = $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"));
-
-        $from = null;
-        foreach ($envelope->from as $from) {
-            if ($from->bare_address) {
-                $from = new MailAddress(
-                    $from->bare_address, $from->personal ?: $from->bare_address
-                );
-            }
-        }
-
-        $tos = new MailAddressList;
-        foreach ($envelope->to as $to) {
-            if ($to->bare_address) {
-                $tos[] = new MailAddress($to->bare_address, $to->personal ?: $to->bare_address);
-            }
-        }
+        $from    = $this->getAddress($envelope, "from");
+        $tos     = $this->getAddress($envelope, "to");
 
         $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
-        // parse body
+        $data = [
+            "from"     => $from,
+            "to"       => $tos,
+            "subject"  => $envelope->subject,
+            "date"     => $envelope->date,
+            "seen"     => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
+            "answered" => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
+            "draft"    => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
+            "flagged"  => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
+            "recent"   => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
+            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"))
+        ];
+
         $messageStructure = $item->getStructure();
-
-        $options = array_merge(["hasAttachments"], $options);
-
-
         $d = $this->getContents($client, $messageStructure, $messageKey, $options);
 
-        $data = [
-            "from"           => $from,
-            "to"             => $tos,
-            "size"           => $item->getSize(),
-            "subject"        => $envelope->subject,
-            "date"           => $envelope->date,
-            "seen"           => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
-            "answered"       => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
-            "draft"          => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
-            "flagged"        => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
-            "recent"         => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset"        => $charset,
-            "hasAttachments" => $d["hasAttachments"]
-        ];
+        if (in_array("hasAttachments", $options)) {
+            $data["hasAttachments"] = $d["hasAttachments"];
+        }
+
+        in_array("size", $options) && $data["size"] = $item->getSize();
+
+        // add addresses if required by $options
+        in_array("cc", $options) && $data["cc"] = $this->getAddress($envelope, "cc");
+        in_array("bcc", $options) && $data["bcc"] = $this->getAddress($envelope, "bcc");
+        in_array("replyTo", $options) && $data["replyTo"] = $this->getAddress($envelope, "replyTo");
 
        return [
            "data"       => $data,
@@ -1031,6 +1056,54 @@ class HordeClient implements MailClient {
     protected function isMailboxSelectable(array $mailbox) {
        return !in_array("\\noselect", $mailbox["attributes"]) &&
               !in_array("\\nonexistent", $mailbox["attributes"]);
+    }
+
+
+    /**
+     * Helper function to return the MailAddress or MailAddressList based on the
+     * specified argument from the $envelope.
+     *
+     * @param $envelope
+     * @param string $type to, from, replyTo, cc or bcc are valid $types
+     *
+     * @return MailAddress|MailAddressList|null
+     */
+    protected function getAddress($envelope, string $type) {
+
+        $type = $type === "replyTo" ? "reply-to" : $type;
+
+        switch ($type) {
+            case "from":
+            case "reply-to":
+                $mailAddress = null;
+                if (!$envelope->{$type}) {
+                    return null;
+                }
+
+                foreach ($envelope->{$type} as $add) {
+                    if ($add->bare_address) {
+                        $mailAddress = new MailAddress(
+                            $add->bare_address, $add->personal ?: $add->bare_address
+                        );
+                    }
+                }
+                return $mailAddress;
+
+            default:
+
+                $mailAddressList = new MailAddressList();
+                if (!$envelope->{$type}) {
+                    return $mailAddressList;
+                }
+                foreach ($envelope->{$type} as $add) {
+                    if ($add->bare_address) {
+                        $mailAddressList[] = new MailAddress($add->bare_address, $add->personal ?: $add->bare_address);
+                    }
+                }
+                return $mailAddressList;
+        }
+
+        return null;
     }
 
 }

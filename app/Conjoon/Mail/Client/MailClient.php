@@ -72,6 +72,18 @@ interface MailClient {
 
 
     /**
+     * Returns the specified MessageItemDraft for the submitted arguments.
+     *
+     * @param MessageKey $key
+     *
+     * @return MessageItemDraft|null The MessageItemDraft or null if none found.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+
+
+    /**
      * Returns the specified MessageBody for the submitted arguments.
      *
      * @param MessageKey $key

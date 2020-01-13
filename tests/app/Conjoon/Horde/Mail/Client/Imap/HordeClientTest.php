@@ -245,6 +245,12 @@ class HordeClientTest extends TestCase {
         $fetchResults = new \Horde_Imap_Client_Fetch_Results();
         $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
         $fetchResults[16]->setUid("16");
+        $fetchResults[16]->setSize("1600");
+
+        $attach = new \Horde_Mime_Part;
+        $attach->setDisposition("attachment");
+        $fetchResults[16]->setStructure($attach);
+
 
         $imapStub->shouldReceive('fetch')->with(
             "INBOX", \Mockery::any(), \Mockery::type('array')
@@ -255,7 +261,54 @@ class HordeClientTest extends TestCase {
 
         $this->assertInstanceOf(MessageItem::class, $item);
         $this->assertSame(null, $item->getFrom());
+        $this->assertSame(1600, $item->getSize());
+        $this->assertSame(true, $item->getHasAttachments());
+    }
 
+
+    /**
+     * Single messageItemDraft Test (get)
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemDraft() {
+
+
+        $client = $this->createClient();
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[16]->setUid("16");
+
+        $cc   = new MailAddressList;
+        $cc[] = new MailAddress("test@dot", "test@dot");
+
+        $bcc   = new MailAddressList;
+        $bcc[] = new MailAddress("test2@dot", "test2@dot");
+
+        $replyTo = new MailAddress("test@replyto", "test@replyto");
+
+        $fetchResults[16]->setEnvelope([
+            "cc"      => $cc[0]->getAddress(),
+            "bcc"     => $bcc[0]->getAddress(),
+            "reply-to" => $replyTo->getAddress()
+        ]);
+
+        $imapStub->shouldReceive('fetch')->with(
+            "INBOX", \Mockery::any(), \Mockery::type('array')
+        )->andReturn($fetchResults);
+
+        $item = $client->getMessageItemDraft($this->createMessageKey($account->getId(), "INBOX", "16"));
+
+        $this->assertInstanceOf(MessageItemDraft::class, $item);
+        $this->assertEquals($cc, $item->getCc());
+        $this->assertEquals($bcc, $item->getBcc());
+        $this->assertEquals($replyTo, $item->getReplyTo());
+        
     }
 
 
