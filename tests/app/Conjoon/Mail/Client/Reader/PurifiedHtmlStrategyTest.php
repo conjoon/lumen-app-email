@@ -24,7 +24,9 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
+use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
+    Conjoon\Mail\Client\Reader\HtmlReadableStrategy,
+    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
 
 
 class PurifiedHtmlStrategyTest extends TestCase {
@@ -33,7 +35,8 @@ class PurifiedHtmlStrategyTest extends TestCase {
     public function testClass() {
 
         $strategy = new PurifiedHtmlStrategy();
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\HtmlReadableStrategy::class, $strategy);
+        $this->assertInstanceOf(HtmlReadableStrategy::class, $strategy);
+        $this->assertInstanceOf(HtmlTextStrategy::class, $strategy);
     }
 
 

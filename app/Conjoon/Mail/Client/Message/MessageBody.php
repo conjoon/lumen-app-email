@@ -27,12 +27,10 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
- * Class MessageBody models a simplified representation of  mail message
- * body-content informations.
+ * Class MessageBody.
  *
  * @example
  *
@@ -49,23 +47,7 @@ use Conjoon\Util\Jsonable,
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBody implements Jsonable {
-
-
-    /**
-     * @var MessageKey
-     */
-    protected $messageKey;
-
-    /**
-     * @var MessagePart
-     */
-    protected $textHtml;
-
-    /**
-     * @var MessagePart
-     */
-    protected $textPlain;
+class MessageBody extends AbstractMessageBody {
 
 
     /**
@@ -76,91 +58,6 @@ class MessageBody implements Jsonable {
     public function __construct(MessageKey $messageKey) {
 
         $this->messageKey = $messageKey;
-    }
-
-
-    /**
-     * Sets the "textHtml" property of this body.
-     *
-     * @param MessagePart $textHtml
-     * @return $this
-     */
-    public function setTextHtml(MessagePart $textHtml) {
-        $this->textHtml = $textHtml;
-        return $this;
-    }
-
-
-    /**
-     * Returns the textHtml property of this body.
-     * @return MessagePart
-     */
-    public function getTextHtml() {
-        return $this->textHtml;
-    }
-
-
-    /**
-     * Sets the "textPlain" property of this body.
-     *
-     * @param MessagePart $textPlain
-     * @return $this
-     */
-    public function setTextPlain(MessagePart $textPlain) {
-        $this->textPlain = $textPlain;
-        return $this;
-    }
-
-
-    /**
-     * Returns the textPlain property of this body.
-     * @return MessagePart
-     */
-    public function getTextPlain() {
-        return $this->textPlain;
-    }
-
-
-    /**
-     * Returns the MessageKey of this MessageBody.
-     *
-     * @return MessageKey
-     */
-    public function getMessageKey() {
-        return $this->messageKey;
-    }
-
-
-// --------------------------------
-//  Jsonable interface
-// --------------------------------
-
-    /**
-     * Returns an array representing this MessageBody.
-     *
-     * Each entry in the returning array must consist of the following key/value-pairs:
-     *
-     * - textHtml (string) - this instances textHtml part's content-value
-     * - textPlain (string) - this instances textPlain part's content-value
-     * - mailFolderId (string) The mailFolderId of this instance's MessageKey
-     * - mailAccountId (string) The mailAccountId of this instance's MessageKey
-     * - id (string) The id of this instance's MessageKey
-     *
-     * Implementing APIs should make sure to properly encode the content of the parts
-     * from the given charset to UTF-8 to prevent errors when trying to send the resulting
-     * array as JSON to interested clients.
-     *
-     * @return array
-     *
-     */
-    public function toJson() :array{
-
-        $keyJson = $this->getMessageKey()->toJson();
-
-        return array_merge($keyJson, [
-            "textHtml" => $this->getTextHtml() ? $this->getTextHtml()->getContents() : "",
-            "textPlain" => $this->getTextPlain() ? $this->getTextPlain()->getContents() : ""
-        ]);
     }
 
 

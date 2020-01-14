@@ -57,7 +57,9 @@ class VariousTest extends TestCase
             "GET/cn_mail/MailAccounts",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
+            "POST/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
+            "PUT/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments"
         ];
 
@@ -89,6 +91,16 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
         );
 
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer::class,
+            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer']))
+        );
+
+        $this->assertInstanceOf(
+            \Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer::class,
+            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer']))
+        );
+
         $attachmentService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\AttachmentService']));
         $attachmentServiceMailClient = $attachmentService->getMailClient();
         $this->assertInstanceOf(
@@ -108,7 +120,7 @@ class VariousTest extends TestCase
             \Conjoon\Mail\Client\Service\DefaultMailFolderService::class,
             $mailFolderService
         );
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $mailFolderServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Imap\HordeClient::class, $mailFolderServiceMailClient);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder::class, $mailFolderTreeBuilder);
         $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper::class, $folderIdToTypeMapper);
 
@@ -125,10 +137,14 @@ class VariousTest extends TestCase
 
         // sharing the same client
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Imap\HordeClient::class, $messageItemServiceMailClient);
+
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer::class, $messageItemServiceMailClient->getBodyComposer());
+        $this->assertInstanceOf(\Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer::class, $messageItemServiceMailClient->getHeaderComposer());
 
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
-        $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor::class, $messageItemService->getMessagePartContentProcessor());
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
+        $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
 
 

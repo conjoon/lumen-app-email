@@ -30,7 +30,7 @@ namespace Conjoon\Util;
 
 /**
  * Class AbstractList
- * @package Conjoon\Mail\Client\Data
+ * @package Conjoon\Util
  */
 abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
 

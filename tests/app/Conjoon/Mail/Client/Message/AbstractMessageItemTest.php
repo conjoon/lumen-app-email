@@ -25,10 +25,15 @@
  */
 
 use Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\Message\Flag\FlagList,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Util\Jsonable;
+    Conjoon\Util\Jsonable,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Util\Modifiable;
 
 
 class AbstractMessageItemTest extends TestCase
@@ -45,9 +50,15 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testConstructor() {
 
-        $messageKey = $this->createMessageKey();
-        $messageItem = $this->createMessageItem($messageKey);
+        $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(Jsonable::class, $messageItem);
+        $this->assertInstanceOf(Modifiable::class, $messageItem);
+
+        $this->assertNull($messageItem->getSeen());
+        $this->assertNull($messageItem->getFlagged());
+        $this->assertNull($messageItem->getDraft());
+
+        $this->assertNull($messageItem->getCharset());
     }
 
 
@@ -58,11 +69,9 @@ class AbstractMessageItemTest extends TestCase
 
         $item = $this->getItemConfig();
 
-        $messageKey = $this->createMessageKey();
+        $messageItem = $this->createMessageItem(null, $item);
 
-        $messageItem = $this->createMessageItem($messageKey, $item);
-
-        $this->assertSame($messageKey, $messageItem->getMessageKey());
+        $this->assertSame([], $messageItem->getModifiedFields());
 
         foreach ($item as $key => $value) {
 
@@ -113,7 +122,7 @@ class AbstractMessageItemTest extends TestCase
             }
 
             try {
-                $this->createMessageItem($this->createMessageKey(), $item);
+                $this->createMessageItem(null, $item);
             } catch (\TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
@@ -124,36 +133,17 @@ class AbstractMessageItemTest extends TestCase
         };
 
         $testException("subject", "int");
-        $testException("charset", "int");
-        $testException("size", "string");
         $testException("seen", "string");
         $testException("answered", "string");
         $testException("recent", "string");
         $testException("draft", "string");
-        $testException("hasAttachments", "string");
         $testException("flagged", "string");
         $testException("from", "");
         $testException("to", "");
         $testException("date", "");
+        $testException("charset", "int");
 
-        $this->assertSame(12, count($caught));
-    }
-
-
-    /**
-     * Test \BadMethodCallException for setMessageKey
-     */
-    public function testSetMessageKey() {
-
-        $this->expectException(\BadMethodCallException::class);
-
-        $messageKey = $this->createMessageKey();
-
-        $messageItem = $this->createMessageItem($messageKey);
-
-        $messageKey2 = $this->createMessageKey();
-
-        $messageItem->setMessageKey($messageKey2);
+        $this->assertSame(10, count($caught));
     }
 
 
@@ -163,34 +153,30 @@ class AbstractMessageItemTest extends TestCase
     public function testToJson() {
         $item = $this->getItemConfig();
 
-        $messageKey = $this->createMessageKey();
-
-        $messageItem = $this->createMessageItem($messageKey, $item);
+        $messageItem = $this->createMessageItem(null, $item);
 
         $keys = array_keys($item);
 
-        $this->assertEquals(
-            $messageKey->toJson(),
-            array_intersect_key($messageItem->toJson(), array_flip(['id', 'mailAccountId', 'mailFolderId']))
-        );
-
+        $json = $messageItem->toJson();
 
         foreach ($keys as $key) {
-            if ($key === "charset") {
-                $this->assertFalse(array_key_exists('charste', $messageItem->toJson()));
-            }else if ($key === "from" || $key === "to") {
-                $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
+            if ($key === "from" || $key === "to") {
+                $this->assertEquals($item[$key]->toJson(), $json[$key]);
             } else if ($key == "date") {
-                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $messageItem->toJson()[$key]);
-            } else{
-                $this->assertSame($item[$key], $messageItem->toJson()[$key]);
+                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $json[$key]);
+            } else if ($key == "charset") {
+                $this->assertArrayNotHasKey($key, $json);
+            } else {
+                $this->assertSame($item[$key], $json[$key]);
             }
         }
 
+        $this->assertSame($json["id"], $messageItem->getMessageKey()->getId());
+        $this->assertSame($json["mailFolderId"], $messageItem->getMessageKey()->getMailFolderId());
+        $this->assertSame($json["mailAccountId"], $messageItem->getMessageKey()->getMailAccountId());
 
-        $messageKey = $this->createMessageKey();
 
-        $messageItem = $this->createMessageItem($messageKey);
+        $messageItem = $this->createMessageItem();
 
         $json = $messageItem->toJson();
 
@@ -206,13 +192,113 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testSetFromWithNull() {
 
-        $messageKey = $this->createMessageKey();
-
-        $messageItem = $this->createMessageItem($messageKey, ["from" => null]);
+        $messageItem = $this->createMessageItem(null, ["from" => null]);
 
         $this->assertSame(null, $messageItem->getFrom());
 
     }
+
+    /**
+     * getFlagList()
+     */
+    public function testGetFlagList() {
+
+        $item = $this->createMessageItem(null, $this->getItemConfig());
+
+        $flagList = $item->getFlagList();
+
+        $this->assertInstanceOf(FlagList::class, $flagList);
+
+        $caught = 0;
+
+        foreach ($flagList as $flag) {
+
+            switch (true) {
+
+                case ($flag instanceof DraftFlag):
+                    if ($flag->getValue() === false) {
+                        $caught++;
+                    }
+                    break;
+
+                case ($flag instanceof SeenFlag):
+                    if ($flag->getValue() === false) {
+                        $caught++;
+                    }
+                    break;
+
+                case ($flag instanceof FlaggedFlag):
+                    if ($flag->getValue() === true) {
+                        $caught++;
+                    }
+                    break;
+
+            }
+
+        }
+
+        $this->assertSame(3, $caught);
+
+    }
+
+
+    /**
+     * getFlagList()
+     */
+    public function testGetFlagList_empty() {
+
+        $item = $this->createMessageItem();
+
+        $flagList = $item->getFlagList();
+
+        $this->assertTrue(count($flagList) === 0);
+    }
+
+
+    /**
+     * Tests modifiable
+     */
+    public function testModifiable() {
+
+        $messageKey  = $this->createMessageKey();
+        $messageItem = $this->createMessageItem($messageKey);
+
+        $conf = $this->getItemConfig();
+        $mod  = [];
+        $it   = 0;
+
+        $fieldLength = count(array_keys($conf));
+        $this->assertTrue($fieldLength > 0);
+
+        $this->assertSame($mod, $messageItem->getModifiedFields());
+        foreach ($conf as $field => $value) {
+            $messageItem->{"set" . ucfirst($field)}($value);
+            $mod[] = $field;
+            $this->assertSame($mod, $messageItem->getModifiedFields());
+            $it++;
+        }
+        $this->assertSame($fieldLength, $it);
+    }
+
+
+    /**
+     * Tests isHeaderField
+     */
+    public function testIsHeaderField() {
+
+        $fields = ["from", "to", "subject", "date"];
+
+        foreach ($fields as $field) {
+            $this->assertTrue(AbstractMessageItem::isHeaderField($field));
+        }
+
+        $fields = ["recent", "seen", "flagged", "answered"];
+
+        foreach ($fields as $field) {
+            $this->assertFalse(AbstractMessageItem::isHeaderField($field));
+        }
+    }
+
 
 // ---------------------
 //    Helper Functions
@@ -221,16 +307,31 @@ class AbstractMessageItemTest extends TestCase
 
     /**
      * Returns an anonymous class extending AbstractMessageItem.
-     * @param MessageKey $key
+     *
      * @param array|null $data
+     * @parsm MessageKey $key
+     *
      * @return AbstractMessageItem
      */
-    protected function createMessageItem(MessageKey $key, array $data = null) :AbstractMessageItem {
+    protected function createMessageItem(MessageKey $key = null, array $data = null) :AbstractMessageItem {
         // Create a new instance from the Abstract Class
-       return new class($key, $data) extends AbstractMessageItem {
-
-        };
+        if (!$key) {
+            $key = $this->createMessageKey();
+        }
+       return new class($key, $data) extends AbstractMessageItem {};
     }
+
+
+    /**
+     * Returns a MessageKey
+     *
+     * @return MessageKey
+     */
+    protected function createMessageKey() :MessageKey {
+        // Create a new instance from the Abstract Class
+        return new MessageKey("a", "b", "c");
+    }
+
 
     /**
      * Returns an MessageItem as array.
@@ -238,10 +339,8 @@ class AbstractMessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
-            'charset'        => 'iso-8859-1',
             'from'           => $this->createFrom(),
             'to'             => $this->createTo(),
-            'size'           => 23,
             'subject'        => "SUBJECT",
             'date'           => new \DateTime(),
             'seen'           => false,
@@ -249,22 +348,9 @@ class AbstractMessageItemTest extends TestCase
             'draft'          => false,
             'flagged'        => true,
             'recent'         => false,
-            'hasAttachments' => true
+            'charset'        => "ISO-8859-1"
         ];
 
-    }
-
-
-    /**
-     * Returns a MessageKey.
-     *
-     * @param string $mailFolderId
-     * @param string $id
-     *
-     * @return MessageKey
-     */
-    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
-        return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
 

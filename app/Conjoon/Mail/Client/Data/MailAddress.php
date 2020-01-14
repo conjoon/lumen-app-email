@@ -27,7 +27,10 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\Jsonable;
+use Conjoon\Util\Jsonable,
+    Conjoon\Util\Stringable,
+    Conjoon\Util\JsonDecodable,
+    Conjoon\Util\Copyable;
 
 /**
  * Class MailAddress models a Mail Address, containing a "name" and an "address".
@@ -39,9 +42,18 @@ use Conjoon\Util\Jsonable;
  *    $address->getName(); // "Peter Parker"
  *    $address->getAddress(); // "PeterParker@newyork.com"
  *
+ * MailAddresses cloned create a new instance and do not hold any references to
+ * the original instance.
+ *
+ * @example
+ *
+ *  $address = new MailAddress("PeterParker@newyork.com", "Peter Parker");
+ *  $address2 = clone $address;
+ *  $address === $address2; //false
+ *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddress  implements Jsonable {
+class MailAddress  implements Stringable, JsonDecodable, Copyable {
 
 
     /**
@@ -80,6 +92,65 @@ class MailAddress  implements Jsonable {
      */
     public function getAddress() :string {
         return $this->address;
+    }
+
+// --------------------------------
+//  Copyable interface
+// --------------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public function copy() :MailAddress {
+
+        $add = new MailAddress($this->getAddress(), $this->getName());
+
+        return $add;
+    }
+
+
+// --------------------------------
+//  JsonDecodable interface
+// --------------------------------
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromJsonString(string $value) :? Jsonable {
+
+        $val = json_decode($value, true);
+
+        if (!$val || !isset($val["address"])) {
+            return null;
+        }
+
+        $address = $val["address"];
+        $name    = isset($val["name"]) ? $val["name"] : $val["address"];
+
+        return new self($address, $name);
+    }
+
+
+// --------------------------------
+//  Stringable interface
+// --------------------------------
+
+    /**
+     * Returns a string representation of this email address.
+     *
+     * @example
+     *   $address = new MailAddress("PeterParker@newyork.com", "Peter Parker");
+     *
+     *   $address->toString(); // returns "Peter Parker <PeterParker@newyork.com>"
+     *
+     * @return string
+     */
+    public function toString() :string {
+
+        $address = $this->getAddress();
+        $name    = $this->getName();
+
+        return $name . " <" . $address . ">";
     }
 
 

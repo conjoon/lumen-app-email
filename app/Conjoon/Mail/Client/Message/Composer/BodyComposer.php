@@ -23,15 +23,35 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
+namespace Conjoon\Mail\Client\Message\Composer;
 
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
 
 /**
- * Class DefaultMessagePartContentProcessorTest
- * 
+ * Interface BodyComposer
+ *
+ * Contract for transforming a MessageBodyDraft to a full text email message.
+ *
+ *
+ * @package Conjoon\Mail\Client\Message\Composer
  */
-class DefaultMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest {
+interface BodyComposer {
 
+
+    /**
+     * Processes the $messageBodyDraft and returns a raw Email Message,
+     * properly set up with required multipart/alternative headers and the body. The resulting body
+     * should contain all parts defined in $messageBodyDraft.
+     * The created header should be RFC 822/2822/3490/5322 compliant.
+     *
+     * @param string $target The raw email message for which the MessageBody should be composed
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return string A valid MIME message text
+     */
+    public function compose(string $target, MessageBodyDraft $messageBodyDraft) :string;
 
 
 }

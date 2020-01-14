@@ -32,7 +32,9 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Folder\MailFolderList;
@@ -70,6 +72,18 @@ interface MailClient {
 
 
     /**
+     * Returns the specified MessageItemDraft for the submitted arguments.
+     *
+     * @param MessageKey $key
+     *
+     * @return MessageItemDraft|null The MessageItemDraft or null if none found.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+
+
+    /**
      * Returns the specified MessageBody for the submitted arguments.
      *
      * @param MessageKey $key
@@ -79,6 +93,47 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
     public function getMessageBody(MessageKey $key) :?MessageBody;
+
+
+    /**
+     * Appends a new Message to the specified Folder with the data found in MessageBodyDraft.
+     * Will mark the newly created Message as a draft.
+     *
+     * @param FolderKey $key
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft the created MessageBodyDraft
+     *
+     * @throws MailClientException if any exception occurs, or of the MessageBodyDraft already has
+     * a MessageKey
+     */
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft;
+
+
+    /**
+     * Updates the MessageBody of the specified message.
+     *
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft the created MessageBodyDraft
+     *
+     * @throws MailClientException if any exception occurs, or of the MessageBodyDraft does not have a
+     * MessageKey
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :MessageBodyDraft;
+
+
+    /**
+     * Updates envelope information of a Message, if the Message is a draft Message.
+     *
+     * @param MessageItemDraft $messageItemDraft
+     *
+     * @return MessageItemDraft The MessageItemDraft updated, along with its MessageKey, which
+     * might not equal to the MessageKey in $messageItemDraft.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**

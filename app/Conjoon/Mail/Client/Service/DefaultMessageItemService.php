@@ -31,12 +31,16 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
-    Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\MailClientException,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList;
 
@@ -61,9 +65,14 @@ class DefaultMessageItemService implements MessageItemService {
     protected $previewTextProcessor;
 
     /**
-     * @var MessagePartContentProcessor
+     * @var ReadableMessagePartContentProcessor
      */
-    protected $messagePartContentProcessor;
+    protected $readableMessagePartContentProcessor;
+
+    /**
+     * @var WritableMessagePartContentProcessor
+     */
+    protected $writableMessagePartContentProcessor;
 
     /**
      * @var MessageItemFieldsProcessor
@@ -76,17 +85,20 @@ class DefaultMessageItemService implements MessageItemService {
      *
      * @param MailClient $mailClient
      * @param MessageItemFieldsProcessor $messageItemFieldsProcessor
-     * @param MessagePartContentProcessor $messagePartContentProcessor
+     * @param ReadableMessagePartContentProcessor $readableMessagePartContentProcessor
+     * @param WritableMessagePartContentProcessor $writableMessagePartContentProcessor
      * @param PreviewTextProcessor $previewTextProcessor
      */
     public function __construct(
         MailClient $mailClient,
         MessageItemFieldsProcessor $messageItemFieldsProcessor,
-        MessagePartContentProcessor $messagePartContentProcessor,
+        ReadableMessagePartContentProcessor $readableMessagePartContentProcessor,
+        WritableMessagePartContentProcessor $writableMessagePartContentProcessor,
         PreviewTextProcessor $previewTextProcessor) {
         $this->messageItemFieldsProcessor = $messageItemFieldsProcessor;
         $this->mailClient = $mailClient;
-        $this->messagePartContentProcessor = $messagePartContentProcessor;
+        $this->readableMessagePartContentProcessor = $readableMessagePartContentProcessor;
+        $this->writableMessagePartContentProcessor = $writableMessagePartContentProcessor;
         $this->previewTextProcessor = $previewTextProcessor;
     }
 
@@ -121,8 +133,16 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessagePartContentProcessor() :MessagePartContentProcessor {
-        return $this->messagePartContentProcessor;
+    public function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor {
+        return $this->readableMessagePartContentProcessor;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor {
+        return $this->writableMessagePartContentProcessor;
     }
 
 
@@ -150,6 +170,16 @@ class DefaultMessageItemService implements MessageItemService {
         $messageItem = $this->mailClient->getMessageItem($key);
         $this->charsetConvertHeaderFields($messageItem);
         return $messageItem;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
+        $messageItemDraft = $this->mailClient->getMessageItemDraft($key);
+        $this->charsetConvertHeaderFields($messageItemDraft);
+        return $messageItemDraft;
     }
 
 
@@ -186,9 +216,112 @@ class DefaultMessageItemService implements MessageItemService {
     }
 
 
+    /**
+     * @inheritdoc
+     */
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
+
+        if ($messageBodyDraft->getMessageKey()) {
+            throw new ServiceException(
+                "Cannot create a MessageBodyDraft that has a MessageKey"
+            );
+        }
+
+        $this->processMessageBodyDraft($messageBodyDraft);
+
+        try {
+            return $this->getMailClient()->createMessageBodyDraft($key, $messageBodyDraft);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
+
+        if (!$messageBodyDraft->getMessageKey()) {
+            throw new ServiceException(
+                "Cannot update a MessageBodyDraft that has no MessageKey"
+            );
+        }
+
+        $this->processMessageBodyDraft($messageBodyDraft);
+
+        try {
+            return $this->getMailClient()->updateMessageBodyDraft($messageBodyDraft);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+
+        $updated = null;
+
+        try {
+            $updated = $this->getMailClient()->updateMessageDraft($messageItemDraft);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $updated;
+    }
+
+
 // -----------------------
 // Helper
 // -----------------------
+
+    /**
+     * Mases sure that there is a text/plain part for this message if only text/html was
+     * available. If only text/plain is available, a text/html part will be created.
+     *
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft
+     */
+    protected function processMessageBodyDraft(MessageBodyDraft $messageBodyDraft) {
+
+        $targetCharset = "UTF-8";
+        $plainPart = $messageBodyDraft->getTextPlain();
+        $htmlPart = $messageBodyDraft->getTextHtml();
+
+        if (!$plainPart && $htmlPart) {
+            $plainPart = new MessagePart($htmlPart->getContents(), $htmlPart->getCharset(), "text/plain");
+            $messageBodyDraft->setTextPlain($plainPart);
+        }
+        if ($plainPart && !$htmlPart) {
+            $htmlPart = new MessagePart($plainPart->getContents(), $plainPart->getCharset(), "text/html");
+            $messageBodyDraft->setTextHtml($htmlPart);
+        }
+
+        if (!$plainPart && !$htmlPart) {
+            $plainPart = new MessagePart("", $targetCharset, "text/plain");
+            $messageBodyDraft->setTextPlain($plainPart);
+            $htmlPart = new MessagePart("", $targetCharset, "text/html");
+            $messageBodyDraft->setTextHtml($htmlPart);
+        }
+
+        // wee need to strip any tags
+        $this->getWritableMessagePartContentProcessor()->process($plainPart, $targetCharset);
+
+        // we need to convert line breaks to html tags
+        $this->getWritableMessagePartContentProcessor()->process($htmlPart, $targetCharset);
+
+        return $messageBodyDraft;
+    }
+
 
     /**
      * Processes the specified MessageItem with the help of this MessageItemFieldsProcessor
@@ -230,13 +363,12 @@ class DefaultMessageItemService implements MessageItemService {
             $messageBody->setTextPlain($textPlainPart);
         }
 
-        $this->getMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
+        $this->getReadableMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
 
-        if ($textHtmlPart) {
-            $this->getMessagePartContentProcessor()->process($textHtmlPart, $targetCharset);
-
+        if ($textHtmlPart && $textHtmlPart->getContents()) {
+            $this->getReadableMessagePartContentProcessor()->process($textHtmlPart, $targetCharset);
         } else {
-            $textHtmlPart = new MessagePart($textPlainPart->getContents(), "UTF-8", "text/plain");
+            $textHtmlPart = new MessagePart($textPlainPart->getContents(), "UTF-8", "text/html");
             $messageBody->setTextHtml($textHtmlPart);
         }
 

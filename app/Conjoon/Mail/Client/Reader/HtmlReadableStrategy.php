@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Reader;
 
+use Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+
 /**
  * Interface HtmlReadableStrategy
  *
@@ -35,18 +37,6 @@ namespace Conjoon\Mail\Client\Reader;
  *
  * @package Conjoon\Mail\Client\Reader
  */
-interface HtmlReadableStrategy {
-
-
-    /**
-     * Purifies the text from untrusted HTML/CSS/Script contents and returns it.
-     *
-     * @param string $text
-     *
-     * @return string
-     */
-    public function process(string $text) :string;
-
-
+interface HtmlReadableStrategy extends HtmlTextStrategy {
 
 }

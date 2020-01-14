@@ -23,19 +23,28 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Message\Text;
+namespace Conjoon\Mail\Client\Writer;
 
 
 /**
- * Interface MessagePartContentProcessor.
- * Contract for converting the contents of a MessagePart to a target charset.
- * Implementing classes are free to add any additional functionality for converting the
- * contents to a readable version required by the client.
+ * Class DefaultHtmlWritableStrategy
  *
- * @package Conjoon\Mail\Client\Message\Text
+ * @package Conjoon\Mail\Client\Writer
  */
-class DefaultMessagePartContentProcessor extends AbstractMessagePartContentProcessor{
+class DefaultHtmlWritableStrategy implements HtmlWritableStrategy {
+
+
+    /**
+     * @inheritdoc
+     */
+    public function process(string $text) :string {
+
+        return str_replace(["\r\n", "\n"], "<br />", $text);
+
+    }
+
 
 
 }

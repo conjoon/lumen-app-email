@@ -30,12 +30,15 @@ namespace Conjoon\Mail\Client\Service;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
+    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
+    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\Flag\FlagList;
 
 /**
@@ -49,7 +52,7 @@ interface MessageItemService {
 
     
     /**
-     * Returns a MessageItemListServiceObject containing the MessageItems for the
+     * Returns a MessageItemList containing the MessageItems for the
      * specified MailAccount and the MailFolder.
      * 
      * @param FolderKey $key
@@ -63,7 +66,7 @@ interface MessageItemService {
 
 
     /**
-     * Returns a single MessageItemServiceObject.
+     * Returns a single MessageItem.
      *
      * @param MessageKey $key
      *
@@ -73,13 +76,69 @@ interface MessageItemService {
 
 
     /**
-     * Returns a single MessageBodyServiceObject.
+     * Returns a single MessageItemDraft.
+     *
+     * @param MessageKey $key
+     *
+     * @return MessageItemDraft or null if no entity for the key was found
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+
+
+    /**
+     * Returns a single MessageBody.
      *
      * @param MessageKey $key
      *
      * @return MessageBody
      */
     public function getMessageBody(MessageKey $key) :MessageBody;
+
+
+    /**
+     * Creates a single MessageBodyDraft and returns it along with the generated MessageKey.
+     * Returns null if the MessageBodyDraft could not be created.
+     * The created message will be marked as a draft.
+     *
+     * @param FolderKey $key
+     * @param MessageBodyDraft $draft The draft to create
+     *
+     * @return MessageBodyDraft
+     *
+     * @throws ServiceException if $draft already has a MessageKey
+     */
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $draft) :?MessageBodyDraft;
+
+
+    /**
+     * Updates the MessageBodyDraft with the data.
+     * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
+     * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
+     * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
+     * The MessageBodyDraft will explicitely get flagged as a "draft".
+     *
+     * @param MessageBodyDraft $draft The draft to create
+     *
+     * @return MessageBodyDraft
+     *
+     * @throws ServiceException if $draft has no messageKey
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $draft) :?MessageBodyDraft;
+
+
+    /**
+     * Updated the Message with the specified MessageItemDraft (if the message is flagged as "draft") and returns the
+     * updated MessageItemDraft.
+     * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
+     * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
+     * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
+     * The MessageBodyDraft will explicitely get flagged as a "draft".
+     *
+     * @param MessageItemDraft $messageItemDraft
+     *
+     * @return MessageItemDraft|null
+     */
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
 
 
     /**
@@ -105,6 +164,9 @@ interface MessageItemService {
     /**
      * Sets the flags in $flagList for the Message identified with MessageKey.
      *
+     * @param MessageKey $messageKey
+     * @param FlagList $flagList
+     *
      * @return boolean
      */
     public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool;
@@ -119,11 +181,19 @@ interface MessageItemService {
 
 
     /**
-     * Returns the MessagePartContentProcessor used by this MessageService.
+     * Returns the ReadableMessagePartContentProcessor used by this MessageService.
      *
-     * @return MessagePartContentProcessor
+     * @return ReadableMessagePartContentProcessor
      */
-    public function getMessagePartContentProcessor() :MessagePartContentProcessor;
+    public function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor;
+
+
+    /**
+     * Returns the WritableMessagePartContentProcessor used by this MessageService.
+     *
+     * @return WritableMessagePartContentProcessor
+     */
+    public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor;
 
 
     /**

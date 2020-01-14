@@ -32,7 +32,7 @@ use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
 
 
 /**
- * Class HordeClientTest
+ * Class DefaultFolderIdToTypeMapperTest
  */
 class DefaultFolderIdToTypeMapperTest extends TestCase {
 

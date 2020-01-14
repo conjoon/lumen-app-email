@@ -25,7 +25,10 @@
  */
 
 use Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Util\Jsonable;
+    Conjoon\Util\Jsonable,
+    Conjoon\Util\JsonDecodable,
+    Conjoon\Util\Stringable,
+    Conjoon\Util\Copyable;
 
 
 class MailAddressTest extends TestCase
@@ -45,6 +48,9 @@ class MailAddressTest extends TestCase
         $mailAddress = new MailAddress($address, $name);
 
         $this->assertInstanceOf(Jsonable::class, $mailAddress);
+        $this->assertInstanceOf(Stringable::class, $mailAddress);
+        $this->assertInstanceOf(JsonDecodable::class, $mailAddress);
+        $this->assertInstanceOf(Copyable::class, $mailAddress);
         $this->assertSame($address, $mailAddress->getAddress());
         $this->assertSame($name, $mailAddress->getName());
 
@@ -52,5 +58,58 @@ class MailAddressTest extends TestCase
     }
 
 
+    /**
+     * toString()
+     */
+    public function testToString() {
+
+        $name = "Peter Parker";
+        $address = "peter.parker@newyork.com";
+        $mailAddress = new MailAddress($address, $name);
+
+        $this->assertSame("Peter Parker <peter.parker@newyork.com>", $mailAddress->toString());
+
+    }
+
+    /**
+     * toString()
+     */
+    public function testFromJsonString() {
+
+        $name = "Peter Parker";
+        $address = "peter.parker@newyork.com";
+        $mailAddress = new MailAddress($address, $name);
+
+        $jsonString = json_encode($mailAddress->toJson());
+        $this->assertEquals($mailAddress, MailAddress::fromJsonString($jsonString));
+
+        $jsonString = "foo/:bar{";
+        $this->assertNull(MailAddress::fromJsonString($jsonString));
+
+        $jsonString = json_encode(["name" => "foo"]);
+        $this->assertNull(MailAddress::fromJsonString($jsonString));
+
+        $jsonString = json_encode(["address" => "foo"]);
+        $address = MailAddress::fromJsonString($jsonString);
+
+        $this->assertSame("foo", $address->getName());
+        $this->assertSame("foo", $address->getAddress());
+    }
+
+    /**
+     * copy()
+     */
+    public function testCopy() {
+
+        $name = "Peter Parker";
+        $address = "peter.parker@newyork.com";
+        $mailAddress = new MailAddress($address, $name);
+
+        $address1 = $mailAddress->copy();
+
+        $this->assertSame($address1->getAddress(), $mailAddress->getAddress());
+        $this->assertSame($address1->getName(), $mailAddress->getName());
+        $this->assertNotSame($address1, $mailAddress);
+    }
 
 }

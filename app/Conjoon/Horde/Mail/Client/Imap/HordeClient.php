@@ -25,11 +25,12 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Imap;
+namespace Conjoon\Horde\Mail\Client\Imap;
 
 use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Message\MessageBody,
+    Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\MessagePart,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
@@ -37,6 +38,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
+    Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\MessageItemList,
     Conjoon\Mail\Client\Folder\MailFolderList,
@@ -44,7 +46,11 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachmentList,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
+    Conjoon\Mail\Client\Message\Composer\BodyComposer,
+    Conjoon\Mail\Client\Message\Composer\HeaderComposer,
+    Conjoon\Mail\Client\Imap\ImapClientException;
 
 /**
  * Class HordeClient.
@@ -66,11 +72,50 @@ class HordeClient implements MailClient {
     protected $socket;
 
     /**
-     * HordeClient constructor.
-     * @param MailAccount $account
+     * @var BodyComposer
      */
-    public function __construct(MailAccount $account) {
-        $this->mailAccount = $account;
+    protected $bodyComposer;
+
+    /**
+     * @var HeaderComposer
+     */
+    protected $headerComposer;
+
+
+    /**
+     * HordeClient constructor.
+     *
+     * @param MailAccount $account
+     * @param BodyComposer $bodyComposer
+     * @param HeaderComposer $headerComposer
+     */
+    public function __construct(
+        MailAccount $account,
+        BodyComposer $bodyComposer,
+        HeaderComposer $headerComposer) {
+        $this->mailAccount    = $account;
+        $this->bodyComposer   = $bodyComposer;
+        $this->headerComposer = $headerComposer;
+    }
+
+
+    /**
+     * Returns the BodyComposer this instance was configured with.
+     *
+     * @return BodyComposer
+     */
+    public function getBodyComposer() :BodyComposer {
+        return $this->bodyComposer;
+    }
+
+
+    /**
+     * Returns the HeaderComposer this instance was configured with.
+     *
+     * @return HeaderComposer
+     */
+    public function getHeaderComposer() :HeaderComposer {
+        return $this->headerComposer;
     }
 
 
@@ -259,11 +304,46 @@ class HordeClient implements MailClient {
                 $client,
                 new \Horde_Imap_Client_Ids($key->getId()), $mailFolderId, []
             );
-            $messageItem = $this->buildMessageItem(
-                $client, new FolderKey($key->getMailAccountId(), $mailFolderId), $fetchedItems[0]
+            $ret = $this->buildMessageItem(
+                $client, new FolderKey($key->getMailAccountId(), $mailFolderId), $fetchedItems[0],
+                ["hasAttachments", "size"]
             );
+            $messageItem = new MessageItem($ret["messageKey"], $ret["data"]);
 
             return $messageItem;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return $response;
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
+
+        try {
+
+            $client = $this->connect($key);
+            $mailFolderId = $key->getMailFolderId();
+            $fetchedItems = $this->fetchMessageItems(
+                $client,
+                new \Horde_Imap_Client_Ids($key->getId()), $mailFolderId, []
+            );
+            $ret = $this->buildMessageItem(
+                $client,
+                new FolderKey($key->getMailAccountId(), $mailFolderId),
+                $fetchedItems[0],
+                ["cc", "bcc", "replyTo"]
+            );
+
+            $messageItemDraft = new MessageItemDraft($ret["messageKey"], $ret["data"]);
+
+            return $messageItemDraft;
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
@@ -393,7 +473,7 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
-    public function setFlags(MessageKey $key, Flaglist $flagList) : bool{
+    public function setFlags(MessageKey $key, FlagList $flagList) : bool{
         try {
             $client = $this->connect($key);
 
@@ -426,9 +506,153 @@ class HordeClient implements MailClient {
         return true;
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        if ($messageBodyDraft->getMessageKey()) {
+            throw new ImapClientException(
+                "Cannot create a MessageBodyDraft that already has a MessageKey"
+            );
+        }
+
+        try {
+            $mailAccountId = $key->getMailAccountId();
+            $mailFolderId  = $key->getId();
+
+            $client = $this->connect($key);
+
+            return $this->appendAsDraft(
+                $client, $mailAccountId, $mailFolderId, "", $messageBodyDraft
+            );
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        $key = $messageBodyDraft->getMessageKey();
+
+        if (!$key) {
+            throw new ImapClientException(
+                "Cannot update a MessageBodyDraft that doesn't have a MessageKey"
+            );
+        }
+
+        try {
+
+            $mailFolderId  = $key->getMailFolderId();
+            $mailAccountId = $key->getMailAccountId();
+            $id            = $key->getId();
+
+            $client = $this->connect($key);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+            $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+            $target = $fetchResult[$id]->getFullMsg(false);
+
+            $newDraft = $this->appendAsDraft(
+                $client, $mailAccountId, $mailFolderId, $target, $messageBodyDraft
+            );
+
+            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+
+            return $newDraft;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+
+        try {
+            $messageKey = $messageItemDraft->getMessageKey();
+
+            $client = $this->connect($messageKey);
+
+            $id = $messageKey->getId();
+
+            $mailFolderId = $messageKey->getMailFolderId();
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchResult = $client->fetch($messageKey->getMailFolderId(), $fetchQuery, ['ids' => $rangeList]);
+            $msg = $fetchResult[$id]->getFullMsg(false);
+
+            $fullText = $this->getHeaderComposer()->compose($msg, $messageItemDraft);
+
+            $ids    = $client->append($mailFolderId, [["data" => $fullText]]);
+            $newKey = new MessageKey($messageKey->getMailAccountId(), $messageKey->getMailFolderId(), "" . $ids->ids[0]);
+
+            $this->setFlags($newKey, $messageItemDraft->getFlagList());
+
+            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+
+            return $messageItemDraft->setMessageKey($newKey);
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return null;
+    }
+
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Appends the specified $rawMessage to $mailFolderId and returns a new MessageBodyDraft with the
+     * created MessageKey.
+     *
+     * @param \Horde_Imap_Client_Socket $client
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $rawMessage
+     * @param MessageBodyDraft $messageBodyDraft
+     *
+     * @return MessageBodyDraft
+     */
+    protected function appendAsDraft(\Horde_Imap_Client_Socket $client, string $mailAccountId, string $mailFolderId, string $target, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft {
+
+        $rawMessage = $this->getBodyComposer()->compose($target, $messageBodyDraft);
+        $rawMessage = $this->getHeaderComposer()->compose($rawMessage);
+
+        $ids = $client->append($mailFolderId, [["data" =>$rawMessage]]);
+        $messageKey = new MessageKey($mailAccountId, $mailFolderId, "" . $ids->ids[0]);
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(true);
+        $this->setFlags($messageKey, $flagList);
+
+        return $messageBodyDraft->setMessageKey($messageKey);
+    }
+
 
     /**
      * Builds an attachment from the specified data.
@@ -513,19 +737,21 @@ class HordeClient implements MailClient {
      * @param \Horde_Imap_Client_Socket $client
      * @param FolderKey $key
      * @param $item
+     * @param array $options Additional field options to retrieve, such as "cc", "bcc", "replyTo"
      *
-     * @return MessageItem
+     * @return array an array indexed with "messageKey" and "data" which should both be used to create
+     * concrete instances of MessageItem/MessageItemDraft
      *
      * @see queryItems
      */
-    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item): MessageItem {
+    protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item, array $options = []): array {
 
-        $result = $result = $this->getItemStructure($client, $item, $key, []);
+        $result = $result = $this->getItemStructure($client, $item, $key, $options);
 
-        return new MessageItem(
-            $result["messageKey"],
-            $result["data"]
-        );
+        return [
+            "messageKey" => $result["messageKey"],
+            "data"       => $result["data"]
+        ];
 
     }
 
@@ -546,7 +772,7 @@ class HordeClient implements MailClient {
 
         $messageItems = new MessageItemList;
 
-        $options = ["plain", "html"];
+        $options = ["plain", "html", "hasAttachments", "size"];
 
         foreach ($items as $item) {
 
@@ -600,49 +826,37 @@ class HordeClient implements MailClient {
         $envelope = $item->getEnvelope();
         $flags    = $item->getFlags();
 
-
-        $charset = $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"));
-
-        $from = null;
-        foreach ($envelope->from as $from) {
-            if ($from->bare_address) {
-                $from = new MailAddress(
-                    $from->bare_address, $from->personal ?: $from->bare_address
-                );
-            }
-        }
-
-        $tos = new MailAddressList;
-        foreach ($envelope->to as $to) {
-            if ($to->bare_address) {
-                $tos[] = new MailAddress($to->bare_address, $to->personal ?: $to->bare_address);
-            }
-        }
+        $from    = $this->getAddress($envelope, "from");
+        $tos     = $this->getAddress($envelope, "to");
 
         $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
-        // parse body
+        $data = [
+            "from"     => $from,
+            "to"       => $tos,
+            "subject"  => $envelope->subject,
+            "date"     => $envelope->date,
+            "seen"     => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
+            "answered" => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
+            "draft"    => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
+            "flagged"  => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
+            "recent"   => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
+            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"))
+        ];
+
         $messageStructure = $item->getStructure();
-
-        $options = array_merge(["hasAttachments"], $options);
-
-
         $d = $this->getContents($client, $messageStructure, $messageKey, $options);
 
-        $data = [
-            "from"           => $from,
-            "to"             => $tos,
-            "size"           => $item->getSize(),
-            "subject"        => $envelope->subject,
-            "date"           => $envelope->date,
-            "seen"           => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
-            "answered"       => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
-            "draft"          => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
-            "flagged"        => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
-            "recent"         => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset"        => $charset,
-            "hasAttachments" => $d["hasAttachments"]
-        ];
+        if (in_array("hasAttachments", $options)) {
+            $data["hasAttachments"] = $d["hasAttachments"];
+        }
+
+        in_array("size", $options) && $data["size"] = $item->getSize();
+
+        // add addresses if required by $options
+        in_array("cc", $options) && $data["cc"] = $this->getAddress($envelope, "cc");
+        in_array("bcc", $options) && $data["bcc"] = $this->getAddress($envelope, "bcc");
+        in_array("replyTo", $options) && $data["replyTo"] = $this->getAddress($envelope, "replyTo");
 
        return [
            "data"       => $data,
@@ -842,6 +1056,54 @@ class HordeClient implements MailClient {
     protected function isMailboxSelectable(array $mailbox) {
        return !in_array("\\noselect", $mailbox["attributes"]) &&
               !in_array("\\nonexistent", $mailbox["attributes"]);
+    }
+
+
+    /**
+     * Helper function to return the MailAddress or MailAddressList based on the
+     * specified argument from the $envelope.
+     *
+     * @param $envelope
+     * @param string $type to, from, replyTo, cc or bcc are valid $types
+     *
+     * @return MailAddress|MailAddressList|null
+     */
+    protected function getAddress($envelope, string $type) {
+
+        $type = $type === "replyTo" ? "reply-to" : $type;
+
+        switch ($type) {
+            case "from":
+            case "reply-to":
+                $mailAddress = null;
+                if (!$envelope->{$type}) {
+                    return null;
+                }
+
+                foreach ($envelope->{$type} as $add) {
+                    if ($add->bare_address) {
+                        $mailAddress = new MailAddress(
+                            $add->bare_address, $add->personal ?: $add->bare_address
+                        );
+                    }
+                }
+                return $mailAddress;
+
+            default:
+
+                $mailAddressList = new MailAddressList();
+                if (!$envelope->{$type}) {
+                    return $mailAddressList;
+                }
+                foreach ($envelope->{$type} as $add) {
+                    if ($add->bare_address) {
+                        $mailAddressList[] = new MailAddress($add->bare_address, $add->personal ?: $add->bare_address);
+                    }
+                }
+                return $mailAddressList;
+        }
+
+        return null;
     }
 
 }

@@ -33,6 +33,9 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
+    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
+    Conjoon\Util\ArrayUtil,
     Auth;
 
 use Illuminate\Http\Request;
@@ -46,20 +49,37 @@ class MessageItemController extends Controller {
 
 
     /**
-     * @var messageItemService
+     * @type MessageItemService
      */
-    protected $messageItemService;
+    protected MessageItemService $messageItemService;
+
+    /**
+     * @type MessageItemDraftJsonTransformer
+     */
+    protected MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer;
+
+
+    /**
+     * @type MessagebodyDraftJsonTransformer
+     */
+    protected MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer;
 
 
     /**
      * MessageItemController constructor.
      *
      * @param MessageItemService $messageItemService
+     * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
+     * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
      */
-    public function __construct(MessageItemService $messageItemService) {
+    public function __construct(MessageItemService $messageItemService,
+                                MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
+                                MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer
+    ) {
 
-        $this->messageItemService = $messageItemService;
-
+        $this->messageItemService              = $messageItemService;
+        $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
+        $this->messageBodyDraftJsonTransformer = $messageBodyDraftJsonTransformer;
     }
 
 
@@ -137,10 +157,12 @@ class MessageItemController extends Controller {
             $item = $messageItemService->getMessageBody($messageKey);
         } else if ($target === "MessageItem") {
             $item = $messageItemService->getMessageItem($messageKey);
+        } else if ($target === "MessageDraft") {
+            $item = $messageItemService->getMessageItemDraft($messageKey);
         } else {
             return response()->json([
                 "success" => false,
-                "msg" =>  "\"target\" must be specified with either \"MessageBody\" or \"MessageItem\"."
+                "msg" =>  "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
             ], 400);
 
         }
@@ -154,9 +176,23 @@ class MessageItemController extends Controller {
 
 
     /**
-     * Changes data of a single MessageItem.
-     * Allows for specifying target=MessageItem and the flag-properties
-     * seen=true/false and/or flagged=true/false.
+     * Changes data of a single MessageItem or a MessageBody.
+     * Allows for specifying target=MessageItem, target=MessageDraft or target=MessageBodyDraft.
+     * If the target MessageItem is specified, the flag-properties
+     * seen=true/false and/or flagged=true/false can be set.
+     * If the target is MessageDraft, the following parameters are expected:
+     *
+     * - id - compound key information
+     * - mailAccountId - compound key information
+     * - mailFolderId - compound key information
+     * - bcc
+     * - cc
+     * - date
+     * - from
+     * - subject
+     * - to
+     * For target=MessageBodyDraft, one of (or both) textPlain/textHtml-parameters should be set.
+     *
      * Everything else returns a 405.
      *
      * @return ResponseJson
@@ -170,50 +206,154 @@ class MessageItemController extends Controller {
 
         // possible targets: MessageItem
         $target = $request->input('target');
-        // possible parameters: seen, flagged
-        $seen    = $request->input('seen');
-        $flagged = $request->input('flagged');
 
         $mailFolderId = urldecode($mailFolderId);
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
-        if ($target !== "MessageItem") {
+        switch ($target) {
+
+
+            case "MessageBodyDraft":
+                $keys = [
+                    "mailAccountId", "mailFolderId", "id", "textHtml", "textPlain"
+                ];
+                $data = $request->only($keys);
+
+                $messageBody        = $this->messageBodyDraftJsonTransformer->transform($data);
+                $updatedMessageBody = $messageItemService->updateMessageBodyDraft($messageBody);
+
+                $resp = ["success" => !!$updatedMessageBody];
+                if ($updatedMessageBody) {
+                    $resp["data"] = $updatedMessageBody->toJson();
+                } else {
+                    $resp["msg"] = "Updating the MessageBodyDraft failed.";
+                }
+                return response()->json($resp, 200);
+                break;
+
+
+
+            case "MessageDraft":
+
+                $keys = [
+                    "mailAccountId", "mailFolderId", "id", "subject", "date",
+                    "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"
+                ];
+                $data = $request->only($keys);
+
+                $messageItemDraft        = $this->messageItemDraftJsonTransformer->transform($data);
+                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageItemDraft);
+
+                $resp = [
+                    "success" => !!$updatedMessageItemDraft
+                ];
+                if ($updatedMessageItemDraft) {
+                    $resp["data"] = ArrayUtil::intersect($updatedMessageItemDraft->toJson(), array_keys($data));
+                } else {
+                    $resp["msg"] = "Updating the MessageDraft failed.";
+                }
+                return response()->json($resp, 200);
+
+                break;
+
+            case "MessageItem":
+
+                $seen    = $request->input('seen');
+                $flagged = $request->input('flagged');
+
+                if (!is_bool($seen) && !is_bool($flagged)) {
+                    return response()->json([
+                        "success" => false,
+                        "msg"     =>  "Invalid request payload.",
+                        "flagged" => $flagged,
+                        "seen"    => $seen
+                    ], 400);
+                }
+
+                $flagList   = new FlagList();
+                $response   = [];
+                if ($seen !== null) {
+                    $flagList[] = new SeenFlag($seen);
+                    $response["seen"] = $seen;
+                }
+                if ($flagged !== null) {
+                    $flagList[] = new FlaggedFlag($flagged);
+                    $response["flagged"] = $flagged;
+                }
+
+                $result = $messageItemService->setFlags($messageKey, $flagList);
+
+                return response()->json([
+                    "success" => $result,
+                    "data"    => array_merge(
+                        $messageKey ->toJson(),
+                        $response
+                    )
+                ], 200);
+
+                break;
+
+            default:
+                return response()->json([
+                    "success" => false,
+                    "msg" =>  "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
+                ], 400);
+                break;
+        }
+
+    }
+
+
+    /**
+     * Posts new MessageBody data to the specified $mailFolderId for the account identified by
+     * $mailAccountId, creating an entirely new Message
+     *
+     * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     *
+     * @return ResponseJson
+     */
+    public function post(Request $request, $mailAccountId, $mailFolderId) {
+
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
+        // possible targets: MessageBody
+        $target = $request->input('target');
+
+        if ($target !== "MessageBodyDraft") {
             return response()->json([
                 "success" => false,
-                "msg" =>  "\"target\" must be specified with \"MessageItem\"."
+                "msg" =>  "\"target\" must be specified with \"MessageBodyDraft\"."
             ], 400);
         }
 
-        if (!is_bool($seen) && !is_bool($flagged)) {
+        $mailFolderId = urldecode($mailFolderId);
+        $folderKey = new FolderKey($mailAccount, $mailFolderId);
+
+        $keys = ["textHtml", "textPlain"];
+        $data = $request->only($keys);
+
+        $messageBody             = $this->messageBodyDraftJsonTransformer->transform($data);
+
+        $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
+
+        if (!$createdMessageBodyDraft) {
             return response()->json([
                 "success" => false,
-                "msg"     =>  "Invalid request payload.",
-                "flagged" => $flagged,
-                "seen"    => $seen
+                "msg"     => "Creating the MessageBody failed."
             ], 400);
         }
-
-        $flagList   = new FlagList();
-        $response   = [];
-        if ($seen !== null) {
-            $flagList[] = new SeenFlag($seen);
-            $response["seen"] = $seen;
-        }
-        if ($flagged !== null) {
-            $flagList[] = new FlaggedFlag($flagged);
-            $response["flagged"] = $flagged;
-        }
-
-        $result = $messageItemService->setFlags($messageKey, $flagList);
 
         return response()->json([
-            "success" => $result,
-            "data"    => array_merge(
-                $messageKey ->toJson(),
-                $response
-            )
+            "success" => !!$createdMessageBodyDraft ,
+            "data"    => $createdMessageBodyDraft->toJson()
         ], 200);
 
     }
+
 
 }

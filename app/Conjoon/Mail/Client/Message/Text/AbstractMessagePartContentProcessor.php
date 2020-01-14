@@ -27,15 +27,11 @@
 namespace Conjoon\Mail\Client\Message\Text;
 
 use Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+    Conjoon\Mail\Client\Message\MessagePart;
 
 
 /**
- * Interface MessagePartContentProcessor.
- * Contract for converting the contents of a MessagePart to a target charset.
- * Implementing classes are free to add any additional functionality for converting the
- * contents to a readable version required by the client.
+ * AbstractMessagePartContentProcessor.
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
@@ -47,20 +43,30 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
     protected $converter;
 
     /**
-     * @var HtmlReadableStrategy
+     * @var PlainTextStrategy
      */
-    protected $htmlReadableStrategy;
+    protected $plainTextStrategy;
+
+    /**
+     * @var HtmlTextStrategy
+     */
+    protected $htmlTextStrategy;
 
 
     /**
      * DefaultMessagePartContentProcessor constructor.
      *
      * @param Converter $converter
-     * @param HtmlReadableStrategy $htmlReadableStrategy
+     * @param PlainTextStrategy $plainTextStrategy
+     * @param HtmlTextStrategy $htmlTextStrategy
      */
-    public function __construct(Converter $converter, HtmlReadableStrategy $htmlReadableStrategy)  {
+    public function __construct(Converter $converter,
+                                PlainTextStrategy $plainTextStrategy,
+                                HtmlTextStrategy $htmlTextStrategy)  {
+
         $this->converter = $converter;
-        $this->htmlReadableStrategy = $htmlReadableStrategy;
+        $this->plainTextStrategy = $plainTextStrategy;
+        $this->htmlTextStrategy = $htmlTextStrategy;
     }
 
 
@@ -81,15 +87,15 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
         switch ($mimeType) {
 
             case "text/plain":
-                $messagePart->setContents($this->converter->convert(
+                $messagePart->setContents($this->plainTextStrategy->process($this->converter->convert(
                     $messagePart->getContents(),
                     $messagePart->getCharset(),
                     $toCharset
-                ), $toCharset);
+                )), $toCharset);
                 break;
 
             case "text/html":
-                $messagePart->setContents($this->htmlReadableStrategy->process($this->converter->convert(
+                $messagePart->setContents($this->htmlTextStrategy->process($this->converter->convert(
                     $messagePart->getContents(),
                     $messagePart->getCharset(),
                     $toCharset
@@ -97,7 +103,7 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
                 break;
 
             default:
-                throw new ProcessorException("Cannot process any mimy type other than \"text/plain\"/\"text/html\"");
+                throw new ProcessorException("Cannot process any mime type other than \"text/plain\"/\"text/html\"");
 
         }
 

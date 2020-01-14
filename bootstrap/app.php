@@ -63,7 +63,10 @@ $app->configure('imapserver');
 
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
-$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients) {
+$hordeBodyComposer   = new Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
+$hordeHeaderComposer = new Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+
+$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
 
     $accountId = $account->getId();
 
@@ -72,7 +75,7 @@ $getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$m
     }
 
 
-    $mailClient = new Conjoon\Mail\Client\Imap\HordeClient($account);
+    $mailClient = new Conjoon\Horde\Mail\Client\Imap\HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };
@@ -111,13 +114,28 @@ $app->singleton('Conjoon\Mail\Client\Service\AttachmentService', function ($app)
 });
 
 
+$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer',  function ($app) {
+    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
+});
+
+$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer',  function ($app) {
+    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
+});
+
 $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
 
-    $defaultMessagePartContentProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessagePartContentProcessor(
+    $readableMessagePartContentProcessor = new Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor(
         $charsetConverter,
+        new Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
         new Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy
+    );
+
+    $writableMessagePartContentProcessor = new Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor(
+        $charsetConverter,
+        new Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
+        new Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy
     );
 
     $defaultMessageItemFieldsProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor(
@@ -127,9 +145,10 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
     return new Conjoon\Mail\Client\Service\DefaultMessageItemService(
         $mailClient,
         $defaultMessageItemFieldsProcessor,
-        $defaultMessagePartContentProcessor,
+        $readableMessagePartContentProcessor,
+        $writableMessagePartContentProcessor,
         new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
-            $defaultMessagePartContentProcessor
+            $readableMessagePartContentProcessor
         )
     );
 });
