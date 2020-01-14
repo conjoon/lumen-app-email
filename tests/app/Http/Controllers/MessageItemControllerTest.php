@@ -183,6 +183,40 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
+     * Tests get() to make sure method returns the MessageItemDraft of a Message
+     *
+     *
+     * @return void
+     */
+    public function testGet_MessageItemDraft_success()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $messageItemDraft = new MessageItemDraft($messageKey);
+
+        $serviceStub->expects($this->once())
+            ->method('getMessageItemDraft')
+            ->with($messageKey)
+            ->willReturn($messageItemDraft);
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageDraft');
+
+        $this->assertEquals(200, $response->status());
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => $messageItemDraft->toJson()
+        ]);
+    }
+
+
+    /**
      * Tests get() to make sure method relies on target-parameter
      *
      *
@@ -205,7 +239,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => false,
-            "msg"    => "\"target\" must be specified with either \"MessageBody\" or \"MessageItem\"."
+            "msg"    => "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
         ]);
     }
 

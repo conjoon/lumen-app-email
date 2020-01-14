@@ -157,10 +157,12 @@ class MessageItemController extends Controller {
             $item = $messageItemService->getMessageBody($messageKey);
         } else if ($target === "MessageItem") {
             $item = $messageItemService->getMessageItem($messageKey);
+        } else if ($target === "MessageDraft") {
+            $item = $messageItemService->getMessageItemDraft($messageKey);
         } else {
             return response()->json([
                 "success" => false,
-                "msg" =>  "\"target\" must be specified with either \"MessageBody\" or \"MessageItem\"."
+                "msg" =>  "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
             ], 400);
 
         }
