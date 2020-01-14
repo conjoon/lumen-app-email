@@ -176,6 +176,16 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
+        $messageItemDraft = $this->mailClient->getMessageItemDraft($key);
+        $this->charsetConvertHeaderFields($messageItemDraft);
+        return $messageItemDraft;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function getMessageBody(MessageKey $key) :MessageBody {
         $messageBody = $this->mailClient->getMessageBody($key);
         $this->processMessageBody($messageBody);

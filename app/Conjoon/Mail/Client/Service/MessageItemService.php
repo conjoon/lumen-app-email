@@ -76,6 +76,16 @@ interface MessageItemService {
 
 
     /**
+     * Returns a single MessageItemDraft.
+     *
+     * @param MessageKey $key
+     *
+     * @return MessageItemDraft or null if no entity for the key was found
+     */
+    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+
+
+    /**
      * Returns a single MessageBody.
      *
      * @param MessageKey $key

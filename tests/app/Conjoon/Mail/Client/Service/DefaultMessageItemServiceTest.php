@@ -177,6 +177,50 @@ class DefaultMessageItemServiceTest extends TestCase {
 
 
     /**
+     * Single MessageItemDraft Test
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemDraft() {
+
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $messageItemId = "8977";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $messageKey = $this->createMessageKey($account->getId(), $mailFolderId, $messageItemId);
+
+        $clientStub = $service->getMailClient();
+        $clientStub->method('getMessageItemDraft')
+            ->with($messageKey)
+            ->willReturn(
+                $this->buildTestMessageItem($account->getId(), $mailFolderId, $messageItemId, true)
+            );
+
+
+        $item = $service->getMessageItemDraft($messageKey);
+
+        $cmpItem = $this->buildTestMessageItem($account->getId(), $mailFolderId, $messageItemId, true);
+
+        $cmpItem->setDate($item->getDate());
+
+        $this->assertSame($messageItemId, $item->getMessageKey()->getId());
+
+        $cmpJson   = $cmpItem->toJson();
+        $itemJson = $item->toJson();
+
+        $this->assertSame("MessageItemFieldsProcessor", $itemJson["subject"]);
+
+        $cmpJson["subject"] = $itemJson["subject"];
+
+        $this->assertSame($cmpJson, $itemJson);
+    }
+
+
+
+    /**
      * Single MessageBody Test
      *
      * @runInSeparateProcess
@@ -605,7 +649,7 @@ class DefaultMessageItemServiceTest extends TestCase {
     protected function getMailClientMock() {
         return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
                     ->setMethods([
-                        "getMessageItemList", "getMessageItem", "getMessageBody",
+                        "getMessageItemList", "getMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
                         "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
                         "updateMessageDraft", "updateMessageBodyDraft"])
@@ -696,10 +740,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @param $mailAccountId
      * @param $mailFolderId
-     * @return array
+     * @return MessageItem|MessageItemDraft
      * @throws Exception
      */
-    protected function buildTestMessageItem($mailAccountId, $mailFolderId, $messageItemId = null) {
+    protected function buildTestMessageItem($mailAccountId, $mailFolderId, $messageItemId = null, $isDraft = false) {
         $items = [];
 
         if ($messageItemId == null) {
@@ -714,15 +758,24 @@ class DefaultMessageItemServiceTest extends TestCase {
             "size" => 100,
             "subject" => "subject",
             "date" => new \DateTime(),
-            "seen" => false,
             "answered" =>false,
             "draft" =>false,
             "flagged" => false,
-            "recent" => false,
-            "hasAttachments" => false
+            "recent" => false
         ];
 
-        return new MessageItem($messageKey, $data);
+        if ($isDraft === false) {
+            $data["seen"]           = false;
+            $data["hasAttachments"] = false;
+            return new MessageItem($messageKey, $data);
+        } else {
+            $data["cc"]      = MailAddressList::fromJsonString(json_encode([["address" => "test@cc"]]));
+            $data["bcc"]     = MailAddressList::fromJsonString(json_encode([["address" => "test@bcc"]]));
+            $data["replyTo"] = MailAddress::fromJsonString(json_encode(["address" => "test@replyTo"]));
+            return new MessageItemDraft($messageKey, $data);
+        }
+
+
     }
 
 
