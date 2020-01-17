@@ -43,6 +43,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\DraftFlag;
 
 /**
  * Class DefaultMessageItemService.
@@ -181,6 +182,24 @@ class DefaultMessageItemService implements MessageItemService {
         $this->charsetConvertHeaderFields($messageItemDraft);
         return $messageItemDraft;
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function sendMessageDraft(MessageKey $key) : bool {
+
+        $result = false;
+
+        try {
+            $result = $this->mailClient->sendMessageDraft($key);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $result;
+    }
+
 
 
     /**

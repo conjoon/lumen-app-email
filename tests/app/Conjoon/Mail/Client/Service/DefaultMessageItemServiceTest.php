@@ -611,6 +611,56 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
 
+    /**
+     * Tests sendMessageDraft()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft() {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $testSend = function($expected) use ($messageKey) {
+
+            $service    = $this->createService();
+            $clientStub = $service->getMailClient();
+            $clientStub->method('sendMessageDraft')->with($messageKey)->willReturn($expected);
+
+            $this->assertSame($service->sendMessageDraft($messageKey), $expected);
+        };
+
+        $testSend(true);
+        $testSend(false);
+    }
+
+
+    /**
+     * Tests sendMessageDraft() /w exception
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_exception() {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $clientStub->method('sendMessageDraft')
+                   ->with($messageKey)
+                   ->willThrowException(new MailClientException);
+
+        $this->assertFalse($service->sendMessageDraft($messageKey));
+    }
+
+
 
 // ------------------
 //     Test Helper
@@ -652,7 +702,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                         "getMessageItemList", "getMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
                         "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
-                        "updateMessageDraft", "updateMessageBodyDraft"])
+                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }
