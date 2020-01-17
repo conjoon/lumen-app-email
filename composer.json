@@ -14,7 +14,8 @@
         "php": ">=7.4",
         "ezyang/htmlpurifier": "^4.11",
         "laravel/lumen-framework": "5.8.*",
-        "pear-pear.horde.org/Horde_Imap_Client": "*"
+        "pear-pear.horde.org/Horde_Imap_Client": "*",
+        "pear-pear.horde.org/Horde_Smtp": "*"
     },
     "require-dev": {
         "fzaninotto/faker": "^1.4",

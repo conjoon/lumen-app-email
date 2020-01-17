@@ -84,6 +84,19 @@ interface MailClient {
 
 
     /**
+     * Tries to send the specified MessageItemDraft found under $key.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if sending was successful, otherwise false.
+     *
+     * @throws MailClientException if any exception occurs, or if the message found
+     * is not a Draft-Message.
+     */
+    public function sendMessageDraft(MessageKey $key) : bool;
+
+
+    /**
      * Returns the specified MessageBody for the submitted arguments.
      *
      * @param MessageKey $key

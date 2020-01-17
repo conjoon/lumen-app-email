@@ -72,6 +72,12 @@ class HordeClient implements MailClient {
     protected $socket;
 
     /**
+     * @var Horde_Mail_Transport
+     */
+    protected $mailer;
+
+
+    /**
      * @var BodyComposer
      */
     protected $bodyComposer;
@@ -622,9 +628,102 @@ class HordeClient implements MailClient {
         return null;
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function sendMessageDraft(MessageKey $messageKey) : bool {
+
+
+        try {
+
+            $client  = $this->connect($messageKey);
+            $account = $this->getMailAccount($messageKey);
+
+            $mailFolderId  = $messageKey->getMailFolderId();
+            $id            = $messageKey->getId();
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+            $fetchQuery->flags();
+            $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+            $item        = $fetchResult[$id];
+
+            // check if message is a draft
+            $flags = $item->getFlags();
+            if (!in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags)) {
+                throw new ImapClientException("The specified message is not a Draft-Message.");
+            }
+
+            $target = $item->getFullMsg(false);
+
+            $part    = \Horde_Mime_Part::parseMessage($target);
+            $headers = \Horde_Mime_Headers::parseHeaders($target);
+            $mail    = new \Horde_Mime_Mail($headers);
+            $mail->setBasePart($part);
+
+            $mailer = $this->getMailer($account);
+            $mail->send($mailer);
+
+            return true;
+
+        } catch (\Exception $e) {
+            if ($e instanceof ImapClientException) {
+                throw $e;
+            }
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return false;
+
+    }
+
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Returns the Horde_Mail_Transport to be used with this account.
+     *
+     *
+     * @param MailAccount $account
+     *
+     * @return Horde_Mail_Transport
+     */
+    public function getMailer(MailAccount $account) {
+
+        $account = $this->getMailAccount($account->getId());
+
+        if (!$account) {
+            throw new ImapClientException(
+                "The passed \"account\" does not share the same id-value with " .
+                "the MailAccount this class was configured with."
+            );
+        }
+
+        if ($this->mailer) {
+            return $this->mailer;
+        }
+
+        $smtpCfg = [
+            "host"     => $account->getOutboxAddress(),
+            "port"     => $account->getOutboxPort(),
+            "password" => $account->getOutboxPassword(),
+            "username" => $account->getOutboxUser()
+        ];
+
+        if ($account->getOutboxSsl()) {
+            $smtpCfg["secure"] = 'ssl';
+        }
+
+        $this->mailer = new \Horde_Mail_Transport_Smtphorde($smtpCfg);
+
+        return $this->mailer;
+    }
+
 
     /**
      * Appends the specified $rawMessage to $mailFolderId and returns a new MessageBodyDraft with the
