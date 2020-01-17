@@ -201,11 +201,12 @@ interface MailClient {
 
     /**
      * Sets the flags specified in FlagList for the message represented by MessageKey.
+     * Existing flags will not be removed if they do not appear in the $flagList.
      *
      * @param MessageKey $key
      * @param FlagList $flagList
      *
-     * @return bool if the operatoin succeeded, otherwise false
+     * @return bool if the operation succeeded, otherwise false
      *
      * @throws MailClientException if any exception occurs
      */
