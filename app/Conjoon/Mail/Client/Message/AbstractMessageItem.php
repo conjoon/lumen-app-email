@@ -313,7 +313,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
             'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
             'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
             'subject'        => $this->getSubject(),
-            'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01"))->format("Y-m-d H:i:s"),
+            'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01 +0000"))->format("Y-m-d H:i:s O"),
             'seen'           => $this->getSeen(),
             'answered'       => $this->getAnswered(),
             'draft'          => $this->getDraft(),
