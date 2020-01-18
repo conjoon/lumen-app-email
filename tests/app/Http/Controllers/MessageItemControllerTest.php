@@ -232,10 +232,10 @@ class MessageItemControllerTest extends TestCase
                     ->method('getMessageItem');
 
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonEquals([
             "success" => false,
@@ -260,10 +260,10 @@ class MessageItemControllerTest extends TestCase
             ->method('setFlags');
 
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageItem');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -287,10 +287,10 @@ class MessageItemControllerTest extends TestCase
         $serviceStub->expects($this->never())
             ->method('setFlags');
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageBody');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -487,10 +487,10 @@ class MessageItemControllerTest extends TestCase
         $serviceStub->expects($this->never())
             ->method('createMessageBodyDraft');
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('POST', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -531,14 +531,14 @@ class MessageItemControllerTest extends TestCase
             ->with($folderKey, $messageBody)
             ->willReturn(null);
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call(
                 'POST',
                 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?target=MessageBodyDraft&textHtml=' .
                 $textHtml . "&textPlain=" . $textPlain
             );
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -732,6 +732,60 @@ class MessageItemControllerTest extends TestCase
             "success" => true,
             "data"    => $messageBodyDraft->toJson()
         ]);
+    }
+
+
+    /**
+     * Tests sendMessageDraft() to make sure sending a MessageDraft works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPost_sendMessageDraft()
+    {
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $requestData = [
+            "mailAccountId" => $messageKey->getMailAccountId(),
+            "mailFolderId" => $messageKey->getMailFolderId(),
+            "id" => $messageKey->getId()
+        ];
+
+        $testSend = function(bool $expected) use ($messageKey, $requestData) {
+
+            $serviceStub = $this->initServiceStub();
+
+            $serviceStub->expects($this->once())
+                ->method('sendMessageDraft')
+                ->with($messageKey)
+                ->willReturn($expected);
+
+            $response = $this->actingAs($this->getTestUserStub())
+                ->post(
+                    'cn_mail/SendMessage',
+                    $requestData
+                );
+
+            if ($expected === true) {
+                $response->assertResponseOk();
+                $response->seeJsonEquals([
+                    "success" => $expected,
+                ]);
+
+            } else {
+                $this->assertResponseStatus(400);
+                $response->seeJsonEquals([
+                    "success" => $expected,
+                    "msg"     => "Sending the message failed."
+                ]);
+
+            }
+
+        };
+
+        $testSend(true);
+        $testSend(false);
+
     }
 
 // +--------------------------

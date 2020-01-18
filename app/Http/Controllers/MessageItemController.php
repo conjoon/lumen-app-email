@@ -356,4 +356,38 @@ class MessageItemController extends Controller {
     }
 
 
+    /**
+     * Sends the Draft identified by the POST-parameters "mailAccountId",
+     * "mailFolderId" and "id".
+     *
+     * @return ResponseJson
+     */
+    public function sendMessageDraft(Request $request) {
+
+        $user = Auth::user();
+
+        $keys = ["mailAccountId", "mailFolderId", "id"];
+        $data = $request->only($keys);
+
+        $mailAccount = $user->getMailAccount($data["mailAccountId"]);
+
+        $messageItemService = $this->messageItemService;
+
+        $messageKey = new MessageKey($mailAccount, $data["mailFolderId"], $data["id"]);
+
+        $status = $messageItemService->sendMessageDraft($messageKey);
+
+        if (!$status) {
+            return response()->json([
+                "success" => false,
+                "msg"     => "Sending the message failed."
+            ], 400);
+        }
+
+        return response()->json([
+            "success" => true
+        ], 200);
+
+    }
+
 }
