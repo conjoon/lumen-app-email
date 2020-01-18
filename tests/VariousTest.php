@@ -60,7 +60,8 @@ class VariousTest extends TestCase
             "POST/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
             "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
             "PUT/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments"
+            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments",
+            "POST/cn_mail/SendMessage"
         ];
 
         foreach ($testAuthsFor as $route) {
@@ -146,7 +147,83 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(\Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());
         $this->assertInstanceOf(\Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
+    }
 
+
+    /**
+     * Test to retrieve the MessageItemService with configured MailAccount
+     * retrieved from input
+     */
+    public function testMessageItemService_input() {
+
+        $cmpId = "8998";
+
+        $userStub = $this->getTemplateUserStub(['getMailAccount']);
+        $userStub->method('getMailAccount')
+            ->with($cmpId)
+            ->willReturn(new \Conjoon\Mail\Client\Data\MailAccount(["id" => $cmpId]));
+        $this->app->auth->setUser($userStub);
+
+
+        $reflection = new \ReflectionClass($this->app);
+        $property = $reflection->getMethod('getConcrete');
+        $property->setAccessible(true);
+
+        $request = new Illuminate\Http\Request();
+        $request["mailAccountId"] = $cmpId;
+        $this->app->request = $request;
+
+        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
+
+        $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
 
     }
+
+
+    /**
+     * Test to retrieve the MessageItemService with configured MailAccount
+     * retrieved from route; route params should be given precedence to
+     *input params
+     */
+    public function testMessageItemService_route() {
+
+        $cmpId = "8998";
+
+        $userStub = $this->getTemplateUserStub(['getMailAccount']);
+        $userStub->method('getMailAccount')
+            ->with($cmpId)
+            ->willReturn(new \Conjoon\Mail\Client\Data\MailAccount(["id" => $cmpId]));
+        $this->app->auth->setUser($userStub);
+
+
+        $reflection = new \ReflectionClass($this->app);
+        $property = $reflection->getMethod('getConcrete');
+        $property->setAccessible(true);
+
+
+        $request = Illuminate\Http\Request::create("dummyurl", "GET", ["mailAccountId" => $cmpId . "ztr"]);
+
+        // make sure routing works
+        $request->setRouteResolver(function() use ($cmpId) {
+            return new class($cmpId) {
+
+                public function __construct($cmpId) {
+                    $this->cmpId = $cmpId;
+                }
+                public function parameter($param, $default) {
+                    if ($param === "mailAccountId") {
+                        return $this->cmpId;
+                    }
+                }
+            };
+        });
+
+        $this->app->request = $request;
+
+        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
+
+        $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
+
+    }
+
 }

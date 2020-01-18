@@ -39,6 +39,8 @@ $router->post('cn_imapuser/auth', 'UserController@authenticate');
 
 $router->group(['middleware' => 'auth'], function () use ($router) {
 
+    $router->post('cn_mail/SendMessage', 'MessageItemController@send');
+
     $router->get('cn_mail/MailAccounts', 'MailAccountController@index');
 
     $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');

@@ -123,7 +123,16 @@ $app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraf
 });
 
 $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
-    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
+    $mailAccountId = null;
+
+    if ($app->request->route('mailAccountId')) {
+        $mailAccountId = $app->request->route('mailAccountId');
+    } else {
+        // mailAccountId not part of the routing url, but request parameters
+        $mailAccountId = $app->request->input('mailAccountId');
+    }
+
+    $mailClient = $getMailClient($app->auth->user()->getMailAccount($mailAccountId));
     $charsetConverter = new Conjoon\Text\CharsetConverter();
 
     $readableMessagePartContentProcessor = new Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor(
