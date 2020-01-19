@@ -842,6 +842,7 @@ class HordeClientTest extends TestCase {
 
     }
 
+
     /**
      * Tests sendMessageDraft
      *
@@ -914,9 +915,122 @@ class HordeClientTest extends TestCase {
 
     }
 
+
+    /**
+     * Tests moveMessage with keys not sharing same MailAccountId
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage() {
+        $this->funcForTestMove(false);
+    }
+
+
+    /**
+     * Tests moveMessage with exception thrown by client
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_exception() {
+        $this->funcForTestMove(true);
+    }
+
+
+    /**
+     * Tests moveMessage with keys not sharing same MailAccountId
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_differerentMailAccountId() {
+
+
+        $client = $this->createClient();
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = "SENT";
+        $newMessageItemId = "abcde";
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey("zut", $toMailFolderId);
+
+        $this->expectException(ImapClientException::class);
+        $client->moveMessage($messageKey, $folderKey);
+    }
+
+
+    /**
+     * Tests moveMessage with same mailFolderIds
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_sameMailFolderIds() {
+
+
+        $client = $this->createClient();
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = $mailFolderId;
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey($account, $toMailFolderId);
+
+        $res = $client->moveMessage($messageKey, $folderKey);
+
+        $this->assertSame($res, $messageKey);
+
+    }
+
 // -------------------------------
 //  Helper
 // -------------------------------
+
+    /**
+     * helper for moveMessage tests
+     */
+    protected function funcForTestMove($exception = false) {
+
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = "SENT";
+        $newMessageItemId = "abcde";
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey($account, $toMailFolderId);
+        $cmpMessageKey  = new MessageKey($account, $toMailFolderId, $newMessageItemId);
+
+        $client = $this->createClient();
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+        $proc = $imapStub->shouldReceive("copy")
+            ->with(
+                $mailFolderId,
+                $toMailFolderId,
+                ['ids' => $rangeList, "move" => true, "force_map" => true]
+            );
+
+        if ($exception === true) {
+            $this->expectException(ImapClientException::class);
+            $proc->andThrow(new \Exception("foo"));
+            $client->moveMessage($messageKey, $folderKey);
+        } else {
+            $proc->andReturn([$messageItemId => $newMessageItemId]);
+            $res = $client->moveMessage($messageKey, $folderKey);
+            $this->assertEquals($res, $cmpMessageKey);
+        }
+    }
 
 
     /**

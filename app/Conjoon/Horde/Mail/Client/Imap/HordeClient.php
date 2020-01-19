@@ -681,6 +681,44 @@ class HordeClient implements MailClient {
 
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) : MessageKey {
+
+        if ($messageKey->getMailAccountId() !== $folderKey->getMailAccountId()) {
+            throw new ImapClientException("The \"messageKey\" and the \"folderKey\" do not share the same mailAccountId.");
+        }
+
+        if ($messageKey->getMailFolderId() === $folderKey->getId()) {
+            return $messageKey;
+        }
+
+
+        try {
+
+            $client = $this->connect($messageKey);
+
+            $sourceFolder = $messageKey->getMailFolderId();
+            $destFolder = $folderKey->getId();
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($messageKey->getId());
+
+            $res = $client->copy(
+                $sourceFolder,
+                $destFolder,
+                ["ids" => $rangeList, "move" => true, "force_map" => true]
+            );
+
+            return new MessageKey($folderKey->getMailAccountId(), $folderKey->getId(), $res[$messageKey->getId()]);
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+    }
+
 // -------------------
 //   Helper
 // -------------------

@@ -212,4 +212,18 @@ interface MailClient {
      */
     public function setFlags(MessageKey $key, FlagList $flagList) : bool;
 
+
+    /**
+     * Moves the message identified by $messageKey to the folder specified with $folderKey.
+     * Does nothing if both mailFolderIds are the same.
+     *
+     * @param MessageKey $messageKey
+     * @param FolderKey $folderKey
+     *
+     * @return MessageKey The new MessageKey for the moved Message
+     *
+     * @throws MailClientException if the MailAccount-id found in $messageKey and $folderKey are
+     * not the same, or if any other error occurs
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) : MessageKey;
 }
