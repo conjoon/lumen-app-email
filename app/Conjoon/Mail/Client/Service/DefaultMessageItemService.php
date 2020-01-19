@@ -43,7 +43,6 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Message\MessageBodyDraft,
     Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList;
-use Conjoon\Mail\Client\Message\Flag\DraftFlag;
 
 /**
  * Class DefaultMessageItemService.
@@ -232,6 +231,21 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool {
         return $this->getMailClient()->setFlags($messageKey, $flagList);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey {
+
+        try {
+            return $this->getMailClient()->moveMessage($messageKey, $folderKey);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return null;
     }
 
 

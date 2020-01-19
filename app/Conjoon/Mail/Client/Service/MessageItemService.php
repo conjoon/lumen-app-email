@@ -182,6 +182,17 @@ interface MessageItemService {
      */
     public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool;
 
+    /**
+     * Moves the message identified by $messageKey to the destination folder specified with
+     * $folderKey. Returns null if the operation failed.
+     *
+     * @param MesageKey $messageKey
+     * @param FolderKey $folderKey
+     *
+     * @return null|MessageKey
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey;
+
 
     /**
      * Returns the MessageItemFieldsProcessor used by this MessageService.

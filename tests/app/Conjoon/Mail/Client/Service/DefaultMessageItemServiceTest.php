@@ -661,6 +661,54 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
 
+    /**
+     * Tests moveMessage()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage() {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+        $folderKey    = new FolderKey($account, "foo");
+
+        $expected = new MessageKey($account, "foo", "newid");
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $clientStub->method('moveMessage')->with($messageKey, $folderKey)->willReturn($expected);
+
+        $this->assertSame($service->moveMessage($messageKey, $folderKey), $expected);
+
+    }
+
+
+    /**
+     * Tests moveMessage() /w exception
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_exception() {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+        $folderKey    = new FolderKey($account, "foo");
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+        $clientStub->method('moveMessage')->with($messageKey, $folderKey)
+                   ->willThrowException(new MailClientException("should not bubble"));
+
+        $this->assertSame($service->moveMessage($messageKey, $folderKey), null);
+
+    }
+
 
 // ------------------
 //     Test Helper
@@ -702,7 +750,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                         "getMessageItemList", "getMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
                         "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
-                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft"])
+                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft", "moveMessage"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }
