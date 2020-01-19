@@ -701,7 +701,7 @@ class HordeClient implements MailClient {
             $client = $this->connect($messageKey);
 
             $sourceFolder = $messageKey->getMailFolderId();
-            $destFolder = $folderKey->getId();
+            $destFolder   = $folderKey->getId();
 
             $rangeList = new \Horde_Imap_Client_Ids();
             $rangeList->add($messageKey->getId());
@@ -712,7 +712,11 @@ class HordeClient implements MailClient {
                 ["ids" => $rangeList, "move" => true, "force_map" => true]
             );
 
-            return new MessageKey($folderKey->getMailAccountId(), $folderKey->getId(), $res[$messageKey->getId()]);
+            if (!is_array($res)) {
+                throw new ImapClientException("Moving the message was not succesful.");
+            }
+
+            return new MessageKey($folderKey->getMailAccountId(), $folderKey->getId(), $res[$messageKey->getId()] . "");
 
         } catch (\Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);

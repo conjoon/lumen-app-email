@@ -923,7 +923,7 @@ class HordeClientTest extends TestCase {
      * @preserveGlobalState disabled
      */
     public function testMoveMessage() {
-        $this->funcForTestMove(false);
+        $this->assertSame($this->funcForTestMove(""), "");
     }
 
 
@@ -934,7 +934,18 @@ class HordeClientTest extends TestCase {
      * @preserveGlobalState disabled
      */
     public function testMoveMessage_exception() {
-        $this->funcForTestMove(true);
+        $this->assertSame($this->funcForTestMove("exception"), "exception");
+    }
+
+
+    /**
+     * Tests moveMessage with no array returned by client
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_noarray() {
+        $this->assertSame($this->funcForTestMove("noarray"), "noarray");
     }
 
 
@@ -995,14 +1006,14 @@ class HordeClientTest extends TestCase {
     /**
      * helper for moveMessage tests
      */
-    protected function funcForTestMove($exception = false) {
+    protected function funcForTestMove($type = "") {
 
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId     = "DRAFTS";
         $messageItemId    = "989786";
         $toMailFolderId   = "SENT";
-        $newMessageItemId = "abcde";
+        $newMessageItemId = 24;
 
         $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
         $folderKey      = new FolderKey($account, $toMailFolderId);
@@ -1021,15 +1032,21 @@ class HordeClientTest extends TestCase {
                 ['ids' => $rangeList, "move" => true, "force_map" => true]
             );
 
-        if ($exception === true) {
+        if ($type === "exception") {
             $this->expectException(ImapClientException::class);
             $proc->andThrow(new \Exception("foo"));
             $client->moveMessage($messageKey, $folderKey);
+        } else if ($type === "noarray") {
+            $proc->andReturn(false);
+            $this->expectException(ImapClientException::class);
+            $res = $client->moveMessage($messageKey, $folderKey);
         } else {
             $proc->andReturn([$messageItemId => $newMessageItemId]);
             $res = $client->moveMessage($messageKey, $folderKey);
             $this->assertEquals($res, $cmpMessageKey);
         }
+
+        return $type;
     }
 
 
