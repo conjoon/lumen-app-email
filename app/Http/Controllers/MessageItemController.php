@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,6 +32,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
@@ -232,7 +233,6 @@ class MessageItemController extends Controller {
                 break;
 
 
-
             case "MessageDraft":
 
                 $keys = [
@@ -258,20 +258,41 @@ class MessageItemController extends Controller {
 
             case "MessageItem":
 
+                $flagResult = null;
+                $response   = [];
+
                 $seen    = $request->input('seen');
                 $flagged = $request->input('flagged');
+                $draft   = $request->input('draft');
 
-                if (!is_bool($seen) && !is_bool($flagged)) {
+                $newMailFolderId = $request->input('mailFolderId');
+
+                // check required parameters first
+                if ($seen === null && $flagged === null && $draft === null && $newMailFolderId === null) {
                     return response()->json([
                         "success" => false,
-                        "msg"     =>  "Invalid request payload.",
-                        "flagged" => $flagged,
-                        "seen"    => $seen
+                        "msg" => "Invalid request payload."
                     ], 400);
                 }
 
-                $flagList   = new FlagList();
-                $response   = [];
+                if ($newMailFolderId !== null && $newMailFolderId === $mailFolderId) {
+                    return response()->json([
+                        "success" => false,
+                        "msg"     => "Cannot move message since it already belongs to this folder."
+                    ], 400);
+                }
+
+                if ($newMailFolderId === null && !is_bool($seen) && !is_bool($flagged) && !is_bool($draft)) {
+                    return response()->json([
+                        "success" => false,
+                        "msg"     => "Invalid request payload.",
+                        "flagged" => $flagged,
+                        "seen"    => $seen,
+                        "draft"   => $draft
+                    ], 400);
+                }
+
+                $flagList = new FlagList();
                 if ($seen !== null) {
                     $flagList[] = new SeenFlag($seen);
                     $response["seen"] = $seen;
@@ -281,15 +302,43 @@ class MessageItemController extends Controller {
                     $response["flagged"] = $flagged;
                 }
 
-                $result = $messageItemService->setFlags($messageKey, $flagList);
+                if ($draft !== null) {
+                    $flagList[] = new DraftFlag($draft);
+                    $response["draft"] = $draft;
+                }
+                if (count($flagList) !== 0) {
+                    $flagResult = $messageItemService->setFlags($messageKey, $flagList);
 
-                return response()->json([
-                    "success" => $result,
-                    "data"    => array_merge(
-                        $messageKey ->toJson(),
-                        $response
-                    )
-                ], 200);
+                    // exit here if we do not have anything related to MailFolders
+                    if ($newMailFolderId === null || $newMailFolderId === $mailFolderId) {
+                        return response()->json([
+                            "success" => $flagResult,
+                            "data"    => array_merge(
+                                $messageKey ->toJson(),
+                                $response
+                            )
+                        ], $flagResult ? 200 : 500);
+                    }
+                }
+
+                // if we are here, we require to move messages
+                $newMessageKey = $messageItemService->moveMessage(
+                    $messageKey, new FolderKey($mailAccountId, $newMailFolderId)
+                );
+
+                if ($newMessageKey) {
+                    $item = $messageItemService->getListMessageItem($newMessageKey);
+
+                    return response()->json([
+                        "success" => true,
+                        "data"    => $item->toJson()
+                    ], 200);
+                } else {
+                    return response()->json([
+                        "success" => false
+                    ], 500);
+                }
+
 
                 break;
 
@@ -338,7 +387,6 @@ class MessageItemController extends Controller {
         $data = $request->only($keys);
 
         $messageBody             = $this->messageBodyDraftJsonTransformer->transform($data);
-
         $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
 
         if (!$createdMessageBodyDraft) {

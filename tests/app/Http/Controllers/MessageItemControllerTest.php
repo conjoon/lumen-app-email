@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -36,6 +36,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
@@ -340,6 +341,101 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
+     * Tests put() to make sure setting flag and moving works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_FlagAndMove()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId = "ut";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", "311");
+        $newMessageKey = new MessageKey($folderKey, "2");
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(false);
+
+        $listMessageItem = new ListMessageItem($newMessageKey, ["draft" => false], new MessagePart("", "", ""));
+
+        $serviceStub->expects($this->once())
+            ->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(true);
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn($newMessageKey);
+
+        $serviceStub->expects($this->once())
+            ->method('getListMessageItem')
+            ->with($newMessageKey)
+            ->willReturn($listMessageItem);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $listMessageItem->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure setting flag and moving works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveSameFolderId()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId = "ut";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", $toFolderId);
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(false);
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->never())
+            ->method('moveMessage');
+
+        $serviceStub->expects($this->never())
+            ->method('getListMessageItem');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/' . $toFolderId . '/MessageItems/311',
+                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseStatus(400);
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "msg"     => "Cannot move message since it already belongs to this folder."
+        ]);
+    }
+
+    /**
      * Tests put() to make sure setting flags (seen / flagged) works as expected
      *
      *
@@ -410,7 +506,7 @@ class MessageItemControllerTest extends TestCase
                 ["target" => "MessageItem", "flagged" => false]//,
             );
 
-        $response->assertResponseOk();
+        $response->assertResponseStatus(500);
 
         $response->seeJsonEquals([
             "success" => false,
