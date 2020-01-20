@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -225,6 +225,75 @@ class HordeClientTest extends TestCase {
         $this->assertEquals(
             [], $messageItemList[1]->getTo()->toJson()
         );
+
+    }
+
+
+    /**
+     * Message Item Test with id specified in search options
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemList_widthIdSpecified() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive('search')->with(
+            "INBOX",
+            \Mockery::on(function ($searchQuery) {
+                return $searchQuery instanceof \Horde_Imap_Client_Search_Query &&
+                       $searchQuery->__toString() === "UID 34";
+            }),
+            ["sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]]
+        )->andReturn(["match" => new \Horde_Imap_Client_Ids([34])]);
+
+        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+
+        $fetchResults[34] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[34]->setUid(34);
+
+        $fetchResults[34]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
+        $fetchResults[34]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
+
+
+        $imapStub->shouldReceive('fetch')->with(
+            "INBOX", \Mockery::any(),
+            \Mockery::type('array')
+        )->andReturn(
+            $fetchResults
+        );
+
+        $client = $this->createClient();
+
+        $messageItemList = $client->getMessageItemList(
+            $this->createFolderKey(
+                $account->getId(),
+                "INBOX"
+            ),
+            ["ids" => [34]]
+        );
+
+
+        $this->assertInstanceOf(MessageItemList::class, $messageItemList);
+
+        $this->assertSame(1, count($messageItemList));
+
+        $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[0]);
+
+        $this->assertSame("utf-8", $messageItemList[0]->getCharset());
+
+        $this->assertSame("34", $messageItemList[0]->getMessageKey()->getId());
+        $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
+        $this->assertEquals(
+            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
+        );
+        $this->assertEquals(
+            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
+        );
+
 
     }
 

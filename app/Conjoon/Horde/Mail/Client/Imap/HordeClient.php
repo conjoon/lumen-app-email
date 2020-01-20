@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -1055,9 +1055,12 @@ class HordeClient implements MailClient {
             $searchOptions = ["sort" => $sortInfo];
         }
 
+        $searchQuery = new \Horde_Imap_Client_Search_Query();
+        if (isset($options["ids"]) && is_array($options["ids"])) {
+            $searchQuery->ids(new \Horde_Imap_Client_Ids($options["ids"]));
+        }
 
         // search and narrow down list
-        $searchQuery = new \Horde_Imap_Client_Search_Query();
         $results = $client->search($key->getId(), $searchQuery, $searchOptions);
 
         return $results;
