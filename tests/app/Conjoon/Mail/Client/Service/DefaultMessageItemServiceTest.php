@@ -710,6 +710,39 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
 
+    /**
+     * Tests getListMessageItem
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetListMessageItem() {
+
+        $service = $this->createService();
+
+        $clientStub = $service->getMailClient();
+
+        $mailAccountId = "dev";
+        $mailFolderId  = "INBOX";
+        $messageItemId = "1234";
+        $messageKey    = $this->createMessageKey($mailAccountId, $mailFolderId, $messageItemId);
+        $folderKey     = $messageKey->getFolderKey();
+
+        $messageItemListMock = new MessageItemList;
+        $messageItemListMock[] = new ListMessageItem($messageKey,
+            null, new MessagePart("preview", "UTF-8", "text/html"));
+
+        $clientStub->method('getMessageItemList')
+            ->with($folderKey, ["ids" => [$messageKey->getId()]])
+            ->willReturn($messageItemListMock);
+
+        $result = $service->getListMessageItem($messageKey);
+
+        $this->assertInstanceOf(ListMessageItem::Class, $result);
+        $this->assertSame("preview", $result->getMessagePart()->getContents());
+    }
+
+
 // ------------------
 //     Test Helper
 // ------------------
@@ -747,7 +780,7 @@ class DefaultMessageItemServiceTest extends TestCase {
     protected function getMailClientMock() {
         return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
                     ->setMethods([
-                        "getMessageItemList", "getMessageItem", "getMessageItemDraft", "getMessageBody",
+                        "getMessageItemList", "getMessageItem", "getListMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
                         "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
                         "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft", "moveMessage"])

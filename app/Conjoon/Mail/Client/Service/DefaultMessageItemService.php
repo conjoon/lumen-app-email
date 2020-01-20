@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessagePart,
@@ -172,6 +173,19 @@ class DefaultMessageItemService implements MessageItemService {
         return $messageItem;
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function getListMessageItem(MessageKey $messageKey) :ListMessageItem {
+
+        $folderKey = $messageKey->getFolderKey();
+
+        $messageItemList = $this->mailClient->getMessageItemList(
+            $folderKey, ["ids" => [$messageKey->getId()]]);
+
+        return $messageItemList[0];
+    }
 
     /**
      * @inheritdoc

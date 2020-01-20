@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
@@ -73,6 +74,16 @@ interface MessageItemService {
      * @return MessageItem
      */
     public function getMessageItem(MessageKey $key) :MessageItem;
+
+
+    /**
+     * Returns a single ListMessageItem.
+     *
+     * @param MessageKey $key
+     *
+     * @return ListMessageItem
+     */
+    public function getListMessageItem(MessageKey $key) :ListMessageItem;
 
 
     /**
