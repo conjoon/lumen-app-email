@@ -335,7 +335,8 @@ class MessageItemController extends Controller {
                     ], 200);
                 } else {
                     return response()->json([
-                        "success" => false
+                        "success" => false,
+                        "msg"     => "Could not move the message."
                     ], 500);
                 }
 

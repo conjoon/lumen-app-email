@@ -435,6 +435,98 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
+
+    /**
+     * Tests put() to make sure move works (without flag)
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveNoFlag()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId    = "TRASH";
+        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $newMessageKey = new MessageKey("dev_sys_conjoon_org", $toFolderId, "5");
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn($newMessageKey);
+
+        $listMessageItem = new ListMessageItem($newMessageKey, [], new MessagePart("", "", ""));
+        $serviceStub->expects($this->once())
+            ->method('getListMessageItem')
+            ->with($newMessageKey)
+            ->willReturn($listMessageItem);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123',
+                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $listMessageItem->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests put() move with moving failed
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveFail()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId    = "TRASH";
+        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $newMessageKey = new MessageKey("dev_sys_conjoon_org", $toFolderId, "5");
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn(null);
+
+        $serviceStub->expects($this->never())
+            ->method('getListMessageItem');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123',
+                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseStatus(500);
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "msg"     => "Could not move the message."
+        ]);
+    }
+
+
     /**
      * Tests put() to make sure setting flags (seen / flagged) works as expected
      *
