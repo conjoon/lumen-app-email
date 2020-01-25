@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -59,6 +59,10 @@ class AbstractMessageItemTest extends TestCase
         $this->assertNull($messageItem->getDraft());
 
         $this->assertNull($messageItem->getCharset());
+
+        $this->assertNull($messageItem->getMessageId());
+        $this->assertNull($messageItem->getReferences());
+        $this->assertNull($messageItem->getinReplyTo());
     }
 
 
@@ -142,6 +146,9 @@ class AbstractMessageItemTest extends TestCase
         $testException("to", "");
         $testException("date", "");
         $testException("charset", "int");
+        $testException("messageId", "string");
+        $testException("inReplyTo", "string");
+        $testException("references", "string");
 
         $this->assertSame(10, count($caught));
     }
@@ -267,17 +274,22 @@ class AbstractMessageItemTest extends TestCase
         $mod  = [];
         $it   = 0;
 
+        $skipFields = ["messageId"];
+
         $fieldLength = count(array_keys($conf));
         $this->assertTrue($fieldLength > 0);
 
         $this->assertSame($mod, $messageItem->getModifiedFields());
         foreach ($conf as $field => $value) {
+            if (in_array($field, $skipFields)) {
+                continue;
+            }
             $messageItem->{"set" . ucfirst($field)}($value);
             $mod[] = $field;
             $this->assertSame($mod, $messageItem->getModifiedFields());
             $it++;
         }
-        $this->assertSame($fieldLength, $it);
+        $this->assertSame($fieldLength - count($skipFields), $it);
     }
 
 
@@ -286,13 +298,13 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testIsHeaderField() {
 
-        $fields = ["from", "to", "subject", "date"];
+        $fields = ["from", "to", "subject", "date", "references", "inReplyTo"];
 
         foreach ($fields as $field) {
             $this->assertTrue(AbstractMessageItem::isHeaderField($field));
         }
 
-        $fields = ["recent", "seen", "flagged", "answered"];
+        $fields = ["recent", "seen", "flagged", "answered", "messageId"];
 
         foreach ($fields as $field) {
             $this->assertFalse(AbstractMessageItem::isHeaderField($field));
@@ -348,7 +360,10 @@ class AbstractMessageItemTest extends TestCase
             'draft'          => false,
             'flagged'        => true,
             'recent'         => false,
-            'charset'        => "ISO-8859-1"
+            'charset'        => "ISO-8859-1",
+            'messageId'      => 'mid',
+            'inReplyTo'      => 'midrt',
+            'references'     => 'midr'
         ];
 
     }

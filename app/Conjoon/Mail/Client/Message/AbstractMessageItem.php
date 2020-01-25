@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -36,7 +36,8 @@ use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClientException;
 
 /**
  * Class MessageItem models simplified envelope informations for a Mail Message.
@@ -114,6 +115,22 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
     protected $charset;
 
     /**
+     * @var string
+     */
+    protected $messageId;
+
+    /**
+     * @var string
+     */
+    protected $inReplyTo;
+
+    /**
+     * @var string
+     */
+    protected $references;
+
+
+    /**
      * Returns true is the specified field is a header field.
      *
      * @param $field
@@ -122,7 +139,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     public static function isHeaderField($field) {
 
-        return in_array($field, ["from", "to", "subject", "date"]);
+        return in_array($field, ["from", "to", "subject", "date", "inReplyTo", "references"]);
 
     }
 
@@ -197,6 +214,22 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
         return $this;
     }
 
+
+    /**
+     * Sets the messageId of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $messageId
+     */
+    public function setMessageId(string $messageId) {
+        if ($this->getMessageId()) {
+            throw new MailClientException("\"messageId\" was already set.");
+        }
+
+        $this->messageId = $messageId;
+
+        return $this;
+    }
 
     /**
      * Makes sure defined properties in this class are accessible via getter method calls.
@@ -276,6 +309,9 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
         switch ($property) {
             case "charset":
             case "subject":
+            case "messageId":
+            case "inReplyTo":
+            case "references":
                 if (!is_string($value)) {
                     return "string";
                 }
@@ -309,7 +345,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
 
         $mk = $this->getMessageKey();
 
-        return array_merge($mk->toJson(), [
+        $ret = array_merge($mk->toJson(), [
             'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
             'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
             'subject'        => $this->getSubject(),
@@ -319,7 +355,13 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
             'draft'          => $this->getDraft(),
             'flagged'        => $this->getFlagged(),
             'recent'         => $this->getRecent(),
+            'messageId'      => $this->getMessageId(),
+            'inReplyTo'      => $this->getInReplyTo(),
+            'references'     => $this->getReferences()
         ]);
+
+
+        return $ret;
     }
 
 
