@@ -982,7 +982,8 @@ class HordeClient implements MailClient {
             "draft"    => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
             "flagged"  => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
             "recent"   => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"))
+            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType")),
+            "messageId" => $envelope->message_id
         ];
 
         $messageStructure = $item->getStructure();

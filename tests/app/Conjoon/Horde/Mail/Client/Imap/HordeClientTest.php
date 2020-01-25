@@ -173,6 +173,8 @@ class HordeClientTest extends TestCase {
             "sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]
         ])->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
 
+        $messageIds = [111 => "foo", 222 => "bar"];
+
         $fetchResults = new \Horde_Imap_Client_Fetch_Results();
 
         $fetchResults[111] = new \Horde_Imap_Client_Data_Fetch();
@@ -180,9 +182,11 @@ class HordeClientTest extends TestCase {
         $fetchResults[222] = new \Horde_Imap_Client_Data_Fetch();
         $fetchResults[222]->setUid(222);
 
-        $fetchResults[111]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
+        $fetchResults[111]->setEnvelope([
+            'from' => "dev@conjoon.org", "to" => "devrec@conjoon.org", "message-id" => $messageIds[111]
+        ]);
         $fetchResults[111]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
-        $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org"]);
+        $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org", "message-id" => $messageIds[222]]);
         $fetchResults[222]->setHeaders('ContentType', 'Content-Type=text/plain;charset= ISO-8859-1');
 
 
@@ -225,6 +229,9 @@ class HordeClientTest extends TestCase {
         $this->assertEquals(
             [], $messageItemList[1]->getTo()->toJson()
         );
+
+        $this->assertSame($messageIds[111], $messageItemList[0]->getMessageId());
+        $this->assertSame($messageIds[222], $messageItemList[1]->getMessageId());
 
     }
 
@@ -317,6 +324,7 @@ class HordeClientTest extends TestCase {
         $fetchResults[16]->setUid("16");
         $fetchResults[16]->setSize("1600");
 
+
         $attach = new \Horde_Mime_Part;
         $attach->setDisposition("attachment");
         $fetchResults[16]->setStructure($attach);
@@ -362,10 +370,13 @@ class HordeClientTest extends TestCase {
 
         $replyTo = new MailAddress("test@replyto", "test@replyto");
 
+        $messageId = "kjgjkggjkkgjkgj";
+
         $fetchResults[16]->setEnvelope([
-            "cc"      => $cc[0]->getAddress(),
-            "bcc"     => $bcc[0]->getAddress(),
-            "reply-to" => $replyTo->getAddress()
+            "cc"          => $cc[0]->getAddress(),
+            "bcc"         => $bcc[0]->getAddress(),
+            "reply-to"    => $replyTo->getAddress(),
+            "message-id"  => $messageId
         ]);
 
         $imapStub->shouldReceive('fetch')->with(
@@ -378,6 +389,7 @@ class HordeClientTest extends TestCase {
         $this->assertEquals($cc, $item->getCc());
         $this->assertEquals($bcc, $item->getBcc());
         $this->assertEquals($replyTo, $item->getReplyTo());
+        $this->assertSame($messageId, $item->getMessageId());
         
     }
 
