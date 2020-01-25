@@ -860,6 +860,7 @@ class HordeClient implements MailClient {
         $fetchQuery->structure();
 
         $fetchQuery->headers("ContentType", ["Content-Type"], ["peek" => true]);
+        $fetchQuery->headers("References", ["References"], ["peek" => true]);
 
         $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
 
@@ -887,7 +888,7 @@ class HordeClient implements MailClient {
      */
     protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item, array $options = []): array {
 
-        $result = $result = $this->getItemStructure($client, $item, $key, $options);
+        $result = $this->getItemStructure($client, $item, $key, $options);
 
         return [
             "messageKey" => $result["messageKey"],
@@ -973,17 +974,18 @@ class HordeClient implements MailClient {
         $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
         $data = [
-            "from"     => $from,
-            "to"       => $tos,
-            "subject"  => $envelope->subject,
-            "date"     => $envelope->date,
-            "seen"     => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
-            "answered" => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
-            "draft"    => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
-            "flagged"  => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
-            "recent"   => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType")),
-            "messageId" => $envelope->message_id
+            "from"       => $from,
+            "to"         => $tos,
+            "subject"    => $envelope->subject,
+            "date"       => $envelope->date,
+            "seen"       => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
+            "answered"   => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
+            "draft"      => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
+            "flagged"    => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
+            "recent"     => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
+            "charset"    => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType")),
+            "references" => $this->getMessageIdStringFromReferencesHeaderValue($item->getHeaders("References")),
+            "messageId"  => $envelope->message_id
         ];
 
         $messageStructure = $item->getStructure();
@@ -1166,6 +1168,20 @@ class HordeClient implements MailClient {
         return ["content" => "", "charset" => ""];
     }
 
+    /**
+     * @param string $value
+     *
+     *
+     */
+    protected function getMessageIdStringFromReferencesHeaderValue(string $value) :string {
+
+        if (strpos($value, "References:") !== 0) {
+            return "";
+        }
+
+        return trim(substr($value, 11));
+
+    }
 
     /**
      * @param $value

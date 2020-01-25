@@ -174,6 +174,7 @@ class HordeClientTest extends TestCase {
         ])->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
 
         $messageIds = [111 => "foo", 222 => "bar"];
+        $references = [111 => "reffoo", 222 => "refbar"];
 
         $fetchResults = new \Horde_Imap_Client_Fetch_Results();
 
@@ -186,9 +187,10 @@ class HordeClientTest extends TestCase {
             'from' => "dev@conjoon.org", "to" => "devrec@conjoon.org", "message-id" => $messageIds[111]
         ]);
         $fetchResults[111]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
+        $fetchResults[111]->setHeaders('References', "References: " . $references[111]);
         $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org", "message-id" => $messageIds[222]]);
         $fetchResults[222]->setHeaders('ContentType', 'Content-Type=text/plain;charset= ISO-8859-1');
-
+        $fetchResults[222]->setHeaders('References', "References: " . $references[222]);
 
         $imapStub->shouldReceive('fetch')->with(
             "INBOX", \Mockery::any(),
@@ -233,6 +235,9 @@ class HordeClientTest extends TestCase {
         $this->assertSame($messageIds[111], $messageItemList[0]->getMessageId());
         $this->assertSame($messageIds[222], $messageItemList[1]->getMessageId());
 
+        $this->assertSame($references[111], $messageItemList[0]->getReferences());
+        $this->assertSame($references[222], $messageItemList[1]->getReferences());
+
     }
 
 
@@ -264,6 +269,7 @@ class HordeClientTest extends TestCase {
 
         $fetchResults[34]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
         $fetchResults[34]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
+        $fetchResults[34]->setHeaders('References', 'References: <foo>');
 
 
         $imapStub->shouldReceive('fetch')->with(
@@ -301,7 +307,7 @@ class HordeClientTest extends TestCase {
             [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
         );
 
-
+        $this->assertSame("<foo>", $messageItemList[0]->getReferences());
     }
 
 
