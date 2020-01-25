@@ -25,6 +25,7 @@
  */
 
 use Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
@@ -311,7 +312,25 @@ class AbstractMessageItemTest extends TestCase
         }
     }
 
+    /**
+     * Tests setMessageItem
+     */
+    public function testSetMessageItem() {
 
+        $item = $this->createMessageitem(null, ["messageId" => "mid"]);
+
+        $this->assertSame($item->getMessageId(), "mid");
+
+        $exp = null;
+        try {
+            $item->setMessageId("foo");
+        } catch (MailClientException $e) {
+            $exp = $e;
+        }
+
+        $this->assertNotNull($exp);
+
+    }
 // ---------------------
 //    Helper Functions
 // ---------------------
