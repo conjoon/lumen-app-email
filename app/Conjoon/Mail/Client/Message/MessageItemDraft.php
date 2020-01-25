@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -59,6 +59,20 @@ class MessageItemDraft extends AbstractMessageItem {
      * @var boolean
      */
     protected $draft = true;
+
+    /**
+     * A json encoded array, encoded as a bae64-string, containing information about the
+     * mailAccountId, the mailFolderId and the messageItemId this draft references),
+     * in this order.
+     * This value will be set by the client once a draft gets saved that is created
+     * for a reply-to/-all regarding a message, and will be reused once the draft
+     * gets send to update the message represented by the info in this field with
+     * appropriate message flags (e.g. \answered).
+     *
+     * @var string
+     */
+    protected $xCnDraftInfo;
+
 
     /**
      * @inheritdoc
@@ -165,11 +179,13 @@ class MessageItemDraft extends AbstractMessageItem {
      */
     public function toJson() :array{
 
-        return array_merge(parent::toJson(), [
+        $data = array_merge(parent::toJson(), [
             'cc'      => $this->getCc() ? $this->getCc()->toJson() : [],
             'bcc'     => $this->getBcc() ? $this->getBcc()->toJson() : [],
             'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : []
         ]);
+
+        return $data;
     }
 
 }

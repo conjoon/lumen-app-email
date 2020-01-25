@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -154,7 +154,12 @@ class MessageItemDraftTest extends TestCase {
 
         $keys = array_keys($item);
 
+        $skipFields = ["xCnDraftInfo"];
+
         foreach ($keys as $key) {
+            if (in_array($key, $skipFields)) {
+                continue;
+            }
             if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
             } else{
@@ -261,6 +266,23 @@ class MessageItemDraftTest extends TestCase {
     }
 
 
+    /**
+     * Tests xCnDraftInfo Field
+     */
+    public function testXCnDraftInfo() {
+
+        $draft = $this->createMessageItem(null, $this->getItemConfig());
+
+
+        $this->assertSame($draft->getXCnDraftInfo(), $this->getItemConfig()["xCnDraftInfo"]);
+
+        $val = "draftinfo";
+        $draft->setXCnDraftInfo($val);
+        $this->assertSame($draft->getXCnDraftInfo(), $val);
+
+    }
+
+
 // ---------------------
 //    Helper Functions
 // ---------------------
@@ -277,7 +299,8 @@ class MessageItemDraftTest extends TestCase {
             'cc'      => $this->createCc(),
             'bcc'     => $this->createBcc(),
             'replyTo' => $this->createReplyTo(),
-            'draft'   => true
+            'draft'   => true,
+            'xCnDraftInfo' => "WyJzaXRlYXJ0d29yayIsIklOQk9YIiwiMTU5NzUyIl0="
         ];
 
     }
