@@ -61,7 +61,7 @@ class MessageItemDraft extends AbstractMessageItem {
     protected $draft = true;
 
     /**
-     * A json encoded array, encoded as a bae64-string, containing information about the
+     * A json encoded array, encoded as a base64-string, containing information about the
      * mailAccountId, the mailFolderId and the messageItemId this draft references),
      * in this order.
      * This value will be set by the client once a draft gets saved that is created
