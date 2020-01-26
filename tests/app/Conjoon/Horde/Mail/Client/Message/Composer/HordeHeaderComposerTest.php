@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -45,6 +45,17 @@ class HordeHeaderComposerTest extends TestCase {
         $this->assertInstanceOf(HeaderComposer::class, $strategy);
     }
 
+    public function testSortHeaderFields() {
+
+        $composer = new HordeHeaderComposer();
+
+        $this->assertSame(
+            ["date", "subject", "cc", "references", "foo", "bar"],
+            $composer->sortHeaderFields(["foo", "bar", "cc", "date", "subject", "references"])
+        );
+
+    }
+
 
     public function testWrite_1() {
 
@@ -52,17 +63,23 @@ class HordeHeaderComposerTest extends TestCase {
 
         $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
         $messageItemDraft->setSubject("Test");
-        $msgText = ["Subject: foobar"];
+        $msgText = ["Subject: foobar\nMessage-ID: foo"];
         $result  = [
-            "Subject: Test",
             "Date: " . (new \DateTime())->format("r"),
+            "Subject: Test",
+            "Message-ID: foo",
             "User-Agent: php-conjoon",
             "",
             ""
         ];
+
         $msgText = implode("\n", $msgText);
-        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
+
+        $composedResult = $composer->compose($msgText, $messageItemDraft);
+
+        $this->assertEquals($result, explode("\n", $composedResult));
     }
+
 
     public function testWrite_2() {
 
@@ -75,24 +92,29 @@ class HordeHeaderComposerTest extends TestCase {
         $messageItemDraft->setCc($this->createAddress("cc"));
         $messageItemDraft->setBcc($this->createAddress("bcc"));
         $messageItemDraft->setReplyTo($this->createAddress("replyTo"));
+        $messageItemDraft->setInReplyTo("messageidstr1");
+        $messageItemDraft->setReferences("messageidstr2");
         $messageItemDraft->setFrom($this->createAddress("from"));
         $messageItemDraft->setDate(new \DateTime());
 
-        $msgText = ["Subject: foobar"];
+        $msgText = ["Subject: foobar\nMessage-Id: foobar"];
         $result  = [
+            "Date: " . (new \DateTime())->format("r"),
             "Subject: Test",
             "From: " . $this->createAddress("from")->toString(),
             "Reply-To: " . $this->createAddress("replyTo")->toString(),
             "To: " . $this->createAddress("to")->toString(),
             "Cc: " . $this->createAddress("cc")->toString(),
             "Bcc: " . $this->createAddress("bcc")->toString(),
-            "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: foobar",
+            "In-Reply-To: messageidstr1",
+            "References: messageidstr2",
             "User-Agent: php-conjoon",
             "",
             ""
         ];
         $msgText = implode("\n", $msgText);
-        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
+        $this->assertEquals($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
     }
 
 
@@ -113,22 +135,28 @@ class HordeHeaderComposerTest extends TestCase {
             "To: c",
             "Cc: d",
             "Bcc: e",
+            "Message-ID: snafu"
         ];
         $result  = [
+            "Date: " . (new \DateTime())->format("r"),
             "Subject: foobar",
             "From: a",
             "Reply-To: b",
             "To: c",
             "Cc: d",
             "Bcc: e",
-            "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: snafu",
             "User-Agent: php-conjoon",
             "",
             ""
         ];
         $msgText = implode("\n", $msgText);
-        $result  = $result;
-        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
+
+        $composed =  explode("\n", $composer->compose($msgText, $messageItemDraft));
+
+
+
+        $this->assertEquals($result, $composed);
 
     }
 
@@ -150,12 +178,18 @@ class HordeHeaderComposerTest extends TestCase {
 
         $result  = [
             "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: foo",
             "User-Agent: php-conjoon",
             "",
             ""
         ];
-        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose("", $messageItemDraft)));
+
+        $composed = $composer->compose("BcC: test@me.com\nMessage-ID: foo", $messageItemDraft);
+
+
+        $this->assertEquals($result, explode("\n", $composed));
     }
+
 
     public function testStringable() {
 
@@ -167,13 +201,59 @@ class HordeHeaderComposerTest extends TestCase {
 
         $result  = [
             "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: bar",
             "User-Agent: php-conjoon",
             "",
             ""
         ];
 
-        $this->assertEqualsCanonicalizing($result, explode("\n", $composer->compose("", $messageItemDraft)));
+        $this->assertEquals($result, explode("\n", $composer->compose("Message-ID: bar", $messageItemDraft)));
     }
+
+
+    public function testMessageId() {
+
+        $composer = new HordeHeaderComposer();
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+        $messageItemDraft->setSeen(true);
+
+        // should also set Message-ID of draft
+        $composed = $composer->compose("", $messageItemDraft);
+
+        $result  = [
+            "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: " . $messageItemDraft->getMessageId(),
+            "User-Agent: php-conjoon",
+            "",
+            ""
+        ];
+
+        $this->assertEquals($result, explode("\n", $composed));
+    }
+
+
+    public function testXCnDraftInfo() {
+
+        $composer = new HordeHeaderComposer();
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+        $messageItemDraft->setXCnDraftInfo("somestring");
+
+        $composed = $composer->compose("", $messageItemDraft);
+
+        $result  = [
+            "Date: " . (new \DateTime())->format("r"),
+            "Message-ID: " . $messageItemDraft->getMessageId(),
+            "User-Agent: php-conjoon",
+            "X-Cn-Draft-Info: somestring",
+            "",
+            ""
+        ];
+
+        $this->assertEquals($result, explode("\n", $composed));
+    }
+
 
 // +-----------------------------------
 // | Helper

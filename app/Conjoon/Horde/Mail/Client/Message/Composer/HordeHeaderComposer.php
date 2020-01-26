@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -47,52 +47,76 @@ class HordeHeaderComposer implements HeaderComposer {
         $part    = \Horde_Mime_Part::parseMessage($target);
         $headers = \Horde_Mime_Headers::parseHeaders($target);
 
-        $mid = $source;
+        $normalizedHeaders = [
+            "xCnDraftInfo" => "X-Cn-Draft-Info",
+            "replyTo"      => "Reply-To",
+            "inReplyTo"    => "In-Reply-To",
+            "userAgent"    => "User-Agent",
+            "messageId"    => "Message-ID"
+        ];
+        $cnHeaders = array_flip($normalizedHeaders);
 
-        if ($mid) {
+        // write a default header-array with all the header values
+        // from the original message headers into an array with
+        // key / value pairs that a MessageItemDraft understands
+        $headerData    = [];
+        $tmpHeaderData = $headers->toArray();
+        foreach ($tmpHeaderData as $key => $value) {
+            if (isset($cnHeaders[$key])) {
+                $headerData[$cnHeaders[$key]] = $value;
+            } else {
+                // we make sure that we override to, cc, or bcc
+                // for any possible spelling (e.g. BCC or cC)
+                $tKey = strtolower($key);
+                if (in_array($tKey, ["to", "cc", "bcc"])) {
+                    $key = $tKey;
+                }
+                $headerData[lcfirst($key)] = $value;
+            }
+        }
 
-            $modified = $mid->getModifiedFields();
+        $headerData["userAgent"] = "php-conjoon";
+
+
+        if (!$source || !$source->getDate()) {
+            $date = new \DateTime();
+            $headerData["date"] = $date->format("r");
+        }
+
+
+        // get all values from source and override the data in
+        // $headerData with these values
+        if ($source) {
+
+            $modified = $source->getModifiedFields();
 
             foreach ($modified as $field) {
 
                 if (!MessageItemDraft::isHeaderField($field)) {
                     continue;
                 }
-
                 switch ($field) {
 
-                    case "subject":
-                        $headers->removeHeader("Subject");
-                        $headers->addHeader("Subject", $mid->getSubject());
-                        break;
-
                     case "date":
-                        $headers->removeHeader("Date");
-                        $headers->addHeader("Date", $mid->getDate()->format("r"));
+                        $headerData["date"] = $source->getDate()->format("r");
                         break;
 
                     case "replyTo":
-                        $headers->removeHeader("Reply-To");
-                        $retrieved = $mid->getReplyTo();
+                        $retrieved = $source->getReplyTo();
                         if ($retrieved) {
-                            $headers->addHeader("Reply-To", $retrieved->toString());
+                            $headerData["replyTo"] =  $retrieved->toString();
                         }
                         break;
 
+
                     default:
                         $getter      = "get" . ucfirst($field);
-                        $headerField = ucfirst($field);
-                        $headers->removeHeader($headerField);
-                        $retrieved = $mid->{$getter}();
-
-                        if ($retrieved === null) {
-                            break;
-                        }
+                        $retrieved = $source->{$getter}();
 
                         if ($retrieved instanceof Stringable) {
-                            $headers->addHeader($headerField, $retrieved->toString());
+                            $headerData[$field] = $retrieved->toString();
                         } else {
-                            $headers->addHeader($headerField, $retrieved);
+                            $headerData[$field] = $retrieved;
                         }
 
                         break;
@@ -100,16 +124,98 @@ class HordeHeaderComposer implements HeaderComposer {
             }
         }
 
-        if (!$mid || !$mid->getDate()) {
-            $date = new \DateTime();
-            $headers->addHeader("Date", $date->format("r"));
+        // if our X-CN-DRAFT-INFO header field is not set, we will set it here
+        if ($source && (!$headers->getHeader("X-Cn-Draft-Info") &&
+            $source->getXCnDraftInfo())) {
+            $headerData["xCnDraftInfo"] = $source->getXCnDraftInfo();
         }
 
-        $headers->addHeader("User-Agent", "php-conjoon");
+        // if we do not have a Message Id, we will generate one here and
+        // apply it to the draft, if available
+        $messageId = strval($headers->getHeader("Message-ID"));
+        if (!$messageId) {
+            $messageId = strval(\Horde_Mime_Headers_MessageId::create("cn"));
+        }
+        $headerData["messageId"] = $messageId;
+        if ($source) {
+            $source->setMessageId($messageId);
+        }
+
+        // transform all data to regular message header fields
+        // and write the contents back in
+        $orderedHeaders = $this->sortHeaderFields(array_keys($headerData));
+        foreach ($orderedHeaders as $headerField) {
+
+            $value = $headerData[$headerField];
+
+            $finalField = isset($normalizedHeaders[$headerField])
+                          ? $normalizedHeaders[$headerField]
+                          : ucfirst($headerField);
+
+            $headers->removeHeader($finalField);
+            if ($value !== null) {
+                $headers->addHeader($finalField, $value);
+            }
+        }
 
 
         return trim($headers->toString()) . "\n\n" . trim($part->toString());
     }
 
+    
+// +---------------------------------
+// | Helper
+// +---------------------------------
+
+    /**
+     * Tries to sort $fields after a specific order for Header-fields in messages,
+     * will only return the fields that are also available in $fields.
+     * Proposed order is
+     * 
+     *  - date
+     *  - subject
+     *  - from
+     *  - sender
+     *  - replyTo
+     *  - to
+     *  - cc
+     *  - bcc
+     *  - inReplyTo
+     *  - messageId
+     *  - references
+     *  - userAgent
+     *  - xCnDraftInfo
+     *
+     * Additional header fields specified in $fields not matching order-fields
+     * will be appended in no particular order to the returned array.
+     * 
+     * 
+     * @param array $fields
+     * @return array
+     */
+    public function sortHeaderFields(array $fields) :array {
+
+        $order = [
+            "date",
+            "subject",
+            "from",
+            "sender",
+            "replyTo",
+            "to",
+            "cc",
+            "bcc",
+            "messageId",
+            "inReplyTo",
+            "references",
+            "userAgent",
+            "xCnDraftInfo"
+        ];
+
+        $intersect = array_intersect($order, $fields);
+
+        $diff = array_diff($fields, $order);
+
+        return array_merge($intersect, $diff);
+    }
 
 }
