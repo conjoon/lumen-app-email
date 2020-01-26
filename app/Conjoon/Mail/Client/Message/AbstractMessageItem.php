@@ -356,7 +356,6 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
             'flagged'        => $this->getFlagged(),
             'recent'         => $this->getRecent(),
             'messageId'      => $this->getMessageId(),
-            'inReplyTo'      => $this->getInReplyTo(),
             'references'     => $this->getReferences()
         ]);
 

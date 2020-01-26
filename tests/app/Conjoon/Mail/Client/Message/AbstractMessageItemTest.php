@@ -172,7 +172,7 @@ class AbstractMessageItemTest extends TestCase
                 $this->assertEquals($item[$key]->toJson(), $json[$key]);
             } else if ($key == "date") {
                 $this->assertEquals($item[$key]->format("Y-m-d H:i:s O"), $json[$key]);
-            } else if ($key == "charset") {
+            } else if ($key == "charset" || $key == "inReplyTo") {
                 $this->assertArrayNotHasKey($key, $json);
             } else {
                 $this->assertSame($item[$key], $json[$key]);
