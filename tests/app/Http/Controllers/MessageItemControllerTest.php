@@ -423,7 +423,7 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/' . $toFolderId . '/MessageItems/311',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/' . $toFolderId . '/MessageItems/311?action=move',
                 ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
             );
 
@@ -470,7 +470,7 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move',
                 ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
             );
 
@@ -514,7 +514,7 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move',
                 ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
             );
 
@@ -737,50 +737,25 @@ class MessageItemControllerTest extends TestCase
 
     /**
      * Tests put() to make sure setting MessageDraft-data works as expected
-     *
+     * Tests w/o "origin" GET parameter
      *
      * @return void
      */
     public function testPut_MessageDraft_data()
     {
-        $serviceStub     = $this->initServiceStub();
-        $transformerStub = $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->runMessageDraftPutTest(false);
+    }
 
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-        $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
 
-        $to = json_encode(["address" => "dev@conjoon.org"]);
-        $data = [
-            "subject" => "Hello World!",
-            "to"      => $to
-        ];
-
-        $transformDraft = new MessageItemDraft($messageKey);
-        $messageItemDraft = new MessageItemDraft($newMessageKey);
-
-        $transformerStub->expects($this->once())
-                        ->method("transform")
-                        ->with($data)
-                        ->willReturn($transformDraft);
-
-        $serviceStub->expects($this->once())
-            ->method('updateMessageDraft')
-            ->with($transformDraft)
-            ->willReturn($messageItemDraft);
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
-                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
-            );
-
-        $response->assertResponseOk();
-
-        $response->seeJsonEquals([
-            "success" => true,
-            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), ["subject", "to"])
-        ]);
+    /**
+     * Tests put() to make sure setting MessageDraft-data works as expected
+     * Tests with GET parameter origin=create
+     *
+     * @return void
+     */
+    public function testPut_MessageDraft_data_originCreate()
+    {
+        $this->runMessageDraftPutTest(true);
     }
 
 
@@ -979,6 +954,59 @@ class MessageItemControllerTest extends TestCase
 // +--------------------------
 // | Helper
 // +--------------------------
+
+    /**
+     * Helper function to test PUT with target = MessageDraft
+     * Use $origin=true to pass GET parameter origin=true
+     */
+    protected function runMessageDraftPutTest($origin) {
+        $serviceStub     = $this->initServiceStub();
+        $transformerStub = $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+        $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
+            "subject" => "Hello World!",
+            "to"      => $to
+        ];
+
+        $transformDraft = new MessageItemDraft($messageKey);
+        $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
+
+
+        $transformerStub->expects($this->once())
+            ->method("transform")
+            ->with($data)
+            ->willReturn($transformDraft);
+
+        $serviceStub->expects($this->once())
+            ->method('updateMessageDraft')
+            ->with($transformDraft)
+            ->willReturn($messageItemDraft);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311' .
+                ($origin === true ? '?origin=create' : ''),
+                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
+            );
+
+        $response->assertResponseOk();
+
+        $set = ["subject", "to"];
+
+        if ($origin === true) {
+            $set[] = "messageId";
+        }
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), $set)
+        ]);
+    }
 
 
     /**

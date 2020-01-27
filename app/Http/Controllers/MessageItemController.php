@@ -248,7 +248,13 @@ class MessageItemController extends Controller {
                     "success" => !!$updatedMessageItemDraft
                 ];
                 if ($updatedMessageItemDraft) {
-                    $resp["data"] = ArrayUtil::intersect($updatedMessageItemDraft->toJson(), array_keys($data));
+                    $json = $updatedMessageItemDraft->toJson();
+                    if ($request->input("origin") === "create") {
+                        $resp["data"] = ArrayUtil::intersect($json, array_merge(array_keys($data), ["messageId"]));
+                    } else {
+                        $resp["data"] = ArrayUtil::intersect($json, array_keys($data));
+                    }
+
                 } else {
                     $resp["msg"] = "Updating the MessageDraft failed.";
                 }
@@ -261,6 +267,9 @@ class MessageItemController extends Controller {
                 $flagResult = null;
                 $response   = [];
 
+                $action = $request->input("action");
+                $isMove = $action === "move";
+
                 $seen    = $request->input('seen');
                 $flagged = $request->input('flagged');
                 $draft   = $request->input('draft');
@@ -268,27 +277,28 @@ class MessageItemController extends Controller {
                 $newMailFolderId = $request->input('mailFolderId');
 
                 // check required parameters first
-                if ($seen === null && $flagged === null && $draft === null && $newMailFolderId === null) {
+                if ($seen === null && $flagged === null && $draft === null && !$isMove) {
                     return response()->json([
                         "success" => false,
                         "msg" => "Invalid request payload."
                     ], 400);
                 }
 
-                if ($newMailFolderId !== null && $newMailFolderId === $mailFolderId) {
+                if ($isMove && $newMailFolderId === $mailFolderId) {
                     return response()->json([
                         "success" => false,
                         "msg"     => "Cannot move message since it already belongs to this folder."
                     ], 400);
                 }
 
-                if ($newMailFolderId === null && !is_bool($seen) && !is_bool($flagged) && !is_bool($draft)) {
+                if (!$isMove && !is_bool($seen) && !is_bool($flagged) && !is_bool($draft)) {
                     return response()->json([
                         "success" => false,
                         "msg"     => "Invalid request payload.",
                         "flagged" => $flagged,
                         "seen"    => $seen,
-                        "draft"   => $draft
+                        "draft"   => $draft,
+                        "action"  => $action
                     ], 400);
                 }
 
