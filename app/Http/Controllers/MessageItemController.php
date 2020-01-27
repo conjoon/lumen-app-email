@@ -235,10 +235,17 @@ class MessageItemController extends Controller {
 
             case "MessageDraft":
 
+                $isCreate = $request->input("origin") === "create";
+
                 $keys = [
                     "mailAccountId", "mailFolderId", "id", "subject", "date",
                     "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"
                 ];
+
+                if ($isCreate) {
+                    $keys = array_merge($keys, ["inReplyTo", "references", "xCnDraftInfo"]);
+                }
+
                 $data = $request->only($keys);
 
                 $messageItemDraft        = $this->messageItemDraftJsonTransformer->transform($data);
@@ -249,7 +256,7 @@ class MessageItemController extends Controller {
                 ];
                 if ($updatedMessageItemDraft) {
                     $json = $updatedMessageItemDraft->toJson();
-                    if ($request->input("origin") === "create") {
+                    if ($isCreate) {
                         $resp["data"] = ArrayUtil::intersect($json, array_merge(array_keys($data), ["messageId"]));
                     } else {
                         $resp["data"] = ArrayUtil::intersect($json, array_keys($data));

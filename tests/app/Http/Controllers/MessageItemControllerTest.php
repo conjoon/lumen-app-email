@@ -973,6 +973,14 @@ class MessageItemControllerTest extends TestCase
             "to"      => $to
         ];
 
+        if ($origin === true) {
+            $data = array_merge($data, [
+                "references" => "ref",
+                "inReplyTo" => "irt",
+                "xCnDraftInfo" => "dinfo"
+            ]);
+        }
+
         $transformDraft = new MessageItemDraft($messageKey);
         $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
 
@@ -989,9 +997,9 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311' .
-                ($origin === true ? '?origin=create' : ''),
-                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageDraft' .
+                ($origin === true ? '&origin=create' : ''),
+                $data//,
             );
 
         $response->assertResponseOk();
@@ -999,7 +1007,7 @@ class MessageItemControllerTest extends TestCase
         $set = ["subject", "to"];
 
         if ($origin === true) {
-            $set[] = "messageId";
+            $set = array_merge($set, ["messageId", "inReplyTo", "references", "xCnDraftInfo"]);
         }
 
         $response->seeJsonEquals([
