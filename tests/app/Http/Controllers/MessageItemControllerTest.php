@@ -999,7 +999,7 @@ class MessageItemControllerTest extends TestCase
             ->put(
                 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageDraft' .
                 ($origin === true ? '&origin=create' : ''),
-                $data//,
+                $data
             );
 
         $response->assertResponseOk();
