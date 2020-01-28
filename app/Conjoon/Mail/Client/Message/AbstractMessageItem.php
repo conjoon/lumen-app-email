@@ -232,6 +232,40 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
     }
 
     /**
+     * Sets the inReplyTo of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $inReplyTo
+     */
+    public function setInReplyTo($inReplyTo) {
+        if (!is_null($this->getInReplyTo())) {
+            throw new MailClientException("\"inReplyTo\" was already set.");
+        }
+
+        $this->__call("setInReplyTo", [$inReplyTo]);
+
+        return $this;
+    }
+
+
+    /**
+     * Sets the references of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $references
+     */
+    public function setReferences($references) {
+        if (!is_null($this->getReferences())) {
+            throw new MailClientException("\"references\" was already set.");
+        }
+
+        $this->__call("setReferences", [$references]);
+
+        return $this;
+    }
+
+
+    /**
      * Makes sure defined properties in this class are accessible via getter method calls.
      * 
      * @param String $method
@@ -307,11 +341,16 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     protected function checkType($property, $value) {
         switch ($property) {
+            case "inReplyTo":
+            case "references":
+                if (!is_string($value) && !is_null($value)) {
+                    return "string or null";
+                }
+                break;
+
             case "charset":
             case "subject":
             case "messageId":
-            case "inReplyTo":
-            case "references":
                 if (!is_string($value)) {
                     return "string";
                 }

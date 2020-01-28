@@ -331,6 +331,59 @@ class AbstractMessageItemTest extends TestCase
         $this->assertNotNull($exp);
 
     }
+
+
+    /**
+     * Tests setting various fields to null or empty string
+     */
+    public function testSetNullOrEmptyStringFields() {
+
+        $item = $this->createMessageitem(null, ["messageId" => "mid"]);
+
+        $fields = ["references", "inReplyTo"];
+
+        foreach ($fields as $field) {
+
+            $getter = "get" . ucfirst($field);
+            $setter = "set" . ucfirst($field);
+
+            $this->assertNull($item->{$getter}());
+            $item->{$setter}(null);
+            $this->assertNull($item->{$getter}());
+
+            $item->{$setter}("");
+            $this->assertSame("", $item->{$getter}());
+
+
+        }
+    }
+
+
+    /**
+     * Tests setReferences w/ exception
+     */
+    public function testSetReferences_exception() {
+
+        $item = $this->createMessageitem(null, $this->getItemConfig());
+
+        $this->expectException(MailClientException::class);
+
+        $item->setReferences("");
+    }
+
+
+    /**
+     * Tests setInReplyTo w/ exception
+     */
+    public function testSetInReplyTo_exception() {
+
+        $item = $this->createMessageitem(null, $this->getItemConfig());
+
+        $this->expectException(MailClientException::class);
+
+        $item->setInReplyTo("");
+    }
+
 // ---------------------
 //    Helper Functions
 // ---------------------

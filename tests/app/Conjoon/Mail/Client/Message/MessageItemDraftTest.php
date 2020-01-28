@@ -29,6 +29,7 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Util\Modifiable;
 
 
@@ -267,21 +268,38 @@ class MessageItemDraftTest extends TestCase {
 
 
     /**
-     * Tests xCnDraftInfo Field
+     * Tests xCnDraftInfo Field w/ setters and getters
      */
     public function testXCnDraftInfo() {
 
         $draft = $this->createMessageItem(null, $this->getItemConfig());
-
-
         $this->assertSame($draft->getXCnDraftInfo(), $this->getItemConfig()["xCnDraftInfo"]);
 
+
+        $draft = $this->createMessageItem(null, ["messageId" => "mid"]);
         $val = "draftinfo";
         $draft->setXCnDraftInfo($val);
         $this->assertSame($draft->getXCnDraftInfo(), $val);
 
+        $draft = $this->createMessageItem(null, ["messageId" => "mid"]);
+        $draft->setXCnDraftInfo(null);
+        $this->assertNull($draft->getXCnDraftInfo());
     }
 
+
+    /**
+     * Tests setting xCnDraftInfo if already set
+     */
+    public function testSetXCnDraftInfo_exception() {
+
+        $draft = $this->createMessageItem(null, $this->getItemConfig());
+
+        $this->assertNotNull($draft->getXCnDraftInfo());
+
+        $this->expectException(MailClientException::class);
+
+        $draft->setXCnDraftInfo("foo");
+    }
 
 // ---------------------
 //    Helper Functions

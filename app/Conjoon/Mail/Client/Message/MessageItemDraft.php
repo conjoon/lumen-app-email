@@ -29,7 +29,8 @@ namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClientException;
 
 
 /**
@@ -56,6 +57,7 @@ class MessageItemDraft extends AbstractMessageItem {
     protected $replyTo;
 
     /**
+     * A MessageItemDraft "draft" flag is by default always true.
      * @var boolean
      */
     protected $draft = true;
@@ -166,6 +168,28 @@ class MessageItemDraft extends AbstractMessageItem {
     public function setReplyTo(MailAddress $replyTo = null) {
         $this->addModified("replyTo");
         $this->replyTo = $replyTo === null ? null : clone($replyTo);
+        return $this;
+    }
+
+
+    /**
+     * Sets the xCnDraftInfo for this MessageItemDraft and throws if
+     * the value was already set.
+     *
+     * @param $string $xCnDraftInfo
+     *
+     * @return $this
+     *
+     * @throws MailClientException if xCnDraftInfo was already set
+     */
+    public function setXCnDraftInfo($xCnDraftInfo) {
+
+        if (is_string($this->getXCnDraftInfo())) {
+            throw new MailClientException("\"xCnDraftInfo\" was already set.");
+        }
+
+        $this->xCnDraftInfo = $xCnDraftInfo;
+
         return $this;
     }
 
