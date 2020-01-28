@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -45,6 +45,8 @@ interface HeaderComposer {
      * APIs are advised to update the header information in $target with default values, then,
      * such as the Date.
      * Existing fields should not be removed if they are not available in $source.
+     * Existing fields should be removed if fields are available in $source, but represent
+     * empty values (e.g.: "", [], null)
      *
      * @param string $target
      * @param MessageItemDraft|null $source

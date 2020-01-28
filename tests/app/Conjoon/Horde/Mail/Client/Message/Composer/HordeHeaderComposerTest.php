@@ -255,6 +255,29 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
+    public function testWrite_emptyStrings() {
+
+        $composer = new HordeHeaderComposer();
+
+
+        $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
+        $messageItemDraft->setSubject("Test");
+        $messageItemDraft->setReferences("");
+
+        $msgText = ["Subject: foobar\nMessage-Id: foobar\nReferences: Id"];
+        $result  = [
+            "Date: " . (new \DateTime())->format("r"),
+            "Subject: Test",
+            "Message-ID: foobar",
+            "User-Agent: php-conjoon",
+            "",
+            ""
+        ];
+        $msgText = implode("\n", $msgText);
+        $this->assertEquals($result, explode("\n", $composer->compose($msgText, $messageItemDraft)));
+    }
+
+
 // +-----------------------------------
 // | Helper
 // +-----------------------------------

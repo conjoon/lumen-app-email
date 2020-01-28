@@ -153,7 +153,7 @@ class HordeHeaderComposer implements HeaderComposer {
                           : ucfirst($headerField);
 
             $headers->removeHeader($finalField);
-            if ($value !== null) {
+            if ($value !== null && $value !== "") {
                 $headers->addHeader($finalField, $value);
             }
         }
