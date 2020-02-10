@@ -936,70 +936,57 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft() {
-
-        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "DRAFTS";
-        $messageItemId = "989786";
-        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
-
-        $client = $this->createClient();
-
-        $rangeList = new \Horde_Imap_Client_Ids();
-        $rangeList->add($messageKey->getId());
-
-        $imapStub        = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
-        $mailer          = $client->getMailer($account);
-        $mimePartStub    = \Mockery::mock('overload:'.\Horde_Mime_Part::class);
-        $mimeHeadersStub = \Mockery::mock('overload:'.\Horde_Mime_Headers::class);
-        $mimeMailStub    = \Mockery::mock('overload:'.\Horde_Mime_Mail::class);
+    public function testSendMessageDraft_regular()
+    {
+        $this->sendMessageDraftTest();
+    }
 
 
-        $headers     = [];
-        $basePart    = null;
-        $rawMsg      = "RAWMESSAGE";
-        $fetchResult = [];
-        $fetchResult[$messageKey->getId()] = new class($rawMsg) {
-
-            public function __construct($rawMsg) {
-                $this->rawMsg = $rawMsg;
-            }
-
-            public function getFullMsg($bool) {
-                return $this->rawMsg;
-            }
-            public function getFlags() {
-                return [\Horde_Imap_Client::FLAG_DRAFT];
-            }
-        };
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_noDraftInfo()
+    {
+        $this->sendMessageDraftTest("NO_DRAFTINFO");
+    }
 
 
-        $imapStub->shouldReceive("fetch")
-            ->with(
-                $messageKey->getMailFolderId(),
-                \Mockery::any(),
-                ['ids' => $rangeList]
-            )
-            ->andReturn($fetchResult);
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_draftInfoInvalid()
+    {
+        $this->sendMessageDraftTest("DRAFTINFO_INVALID");
+    }
 
 
-        $mimePartStub->shouldReceive("parseMessage")
-            ->with($rawMsg)
-            ->andReturn($basePart);
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_draftInfoNoJson()
+    {
+        $this->sendMessageDraftTest("DRAFTINFO_NOJSON");
+    }
 
-        $mimeHeadersStub->shouldReceive("parseHeaders")
-            ->with($rawMsg)
-            ->andReturn($headers);
 
-        $mimeMailStub->shouldReceive("setBasePart")
-            ->with($basePart);
-
-        $mimeMailStub->shouldReceive("send")->with($mailer);
-
-        $res = $client->sendMessageDraft($messageKey);
-
-        $this->assertTrue($res);
-
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_invalidMailAccount()
+    {
+        $this->sendMessageDraftTest("INVALID_MAILACCOUNT");
     }
 
 
@@ -1089,6 +1076,146 @@ class HordeClientTest extends TestCase {
 // -------------------------------
 //  Helper
 // -------------------------------
+
+
+    /**
+     * Helper function for sending a MessageDraft
+     *
+     * @param string $testType The test to perform.
+     * Valid switches: "" -> regular test, with X-CN-DRAFT-INFO set
+     * "NO_DRAFTINFO" -> with NO X-CN-DRAFT-INFO set
+     * "DRAFTINFO_INVALID" -> parsing the header X-CN-DRAFT-INFO failed
+     * "DRAFTINFO_NOJSON" -> the parsed header does not contain a valid JSON string
+     * "INVALID_MAILACCOUNT" -> X-CN-DRAFT-INFO contained invalid mail account id
+     *
+     */
+    protected function sendMessageDraftTest($testType = "") {
+
+        if (!in_array($testType, ["", "NO_DRAFTINFO", "DRAFTINFO_INVALID", "INVALID_MAILACCOUNT", "DRAFTINFO_NOJSON"])) {
+            throw new \RuntimeException("Unexpected invalid test configuration.");
+        }
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId = "DRAFTS";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $client = $this->createClient();
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:' . \Horde_Imap_Client_Socket::class);
+        $mailer = $client->getMailer($account);
+        $mimePartStub = \Mockery::mock('overload:' . \Horde_Mime_Part::class);
+        $mimeHeadersStub = \Mockery::mock('overload:' . \Horde_Mime_Headers::class);
+        $mimeMailStub = \Mockery::mock('overload:' . \Horde_Mime_Mail::class);
+
+
+        $headerElement = \Mockery::mock('overload:' . \Horde_Mime_Headers_Element::class);
+
+        $headers     = new  $mimeHeadersStub;
+        $basePart    = null;
+        $rawMsg      = "RAWMESSAGE";
+        $fetchResult = [];
+        $fetchResult[$messageKey->getId()] = new class($rawMsg) {
+
+            public function __construct($rawMsg) {
+                $this->rawMsg = $rawMsg;
+            }
+
+            public function getFullMsg($bool) {
+                return $this->rawMsg;
+            }
+            public function getFlags() {
+                return [\Horde_Imap_Client::FLAG_DRAFT];
+            }
+        };
+
+
+        $imapStub->shouldReceive("fetch")
+            ->with(
+                $messageKey->getMailFolderId(),
+                \Mockery::any(),
+                ['ids' => $rangeList]
+            )
+            ->andReturn($fetchResult);
+
+
+        $mimePartStub->shouldReceive("parseMessage")
+            ->with($rawMsg)
+            ->andReturn($basePart);
+
+        $mimeHeadersStub->shouldReceive("parseHeaders")
+            ->with($rawMsg)
+            ->andReturn($headers);
+
+        $mimeMailStub->shouldReceive("setBasePart")
+            ->with($basePart);
+
+
+        switch ($testType) {
+            case "DRAFTINFO_INVALID":
+                $value = "NO!";
+                break;
+
+            case "DRAFTINFO_NOJSON":
+                $value = base64_encode("{\"abc\" \"def\"}");
+                break;
+            case "INVALID_MAILACCOUNT":
+                $value = base64_encode(json_encode(["abc", "foo", "bar"]));
+                break;
+            default:
+                $value = base64_encode(json_encode([$account->getId(), "foo", "bar"]));
+                break;
+        }
+
+
+        $headerElement->shouldReceive("__get")
+            ->with("value_single")
+            ->andReturn($value);
+
+        if ($testType === "NO_DRAFTINFO") {
+            $headers->shouldReceive("getHeader")
+                ->with("X-CN-DRAFT-INFO")
+                ->andReturn(null);
+
+        } else {
+            $headers->shouldReceive("getHeader")
+                ->with("X-CN-DRAFT-INFO")
+                ->andReturn(
+                    new \Horde_Mime_Headers_Element_Single(
+                        "X-CN-DRAFT-INFO",
+                        $value
+                    )
+                );
+        }
+
+
+        $headers->shouldReceive("removeHeader")
+            ->with("X-CN-DRAFT-INFO");
+
+
+        if (in_array($testType, ["NO_DRAFTINFO", "DRAFTINFO_INVALID", "DRAFTINFO_NOJSON", "INVALID_MAILACCOUNT"])) {
+            $imapStub->shouldNotReceive('store');
+        } else {
+            $imapStub->shouldReceive('store')->with(
+                "foo", [
+                    "ids"    => new \Horde_Imap_Client_Ids(["bar"]),
+                    "add"    => ["\\Answered"]
+                ]
+            )->andReturn(true);
+
+        }
+
+
+        $mimeMailStub->shouldReceive("send")->with($mailer);
+
+        $res = $client->sendMessageDraft($messageKey);
+
+        $this->assertTrue($res);
+    }
+
 
     /**
      * helper for moveMessage tests

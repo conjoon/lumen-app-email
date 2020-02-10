@@ -47,6 +47,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Message\Flag\AnsweredFlag,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Mail\Client\Message\Composer\BodyComposer,
     Conjoon\Mail\Client\Message\Composer\HeaderComposer,
@@ -662,11 +663,24 @@ class HordeClient implements MailClient {
 
             $part    = \Horde_Mime_Part::parseMessage($target);
             $headers = \Horde_Mime_Headers::parseHeaders($target);
-            $mail    = new \Horde_Mime_Mail($headers);
+
+            // Check for X-CN-DRAFT-INFO...
+            $xCnDraftInfo = $headers->getHeader("X-CN-DRAFT-INFO");
+            $xCnDraftInfo = $xCnDraftInfo ? $xCnDraftInfo->value_single : null;
+            // ...delete the header...
+            $headers->removeHeader("X-CN-DRAFT-INFO");
+
+
+            $mail = new \Horde_Mime_Mail($headers);
             $mail->setBasePart($part);
 
             $mailer = $this->getMailer($account);
             $mail->send($mailer);
+
+            // ...and set \Answered flag.
+            if ($xCnDraftInfo) {
+                $this->setAnsweredForDraftInfo($xCnDraftInfo, $account->getId());
+            }
 
             return true;
 
@@ -726,6 +740,45 @@ class HordeClient implements MailClient {
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Sets the flag \Answered for the message specified in $xCnDraftInfo.
+     * The string is ecpected to be a base64-encoded string representing
+     * a JSON-encoded array with three indices: mailAccountId, mailFolderId
+     * and id.
+     * Will do nothing if the mailAccountId in $xCnDraftInfo does not match
+     * the $forAccountId passed to this method, or if decoding the $xCnDraftInfo
+     * failed.
+     *
+     * @param string $xCnDraftInfo
+     * @param string $forAccountId
+     */
+    protected function setAnsweredForDraftInfo(string $xCnDraftInfo, string $forAccountId) {
+
+        $baseDecode = base64_decode($xCnDraftInfo);
+
+        if ($baseDecode === false) {
+            return;
+        }
+
+        $info = json_decode($baseDecode, true);
+
+        if (!is_array($info) || count($info) !== 3) {
+            return;
+        }
+
+        if ($info[0] !== $forAccountId) {
+            return;
+        }
+
+        $messageKey = new MessageKey($forAccountId, $info[1], $info[2]);
+
+        $flagList = new FlagList;
+        $flagList[] = new AnsweredFlag(true);
+
+        $this->setFlags($messageKey, $flagList);
+    }
+
 
     /**
      * Returns the Horde_Mail_Transport to be used with this account.
