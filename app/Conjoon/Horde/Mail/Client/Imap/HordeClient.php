@@ -727,7 +727,7 @@ class HordeClient implements MailClient {
             );
 
             if (!is_array($res)) {
-                throw new ImapClientException("Moving the message was not succesful.");
+                throw new ImapClientException("Moving the message was not successful.");
             }
 
             return new MessageKey($folderKey->getMailAccountId(), $folderKey->getId(), $res[$messageKey->getId()] . "");
