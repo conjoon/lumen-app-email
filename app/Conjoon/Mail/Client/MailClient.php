@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -69,6 +69,18 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
      public function getMessageItem(MessageKey $key) :?MessageItem;
+
+
+    /**
+     * Deletes the specified MessageItem permanently.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if deleting the message was successful, otherwise false.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function deleteMessage(MessageKey $key) :bool;
 
 
     /**

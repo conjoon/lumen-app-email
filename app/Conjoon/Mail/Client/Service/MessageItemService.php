@@ -77,6 +77,16 @@ interface MessageItemService {
 
 
     /**
+     * Deletes a single Message permanently.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if successful, otherwise false
+     */
+    public function deleteMessage(MessageKey $key) :bool;
+
+
+    /**
      * Returns a single ListMessageItem.
      *
      * @param MessageKey $key

@@ -331,6 +331,36 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
+    public function deleteMessage(MessageKey $key) :bool {
+
+        try {
+
+            $mailFolderId  = $key->getMailFolderId();
+            $id            = $key->getId();
+
+            $client = $this->connect($key);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $idList = $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList, "list" => true]);
+
+            if (count($idList) === 0) {
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
 
         try {
@@ -575,7 +605,8 @@ class HordeClient implements MailClient {
                 $client, $mailAccountId, $mailFolderId, $target, $messageBodyDraft
             );
 
-            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+            // delete the previous draft
+            $this->deleteMessage($key);
 
             return $newDraft;
 
@@ -618,7 +649,7 @@ class HordeClient implements MailClient {
 
             $this->setFlags($newKey, $messageItemDraft->getFlagList());
 
-            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+            $this->deleteMessage($messageKey);
 
             return $messageItemDraft->setMessageKey($newKey);
 

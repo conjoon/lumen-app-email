@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -743,9 +743,73 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
 
+    /**
+     * Tests deleteMessage()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_okay() {
+        $this->deleteMessageTest(true);
+    }
+
+
+    /**
+     * Tests deleteMessage()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_failed() {
+        $this->deleteMessageTest(false);
+    }
+
+
+    /**
+     * Tests deleteMessage()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_exeption() {
+        $this->deleteMessageTest("exception");
+    }
 // ------------------
 //     Test Helper
 // ------------------
+
+    /**
+     * Helper for testDeleteMessage
+     *
+     * @param mixed $type bool|string=exception
+     */
+    public function deleteMessageTest($type) {
+
+        $mailFolderId = "INBOX";
+        $id           = "123";
+        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+
+        $service    = $this->createService();
+        $clientStub = $service->getMailClient();
+
+        $op = $clientStub->method('deleteMessage')->with($messageKey);
+
+        if ($type === "exception") {
+            $op->willThrowException(new MailClientException);
+            $expected = false;
+        } else if (is_bool($type)) {
+            $expected = $type;
+            $op->willReturn($expected);
+        } else {
+            $this->fail("No valid type configured for test.");
+        }
+
+        $clientStub->method('deleteMessage')->with($messageKey)->willReturn($expected);
+
+        $this->assertSame($service->deleteMessage($messageKey), $expected);
+    }
+
 
     /**
      * @return FolderKey
@@ -783,7 +847,7 @@ class DefaultMessageItemServiceTest extends TestCase {
                         "getMessageItemList", "getMessageItem", "getListMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
                         "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
-                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft", "moveMessage"])
+                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft", "moveMessage", "deleteMessage"])
                     ->disableOriginalConstructor()
                     ->getMock();
     }

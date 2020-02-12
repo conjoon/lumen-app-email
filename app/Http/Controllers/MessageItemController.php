@@ -177,6 +177,44 @@ class MessageItemController extends Controller {
 
 
     /**
+     * Deletes a single MessageItem permanently.
+     * The target parameter must be set to "MessageItem" in order to process
+     * the request. Returns a 400 - Bad Request if missing.
+     *
+     * @return ResponseJson with status 200 if deleting the message succeeded, otherwise a 500
+     */
+    public function delete(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
+        // possible targets: MessageItem, MessageBody
+        $target = $request->input('target');
+
+        $mailFolderId = urldecode($mailFolderId);
+
+        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+
+        if ($target === "MessageItem") {
+            $result = $messageItemService->deleteMessage($messageKey);
+        } else {
+            return response()->json([
+                "success" => false,
+                "msg" =>  "\"target\" must be specified with \"MessageItem\"."
+            ], 400);
+
+        }
+
+        return response()->json([
+            "success" => $result
+        ], $result ? 200 : 500);
+
+    }
+
+
+    /**
      * Changes data of a single MessageItem or a MessageBody.
      * Allows for specifying target=MessageItem, target=MessageDraft or target=MessageBodyDraft.
      * If the target MessageItem is specified, the flag-properties

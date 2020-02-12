@@ -730,8 +730,8 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("expunge")
             ->with(
                 $messageKey->getMailFolderId(),
-                ["delete" => true, "ids" => $rangeList]
-            );
+                ["delete" => true, "ids" => $rangeList, "list" => true]
+            )->andReturn([]);
 
 
         $client = $this->createClient();
@@ -825,8 +825,8 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("expunge")
                  ->with(
                      $messageKey->getMailFolderId(),
-                     ["delete" => true, "ids" => $rangeList]
-                 );
+                     ["delete" => true, "ids" => $rangeList, "list" => true]
+                 )->andReturn([]);
 
         $client = $this->createClient();
 
@@ -1073,9 +1073,95 @@ class HordeClientTest extends TestCase {
 
     }
 
+
+    /**
+     * Tests deleteMessage / okay
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_okay() {
+        $this->deleteMessageTest(true);
+    }
+
+
+    /**
+     * Tests deleteMessage / failed
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_failed() {
+        $this->deleteMessageTest(false);
+    }
+
+
+    /**
+     * Tests deleteMessage / exception
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_exception() {
+        $this->deleteMessageTest("exception");
+    }
+
 // -------------------------------
 //  Helper
 // -------------------------------
+
+
+    /**
+     * Helper for testing deleteMessage()
+     *
+     * @param mixed $testType true, false or "exception"
+     */
+    protected function deleteMessageTest($testType) {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $returnValue = $testType === true ? ["someunrelatedvar"] : [];
+
+        $op = $imapStub->shouldReceive("expunge")
+                ->with(
+                    $mailFolderId,
+                    ["delete" => true, "ids" => $rangeList, "list" => true]
+                );
+
+        if ($testType === "exception") {
+            $op->andThrow(new \Exception());
+        } else {
+            $op->andReturn($returnValue);
+        }
+
+        $client = $this->createClient();
+
+        try {
+            $res = $client->deleteMessage($messageKey);
+        } catch (ImapClientException $exc) {
+            if ($testType === "exception") {
+                $this->assertTrue(true);
+                return;
+            }
+        }
+
+        if ($testType === "exception") {
+            // if we are here, no exception was thrown
+            $this->assertTrue(false);
+        }
+
+        $resultValue = $testType === true ? true : false;
+
+        $this->assertSame($resultValue, $res);
+    }
 
 
     /**

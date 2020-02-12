@@ -951,9 +951,87 @@ class MessageItemControllerTest extends TestCase
 
     }
 
+
+    /**
+     * Tests delete() to make sure method relies on target-parameter.
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_BadRequest_missingTarget()
+    {
+        $this->deleteMessageItemTest("missing");
+    }
+
+
+    /**
+     * Tests delete() w/ 500
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_500()
+    {
+        $this->deleteMessageItemTest(false);
+    }
+
+
+    /**
+     * Tests delete() w/ 200
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_200()
+    {
+        $this->deleteMessageItemTest(true);
+    }
+
 // +--------------------------
 // | Helper
 // +--------------------------
+
+    /**
+     * @param mixed $type bool|string=missing
+     */
+    protected function deleteMessageItemTest($type) {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        if ($type === "missing") {
+            $serviceStub->expects($this->never())
+                ->method('deleteMessage');
+        } else {
+            $serviceStub->expects($this->once())
+                ->method('deleteMessage')
+                ->with(new MessageKey("dev_sys_conjoon_org", "INBOX", "311"))
+                ->willReturn($type);
+        }
+
+        $this->actingAs($this->getTestUserStub())
+            ->call(
+                'DELETE',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311'
+                . ($type !== "missing" ? "?target=MessageItem" : "") );
+
+        if ($type === "missing") {
+            $this->assertResponseStatus(400);
+
+            $this->seeJsonContains([
+                "success" => false,
+                "msg"    => "\"target\" must be specified with \"MessageItem\"."
+            ]);
+        } else {
+            $this->assertResponseStatus($type === false ? 500 : 200);
+
+            $this->seeJsonContains([
+                "success" => $type
+            ]);
+        }
+
+    }
+
 
     /**
      * Helper function to test PUT with target = MessageDraft

@@ -177,6 +177,22 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
+    public function deleteMessage(MessageKey $key) :bool {
+        $result = false;
+
+        try {
+            $result = $this->mailClient->deleteMessage($key);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function getListMessageItem(MessageKey $messageKey) :ListMessageItem {
 
         $folderKey = $messageKey->getFolderKey();
