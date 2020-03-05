@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -219,6 +219,18 @@ class DefaultMessageItemServiceTest extends TestCase {
     }
 
 
+    /**
+     * Single MessageBody Test
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageBodyFor_plain() {
+
+        $this->getMessageBodyForTestHelper("plain");
+
+    }
+
 
     /**
      * Single MessageBody Test
@@ -226,34 +238,23 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageBodyFor() {
+    public function testGetMessageBodyFor_html() {
 
-        $service = $this->createService();
+        $this->getMessageBodyForTestHelper("", "html");
 
-        $mailFolderId = "INBOX";
-        $messageItemId = "8977";
-        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-
-        $messageKey = $this->createMessageKey($account, $mailFolderId, $messageItemId);
-
-        $clientStub = $service->getMailClient();
-        $clientStub->method('getMessageBody')
-            ->with($messageKey)
-            ->willReturn(
-                $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageItemId, "plain")
-            );
+    }
 
 
-        $body = $service->getMessageBody($messageKey);
+    /**
+     * Single MessageBody Test
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageBodyFor_both() {
 
-        $this->assertSame($messageItemId, $body->getMessageKey()->getId());
+        $this->getMessageBodyForTestHelper("plain", "html");
 
-        $this->assertTrue($body->getTextPlain() == true);
-        $this->assertTrue($body->getTextHtml() == true);
-
-
-        $this->assertSame("READtext/plainplain", $body->getTextPlain()->getContents());
-        $this->assertSame("READtext/plainplain", $body->getTextHtml()->getContents());
     }
 
 
@@ -774,9 +775,55 @@ class DefaultMessageItemServiceTest extends TestCase {
     public function testDeleteMessage_exeption() {
         $this->deleteMessageTest("exception");
     }
+
+
 // ------------------
 //     Test Helper
 // ------------------
+
+    /**
+     * @param $plain
+     * @param $html
+     */
+    protected function getMessageBodyForTestHelper($plain ="", $html = "") {
+
+        $service = $this->createService();
+
+        $mailFolderId = "INBOX";
+        $messageItemId = "8977";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $messageItemId);
+
+        $clientStub = $service->getMailClient();
+        $clientStub->method('getMessageBody')
+            ->with($messageKey)
+            ->willReturn(
+                $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageKey->getId(), $plain, $html)
+            );
+
+        $body = $service->getMessageBody($messageKey);
+
+        $this->assertSame($messageItemId, $body->getMessageKey()->getId());
+
+        $this->assertTrue($body->getTextPlain() == (!!$plain));
+        $this->assertTrue($body->getTextHtml() == (!!$html));
+
+
+        if ($plain) {
+            $this->assertSame("READtext/plainplain", $body->getTextPlain()->getContents());
+        } else {
+            $this->assertSame(null, $body->getTextPlain());
+        }
+
+        if ($html) {
+            $this->assertSame("READtext/htmlhtml", $body->getTextHtml()->getContents());
+        } else {
+            $this->assertSame(null, $body->getTextHtml());
+        }
+
+    }
+
 
     /**
      * Helper for testDeleteMessage

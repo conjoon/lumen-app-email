@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -406,7 +406,7 @@ class DefaultMessageItemService implements MessageItemService {
      * Processes the contents of the MessageBody's Parts and makes sure this converter converts
      * the contents to proper UTF-8.
      * Additionally, the text/html part will be filtered by this $htmlReadableStrategy.
-     * If no text/html part is available, the text/plain part will be used instead.
+     *
      *
      * @param MessageBody $messageBody
      *
@@ -421,19 +421,13 @@ class DefaultMessageItemService implements MessageItemService {
 
         $targetCharset = "UTF-8";
 
-        if (!$textPlainPart) {
-            $textPlainPart = new MessagePart("", "UTF-8", "text/plain");
-            $messageBody->setTextPlain($textPlainPart);
+        if ($textPlainPart) {
+            $this->getReadableMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
         }
 
-        $this->getReadableMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
-
-        if ($textHtmlPart && $textHtmlPart->getContents()) {
+        if ($textHtmlPart) {
             $this->getReadableMessagePartContentProcessor()->process($textHtmlPart, $targetCharset);
-        } else {
-            $textHtmlPart = new MessagePart($textPlainPart->getContents(), "UTF-8", "text/html");
-            $messageBody->setTextHtml($textHtmlPart);
-        }
+        } 
 
         return $messageBody;
     }
