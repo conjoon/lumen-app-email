@@ -4,3 +4,5 @@ composer.phar
 Homestead.json
 Homestead.yaml
 .env
+.env.example
+.phpunit.result.cache
