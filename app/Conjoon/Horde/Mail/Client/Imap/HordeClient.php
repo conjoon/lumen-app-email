@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -47,6 +47,7 @@ use Conjoon\Mail\Client\MailClient,
     Conjoon\Mail\Client\Attachment\FileAttachment,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
+    Conjoon\Mail\Client\Message\Flag\AnsweredFlag,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
     Conjoon\Mail\Client\Message\Composer\BodyComposer,
     Conjoon\Mail\Client\Message\Composer\HeaderComposer,
@@ -70,6 +71,12 @@ class HordeClient implements MailClient {
      * @var Horde_Imap_Client_Socket
      */
     protected $socket;
+
+    /**
+     * @var Horde_Mail_Transport
+     */
+    protected $mailer;
+
 
     /**
      * @var BodyComposer
@@ -324,6 +331,36 @@ class HordeClient implements MailClient {
     /**
      * @inheritdoc
      */
+    public function deleteMessage(MessageKey $key) :bool {
+
+        try {
+
+            $mailFolderId  = $key->getMailFolderId();
+            $id            = $key->getId();
+
+            $client = $this->connect($key);
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $idList = $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList, "list" => true]);
+
+            if (count($idList) === 0) {
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
 
         try {
@@ -568,7 +605,8 @@ class HordeClient implements MailClient {
                 $client, $mailAccountId, $mailFolderId, $target, $messageBodyDraft
             );
 
-            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+            // delete the previous draft
+            $this->deleteMessage($key);
 
             return $newDraft;
 
@@ -611,7 +649,7 @@ class HordeClient implements MailClient {
 
             $this->setFlags($newKey, $messageItemDraft->getFlagList());
 
-            $client->expunge($mailFolderId, ["delete" => true, "ids" => $rangeList]);
+            $this->deleteMessage($messageKey);
 
             return $messageItemDraft->setMessageKey($newKey);
 
@@ -622,9 +660,196 @@ class HordeClient implements MailClient {
         return null;
     }
 
+
+    /**
+     * @inheritdoc
+     */
+    public function sendMessageDraft(MessageKey $messageKey) : bool {
+
+
+        try {
+
+            $client  = $this->connect($messageKey);
+            $account = $this->getMailAccount($messageKey);
+
+            $mailFolderId  = $messageKey->getMailFolderId();
+            $id            = $messageKey->getId();
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($id);
+
+            $fetchQuery = new \Horde_Imap_Client_Fetch_Query();
+            $fetchQuery->fullText(["peek" => true]);
+            $fetchQuery->flags();
+            $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+            $item        = $fetchResult[$id];
+
+            // check if message is a draft
+            $flags = $item->getFlags();
+            if (!in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags)) {
+                throw new ImapClientException("The specified message is not a Draft-Message.");
+            }
+
+            $target = $item->getFullMsg(false);
+
+            $part    = \Horde_Mime_Part::parseMessage($target);
+            $headers = \Horde_Mime_Headers::parseHeaders($target);
+
+            // Check for X-CN-DRAFT-INFO...
+            $xCnDraftInfo = $headers->getHeader("X-CN-DRAFT-INFO");
+            $xCnDraftInfo = $xCnDraftInfo ? $xCnDraftInfo->value_single : null;
+            // ...delete the header...
+            $headers->removeHeader("X-CN-DRAFT-INFO");
+
+
+            $mail = new \Horde_Mime_Mail($headers);
+            $mail->setBasePart($part);
+
+            $mailer = $this->getMailer($account);
+            $mail->send($mailer);
+
+            // ...and set \Answered flag.
+            if ($xCnDraftInfo) {
+                $this->setAnsweredForDraftInfo($xCnDraftInfo, $account->getId());
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            if ($e instanceof ImapClientException) {
+                throw $e;
+            }
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+
+        return false;
+
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) : MessageKey {
+
+        if ($messageKey->getMailAccountId() !== $folderKey->getMailAccountId()) {
+            throw new ImapClientException("The \"messageKey\" and the \"folderKey\" do not share the same mailAccountId.");
+        }
+
+        if ($messageKey->getMailFolderId() === $folderKey->getId()) {
+            return $messageKey;
+        }
+
+
+        try {
+
+            $client = $this->connect($messageKey);
+
+            $sourceFolder = $messageKey->getMailFolderId();
+            $destFolder   = $folderKey->getId();
+
+            $rangeList = new \Horde_Imap_Client_Ids();
+            $rangeList->add($messageKey->getId());
+
+            $res = $client->copy(
+                $sourceFolder,
+                $destFolder,
+                ["ids" => $rangeList, "move" => true, "force_map" => true]
+            );
+
+            if (!is_array($res)) {
+                throw new ImapClientException("Moving the message was not successful.");
+            }
+
+            return new MessageKey($folderKey->getMailAccountId(), $folderKey->getId(), $res[$messageKey->getId()] . "");
+
+        } catch (\Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
+    }
+
 // -------------------
 //   Helper
 // -------------------
+
+    /**
+     * Sets the flag \Answered for the message specified in $xCnDraftInfo.
+     * The string is ecpected to be a base64-encoded string representing
+     * a JSON-encoded array with three indices: mailAccountId, mailFolderId
+     * and id.
+     * Will do nothing if the mailAccountId in $xCnDraftInfo does not match
+     * the $forAccountId passed to this method, or if decoding the $xCnDraftInfo
+     * failed.
+     *
+     * @param string $xCnDraftInfo
+     * @param string $forAccountId
+     */
+    protected function setAnsweredForDraftInfo(string $xCnDraftInfo, string $forAccountId) {
+
+        $baseDecode = base64_decode($xCnDraftInfo);
+
+        if ($baseDecode === false) {
+            return;
+        }
+
+        $info = json_decode($baseDecode, true);
+
+        if (!is_array($info) || count($info) !== 3) {
+            return;
+        }
+
+        if ($info[0] !== $forAccountId) {
+            return;
+        }
+
+        $messageKey = new MessageKey($forAccountId, $info[1], $info[2]);
+
+        $flagList = new FlagList;
+        $flagList[] = new AnsweredFlag(true);
+
+        $this->setFlags($messageKey, $flagList);
+    }
+
+
+    /**
+     * Returns the Horde_Mail_Transport to be used with this account.
+     *
+     *
+     * @param MailAccount $account
+     *
+     * @return Horde_Mail_Transport
+     */
+    public function getMailer(MailAccount $account) {
+
+        $account = $this->getMailAccount($account->getId());
+
+        if (!$account) {
+            throw new ImapClientException(
+                "The passed \"account\" does not share the same id-value with " .
+                "the MailAccount this class was configured with."
+            );
+        }
+
+        if ($this->mailer) {
+            return $this->mailer;
+        }
+
+        $smtpCfg = [
+            "host"     => $account->getOutboxAddress(),
+            "port"     => $account->getOutboxPort(),
+            "password" => $account->getOutboxPassword(),
+            "username" => $account->getOutboxUser()
+        ];
+
+        if ($account->getOutboxSsl()) {
+            $smtpCfg["secure"] = 'ssl';
+        }
+
+        $this->mailer = new \Horde_Mail_Transport_Smtphorde($smtpCfg);
+
+        return $this->mailer;
+    }
+
 
     /**
      * Appends the specified $rawMessage to $mailFolderId and returns a new MessageBodyDraft with the
@@ -719,6 +944,7 @@ class HordeClient implements MailClient {
         $fetchQuery->structure();
 
         $fetchQuery->headers("ContentType", ["Content-Type"], ["peek" => true]);
+        $fetchQuery->headers("References", ["References"], ["peek" => true]);
 
         $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
 
@@ -746,7 +972,7 @@ class HordeClient implements MailClient {
      */
     protected function buildMessageItem(\Horde_Imap_Client_Socket $client, FolderKey $key, $item, array $options = []): array {
 
-        $result = $result = $this->getItemStructure($client, $item, $key, $options);
+        $result = $this->getItemStructure($client, $item, $key, $options);
 
         return [
             "messageKey" => $result["messageKey"],
@@ -832,16 +1058,18 @@ class HordeClient implements MailClient {
         $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
         $data = [
-            "from"     => $from,
-            "to"       => $tos,
-            "subject"  => $envelope->subject,
-            "date"     => $envelope->date,
-            "seen"     => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
-            "answered" => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
-            "draft"    => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
-            "flagged"  => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
-            "recent"   => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset"  => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType"))
+            "from"       => $from,
+            "to"         => $tos,
+            "subject"    => $envelope->subject,
+            "date"       => $envelope->date,
+            "seen"       => in_array(\Horde_Imap_Client::FLAG_SEEN, $flags),
+            "answered"   => in_array(\Horde_Imap_Client::FLAG_ANSWERED, $flags),
+            "draft"      => in_array(\Horde_Imap_Client::FLAG_DRAFT, $flags),
+            "flagged"    => in_array(\Horde_Imap_Client::FLAG_FLAGGED, $flags),
+            "recent"     => in_array(\Horde_Imap_Client::FLAG_RECENT, $flags),
+            "charset"    => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType")),
+            "references" => $this->getMessageIdStringFromReferencesHeaderValue($item->getHeaders("References")),
+            "messageId"  => $envelope->message_id
         ];
 
         $messageStructure = $item->getStructure();
@@ -914,9 +1142,12 @@ class HordeClient implements MailClient {
             $searchOptions = ["sort" => $sortInfo];
         }
 
+        $searchQuery = new \Horde_Imap_Client_Search_Query();
+        if (isset($options["ids"]) && is_array($options["ids"])) {
+            $searchQuery->ids(new \Horde_Imap_Client_Ids($options["ids"]));
+        }
 
         // search and narrow down list
-        $searchQuery = new \Horde_Imap_Client_Search_Query();
         $results = $client->search($key->getId(), $searchQuery, $searchOptions);
 
         return $results;
@@ -1021,6 +1252,20 @@ class HordeClient implements MailClient {
         return ["content" => "", "charset" => ""];
     }
 
+    /**
+     * @param string $value
+     *
+     *
+     */
+    protected function getMessageIdStringFromReferencesHeaderValue(string $value) :string {
+
+        if (strpos($value, "References:") !== 0) {
+            return "";
+        }
+
+        return trim(substr($value, 11));
+
+    }
 
     /**
      * @param $value

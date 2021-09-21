@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -72,6 +72,18 @@ interface MailClient {
 
 
     /**
+     * Deletes the specified MessageItem permanently.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if deleting the message was successful, otherwise false.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function deleteMessage(MessageKey $key) :bool;
+
+
+    /**
      * Returns the specified MessageItemDraft for the submitted arguments.
      *
      * @param MessageKey $key
@@ -81,6 +93,19 @@ interface MailClient {
      * @throws MailClientException if any exception occurs
      */
     public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+
+
+    /**
+     * Tries to send the specified MessageItemDraft found under $key.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if sending was successful, otherwise false.
+     *
+     * @throws MailClientException if any exception occurs, or if the message found
+     * is not a Draft-Message.
+     */
+    public function sendMessageDraft(MessageKey $key) : bool;
 
 
     /**
@@ -188,14 +213,29 @@ interface MailClient {
 
     /**
      * Sets the flags specified in FlagList for the message represented by MessageKey.
+     * Existing flags will not be removed if they do not appear in the $flagList.
      *
      * @param MessageKey $key
      * @param FlagList $flagList
      *
-     * @return bool if the operatoin succeeded, otherwise false
+     * @return bool if the operation succeeded, otherwise false
      *
      * @throws MailClientException if any exception occurs
      */
     public function setFlags(MessageKey $key, FlagList $flagList) : bool;
 
+
+    /**
+     * Moves the message identified by $messageKey to the folder specified with $folderKey.
+     * Does nothing if both mailFolderIds are the same.
+     *
+     * @param MessageKey $messageKey
+     * @param FolderKey $folderKey
+     *
+     * @return MessageKey The new MessageKey for the moved Message
+     *
+     * @throws MailClientException if the MailAccount-id found in $messageKey and $folderKey are
+     * not the same, or if any other error occurs
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) : MessageKey;
 }

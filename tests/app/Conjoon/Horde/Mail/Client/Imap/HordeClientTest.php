@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -26,6 +26,7 @@
 
 use Conjoon\Horde\Mail\Client\Imap\HordeClient,
     Conjoon\Mail\Client\Data\MailAddress,
+    Conjoon\Mail\Client\Data\MailAccount,
     Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
@@ -109,7 +110,7 @@ class HordeClientTest extends TestCase {
 
 
     /**
-     * Tests connect() with exception
+     * Tests connect()
      */
     public function testConnect()
     {
@@ -172,6 +173,9 @@ class HordeClientTest extends TestCase {
             "sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]
         ])->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
 
+        $messageIds = [111 => "foo", 222 => "bar"];
+        $references = [111 => "reffoo", 222 => "refbar"];
+
         $fetchResults = new \Horde_Imap_Client_Fetch_Results();
 
         $fetchResults[111] = new \Horde_Imap_Client_Data_Fetch();
@@ -179,11 +183,14 @@ class HordeClientTest extends TestCase {
         $fetchResults[222] = new \Horde_Imap_Client_Data_Fetch();
         $fetchResults[222]->setUid(222);
 
-        $fetchResults[111]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
+        $fetchResults[111]->setEnvelope([
+            'from' => "dev@conjoon.org", "to" => "devrec@conjoon.org", "message-id" => $messageIds[111]
+        ]);
         $fetchResults[111]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
-        $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org"]);
+        $fetchResults[111]->setHeaders('References', "References: " . $references[111]);
+        $fetchResults[222]->setEnvelope(['from' => "dev2@conjoon.org", "message-id" => $messageIds[222]]);
         $fetchResults[222]->setHeaders('ContentType', 'Content-Type=text/plain;charset= ISO-8859-1');
-
+        $fetchResults[222]->setHeaders('References', "References: " . $references[222]);
 
         $imapStub->shouldReceive('fetch')->with(
             "INBOX", \Mockery::any(),
@@ -225,6 +232,82 @@ class HordeClientTest extends TestCase {
             [], $messageItemList[1]->getTo()->toJson()
         );
 
+        $this->assertSame($messageIds[111], $messageItemList[0]->getMessageId());
+        $this->assertSame($messageIds[222], $messageItemList[1]->getMessageId());
+
+        $this->assertSame($references[111], $messageItemList[0]->getReferences());
+        $this->assertSame($references[222], $messageItemList[1]->getReferences());
+
+    }
+
+
+    /**
+     * Message Item Test with id specified in search options
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemList_widthIdSpecified() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive('search')->with(
+            "INBOX",
+            \Mockery::on(function ($searchQuery) {
+                return $searchQuery instanceof \Horde_Imap_Client_Search_Query &&
+                       $searchQuery->__toString() === "UID 34";
+            }),
+            ["sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]]
+        )->andReturn(["match" => new \Horde_Imap_Client_Ids([34])]);
+
+        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+
+        $fetchResults[34] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[34]->setUid(34);
+
+        $fetchResults[34]->setEnvelope(['from' => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
+        $fetchResults[34]->setHeaders('ContentType', 'Content-Type=text/html;charset=UTF-8');
+        $fetchResults[34]->setHeaders('References', 'References: <foo>');
+
+
+        $imapStub->shouldReceive('fetch')->with(
+            "INBOX", \Mockery::any(),
+            \Mockery::type('array')
+        )->andReturn(
+            $fetchResults
+        );
+
+        $client = $this->createClient();
+
+        $messageItemList = $client->getMessageItemList(
+            $this->createFolderKey(
+                $account->getId(),
+                "INBOX"
+            ),
+            ["ids" => [34]]
+        );
+
+
+        $this->assertInstanceOf(MessageItemList::class, $messageItemList);
+
+        $this->assertSame(1, count($messageItemList));
+
+        $this->assertInstanceOf(ListMessageItem::Class, $messageItemList[0]);
+
+        $this->assertSame("utf-8", $messageItemList[0]->getCharset());
+
+        $this->assertSame("34", $messageItemList[0]->getMessageKey()->getId());
+        $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
+        $this->assertEquals(
+            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
+        );
+        $this->assertEquals(
+            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
+        );
+
+        $this->assertSame("<foo>", $messageItemList[0]->getReferences());
     }
 
 
@@ -246,6 +329,7 @@ class HordeClientTest extends TestCase {
         $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
         $fetchResults[16]->setUid("16");
         $fetchResults[16]->setSize("1600");
+
 
         $attach = new \Horde_Mime_Part;
         $attach->setDisposition("attachment");
@@ -292,10 +376,13 @@ class HordeClientTest extends TestCase {
 
         $replyTo = new MailAddress("test@replyto", "test@replyto");
 
+        $messageId = "kjgjkggjkkgjkgj";
+
         $fetchResults[16]->setEnvelope([
-            "cc"      => $cc[0]->getAddress(),
-            "bcc"     => $bcc[0]->getAddress(),
-            "reply-to" => $replyTo->getAddress()
+            "cc"          => $cc[0]->getAddress(),
+            "bcc"         => $bcc[0]->getAddress(),
+            "reply-to"    => $replyTo->getAddress(),
+            "message-id"  => $messageId
         ]);
 
         $imapStub->shouldReceive('fetch')->with(
@@ -308,6 +395,7 @@ class HordeClientTest extends TestCase {
         $this->assertEquals($cc, $item->getCc());
         $this->assertEquals($bcc, $item->getBcc());
         $this->assertEquals($replyTo, $item->getReplyTo());
+        $this->assertSame($messageId, $item->getMessageId());
         
     }
 
@@ -642,8 +730,8 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("expunge")
             ->with(
                 $messageKey->getMailFolderId(),
-                ["delete" => true, "ids" => $rangeList]
-            );
+                ["delete" => true, "ids" => $rangeList, "list" => true]
+            )->andReturn([]);
 
 
         $client = $this->createClient();
@@ -654,6 +742,7 @@ class HordeClientTest extends TestCase {
         $this->assertSame($res->getMessageKey()->getMailFolderId(), $mailFolderId);
         $this->assertSame($res->getMessageKey()->getId(), $createdId);
     }
+
 
     /**
      * Tests updateMessageDraft
@@ -736,8 +825,8 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("expunge")
                  ->with(
                      $messageKey->getMailFolderId(),
-                     ["delete" => true, "ids" => $rangeList]
-                 );
+                     ["delete" => true, "ids" => $rangeList, "list" => true]
+                 )->andReturn([]);
 
         $client = $this->createClient();
 
@@ -754,10 +843,511 @@ class HordeClientTest extends TestCase {
         $this->assertNotSame($res, $messageItemDraft);
         $this->assertEquals($res->getMessageKey(), $resultMessageKey);
     }
-    
+
+    /**
+     * Tests getMailer() with exception
+     */
+    public function testGetMailer_exception()
+    {
+
+        $this->expectException(ImapClientException::class);
+        $client = $this->createClient();
+
+        $someAccount = new MailAccount(["id" => "foo"]);
+        $client->getMailer($someAccount);
+    }
+
+
+    /**
+     * Tests getMailer()
+     */
+    public function testGetMailer()
+    {
+        $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $client = $this->createClient($mailAccount);
+
+        $someAccount = new MailAccount(["id" => $mailAccount->getId()]);
+        $mailer = $client->getMailer($someAccount);
+        $this->assertInstanceOf(\Horde_Mail_Transport::class, $mailer);
+
+        $someAccount2 = new MailAccount(["id" => $mailAccount->getId()]);
+        $mailer2 = $client->getMailer($someAccount2);
+
+        $this->assertSame($mailer, $mailer2);
+
+        $mailer3 = $client->getMailer($someAccount);
+
+        $this->assertSame($mailer, $mailer3);
+
+    }
+
+
+    /**
+     * Tests sendMessageDraft exception (no draft)
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_noDraft() {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "DRAFTS";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $client = $this->createClient();
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $fetchResult = [];
+        $fetchResult[$messageKey->getId()] = new class() {
+            public function __construct() {
+            }
+
+            public function getFullMsg() {
+            }
+            public function getFlags() {
+                return [];
+            }
+        };
+
+
+        $imapStub->shouldReceive("fetch")
+            ->with(
+                $messageKey->getMailFolderId(),
+                \Mockery::any(),
+                ['ids' => $rangeList]
+            )
+            ->andReturn($fetchResult);
+
+        $this->expectException(ImapClientException::class);
+        $client->sendMessageDraft($messageKey);
+
+    }
+
+
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_regular()
+    {
+        $this->sendMessageDraftTest();
+    }
+
+
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_noDraftInfo()
+    {
+        $this->sendMessageDraftTest("NO_DRAFTINFO");
+    }
+
+
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_draftInfoInvalid()
+    {
+        $this->sendMessageDraftTest("DRAFTINFO_INVALID");
+    }
+
+
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_draftInfoNoJson()
+    {
+        $this->sendMessageDraftTest("DRAFTINFO_NOJSON");
+    }
+
+
+    /**
+     * Tests sendMessageDraft
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testSendMessageDraft_invalidMailAccount()
+    {
+        $this->sendMessageDraftTest("INVALID_MAILACCOUNT");
+    }
+
+
+    /**
+     * Tests moveMessage with keys not sharing same MailAccountId
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage() {
+        $this->assertSame($this->funcForTestMove(""), "");
+    }
+
+
+    /**
+     * Tests moveMessage with exception thrown by client
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_exception() {
+        $this->assertSame($this->funcForTestMove("exception"), "exception");
+    }
+
+
+    /**
+     * Tests moveMessage with no array returned by client
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_noarray() {
+        $this->assertSame($this->funcForTestMove("noarray"), "noarray");
+    }
+
+
+    /**
+     * Tests moveMessage with keys not sharing same MailAccountId
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_differerentMailAccountId() {
+
+
+        $client = $this->createClient();
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = "SENT";
+        $newMessageItemId = "abcde";
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey("zut", $toMailFolderId);
+
+        $this->expectException(ImapClientException::class);
+        $client->moveMessage($messageKey, $folderKey);
+    }
+
+
+    /**
+     * Tests moveMessage with same mailFolderIds
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testMoveMessage_sameMailFolderIds() {
+
+
+        $client = $this->createClient();
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = $mailFolderId;
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey($account, $toMailFolderId);
+
+        $res = $client->moveMessage($messageKey, $folderKey);
+
+        $this->assertSame($res, $messageKey);
+
+    }
+
+
+    /**
+     * Tests deleteMessage / okay
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_okay() {
+        $this->deleteMessageTest(true);
+    }
+
+
+    /**
+     * Tests deleteMessage / failed
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_failed() {
+        $this->deleteMessageTest(false);
+    }
+
+
+    /**
+     * Tests deleteMessage / exception
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testDeleteMessage_exception() {
+        $this->deleteMessageTest("exception");
+    }
+
 // -------------------------------
 //  Helper
 // -------------------------------
+
+
+    /**
+     * Helper for testing deleteMessage()
+     *
+     * @param mixed $testType true, false or "exception"
+     */
+    protected function deleteMessageTest($testType) {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId  = "INBOX";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+
+        $returnValue = $testType === true ? ["someunrelatedvar"] : [];
+
+        $op = $imapStub->shouldReceive("expunge")
+                ->with(
+                    $mailFolderId,
+                    ["delete" => true, "ids" => $rangeList, "list" => true]
+                );
+
+        if ($testType === "exception") {
+            $op->andThrow(new \Exception());
+        } else {
+            $op->andReturn($returnValue);
+        }
+
+        $client = $this->createClient();
+
+        try {
+            $res = $client->deleteMessage($messageKey);
+        } catch (ImapClientException $exc) {
+            if ($testType === "exception") {
+                $this->assertTrue(true);
+                return;
+            }
+        }
+
+        if ($testType === "exception") {
+            // if we are here, no exception was thrown
+            $this->assertTrue(false);
+        }
+
+        $resultValue = $testType === true ? true : false;
+
+        $this->assertSame($resultValue, $res);
+    }
+
+
+    /**
+     * Helper function for sending a MessageDraft
+     *
+     * @param string $testType The test to perform.
+     * Valid switches: "" -> regular test, with X-CN-DRAFT-INFO set
+     * "NO_DRAFTINFO" -> with NO X-CN-DRAFT-INFO set
+     * "DRAFTINFO_INVALID" -> parsing the header X-CN-DRAFT-INFO failed
+     * "DRAFTINFO_NOJSON" -> the parsed header does not contain a valid JSON string
+     * "INVALID_MAILACCOUNT" -> X-CN-DRAFT-INFO contained invalid mail account id
+     *
+     */
+    protected function sendMessageDraftTest($testType = "") {
+
+        if (!in_array($testType, ["", "NO_DRAFTINFO", "DRAFTINFO_INVALID", "INVALID_MAILACCOUNT", "DRAFTINFO_NOJSON"])) {
+            throw new \RuntimeException("Unexpected invalid test configuration.");
+        }
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId = "DRAFTS";
+        $messageItemId = "989786";
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+
+        $client = $this->createClient();
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:' . \Horde_Imap_Client_Socket::class);
+        $mailer = $client->getMailer($account);
+        $mimePartStub = \Mockery::mock('overload:' . \Horde_Mime_Part::class);
+        $mimeHeadersStub = \Mockery::mock('overload:' . \Horde_Mime_Headers::class);
+        $mimeMailStub = \Mockery::mock('overload:' . \Horde_Mime_Mail::class);
+
+
+        $headerElement = \Mockery::mock('overload:' . \Horde_Mime_Headers_Element::class);
+
+        $headers     = new  $mimeHeadersStub;
+        $basePart    = null;
+        $rawMsg      = "RAWMESSAGE";
+        $fetchResult = [];
+        $fetchResult[$messageKey->getId()] = new class($rawMsg) {
+
+            public function __construct($rawMsg) {
+                $this->rawMsg = $rawMsg;
+            }
+
+            public function getFullMsg($bool) {
+                return $this->rawMsg;
+            }
+            public function getFlags() {
+                return [\Horde_Imap_Client::FLAG_DRAFT];
+            }
+        };
+
+
+        $imapStub->shouldReceive("fetch")
+            ->with(
+                $messageKey->getMailFolderId(),
+                \Mockery::any(),
+                ['ids' => $rangeList]
+            )
+            ->andReturn($fetchResult);
+
+
+        $mimePartStub->shouldReceive("parseMessage")
+            ->with($rawMsg)
+            ->andReturn($basePart);
+
+        $mimeHeadersStub->shouldReceive("parseHeaders")
+            ->with($rawMsg)
+            ->andReturn($headers);
+
+        $mimeMailStub->shouldReceive("setBasePart")
+            ->with($basePart);
+
+
+        switch ($testType) {
+            case "DRAFTINFO_INVALID":
+                $value = "NO!";
+                break;
+
+            case "DRAFTINFO_NOJSON":
+                $value = base64_encode("{\"abc\" \"def\"}");
+                break;
+            case "INVALID_MAILACCOUNT":
+                $value = base64_encode(json_encode(["abc", "foo", "bar"]));
+                break;
+            default:
+                $value = base64_encode(json_encode([$account->getId(), "foo", "bar"]));
+                break;
+        }
+
+
+        $headerElement->shouldReceive("__get")
+            ->with("value_single")
+            ->andReturn($value);
+
+        if ($testType === "NO_DRAFTINFO") {
+            $headers->shouldReceive("getHeader")
+                ->with("X-CN-DRAFT-INFO")
+                ->andReturn(null);
+
+        } else {
+            $headers->shouldReceive("getHeader")
+                ->with("X-CN-DRAFT-INFO")
+                ->andReturn(
+                    new \Horde_Mime_Headers_Element_Single(
+                        "X-CN-DRAFT-INFO",
+                        $value
+                    )
+                );
+        }
+
+
+        $headers->shouldReceive("removeHeader")
+            ->with("X-CN-DRAFT-INFO");
+
+
+        if (in_array($testType, ["NO_DRAFTINFO", "DRAFTINFO_INVALID", "DRAFTINFO_NOJSON", "INVALID_MAILACCOUNT"])) {
+            $imapStub->shouldNotReceive('store');
+        } else {
+            $imapStub->shouldReceive('store')->with(
+                "foo", [
+                    "ids"    => new \Horde_Imap_Client_Ids(["bar"]),
+                    "add"    => ["\\Answered"]
+                ]
+            )->andReturn(true);
+
+        }
+
+
+        $mimeMailStub->shouldReceive("send")->with($mailer);
+
+        $res = $client->sendMessageDraft($messageKey);
+
+        $this->assertTrue($res);
+    }
+
+
+    /**
+     * helper for moveMessage tests
+     */
+    protected function funcForTestMove($type = "") {
+
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $mailFolderId     = "DRAFTS";
+        $messageItemId    = "989786";
+        $toMailFolderId   = "SENT";
+        $newMessageItemId = 24;
+
+        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey      = new FolderKey($account, $toMailFolderId);
+        $cmpMessageKey  = new MessageKey($account, $toMailFolderId, $newMessageItemId);
+
+        $client = $this->createClient();
+
+        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList->add($messageKey->getId());
+
+        $imapStub = \Mockery::mock('overload:'.\Horde_Imap_Client_Socket::class);
+        $proc = $imapStub->shouldReceive("copy")
+            ->with(
+                $mailFolderId,
+                $toMailFolderId,
+                ['ids' => $rangeList, "move" => true, "force_map" => true]
+            );
+
+        if ($type === "exception") {
+            $this->expectException(ImapClientException::class);
+            $proc->andThrow(new \Exception("foo"));
+            $client->moveMessage($messageKey, $folderKey);
+        } else if ($type === "noarray") {
+            $proc->andReturn(false);
+            $this->expectException(ImapClientException::class);
+            $res = $client->moveMessage($messageKey, $folderKey);
+        } else {
+            $proc->andReturn([$messageItemId => $newMessageItemId]);
+            $res = $client->moveMessage($messageKey, $folderKey);
+            $this->assertEquals($res, $cmpMessageKey);
+        }
+
+        return $type;
+    }
 
 
     /**

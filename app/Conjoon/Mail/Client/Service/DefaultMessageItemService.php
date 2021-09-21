@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
     Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessagePart,
@@ -176,11 +177,58 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
+    public function deleteMessage(MessageKey $key) :bool {
+        $result = false;
+
+        try {
+            $result = $this->mailClient->deleteMessage($key);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getListMessageItem(MessageKey $messageKey) :ListMessageItem {
+
+        $folderKey = $messageKey->getFolderKey();
+
+        $messageItemList = $this->mailClient->getMessageItemList(
+            $folderKey, ["ids" => [$messageKey->getId()]]);
+
+        return $messageItemList[0];
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
         $messageItemDraft = $this->mailClient->getMessageItemDraft($key);
         $this->charsetConvertHeaderFields($messageItemDraft);
         return $messageItemDraft;
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function sendMessageDraft(MessageKey $key) : bool {
+
+        $result = false;
+
+        try {
+            $result = $this->mailClient->sendMessageDraft($key);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return $result;
+    }
+
 
 
     /**
@@ -213,6 +261,21 @@ class DefaultMessageItemService implements MessageItemService {
      */
     public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool {
         return $this->getMailClient()->setFlags($messageKey, $flagList);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey {
+
+        try {
+            return $this->getMailClient()->moveMessage($messageKey, $folderKey);
+        } catch (MailClientException $e) {
+            // intentionally left empty
+        }
+
+        return null;
     }
 
 
@@ -343,7 +406,7 @@ class DefaultMessageItemService implements MessageItemService {
      * Processes the contents of the MessageBody's Parts and makes sure this converter converts
      * the contents to proper UTF-8.
      * Additionally, the text/html part will be filtered by this $htmlReadableStrategy.
-     * If no text/html part is available, the text/plain part will be used instead.
+     *
      *
      * @param MessageBody $messageBody
      *
@@ -358,19 +421,13 @@ class DefaultMessageItemService implements MessageItemService {
 
         $targetCharset = "UTF-8";
 
-        if (!$textPlainPart) {
-            $textPlainPart = new MessagePart("", "UTF-8", "text/plain");
-            $messageBody->setTextPlain($textPlainPart);
+        if ($textPlainPart) {
+            $this->getReadableMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
         }
 
-        $this->getReadableMessagePartContentProcessor()->process($textPlainPart, $targetCharset);
-
-        if ($textHtmlPart && $textHtmlPart->getContents()) {
+        if ($textHtmlPart) {
             $this->getReadableMessagePartContentProcessor()->process($textHtmlPart, $targetCharset);
-        } else {
-            $textHtmlPart = new MessagePart($textPlainPart->getContents(), "UTF-8", "text/html");
-            $messageBody->setTextHtml($textHtmlPart);
-        }
+        } 
 
         return $messageBody;
     }

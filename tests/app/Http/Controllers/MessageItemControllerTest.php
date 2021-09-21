@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -36,6 +36,7 @@ use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
+    Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
     Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
@@ -232,10 +233,10 @@ class MessageItemControllerTest extends TestCase
                     ->method('getMessageItem');
 
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonEquals([
             "success" => false,
@@ -260,10 +261,10 @@ class MessageItemControllerTest extends TestCase
             ->method('setFlags');
 
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageItem');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -287,10 +288,10 @@ class MessageItemControllerTest extends TestCase
         $serviceStub->expects($this->never())
             ->method('setFlags');
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('PUT', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageBody');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -335,6 +336,193 @@ class MessageItemControllerTest extends TestCase
             "data"    => array_merge($messageKey->toJson(), [
                 "seen" => true
             ])
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure setting flag and moving works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_FlagAndMove()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId = "ut";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", "311");
+        $newMessageKey = new MessageKey($folderKey, "2");
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(false);
+
+        $listMessageItem = new ListMessageItem($newMessageKey, ["draft" => false], new MessagePart("", "", ""));
+
+        $serviceStub->expects($this->once())
+            ->method('setFlags')
+            ->with($messageKey, $flagList)
+            ->willReturn(true);
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn($newMessageKey);
+
+        $serviceStub->expects($this->once())
+            ->method('getListMessageItem')
+            ->with($newMessageKey)
+            ->willReturn($listMessageItem);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
+                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $listMessageItem->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure setting flag and moving works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveSameFolderId()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId = "ut";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", $toFolderId);
+
+        $flagList = new FlagList();
+        $flagList[] = new DraftFlag(false);
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->never())
+            ->method('moveMessage');
+
+        $serviceStub->expects($this->never())
+            ->method('getListMessageItem');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/' . $toFolderId . '/MessageItems/311?action=move',
+                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseStatus(400);
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "msg"     => "Cannot move message since it already belongs to this folder."
+        ]);
+    }
+
+
+    /**
+     * Tests put() to make sure move works (without flag)
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveNoFlag()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId    = "TRASH";
+        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $newMessageKey = new MessageKey("dev_sys_conjoon_org", $toFolderId, "5");
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn($newMessageKey);
+
+        $listMessageItem = new ListMessageItem($newMessageKey, [], new MessagePart("", "", ""));
+        $serviceStub->expects($this->once())
+            ->method('getListMessageItem')
+            ->with($newMessageKey)
+            ->willReturn($listMessageItem);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move',
+                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseOk();
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => $listMessageItem->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests put() move with moving failed
+     *
+     *
+     * @return void
+     */
+    public function testPut_MessageItem_MoveFail()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $toFolderId    = "TRASH";
+        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $newMessageKey = new MessageKey("dev_sys_conjoon_org", $toFolderId, "5");
+
+
+        $serviceStub->expects($this->never())
+            ->method('setFlags');
+
+        $serviceStub->expects($this->once())
+            ->method('moveMessage')
+            ->with($messageKey, $folderKey)
+            ->willReturn(null);
+
+        $serviceStub->expects($this->never())
+            ->method('getListMessageItem');
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move',
+                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+            );
+
+        $response->assertResponseStatus(500);
+
+        $response->seeJsonEquals([
+            "success" => false,
+            "msg"     => "Could not move the message."
         ]);
     }
 
@@ -410,7 +598,7 @@ class MessageItemControllerTest extends TestCase
                 ["target" => "MessageItem", "flagged" => false]//,
             );
 
-        $response->assertResponseOk();
+        $response->assertResponseStatus(500);
 
         $response->seeJsonEquals([
             "success" => false,
@@ -487,10 +675,10 @@ class MessageItemControllerTest extends TestCase
         $serviceStub->expects($this->never())
             ->method('createMessageBodyDraft');
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call('POST', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems');
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -531,14 +719,14 @@ class MessageItemControllerTest extends TestCase
             ->with($folderKey, $messageBody)
             ->willReturn(null);
 
-        $response = $this->actingAs($this->getTestUserStub())
+        $this->actingAs($this->getTestUserStub())
             ->call(
                 'POST',
                 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?target=MessageBodyDraft&textHtml=' .
                 $textHtml . "&textPlain=" . $textPlain
             );
 
-        $this->assertEquals(400, $response->status());
+        $this->assertResponseStatus(400);
 
         $this->seeJsonContains([
             "success" => false,
@@ -549,50 +737,25 @@ class MessageItemControllerTest extends TestCase
 
     /**
      * Tests put() to make sure setting MessageDraft-data works as expected
-     *
+     * Tests w/o "origin" GET parameter
      *
      * @return void
      */
     public function testPut_MessageDraft_data()
     {
-        $serviceStub     = $this->initServiceStub();
-        $transformerStub = $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->runMessageDraftPutTest(false);
+    }
 
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-        $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
 
-        $to = json_encode(["address" => "dev@conjoon.org"]);
-        $data = [
-            "subject" => "Hello World!",
-            "to"      => $to
-        ];
-
-        $transformDraft = new MessageItemDraft($messageKey);
-        $messageItemDraft = new MessageItemDraft($newMessageKey);
-
-        $transformerStub->expects($this->once())
-                        ->method("transform")
-                        ->with($data)
-                        ->willReturn($transformDraft);
-
-        $serviceStub->expects($this->once())
-            ->method('updateMessageDraft')
-            ->with($transformDraft)
-            ->willReturn($messageItemDraft);
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311',
-                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
-            );
-
-        $response->assertResponseOk();
-
-        $response->seeJsonEquals([
-            "success" => true,
-            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), ["subject", "to"])
-        ]);
+    /**
+     * Tests put() to make sure setting MessageDraft-data works as expected
+     * Tests with GET parameter origin=create
+     *
+     * @return void
+     */
+    public function testPut_MessageDraft_data_originCreate()
+    {
+        $this->runMessageDraftPutTest(true);
     }
 
 
@@ -734,9 +897,202 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
+
+    /**
+     * Tests sendMessageDraft() to make sure sending a MessageDraft works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPost_sendMessageDraft()
+    {
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+
+        $requestData = [
+            "mailAccountId" => $messageKey->getMailAccountId(),
+            "mailFolderId" => $messageKey->getMailFolderId(),
+            "id" => $messageKey->getId()
+        ];
+
+        $testSend = function(bool $expected) use ($messageKey, $requestData) {
+
+            $serviceStub = $this->initServiceStub();
+
+            $serviceStub->expects($this->once())
+                ->method('sendMessageDraft')
+                ->with($messageKey)
+                ->willReturn($expected);
+
+            $response = $this->actingAs($this->getTestUserStub())
+                ->post(
+                    'cn_mail/SendMessage',
+                    $requestData
+                );
+
+            if ($expected === true) {
+                $response->assertResponseOk();
+                $response->seeJsonEquals([
+                    "success" => $expected,
+                ]);
+
+            } else {
+                $this->assertResponseStatus(400);
+                $response->seeJsonEquals([
+                    "success" => $expected,
+                    "msg"     => "Sending the message failed."
+                ]);
+
+            }
+
+        };
+
+        $testSend(true);
+        $testSend(false);
+
+    }
+
+
+    /**
+     * Tests delete() to make sure method relies on target-parameter.
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_BadRequest_missingTarget()
+    {
+        $this->deleteMessageItemTest("missing");
+    }
+
+
+    /**
+     * Tests delete() w/ 500
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_500()
+    {
+        $this->deleteMessageItemTest(false);
+    }
+
+
+    /**
+     * Tests delete() w/ 200
+     *
+     *
+     * @return void
+     */
+    public function testDelete_MessageItem_200()
+    {
+        $this->deleteMessageItemTest(true);
+    }
+
 // +--------------------------
 // | Helper
 // +--------------------------
+
+    /**
+     * @param mixed $type bool|string=missing
+     */
+    protected function deleteMessageItemTest($type) {
+        $serviceStub = $this->initServiceStub();
+        $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        if ($type === "missing") {
+            $serviceStub->expects($this->never())
+                ->method('deleteMessage');
+        } else {
+            $serviceStub->expects($this->once())
+                ->method('deleteMessage')
+                ->with(new MessageKey("dev_sys_conjoon_org", "INBOX", "311"))
+                ->willReturn($type);
+        }
+
+        $this->actingAs($this->getTestUserStub())
+            ->call(
+                'DELETE',
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311'
+                . ($type !== "missing" ? "?target=MessageItem" : "") );
+
+        if ($type === "missing") {
+            $this->assertResponseStatus(400);
+
+            $this->seeJsonContains([
+                "success" => false,
+                "msg"    => "\"target\" must be specified with \"MessageItem\"."
+            ]);
+        } else {
+            $this->assertResponseStatus($type === false ? 500 : 200);
+
+            $this->seeJsonContains([
+                "success" => $type
+            ]);
+        }
+
+    }
+
+
+    /**
+     * Helper function to test PUT with target = MessageDraft
+     * Use $origin=true to pass GET parameter origin=true
+     */
+    protected function runMessageDraftPutTest($origin) {
+        $serviceStub     = $this->initServiceStub();
+        $transformerStub = $this->initItemTransformerStub();
+        $this->initBodyTransformerStub();
+
+        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
+        $newMessageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "abc");
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
+            "subject" => "Hello World!",
+            "to"      => $to
+        ];
+
+        if ($origin === true) {
+            $data = array_merge($data, [
+                "references" => "ref",
+                "inReplyTo" => "irt",
+                "xCnDraftInfo" => "dinfo"
+            ]);
+        }
+
+        $transformDraft = new MessageItemDraft($messageKey);
+        $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
+
+
+        $transformerStub->expects($this->once())
+            ->method("transform")
+            ->with($data)
+            ->willReturn($transformDraft);
+
+        $serviceStub->expects($this->once())
+            ->method('updateMessageDraft')
+            ->with($transformDraft)
+            ->willReturn($messageItemDraft);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->put(
+                'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311?target=MessageDraft' .
+                ($origin === true ? '&origin=create' : ''),
+                $data
+            );
+
+        $response->assertResponseOk();
+
+        $set = ["subject", "to"];
+
+        if ($origin === true) {
+            $set = array_merge($set, ["messageId", "inReplyTo", "references", "xCnDraftInfo"]);
+        }
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), $set)
+        ]);
+    }
 
 
     /**

@@ -25,35 +25,22 @@
  */
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Message\Composer;
+namespace Conjoon\Mail\Client\Message\Flag;
 
-use Conjoon\Mail\Client\Message\MessageItemDraft;
 
 /**
- * Interface HeaderComposer
+ * Class representing \Answered-Flag
  *
- * @package Conjoon\Mail\Client\Message\Composer
+ *
+ * @package Conjoon\Mail\Client\Message\Flag
  */
-interface HeaderComposer {
-
+final class AnsweredFlag extends AbstractFlag {
 
     /**
-     * Writes the header fields in source to $target which is assumed to be the
-     * raw full text representing an email message. The resulting header text must be
-     * RFC 822/2822/3490/5322 compliant.
-     * If $source is null, no header information is available for $target. Implementing
-     * APIs are advised to update the header information in $target with default values, then,
-     * such as the Date.
-     * Existing fields should not be removed if they are not available in $source.
-     * Existing fields should be removed if fields are available in $source, but represent
-     * empty values (e.g.: "", [], null)
-     *
-     * @param string $target
-     * @param MessageItemDraft|null $source
-     *
-     * @return string
+     * @inheritdoc
      */
-    public function compose(string $target, MessageItemDraft $source = null) :string;
-
+    public function getName() :string {
+        return "\\Answered";
+    }
 
 }

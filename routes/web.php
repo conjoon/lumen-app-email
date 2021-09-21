@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -39,6 +39,8 @@ $router->post('cn_imapuser/auth', 'UserController@authenticate');
 
 $router->group(['middleware' => 'auth'], function () use ($router) {
 
+    $router->post('cn_mail/SendMessage', 'MessageItemController@sendMessageDraft');
+
     $router->get('cn_mail/MailAccounts', 'MailAccountController@index');
 
     $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
@@ -60,6 +62,10 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->put(
         'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
         'MessageItemController@put'
+    );
+    $router->delete(
+        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+        'MessageItemController@delete'
     );
     $router->get(
         'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',

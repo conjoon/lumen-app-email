@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,6 +25,7 @@
  */
 
 use Conjoon\Mail\Client\Message\AbstractMessageItem,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Mail\Client\Message\Flag\FlagList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
@@ -59,6 +60,10 @@ class AbstractMessageItemTest extends TestCase
         $this->assertNull($messageItem->getDraft());
 
         $this->assertNull($messageItem->getCharset());
+
+        $this->assertNull($messageItem->getMessageId());
+        $this->assertNull($messageItem->getReferences());
+        $this->assertNull($messageItem->getinReplyTo());
     }
 
 
@@ -142,6 +147,9 @@ class AbstractMessageItemTest extends TestCase
         $testException("to", "");
         $testException("date", "");
         $testException("charset", "int");
+        $testException("messageId", "string");
+        $testException("inReplyTo", "string");
+        $testException("references", "string");
 
         $this->assertSame(10, count($caught));
     }
@@ -163,8 +171,8 @@ class AbstractMessageItemTest extends TestCase
             if ($key === "from" || $key === "to") {
                 $this->assertEquals($item[$key]->toJson(), $json[$key]);
             } else if ($key == "date") {
-                $this->assertEquals($item[$key]->format("Y-m-d H:i:s"), $json[$key]);
-            } else if ($key == "charset") {
+                $this->assertEquals($item[$key]->format("Y-m-d H:i:s O"), $json[$key]);
+            } else if ($key == "charset" || $key == "inReplyTo") {
                 $this->assertArrayNotHasKey($key, $json);
             } else {
                 $this->assertSame($item[$key], $json[$key]);
@@ -180,7 +188,7 @@ class AbstractMessageItemTest extends TestCase
 
         $json = $messageItem->toJson();
 
-        $this->assertSame("1970-01-01 00:00:00", $json["date"]);
+        $this->assertSame("1970-01-01 00:00:00 +0000", $json["date"]);
         $this->assertSame([], $json["to"]);
         $this->assertSame([], $json["from"]);
 
@@ -267,17 +275,22 @@ class AbstractMessageItemTest extends TestCase
         $mod  = [];
         $it   = 0;
 
+        $skipFields = ["messageId"];
+
         $fieldLength = count(array_keys($conf));
         $this->assertTrue($fieldLength > 0);
 
         $this->assertSame($mod, $messageItem->getModifiedFields());
         foreach ($conf as $field => $value) {
+            if (in_array($field, $skipFields)) {
+                continue;
+            }
             $messageItem->{"set" . ucfirst($field)}($value);
             $mod[] = $field;
             $this->assertSame($mod, $messageItem->getModifiedFields());
             $it++;
         }
-        $this->assertSame($fieldLength, $it);
+        $this->assertSame($fieldLength - count($skipFields), $it);
     }
 
 
@@ -286,19 +299,90 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testIsHeaderField() {
 
-        $fields = ["from", "to", "subject", "date"];
+        $fields = ["from", "to", "subject", "date", "references", "inReplyTo"];
 
         foreach ($fields as $field) {
             $this->assertTrue(AbstractMessageItem::isHeaderField($field));
         }
 
-        $fields = ["recent", "seen", "flagged", "answered"];
+        $fields = ["recent", "seen", "flagged", "answered", "messageId"];
 
         foreach ($fields as $field) {
             $this->assertFalse(AbstractMessageItem::isHeaderField($field));
         }
     }
 
+    /**
+     * Tests setMessageItem
+     */
+    public function testSetMessageItem() {
+
+        $item = $this->createMessageitem(null, ["messageId" => "mid"]);
+
+        $this->assertSame($item->getMessageId(), "mid");
+
+        $exp = null;
+        try {
+            $item->setMessageId("foo");
+        } catch (MailClientException $e) {
+            $exp = $e;
+        }
+
+        $this->assertNotNull($exp);
+
+    }
+
+
+    /**
+     * Tests setting various fields to null or empty string
+     */
+    public function testSetNullOrEmptyStringFields() {
+
+        $item = $this->createMessageitem(null, ["messageId" => "mid"]);
+
+        $fields = ["references", "inReplyTo"];
+
+        foreach ($fields as $field) {
+
+            $getter = "get" . ucfirst($field);
+            $setter = "set" . ucfirst($field);
+
+            $this->assertNull($item->{$getter}());
+            $item->{$setter}(null);
+            $this->assertNull($item->{$getter}());
+
+            $item->{$setter}("");
+            $this->assertSame("", $item->{$getter}());
+
+
+        }
+    }
+
+
+    /**
+     * Tests setReferences w/ exception
+     */
+    public function testSetReferences_exception() {
+
+        $item = $this->createMessageitem(null, $this->getItemConfig());
+
+        $this->expectException(MailClientException::class);
+
+        $item->setReferences("");
+    }
+
+
+    /**
+     * Tests setInReplyTo w/ exception
+     */
+    public function testSetInReplyTo_exception() {
+
+        $item = $this->createMessageitem(null, $this->getItemConfig());
+
+        $this->expectException(MailClientException::class);
+
+        $item->setInReplyTo("");
+    }
 
 // ---------------------
 //    Helper Functions
@@ -348,7 +432,10 @@ class AbstractMessageItemTest extends TestCase
             'draft'          => false,
             'flagged'        => true,
             'recent'         => false,
-            'charset'        => "ISO-8859-1"
+            'charset'        => "ISO-8859-1",
+            'messageId'      => 'mid',
+            'inReplyTo'      => 'midrt',
+            'references'     => 'midr'
         ];
 
     }

@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -36,7 +36,8 @@ use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Message\Flag\DraftFlag,
     Conjoon\Mail\Client\Message\Flag\SeenFlag,
     Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClientException;
 
 /**
  * Class MessageItem models simplified envelope informations for a Mail Message.
@@ -114,6 +115,22 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
     protected $charset;
 
     /**
+     * @var string
+     */
+    protected $messageId;
+
+    /**
+     * @var string
+     */
+    protected $inReplyTo;
+
+    /**
+     * @var string
+     */
+    protected $references;
+
+
+    /**
      * Returns true is the specified field is a header field.
      *
      * @param $field
@@ -122,7 +139,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     public static function isHeaderField($field) {
 
-        return in_array($field, ["from", "to", "subject", "date"]);
+        return in_array($field, ["from", "to", "subject", "date", "inReplyTo", "references"]);
 
     }
 
@@ -194,6 +211,56 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
     public function setDate(\DateTime $date) {
         $this->addModified("date");
         $this->date = clone($date);
+        return $this;
+    }
+
+
+    /**
+     * Sets the messageId of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $messageId
+     */
+    public function setMessageId(string $messageId) {
+        if ($this->getMessageId()) {
+            throw new MailClientException("\"messageId\" was already set.");
+        }
+
+        $this->messageId = $messageId;
+
+        return $this;
+    }
+
+    /**
+     * Sets the inReplyTo of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $inReplyTo
+     */
+    public function setInReplyTo($inReplyTo) {
+        if (!is_null($this->getInReplyTo())) {
+            throw new MailClientException("\"inReplyTo\" was already set.");
+        }
+
+        $this->__call("setInReplyTo", [$inReplyTo]);
+
+        return $this;
+    }
+
+
+    /**
+     * Sets the references of this MessageItem and throws if a value was already
+     * set.
+     *
+     * @param string $references
+     */
+    public function setReferences($references) {
+        if (!is_null($this->getReferences())) {
+            throw new MailClientException("\"references\" was already set.");
+        }
+
+        $this->__call("setReferences", [$references]);
+
         return $this;
     }
 
@@ -274,8 +341,16 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     protected function checkType($property, $value) {
         switch ($property) {
+            case "inReplyTo":
+            case "references":
+                if (!is_string($value) && !is_null($value)) {
+                    return "string or null";
+                }
+                break;
+
             case "charset":
             case "subject":
+            case "messageId":
                 if (!is_string($value)) {
                     return "string";
                 }
@@ -309,17 +384,22 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
 
         $mk = $this->getMessageKey();
 
-        return array_merge($mk->toJson(), [
+        $ret = array_merge($mk->toJson(), [
             'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
             'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
             'subject'        => $this->getSubject(),
-            'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01"))->format("Y-m-d H:i:s"),
+            'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01 +0000"))->format("Y-m-d H:i:s O"),
             'seen'           => $this->getSeen(),
             'answered'       => $this->getAnswered(),
             'draft'          => $this->getDraft(),
             'flagged'        => $this->getFlagged(),
             'recent'         => $this->getRecent(),
+            'messageId'      => $this->getMessageId(),
+            'references'     => $this->getReferences()
         ]);
+
+
+        return $ret;
     }
 
 

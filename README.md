@@ -7,6 +7,20 @@ In case you cannot run tests from within this folder with your phpunit-installat
 phpunit included in the vendor directory:
 ```./vendor/bin/phpunit```
 
+### Composer 2.0 / Horde vows
+Unfortunately, there is no full support for the required Horde packages as of now. If you experience any troubles running ```composer update```, the following will most likely help:
+
+```
+// remove the "requires" and "repositories" from the composer.json
+//
+> composer self-update --1
+// add the previously "requires" and "repositories" from the composer.json back
+// ...
+> composer update
+> composer self-update --rollback
+```
+
+
 
 ## Supported Routes
 - ```cn_imapuser/auth``` **POST** (*app-cn_imapuser*)

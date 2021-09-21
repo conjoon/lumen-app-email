@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,6 +29,7 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\MailAddress,
     Conjoon\Mail\Client\Data\MailAddressList,
+    Conjoon\Mail\Client\MailClientException,
     Conjoon\Util\Modifiable;
 
 
@@ -154,7 +155,12 @@ class MessageItemDraftTest extends TestCase {
 
         $keys = array_keys($item);
 
+        $skipFields = ["xCnDraftInfo"];
+
         foreach ($keys as $key) {
+            if (in_array($key, $skipFields)) {
+                continue;
+            }
             if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
             } else{
@@ -261,6 +267,40 @@ class MessageItemDraftTest extends TestCase {
     }
 
 
+    /**
+     * Tests xCnDraftInfo Field w/ setters and getters
+     */
+    public function testXCnDraftInfo() {
+
+        $draft = $this->createMessageItem(null, $this->getItemConfig());
+        $this->assertSame($draft->getXCnDraftInfo(), $this->getItemConfig()["xCnDraftInfo"]);
+
+
+        $draft = $this->createMessageItem(null, ["messageId" => "mid"]);
+        $val = "draftinfo";
+        $draft->setXCnDraftInfo($val);
+        $this->assertSame($draft->getXCnDraftInfo(), $val);
+
+        $draft = $this->createMessageItem(null, ["messageId" => "mid"]);
+        $draft->setXCnDraftInfo(null);
+        $this->assertNull($draft->getXCnDraftInfo());
+    }
+
+
+    /**
+     * Tests setting xCnDraftInfo if already set
+     */
+    public function testSetXCnDraftInfo_exception() {
+
+        $draft = $this->createMessageItem(null, $this->getItemConfig());
+
+        $this->assertNotNull($draft->getXCnDraftInfo());
+
+        $this->expectException(MailClientException::class);
+
+        $draft->setXCnDraftInfo("foo");
+    }
+
 // ---------------------
 //    Helper Functions
 // ---------------------
@@ -277,7 +317,8 @@ class MessageItemDraftTest extends TestCase {
             'cc'      => $this->createCc(),
             'bcc'     => $this->createBcc(),
             'replyTo' => $this->createReplyTo(),
-            'draft'   => true
+            'draft'   => true,
+            'xCnDraftInfo' => "WyJzaXRlYXJ0d29yayIsIklOQk9YIiwiMTU5NzUyIl0="
         ];
 
     }

@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
     Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
     Conjoon\Mail\Client\Message\MessageItemList,
+    Conjoon\Mail\Client\Message\ListMessageItem,
     Conjoon\Mail\Client\Message\MessageItem,
     Conjoon\Mail\Client\Message\MessageItemDraft,
     Conjoon\Mail\Client\Message\MessageBody,
@@ -73,6 +74,26 @@ interface MessageItemService {
      * @return MessageItem
      */
     public function getMessageItem(MessageKey $key) :MessageItem;
+
+
+    /**
+     * Deletes a single Message permanently.
+     *
+     * @param MessageKey $key
+     *
+     * @return bool true if successful, otherwise false
+     */
+    public function deleteMessage(MessageKey $key) :bool;
+
+
+    /**
+     * Returns a single ListMessageItem.
+     *
+     * @param MessageKey $key
+     *
+     * @return ListMessageItem
+     */
+    public function getListMessageItem(MessageKey $key) :ListMessageItem;
 
 
     /**
@@ -142,6 +163,17 @@ interface MessageItemService {
 
 
     /**
+     * Sends the MessageItemDraft with the specified $messageKey. The message will not
+     * be send if it is not a DRAFT message.
+     *
+     * @param MessageItemDraft $messageItemDraft
+     *
+     * @return bool true if sending was succesfull, otherwise false
+     */
+    public function sendMessageDraft(MessageKey $messageKey) : bool;
+
+
+    /**
      * Returns the total number of messages in the specified $mailFolderId for the specified $account;
      *
      * @param FolderKey $key
@@ -170,6 +202,17 @@ interface MessageItemService {
      * @return boolean
      */
     public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool;
+
+    /**
+     * Moves the message identified by $messageKey to the destination folder specified with
+     * $folderKey. Returns null if the operation failed.
+     *
+     * @param MesageKey $messageKey
+     * @param FolderKey $folderKey
+     *
+     * @return null|MessageKey
+     */
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey;
 
 
     /**

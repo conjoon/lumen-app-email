@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,8 @@ namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\MailAddressList,
     Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Conjoon\Mail\Client\MailClientException;
 
 
 /**
@@ -56,9 +57,24 @@ class MessageItemDraft extends AbstractMessageItem {
     protected $replyTo;
 
     /**
+     * A MessageItemDraft "draft" flag is by default always true.
      * @var boolean
      */
     protected $draft = true;
+
+    /**
+     * A json encoded array, encoded as a base64-string, containing information about the
+     * mailAccountId, the mailFolderId and the messageItemId this draft references),
+     * in this order.
+     * This value will be set by the client once a draft gets saved that is created
+     * for a reply-to/-all regarding a message, and will be reused once the draft
+     * gets send to update the message represented by the info in this field with
+     * appropriate message flags (e.g. \answered).
+     *
+     * @var string
+     */
+    protected $xCnDraftInfo;
+
 
     /**
      * @inheritdoc
@@ -156,6 +172,28 @@ class MessageItemDraft extends AbstractMessageItem {
     }
 
 
+    /**
+     * Sets the xCnDraftInfo for this MessageItemDraft and throws if
+     * the value was already set.
+     *
+     * @param $string $xCnDraftInfo
+     *
+     * @return $this
+     *
+     * @throws MailClientException if xCnDraftInfo was already set
+     */
+    public function setXCnDraftInfo($xCnDraftInfo) {
+
+        if (is_string($this->getXCnDraftInfo())) {
+            throw new MailClientException("\"xCnDraftInfo\" was already set.");
+        }
+
+        $this->xCnDraftInfo = $xCnDraftInfo;
+
+        return $this;
+    }
+
+
 // --------------------------------
 //  Jsonable interface
 // --------------------------------
@@ -165,11 +203,13 @@ class MessageItemDraft extends AbstractMessageItem {
      */
     public function toJson() :array{
 
-        return array_merge(parent::toJson(), [
+        $data = array_merge(parent::toJson(), [
             'cc'      => $this->getCc() ? $this->getCc()->toJson() : [],
             'bcc'     => $this->getBcc() ? $this->getBcc()->toJson() : [],
             'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : []
         ]);
+
+        return $data;
     }
 
 }

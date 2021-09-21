@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -100,6 +100,23 @@ class MessageKeyTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         new MessageKey($mailAccountId, $mailFolderId);
+    }
+
+
+    /**
+     * Test getFolderKey
+     */
+    public function testGetFolderKey() {
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $id = "123";
+
+        $folderKey = new FolderKey($mailAccountId, $mailFolderId);
+        $key = new MessageKey($folderKey, $id);
+
+        $this->assertEquals($folderKey, $key->getFolderKey());
+        $this->assertEquals($key->getFolderKey(), $key->getFolderKey());
+        $this->assertNotSame($key->getFolderKey(), $key->getFolderKey());
     }
 
 }
