@@ -4,6 +4,9 @@ supporting [extjs-app-webmail](https://github.com/conjoon/extjs-app-webmail) wit
 
 ## Usage
 
+### Services
+For the list of service endpoints this microservice provides, have a look at the `openapi.json`.
+
 ### Adding pre-configured server configurations
 In order for users to authenticate against IMAP servers, `php-cn_imapuser` provides 
 a template-configuration file in ```config/imapserver.php.example```.
@@ -46,12 +49,3 @@ Unfortunately, there is no full support for the required Horde packages as of no
 > composer update
 > composer self-update --rollback
 ```
-
-
-
-## Supported Routes
-- ```cn_imapuser/auth``` **POST** (*app-cn_imapuser*)
-- ```cn_mail/MailAccounts``` **GET** (*app-cn_mail*) 
-- ```cn_mail/MailAccounts/{mailAccountId}/MailFolders``` **GET** (*app-cn_mail*)
-- ```cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems``` **GET/POST** (*app-cn_mail*)
-- ```cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItemId}``` **GET/PUT** (*app-cn_mail*)
