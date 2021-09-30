@@ -2,8 +2,8 @@
 <?php
 /**
  * conjoon
- * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -45,7 +45,7 @@ class MailFolderTest extends TestCase
     public function testConstructor() {
 
         $folderKey = $this->createKey();
-        
+
         $this->assertTrue(MailFolder::TYPE_INBOX != "");
         $this->assertTrue(MailFolder::TYPE_DRAFT != "");
         $this->assertTrue(MailFolder::TYPE_JUNK != "");
@@ -163,5 +163,5 @@ class MailFolderTest extends TestCase
         return new FolderKey($account, $name);
     }
 
-    
+
 }

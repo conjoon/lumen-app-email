@@ -1,8 +1,8 @@
 <?php
 /**
  * conjoon
- * php-cn_imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * php-ms-imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -162,7 +162,7 @@ class HordeHeaderComposer implements HeaderComposer {
         return trim($headers->toString()) . "\n\n" . trim($part->toString());
     }
 
-    
+
 // +---------------------------------
 // | Helper
 // +---------------------------------
@@ -171,7 +171,7 @@ class HordeHeaderComposer implements HeaderComposer {
      * Tries to sort $fields after a specific order for Header-fields in messages,
      * will only return the fields that are also available in $fields.
      * Proposed order is
-     * 
+     *
      *  - date
      *  - subject
      *  - from
@@ -188,8 +188,8 @@ class HordeHeaderComposer implements HeaderComposer {
      *
      * Additional header fields specified in $fields not matching order-fields
      * will be appended in no particular order to the returned array.
-     * 
-     * 
+     *
+     *
      * @param array $fields
      * @return array
      */

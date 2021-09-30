@@ -1,4 +1,4 @@
-# php-cn_imapuser
+# @conjoon/php-ms-imapuser
 Simplistic RESTful PHP backend created with [Lumen](https://github.com/laravel/lumen/) for [conjoon](https://github.com/conjoon), 
 supporting [extjs-app-webmail](https://github.com/conjoon/extjs-app-webmail) with [extjs-app-imapuser](https://github.com/conjoon/extjs-app-imapuser).
 
@@ -8,7 +8,7 @@ supporting [extjs-app-webmail](https://github.com/conjoon/extjs-app-webmail) wit
 For the list of service endpoints this microservice provides, have a look at the `openapi.json`.
 
 ### Adding pre-configured server configurations
-In order for users to authenticate against IMAP servers, `php-cn_imapuser` provides 
+In order for users to authenticate against IMAP servers, `php-ms-imapuser` provides 
 a template-configuration file in ```config/imapserver.php.example```.
 In this file, you can specify an array of supported IMAP servers to which users
 of your application can connect to.

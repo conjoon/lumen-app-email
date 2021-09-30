@@ -1,8 +1,8 @@
 <?php
 /**
  * conjoon
- * php-cn_imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * php-ms-imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -267,7 +267,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
 
     /**
      * Makes sure defined properties in this class are accessible via getter method calls.
-     * 
+     *
      * @param String $method
      * @param Mixed $arguments
      *
@@ -279,8 +279,8 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      */
     public function __call($method, $arguments) {
 
-        
-        if (($isGetter = strpos($method, 'get') === 0) || 
+
+        if (($isGetter = strpos($method, 'get') === 0) ||
             ($isSetter = strpos($method, 'set') === 0)) {
 
             $property = lcfirst(substr($method, 3));
@@ -288,10 +288,10 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
             if ($isGetter) {
                 if (property_exists($this, $property)) {
                     return $this->{$property};
-                }    
+                }
             } else if ($isSetter) {
 
-                if (property_exists($this, $property) && 
+                if (property_exists($this, $property) &&
                     !in_array($property, ['messageKey'])) {
 
                     $value = $arguments[0];
@@ -306,7 +306,7 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
                 }
             }
 
-            
+
         }
 
         throw new \BadMethodCallException("no method \"".$method."\" found.");

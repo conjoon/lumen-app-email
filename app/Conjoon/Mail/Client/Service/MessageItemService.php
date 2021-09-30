@@ -1,8 +1,8 @@
 <?php
 /**
  * conjoon
- * php-cn_imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * php-ms-imapuser
+ * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -51,11 +51,11 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  */
 interface MessageItemService {
 
-    
+
     /**
      * Returns a MessageItemList containing the MessageItems for the
      * specified MailAccount and the MailFolder.
-     * 
+     *
      * @param FolderKey $key
      * @param array $options An array with the following query options:
      *  - start (integer) The position from where the items should be returned

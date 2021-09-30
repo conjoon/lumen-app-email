@@ -1,8 +1,8 @@
 <?php
 /**
  * conjoon
- * php-cn_imapuser
- * Copyright (C) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -54,7 +54,7 @@ class CharsetConverter implements Converter {
      * @return string
      */
     public function convert(string $text, string $fromCharset = "", string $targetCharset = "UTF-8") :string {
-        
+
 
         // try to replace those curved quotes with their correct entities!
         // see http://en.wikipedia.org/wiki/Quotation_mark_glyphs

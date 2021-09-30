@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2019 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+Copyright (c) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
