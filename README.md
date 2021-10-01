@@ -1,11 +1,29 @@
-# @conjoon/php-ms-imapuser
+# conjoon/php-ms-imapuser
 Simplistic RESTful PHP backend created with [Lumen](https://github.com/laravel/lumen/) for [conjoon](https://github.com/conjoon), 
 supporting [extjs-app-webmail](https://github.com/conjoon/extjs-app-webmail) with [extjs-app-imapuser](https://github.com/conjoon/extjs-app-imapuser).
 
-## Usage
+This microservice provides Basic Authorization against a single IMAP server, providing access to it's mailboxes. 
 
-### Services
-For the list of service endpoints this microservice provides, have a look at the `openapi.json`.
+## Installation
+
+### Development
+Starting up a default **ddev** instance with
+```shell
+$ ddev start
+```
+will expose the API to https://php-ms-imapuser.ddev.site. Please refer to the `ddev`-configuration if you need to adjust
+settings according to your environment.
+
+## Available Rest API
+* api-imap 
+  <br>For the list of IMAP commands this microservice provides, please refer to the OpenApi-documentation of `api-imap.json`,
+  hosted at [conjoon/openapi-docs repository](https://github.com/conjoon/openapi-docs).
+* api-imapuser
+  <br>Authenticating a user against a single IMAP account
+  is specified in the OpenApi-documentation of `api-imapuser.json`,
+  hosted at [conjoon/openapi-docs repository](https://github.com/conjoon/openapi-docs/).
+
+## Usage
 
 ### Adding pre-configured server configurations
 In order for users to authenticate against IMAP servers, `php-ms-imapuser` provides 
