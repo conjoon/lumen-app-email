@@ -177,7 +177,7 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
 $app->register(Fruitcake\Cors\CorsServiceProvider::class);
 $app->configure('cors');
 $app->middleware([
-    Fruitcake\Cors\HandleCors::class,
+    Fruitcake\Cors\HandleCors::class
 ]);
 
  $app->routeMiddleware([
@@ -194,7 +194,6 @@ $app->middleware([
 | totally optional, so you are not required to uncomment this line.
 |
 */
-
 
 $app->register(App\Providers\AuthServiceProvider::class);
 
