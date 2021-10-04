@@ -13,6 +13,7 @@
     "require": {
         "php": ">=7.4",
         "ezyang/htmlpurifier": "^4.11",
+        "fruitcake/laravel-cors": "^2.0",
         "laravel/lumen-framework": "5.8.*",
         "pear-pear.horde.org/horde_imap_client": "*",
         "pear-pear.horde.org/horde_smtp": "*"

@@ -1,12 +1,14 @@
 # conjoon/php-ms-imapuser
-Simplistic RESTful PHP backend created with [Lumen](https://github.com/laravel/lumen/) for [conjoon](https://github.com/conjoon), 
-supporting [extjs-app-webmail](https://github.com/conjoon/extjs-app-webmail) with [extjs-app-imapuser](https://github.com/conjoon/extjs-app-imapuser).
 
-This microservice provides Basic Authorization against a single IMAP server, providing access to it's mailboxes. 
+Implements **[rest-imap](https://github.com/conjoon/rest-api-description)** and **[rest-imapuser](https://github.com/conjoon/rest-api-description)**.
+
+## About
+
+PHP microservice for accessing IMAP servers. 
 
 ## Installation
 
-### Development
+#### Development environment
 Starting up a default **ddev** instance with
 ```shell
 $ ddev start
@@ -15,17 +17,17 @@ will expose the API to https://php-ms-imapuser.ddev.site. Please refer to the `d
 settings according to your environment.
 
 ## Available Rest API
-* api-imap 
-  <br>For the list of IMAP commands this microservice provides, please refer to the OpenApi-documentation of `api-imap.json`,
-  hosted at [conjoon/openapi-docs repository](https://github.com/conjoon/openapi-docs).
-* api-imapuser
+* **rest-imap** 
+  <br>For the list of IMAP commands this microservice provides, please refer to the OpenApi-documentation of `rest-imap`,
+  hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description).
+* **rest-imapuser**
   <br>Authenticating a user against a single IMAP account
-  is specified in the OpenApi-documentation of `api-imapuser.json`,
-  hosted at [conjoon/openapi-docs repository](https://github.com/conjoon/openapi-docs/).
+  is specified in the OpenApi-documentation of `rest-imapuser`,
+  hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description).
 
-## Usage
+## Required configurations
 
-### Adding pre-configured server configurations
+#### 1. Allowed IMAP servers
 In order for users to authenticate against IMAP servers, `php-ms-imapuser` provides 
 a template-configuration file in ```config/imapserver.php.example```.
 In this file, you can specify an array of supported IMAP servers to which users
@@ -49,13 +51,34 @@ above will use the connection information for every user that uses an email-addr
 the regular expression ```"/\@(googlemail.)(com)$/mi"```.
 Copy and rename this file to ```config/imapserver.php``` once all IMAP-servers were configured.
 
+#### 2. Configuring CORS
+
+**php-ms-imapuser** uses [fruitcake/laravel-cors](https://github.com/fruitcake/laravel-cors) for enabling
+[Cross-Origin Resource Sharing](http://enable-cors.org/).
+<br>
+A configuration template can be found in ```config/cors.php.example```. You need to create a file named
+```config/cors.php``` - basically the configuration of ```config/cors.php.example``` should work, but if
+you need to set specific options, this would be the place to do so.
+
+#### Options
+
+| Option                   | Description                                                              | Default value |
+|--------------------------|--------------------------------------------------------------------------|---------------|
+| paths                    | You can enable CORS for 1 or multiple paths, eg. `['api/*'] `            | `[]`          |
+| allowed_origins          | Matches the request origin. Wildcards can be used, eg. `*.mydomain.com` or `mydomain.com:*`  | `['*']`       |
+| allowed_origins_patterns | Matches the request origin with `preg_match`.                            | `[]`          |
+| allowed_methods          | Matches the request method.                                              | `['*']`       |
+| allowed_headers          | Sets the Access-Control-Allow-Headers response header.                   | `['*']`       |
+| exposed_headers          | Sets the Access-Control-Expose-Headers response header.                  | `false`       |
+| max_age                  | Sets the Access-Control-Max-Age response header.                         | `0`           |
+| supports_credentials     | Sets the Access-Control-Allow-Credentials header.                        | `false`       |
 
 ## Troubleshooting
 In case you cannot run tests from within this folder with your phpunit-installation, try running the tests with
 phpunit included in the vendor directory:
 ```./vendor/bin/phpunit```
 
-### Composer 2.0 / Horde vows
+#### Composer 2.0 / Horde vows
 Unfortunately, there is no full support for the required Horde packages as of now. If you experience any troubles running ```composer update```, the following will most likely help:
 
 ```

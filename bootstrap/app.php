@@ -174,7 +174,11 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
 | route or middleware that'll be assigned to some specific routes.
 |
 */
-
+$app->register(Fruitcake\Cors\CorsServiceProvider::class);
+$app->configure('cors');
+$app->middleware([
+    Fruitcake\Cors\HandleCors::class,
+]);
 
  $app->routeMiddleware([
      'auth' => App\Http\Middleware\Authenticate::class,
