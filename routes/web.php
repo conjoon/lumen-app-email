@@ -29,48 +29,13 @@
 | Application Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
+|API Versioning groups, loading specific route configurations based on the prefix.
 |
 */
 
-$router->post('cn_imapuser/auth', 'UserController@authenticate');
-
-$router->group(['middleware' => 'auth'], function () use ($router) {
-
-    $router->post('cn_mail/SendMessage', 'MessageItemController@sendMessageDraft');
-
-    $router->get('cn_mail/MailAccounts', 'MailAccountController@index');
-
-    $router->get('cn_mail/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
-
-    // {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
-    // webserver option is set to "on"
-    $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-        'MessageItemController@index'
-    );
-    $router->post(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-        'MessageItemController@post'
-    );
-    $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@get'
-    );
-    $router->put(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@put'
-    );
-    $router->delete(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@delete'
-    );
-    $router->get(
-        'cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
-        'AttachmentController@index'
-    );
-
-
+$router->group([
+    'namespace'  => "\App\Http\Controllers\Api\alpha",
+    'prefix'     => 'api/v0.1',
+], function () use ($router) {
+    require base_path('routes/api_alpha.php');
 });
