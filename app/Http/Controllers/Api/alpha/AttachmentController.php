@@ -25,55 +25,60 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\alpha;
 
-use Illuminate\Http\Request;
-
-use App\Imap\ImapUserRepository;
+use Conjoon\Mail\Client\Service\AttachmentService,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Auth,
+    Illuminate\Http\Request;
 
 
 /**
- * Class UserController
+ * Class AttachmentController
  * @package App\Http\Controllers
  */
-class UserController extends Controller
-{
+class AttachmentController extends Controller {
+
 
     /**
-     * @var ImapUserRepository
+     * @var attachmentService
      */
-    protected $repository;
+    protected $attachmentService;
 
 
     /**
-     * UserController constructor.
+     * AttachmentController constructor.
      *
-     * @param ImapUserRepository $repository
+     * @param AttachmentService $attachmentService
      */
-    public function __construct(ImapUserRepository $repository) {
+    public function __construct(AttachmentService $attachmentService) {
 
-        $this->repository = $repository;
+        $this->attachmentService = $attachmentService;
+
     }
 
+
     /**
-     * Action for validating a set of username/password against this ImapUserRepository.
+     * Returns all available Attachments for $mailAccountId, the specified
+     * $mailFolderId,
+     * and the specified $messageItemId
      *
+     * @return ResponseJson
      */
-    public function authenticate(Request $request)
-    {
-        $username = (string)$request->input("username");
-        $password = (string)$request->input("password");
+    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
 
-        $user = $this->repository->getUser($username, $password);
+        $user = Auth::user();
 
-        if ($user) {
-             return response()->json([
-                 'success' => true,
-                 'data'    => $user->toArray()
-             ]);
-        }
+        $attachmentService = $this->attachmentService;
+        $mailAccount       = $user->getMailAccount($mailAccountId);
+        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
-        return response()->json(['success' => false, "msg" => "Unauthorized.", "status" => 401], 401);
+        return response()->json([
+            "success" => true,
+            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
+        ]);
+
     }
+
 
 }

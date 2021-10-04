@@ -25,7 +25,7 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api\alpha;
 
 use Conjoon\Mail\Client\Service\MessageItemService,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
