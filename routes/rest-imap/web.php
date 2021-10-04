@@ -28,8 +28,14 @@
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| Entry point for the APIs this server supports.
+|
+|API Versioning groups, loading specific route configurations based on the prefix.
+|
 */
 
-require base_path('routes/rest-imap/web.php');
-require base_path('routes/rest-imapuser/web.php');
+$router->group([
+    'namespace'  => "\App\Http\Controllers\Api\alpha",
+    'prefix'     => 'rest-imap/api/v0.1'
+], function () use ($router) {
+    require base_path('routes/rest-imap/api_alpha.php');
+});

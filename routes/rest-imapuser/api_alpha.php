@@ -28,8 +28,9 @@
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| Entry point for the APIs this server supports.
+| The following routes represent the rest-imapuser API V0.1.
+| https://github.com/conjoon/rest-api-description
 */
 
-require base_path('routes/rest-imap/web.php');
-require base_path('routes/rest-imapuser/web.php');
+$router->post('auth', 'UserController@authenticate');
+

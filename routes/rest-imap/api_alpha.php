@@ -28,11 +28,10 @@
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| The following routes represent the API V0.1.
-| https://github.com/conjoon/rest-api-description rest-imap|rest-imapuser
+| The following routes represent the rest-imap API V0.1.
+| https://github.com/conjoon/rest-api-description
 */
 
-$router->post('/auth', 'UserController@authenticate');
 
 $router->group(
     ['middleware' => 'auth'],
