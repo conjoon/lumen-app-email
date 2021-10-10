@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,18 +24,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-|API Versioning groups, loading specific route configurations based on the prefix.
-|
-*/
-
-$router->group([
-    'namespace'  => "\App\Http\Controllers\Api\\" . config("app.api.latest.namespace"),
-    'prefix'     => "rest-imap/api/" . config("app.api.latest.url")
-], function () use ($router) {
-    require base_path("routes/rest-imap/api_" . config("app.api.latest.url") . ".php");
-});
+return [
+    "api" => [
+        "latest" => [
+            /**
+             * Matches: "path/{url}/api",
+             * The "namespace" is available to make sure that another token
+             * than the version the "url" represents and is requested by the
+             * client can be used for namespacing.
+             */
+            "url" => "v0.1",
+            "namespace" => "alpha"
+        ]
+    ]
+];

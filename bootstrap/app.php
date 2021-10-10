@@ -47,7 +47,7 @@ $app = new Laravel\Lumen\Application(
 
 $app->withFacades();
 
-
+$app->configure('app');
 $app->configure('imapserver');
 
 /*

@@ -2,7 +2,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,6 +32,16 @@ class VariousTest extends TestCase
     use TestTrait;
 
     /**
+     * We are currently on...
+     *
+     * @return void
+     */
+    public function testApi() {
+        $this->assertSame(config("app.api.latest.url"), "v0.1");
+        $this->assertSame(config("app.api.latest.namespace"), "alpha");
+    }
+
+    /**
      * Get information and validate registered middleware for the app.
      *
      * @return void
@@ -47,22 +57,23 @@ class VariousTest extends TestCase
 
 
     public function testRoutes() {
-
         $routes = $this->app->router->getRoutes();
 
-        $this->assertArrayHasKey("POST/cn_imapuser/auth", $routes);
+        $prefixImap     = "rest-imap/api/" . config("app.api.latest.url");
+        $prefixImapUser = "rest-imapuser/api/" . config("app.api.latest.url");
+        $this->assertArrayHasKey("POST/" . $prefixImapUser . "/auth", $routes);
 
 
         $testAuthsFor = [
-            "GET/cn_mail/MailAccounts",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
-            "POST/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
-            "PUT/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
-            "DELETE/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
-            "GET/cn_mail/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments",
-            "POST/cn_mail/SendMessage"
+            "GET/" . $prefixImap . "/MailAccounts",
+            "GET/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders",
+            "GET/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
+            "POST/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems",
+            "GET/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
+            "PUT/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
+            "DELETE/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}",
+            "GET/" . $prefixImap . "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments",
+            "POST/" . $prefixImap . "/SendMessage"
         ];
 
         foreach ($testAuthsFor as $route) {
@@ -81,8 +92,7 @@ class VariousTest extends TestCase
             ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
         $this->app->auth->setUser($userStub);
 
-
-
+        config(['imapserver' => ["mock" => "default"]]);
         $reflection = new \ReflectionClass($this->app);
         $property = $reflection->getMethod('getConcrete');
         $property->setAccessible(true);

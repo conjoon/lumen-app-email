@@ -34,8 +34,8 @@
 */
 
 $router->group([
-    'namespace'  => "\App\Http\Controllers\Api\alpha",
-    'prefix'     => 'rest-imapuser/api/v0.1'
+    'namespace'  => "\App\Http\Controllers\Api\\" . config("app.api.latest.namespace"),
+    'prefix'     => "rest-imapuser/api/" . config("app.api.latest.url")
 ], function () use ($router) {
-    require base_path('routes/rest-imapuser/api_alpha.php');
+    require base_path("routes/rest-imapuser/api_" . config("app.api.latest.url") . ".php");
 });
