@@ -11,7 +11,7 @@ additional_fqdns: []
 mariadb_version: "10.3"
 mysql_version: ""
 use_dns_when_possible: true
-composer_version: ""
+composer_version: "1"
 web_environment: []
 omit_containers: [db, dba]
 nfs_mount_enabled: true
