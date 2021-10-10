@@ -72,7 +72,7 @@ class ListMessageItem extends MessageItem {
      * @param array|null $data
      * @param MessagePart $messagePart
      */
-    public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart) {
+    public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart = null) {
 
         parent::__construct($messageKey, $data);
 
@@ -85,7 +85,7 @@ class ListMessageItem extends MessageItem {
      *
      * @return MessagePart
      */
-    public function getMessagePart() : MessagePart {
+    public function getMessagePart() : ?MessagePart {
         return $this->messagePart;
     }
 
@@ -98,9 +98,15 @@ class ListMessageItem extends MessageItem {
      */
     public function toJson() :array{
 
+        $fields = [];
+
+        if ($this->getMessagePart()) {
+            $fields["previewText"] = $this->getMessagePart() ? $this->getMessagePart()->getContents() : "";
+        }
+
         return array_merge(
             parent::toJson(),
-            ["previewText" => $this->getMessagePart()->getContents()]
+            $fields
         );
     }
 

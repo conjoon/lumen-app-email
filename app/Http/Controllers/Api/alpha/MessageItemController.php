@@ -111,11 +111,26 @@ class MessageItemController extends Controller {
 
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
-        $options = [
-            "start" => $start,
-            "limit" => $limit,
-            "sort"  => $sort
-        ];
+
+        $excludeFields = $request->input('excludeFields') ? explode(",",$request->input('excludeFields')) : [];
+        $messageItemIds = $request->input('messageItemIds') ? explode(",",$request->input('messageItemIds')) : null;
+
+        if ($messageItemIds !== null) {
+            $options = [
+                "ids" => $messageItemIds,
+                "sort"  => $sort,
+                "preview" => !in_array("previewText", $excludeFields, true)
+            ];
+
+        } else {
+            $options = [
+                "start" => $start,
+                "limit" => $limit,
+                "sort"  => $sort,
+                "preview" => !in_array("previewText", $excludeFields, true)
+            ];
+        }
+
 
         $data = $messageItemService->getMessageItemList($folderKey, $options)->toJson();
 

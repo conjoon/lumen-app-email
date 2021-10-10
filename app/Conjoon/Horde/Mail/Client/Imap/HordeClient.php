@@ -247,7 +247,7 @@ class HordeClient implements MailClient {
             $results      = $this->queryItems($client, $key, $options);
             $fetchedItems = $this->fetchMessageItems($client, $results["match"], $key->getId(), $options);
             $messageItems = $this->buildMessageItems(
-                $client, $key, $fetchedItems, true
+                $client, $key, $fetchedItems, $options["preview"]
             );
 
             return $messageItems;
@@ -918,18 +918,22 @@ class HordeClient implements MailClient {
     protected function fetchMessageItems(
         \Horde_Imap_Client_Socket $client, \Horde_Imap_Client_Ids $searchResultIds, string $mailFolderId, array $options) :array {
 
-        $start = isset($options["start"]) ? intval($options["start"]) : -1;
-        $limit = isset($options["limit"]) ? intval($options["limit"]) : -1;
+        if (!isset($options["ids"])) {
+            $start = isset($options["start"]) ? intval($options["start"]) : -1;
+            $limit = isset($options["limit"]) ? intval($options["limit"]) : -1;
 
-        if ($start >= 0 && $limit > 0) {
-            $rangeList = new \Horde_Imap_Client_Ids();
-            foreach ($searchResultIds as $key => $entry) {
-                if ($key >= $start && $key < $start + $limit) {
-                    $rangeList->add($entry);
+            if ($start >= 0 && $limit > 0) {
+                $rangeList = new \Horde_Imap_Client_Ids();
+                foreach ($searchResultIds as $key => $entry) {
+                    if ($key >= $start && $key < $start + $limit) {
+                        $rangeList->add($entry);
+                    }
                 }
-            }
 
-            $orderedList = $rangeList->ids;
+                $orderedList = $rangeList->ids;
+            }
+        } else if (isset($options["ids"])) {
+            $orderedList = $rangeList = new \Horde_Imap_Client_Ids(new \Horde_Imap_Client_Ids($options["ids"]));
         } else {
             $orderedList = $searchResultIds->ids;
             $rangeList = $searchResultIds;
@@ -988,17 +992,23 @@ class HordeClient implements MailClient {
      * @param \Horde_Imap_Client_Socket $client
      * @param FolderKey $key
      * @param array $items
+     * @param bool $preview true to return the list with messagepart as previewLoad preview text
      *
      * @return MessageItemList
      *
      * @see queryItems
      */
-    protected function buildMessageItems(\Horde_Imap_Client_Socket $client, FolderKey $key, array $items
+    protected function buildMessageItems(\Horde_Imap_Client_Socket $client, FolderKey $key, array $items, $preview = true
     ): MessageItemList {
 
         $messageItems = new MessageItemList;
 
-        $options = ["plain", "html", "hasAttachments", "size"];
+        $options = ["hasAttachments", "size"];
+
+        if ($preview) {
+            $options[] = "plain";
+            $options[] = "html";
+        }
 
         foreach ($items as $item) {
 
@@ -1011,14 +1021,18 @@ class HordeClient implements MailClient {
 
             $contentKey = "plain";
 
-            if (!$d['plain']['content'] && $d['html']['content']) {
-                $contentKey = "html";
-            }
+            $messagePart = null;
 
-            $messagePart = new MessagePart(
-                $d[$contentKey]['content'], $d[$contentKey]['charset'],
-                $contentKey === "plain" ? "text/plain" : "text/html"
-            );
+            if (isset($d["plain"]) || isset($d["html"])) {
+                if (!$d['plain']['content'] && $d['html']['content']) {
+                    $contentKey = "html";
+                }
+
+                $messagePart = new MessagePart(
+                    $d[$contentKey]['content'], $d[$contentKey]['charset'],
+                    $contentKey === "plain" ? "text/plain" : "text/html"
+                );
+            }
 
             $messageKey = $result["messageKey"];
 
@@ -1027,6 +1041,7 @@ class HordeClient implements MailClient {
                 $data,
                 $messagePart
             );
+
 
             $messageItems[] = $messageItem;
         }
