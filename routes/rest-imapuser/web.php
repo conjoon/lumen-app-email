@@ -38,6 +38,7 @@ declare(strict_types=1);
 $router = $app->router;
 $versions = config("app.api.versions");
 $latest = config("app.api.latest");
+
 foreach ($versions as $version) {
 
     $app->router->group([
@@ -53,7 +54,7 @@ foreach ($versions as $version) {
 $router->group([
     'namespace'  => "\App\Http\\" . ucfirst($latest) . "\Controllers",
     'prefix'     => "rest-imapuser/api"
-], function () use ($router, $version) {
-    require base_path("routes/rest-imapuser/api_" . $version . ".php");
+], function () use ($router, $latest) {
+    require base_path("routes/rest-imapuser/api_" . $latest . ".php");
 });
 
