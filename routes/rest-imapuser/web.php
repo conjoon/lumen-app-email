@@ -24,6 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -33,9 +35,25 @@
 |
 */
 
+$router = $app->router;
+$versions = config("app.api.versions");
+$latest = config("app.api.latest");
+foreach ($versions as $version) {
+
+    $app->router->group([
+        'namespace'  => "\App\Http\\" . ucfirst($version) . "\Controllers",
+        'prefix'     => "rest-imapuser/api/" . $version
+    ], function () use ($router, $version) {
+        require base_path("routes/rest-imapuser/api_" . $version . ".php");
+    });
+
+}
+
+// config for latest
 $router->group([
-    'namespace'  => "\App\Http\Controllers\Api\\" . config("app.api.latest.namespace"),
-    'prefix'     => "rest-imapuser/api/" . config("app.api.latest.url")
-], function () use ($router) {
-    require base_path("routes/rest-imapuser/api_" . config("app.api.latest.url") . ".php");
+    'namespace'  => "\App\Http\\" . ucfirst($latest) . "\Controllers",
+    'prefix'     => "rest-imapuser/api"
+], function () use ($router, $version) {
+    require base_path("routes/rest-imapuser/api_" . $version . ".php");
 });
+

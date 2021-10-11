@@ -23,7 +23,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+declare(strict_types=1);
 
 /**
  * Trait for having access to authenticated User-stub in tests.
@@ -32,18 +32,22 @@
  */
 trait TestTrait {
 
-
-    public function getTemplateUserStub(array $pMethods) {
+    /**
+     * Returns a MockObject serving as the user stub.
+     *
+     * @param array $pMethods
+     *
+     * @return \PHPUnit\Framework\MockObject\MockObject
+     */
+    public function getTemplateUserStub(array $pMethods): \PHPUnit\Framework\MockObject\MockObject {
         $methods = array_map(function (\ReflectionMethod $m) {
             return $m->getName();
         }, (new \ReflectionClass(\Illuminate\Contracts\Auth\Authenticatable::class))->getMethods());
 
-        $methods = array_merge($methods, $pMethods);
-
         return $this->getMockBuilder('\Illuminate\Contracts\Auth\Authenticatable')
-                    ->setMethods($methods)
+                    ->onlyMethods($methods)
+                    ->addMethods($pMethods)
                     ->getMock();
-
     }
 
     public function getTestUserStub() {

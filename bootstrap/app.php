@@ -180,9 +180,13 @@ $app->middleware([
     Fruitcake\Cors\HandleCors::class
 ]);
 
- $app->routeMiddleware([
-     'auth' => App\Http\Middleware\Authenticate::class,
- ]);
+$versions = config("app.api.versions");
+$authMiddleware = [];
+foreach ($versions as $version) {
+    $version = ucfirst($version);
+    $authMiddleware['auth_' . $version] = "App\Http\\" . $version . "\Middleware\Authenticate";
+}
+$app->routeMiddleware($authMiddleware);
 
 /*
 |--------------------------------------------------------------------------
@@ -209,10 +213,6 @@ $app->register(App\Providers\AuthServiceProvider::class);
 |
 */
 
-$app->router->group([
-    'namespace' => 'App\Http\Controllers',
-], function ($router) {
-    require __DIR__.'/../routes/web.php';
-});
+require __DIR__.'/../routes/web.php';
 
 return $app;

@@ -33,9 +33,29 @@
 |
 */
 
+$router = $app->router;
+$versions = config("app.api.versions");
+$latest = config("app.api.latest");
+
+foreach ($versions as $version) {
+
+    $router->group([
+        "middleware" => "auth_" . ucfirst($version),
+        'namespace'  => "\App\Http\\" . ucfirst($version) . "\Controllers",
+        'prefix'     => "rest-imap/api/" . $version
+    ], function () use ($router, $version) {
+        require base_path("routes/rest-imap/api_" . $version . ".php");
+    });
+
+}
+
+
+// config for latest
 $router->group([
-    'namespace'  => "\App\Http\Controllers\Api\\" . config("app.api.latest.namespace"),
-    'prefix'     => "rest-imap/api/" . config("app.api.latest.url")
-], function () use ($router) {
-    require base_path("routes/rest-imap/api_" . config("app.api.latest.url") . ".php");
+    "middleware" => "auth_" . ucfirst($latest),
+    'namespace'  => "\App\Http\\" . ucfirst($latest) . "\Controllers",
+    'prefix'     => "rest-imap/api"
+], function () use ($router, $version) {
+    require base_path("routes/rest-imap/api_" . $version . ".php");
 });
+

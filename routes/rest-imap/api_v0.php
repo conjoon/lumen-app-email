@@ -33,9 +33,8 @@
 */
 
 
-$router->group(
-    ['middleware' => 'auth'],
-    function () use ($router) {
+//$router->group([],
+  //  function () use ($router) {
 
     $router->post('/SendMessage', 'MessageItemController@sendMessageDraft');
 
@@ -71,4 +70,4 @@ $router->group(
     );
 
 
-});
+//});

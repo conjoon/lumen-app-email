@@ -23,6 +23,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
 require_once __DIR__ . '/TestTrait.php';
 
@@ -37,6 +38,61 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     public function createApplication()
     {
         return require __DIR__.'/../bootstrap/app.php';
+    }
+
+
+    /**
+     * Returns the string used as prefix for the services.
+     *
+     * @param string $type
+     * @param string $version
+     *
+     * @return string The relative path to the endpoints used with this api.
+     *
+     * @throws if $type is neither "imap" nor "imapuser"
+     */
+    public function getServicePrefix(string $type, string $version) : string {
+
+        $type = strtolower($type);
+        if (!in_array($type, ["imap", "imapuser"])) {
+            throw new \RuntimeException("\"$type\" is not valid");
+        }
+        return implode("", [
+            "rest-",
+            $type,
+            "/api",
+            ($version === "latest") ? "" : "/" . $version
+        ]);
+    }
+
+
+    /**
+     * Returns the relative path to the rest-imapuser endpoint.
+     *
+     * @param $endpoint
+     *
+     * @return string The relative path to the endpoint according to the api version used with this
+     * tests.
+     *
+     * @see #getServicePrefix
+     */
+    public function getImapUserEndpoint(string $endpoint, string $version): string {
+        return $this->getServicePrefix("imapuser", $version) . "/" . $endpoint;
+    }
+
+
+    /**
+     * Returns the relative path to the rest-imap endpoint.
+     *
+     * @param $endpoint
+     *
+     * @return string The relative path to the endpoint according to the api version used with this
+     * tests.
+     *
+     * @see #getServicePrefix
+     */
+    public function getImapEndpoint(string $endpoint, string $version) : string {
+        return $this->getServicePrefix("imap", $version) . "/" . $endpoint;
     }
 
 
