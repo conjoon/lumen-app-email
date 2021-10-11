@@ -23,41 +23,12 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\alpha;
+namespace App\Http\V0\Controllers;
 
-use Auth;
+use Laravel\Lumen\Routing\Controller as BaseController;
 
-
-
-/**
- * Class MailAccountController
- * @package App\Http\Controllers
- */
-class MailAccountController extends Controller {
-
-    /**
-     * Returns all available MailAccounts for the user that is currently
-     * authenticated with this application in the json response.
-     *
-     * @return ResponseJson
-     */
-    public function index() {
-
-        $user = Auth::user();
-
-        $accounts = $user->getMailAccounts();
-        $res = [];
-        foreach ($accounts as $acc) {
-            $res[] = $acc->toArray();
-        }
-
-        return response()->json([
-            "success" => true,
-            "data" => $res
-        ]);
-
-    }
-
+class Controller extends BaseController
+{
+    //
 }

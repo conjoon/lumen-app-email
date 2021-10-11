@@ -25,60 +25,39 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\alpha;
+namespace App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Auth,
-    Illuminate\Http\Request;
+use Auth;
+
 
 
 /**
- * Class AttachmentController
+ * Class MailAccountController
  * @package App\Http\Controllers
  */
-class AttachmentController extends Controller {
-
-
-    /**
-     * @var attachmentService
-     */
-    protected $attachmentService;
-
+class MailAccountController extends Controller {
 
     /**
-     * AttachmentController constructor.
-     *
-     * @param AttachmentService $attachmentService
-     */
-    public function __construct(AttachmentService $attachmentService) {
-
-        $this->attachmentService = $attachmentService;
-
-    }
-
-
-    /**
-     * Returns all available Attachments for $mailAccountId, the specified
-     * $mailFolderId,
-     * and the specified $messageItemId
+     * Returns all available MailAccounts for the user that is currently
+     * authenticated with this application in the json response.
      *
      * @return ResponseJson
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+    public function index() {
 
         $user = Auth::user();
 
-        $attachmentService = $this->attachmentService;
-        $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+        $accounts = $user->getMailAccounts();
+        $res = [];
+        foreach ($accounts as $acc) {
+            $res[] = $acc->toArray();
+        }
 
         return response()->json([
             "success" => true,
-            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
+            "data" => $res
         ]);
 
     }
-
 
 }

@@ -23,12 +23,62 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\alpha;
+namespace App\Http\V0\Controllers;
 
-use Laravel\Lumen\Routing\Controller as BaseController;
+use Conjoon\Mail\Client\Service\MailFolderService;
 
-class Controller extends BaseController
-{
-    //
+use Auth;
+
+
+
+/**
+ * Class MailFolderController
+ * @package App\Http\Controllers
+ */
+class MailFolderController extends Controller {
+
+
+    /**
+     * @var MailFolderService
+     */
+    protected $mailFolderService;
+
+
+    /**
+     * MailFolderController constructor.
+     *
+     * @param MailFolderService $mailFolderService
+     */
+    public function __construct(MailFolderService $mailFolderService) {
+
+        $this->mailFolderService = $mailFolderService;
+
+    }
+
+
+    /**
+     * Returns all available MailFolders for the user that is currently
+     * authenticated for the specified $mailAccountId.
+     *
+     * @param string $mailAccountId
+     *
+     * @return ResponseJson
+     */
+    public function index($mailAccountId) {
+
+        $user = Auth::user();
+
+        $mailFolderService = $this->mailFolderService;
+        $mailAccount       = $user->getMailAccount($mailAccountId);
+
+
+        return response()->json([
+            "success" => true,
+            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
+        ]);
+
+    }
+
 }

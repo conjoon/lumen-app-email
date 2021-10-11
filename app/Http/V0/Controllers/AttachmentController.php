@@ -25,60 +25,60 @@
  */
 declare(strict_types=1);
 
-namespace App\Http\Controllers\Api\alpha;
+namespace App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Service\MailFolderService;
-
-use Auth;
-
+use Conjoon\Mail\Client\Service\AttachmentService,
+    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
+    Auth,
+    Illuminate\Http\Request;
 
 
 /**
- * Class MailFolderController
+ * Class AttachmentController
  * @package App\Http\Controllers
  */
-class MailFolderController extends Controller {
+class AttachmentController extends Controller {
 
 
     /**
-     * @var MailFolderService
+     * @var attachmentService
      */
-    protected $mailFolderService;
+    protected $attachmentService;
 
 
     /**
-     * MailFolderController constructor.
+     * AttachmentController constructor.
      *
-     * @param MailFolderService $mailFolderService
+     * @param AttachmentService $attachmentService
      */
-    public function __construct(MailFolderService $mailFolderService) {
+    public function __construct(AttachmentService $attachmentService) {
 
-        $this->mailFolderService = $mailFolderService;
+        $this->attachmentService = $attachmentService;
 
     }
 
 
     /**
-     * Returns all available MailFolders for the user that is currently
-     * authenticated for the specified $mailAccountId.
-     *
-     * @param string $mailAccountId
+     * Returns all available Attachments for $mailAccountId, the specified
+     * $mailFolderId,
+     * and the specified $messageItemId
      *
      * @return ResponseJson
      */
-    public function index($mailAccountId) {
+    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
 
         $user = Auth::user();
 
-        $mailFolderService = $this->mailFolderService;
+        $attachmentService = $this->attachmentService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
-
+        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         return response()->json([
             "success" => true,
-            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
+            "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
         ]);
 
     }
+
 
 }

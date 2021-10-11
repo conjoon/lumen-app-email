@@ -24,7 +24,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace App\Http\Middleware;
+namespace App\Http\V0\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
