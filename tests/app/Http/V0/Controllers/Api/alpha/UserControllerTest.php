@@ -37,6 +37,9 @@ class UserControllerTest extends TestCase
      */
     public function testAuthenticate()
     {
+        $endpoint = $this->getImapUserEndpoint("auth");
+
+
         $repository = $this->getMockBuilder('App\Imap\DefaultImapUserRepository')
                            ->disableOriginalConstructor()
                            ->getMock();
@@ -56,13 +59,28 @@ class UserControllerTest extends TestCase
                         )
                    );
 
-        $response = $this->call('POST', 'cn_imapuser/auth', ['username' => 'dev@conjoon.org', 'password' => 'test']);
+        $response = $this->call(
+            'POST',
+            $endpoint,
+            ['username' => 'dev@conjoon.org', 'password' => 'test']
+        );
+
         $this->assertEquals(401, $response->status());
-        $this->assertEquals(['success' => false, "msg" => "Unauthorized.", "status" => 401], $response->getData(true));
+        $this->assertEquals(
+            ['success' => false, "msg" => "Unauthorized.", "status" => 401],
+            $response->getData(true)
+        );
 
 
-        $response = $this->call('POST', 'cn_imapuser/auth', ['username' => 'safsafasfsa', 'password' => 'test']);
+        $response = $this->call(
+            'POST',
+            $endpoint,
+            ['username' => 'safsafasfsa', 'password' => 'test']
+        );
         $this->assertEquals(200, $response->status());
-        $this->assertEquals(['success' => true, "data" => ['username' => 'foo', 'password' => 'bar']], $response->getData(true));
+        $this->assertEquals(
+            ['success' => true, "data" => ['username' => 'foo', 'password' => 'bar']],
+            $response->getData(true)
+        );
     }
 }
