@@ -1,8 +1,9 @@
-<?php
+<?xml version="1.0"?>
+<!--
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,40 +24,8 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+-->
+<ruleset name="php-ms-imapuser coding standards">
 
-namespace Tests\App\Imap;
-
-use App\Imap\ImapUser,
-    Tests\TestCase,
-    Conjoon\Mail\Client\Data\MailAccount;
-
-class ImapUserTest extends TestCase
-{
-
-    public function testClass()
-    {
-        $mailAccount = new MailAccount(array("id" => "foo"));
-        $username    = "foo";
-        $password     = "bar";
-
-        $user = new ImapUser($username, $password, $mailAccount);
-
-        $this->assertSame($username, $user->getUsername());
-        $this->assertSame($password, $user->getPassword());
-        $this->assertSame([
-            "username" => $username,
-            "password" => $password
-        ], $user->toArray());
-
-        $this->assertSame($mailAccount, $user->getMailAccount($mailAccount->getId()));
-
-        $accounts = $user->getMailAccounts();
-
-        foreach ($accounts as $account) {
-            $this->assertSame($account, $user->getMailAccount($account->getId()));
-        }
-
-
-    }
-
-}
+    <rule ref="PSR12" />
+</ruleset>

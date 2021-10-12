@@ -24,9 +24,12 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\App\Imap;
+
 use App\Imap\DefaultImapUserRepository,
     App\Imap\ImapUserRepository,
     App\Imap\ImapUser,
+    Tests\TestCase,
     Conjoon\Mail\Client\Data\MailAccount;
 
 class DefaultImapUserRepositoryTest extends TestCase
@@ -62,21 +65,21 @@ class DefaultImapUserRepositoryTest extends TestCase
 
         $this->assertInstanceOf(ImapUserRepository::class, $repository);
 
-        $ret = $repository->getUser('a', 'b');
+        $ret = $repository->getUser("a", "b");
         $this->assertNull($ret);
 
-        $user = $repository->getUser('devtest@conjoon.org', 'b');
+        $user = $repository->getUser("devtest@conjoon.org", "b");
         $this->assertInstanceOf(ImapUser::class, $user);
-        $this->assertNull($user->getMailAccount('abc'));
-        $this->assertInstanceOf(MailAccount::class, $user->getMailAccount('dev_sys_conjoon_org'));
-        $this->assertSame($config[0]['id'], $user->getMailAccount('dev_sys_conjoon_org')->getId());
+        $this->assertNull($user->getMailAccount("abc"));
+        $this->assertInstanceOf(MailAccount::class, $user->getMailAccount("dev_sys_conjoon_org"));
+        $this->assertSame($config[0]["id"], $user->getMailAccount("dev_sys_conjoon_org")->getId());
 
 
-        $user = $repository->getUser('@sNafu', 'b');
+        $user = $repository->getUser("@sNafu", "b");
         $this->assertInstanceOf(ImapUser::class, $user);
         $this->assertNull($user->getMailAccount("dev_sys_conjoon_org"));
         $this->assertInstanceOf(MailAccount::class, $user->getMailAccount("imap_test"));
-        $this->assertSame($config[1]['id'], $user->getMailAccount("imap_test")->getId());
+        $this->assertSame($config[1]["id"], $user->getMailAccount("imap_test")->getId());
 
     }
 }

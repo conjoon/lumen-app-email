@@ -24,7 +24,14 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Http\Middleware\Authenticate;
+namespace Tests\App\Http\V0\Middleware;
+
+use App\Http\V0\Middleware\Authenticate,
+    Tests\TestCase,
+    Tests\TestTrait,
+    Illuminate\Auth\AuthManager,
+    Illuminate\Http\Request,
+    Illuminate\Http\JsonResponse;
 
 class AuthenticateTest extends TestCase
 {
@@ -38,7 +45,7 @@ class AuthenticateTest extends TestCase
      */
     public function testHandle()
     {
-        $authStub = $this->getMockBuilder('\Illuminate\Auth\AuthManager')
+        $authStub = $this->getMockBuilder(AuthManager::class)
                      ->disableOriginalConstructor()
                      ->getMock();
 
@@ -51,20 +58,20 @@ class AuthenticateTest extends TestCase
             }
         };
 
-        $authStub->method('guard')
+        $authStub->method("guard")
                  ->willReturn($stubbedStub);
 
         $authenticate = new Authenticate($authStub);
 
         // test for is guest
         $stubbedStub::$ISGUEST = true;
-        $response = $authenticate->handle(new \Illuminate\Http\Request(), function(){});
-        $this->assertInstanceOf(\Illuminate\Http\JsonResponse::class, $response);
+        $response = $authenticate->handle(new Request(), function(){});
+        $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // test for authenticated
         $stubbedStub::$ISGUEST = false;
-        $newRequest = new \Illuminate\Http\Request();
+        $newRequest = new Request();
         $cmpRequest = null;
         $called = false;
         $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
@@ -84,7 +91,7 @@ class AuthenticateTest extends TestCase
      */
     public function testHandle_accountCompare()
     {
-        $authStub = $this->getMockBuilder('\Illuminate\Auth\AuthManager')
+        $authStub = $this->getMockBuilder(AuthManager::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -97,18 +104,18 @@ class AuthenticateTest extends TestCase
 
         $user = $this->getTestUserStub();
 
-        $authStub->method('guard')
+        $authStub->method("guard")
                  ->willReturn($stubbedStub);
 
         // we just need the test user here in the __call to
         // guard->user()
-        $authStub->method('__call')
+        $authStub->method("__call")
                  ->willReturn($user);
 
         $authenticate = new Authenticate($authStub);
 
         // test for authenticated
-        $newRequest = new \Illuminate\Http\Request();
+        $newRequest = new Request();
         $newRequest->setRouteResolver(function() {
             return new class {
                 public function parameter($param) {
@@ -124,7 +131,7 @@ class AuthenticateTest extends TestCase
         $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
             $this->assertSame($newRequest, $request);
         });
-        $this->assertInstanceOf(\Illuminate\Http\JsonResponse::class, $response);
+        $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // OKAY

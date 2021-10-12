@@ -24,21 +24,24 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\App\Imap;
+
 use App\Imap\Util,
+    Tests\TestCase,
     Conjoon\Mail\Client\Data\MailAccount;
 
 class UtilTest extends TestCase
 {
 
     protected $config = [
-        'id'               => "dev_sys_conjoon_org",
-        'inbox_type'      => 'IMAP',
-        'inbox_address'   => 'sfsffs.ffssf.sffs',
-        'inbox_port'      => 993,
-        'inbox_ssl'       => true,
-        'outbox_address'  => 'sfsffs.ffssf.sffs',
-        'outbox_port'     => 993,
-        'outbox_ssl'      => true
+        "id"               => "dev_sys_conjoon_org",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => "sfsffs.ffssf.sffs",
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "sfsffs.ffssf.sffs",
+        "outbox_port"     => 993,
+        "outbox_ssl"      => true
     ];
 
     public function testMake()
@@ -53,9 +56,9 @@ class UtilTest extends TestCase
         $this->assertInstanceOf(MailAccount::class, $account);
 
         foreach ($this->config as $property => $value) {
-                $camelKey = '_' . str_replace('_', ' ', strtolower($property));
-                $camelKey = ltrim(str_replace(' ', '', ucwords($camelKey)), '_');
-                $method   = 'get' . ucfirst($camelKey);
+                $camelKey = "_" . str_replace("_", " ", strtolower($property));
+                $camelKey = ltrim(str_replace(" ", "", ucwords($camelKey)), "_");
+                $method   = "get" . ucfirst($camelKey);
 
             $this->assertSame($value, $account->{$method}());
         }

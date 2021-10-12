@@ -24,7 +24,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use App\Imap\ImapUserRepository;
+namespace Tests\App\Imap;
+
+use App\Imap\ImapUserRepository,
+    Tests\TestCase;
 
 class ImapUserRepositoryTest extends TestCase
 {
@@ -32,7 +35,7 @@ class ImapUserRepositoryTest extends TestCase
     {
         $repository = $this->getMockBuilder(ImapUserRepository::class)->getMock();
 
-        $ret = $repository->getUser('a', 'b');
+        $ret = $repository->getUser("a", "b");
 
         $this->assertNull($ret);
     }
