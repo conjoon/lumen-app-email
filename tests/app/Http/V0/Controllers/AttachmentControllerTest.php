@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,14 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Test\App\Http\V0\Controllers;
+namespace Tests\App\Http\V0\Controllers;
 
-use
-    Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Mail\Client\Service\DefaultAttachmentService;
+use App\Http\V0\Controllers\AttachmentController;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+use Conjoon\Mail\Client\Service\AttachmentService;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Tests\TestCase;
+use Tests\TestTrait;
 
+/**
+ * Tests for AttachmentController.
+ */
 class AttachmentControllerTest extends TestCase
 {
     use TestTrait;
@@ -45,12 +53,12 @@ class AttachmentControllerTest extends TestCase
      */
     public function testIndexSuccess()
     {
-        $service = $this->getMockBuilder("Conjoon\Mail\Client\Service\DefaultAttachmentService")
+        $service = $this->getMockBuilder(DefaultAttachmentService::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->app->when(\App\Http\V0\Controllers\AttachmentController::class)
-            ->needs(Conjoon\Mail\Client\Service\AttachmentService::class)
+        $this->app->when(AttachmentController::class)
+            ->needs(AttachmentService::class)
             ->give(function () use ($service) {
 
                 return $service;
@@ -58,15 +66,17 @@ class AttachmentControllerTest extends TestCase
 
         $messageKey = new MessageKey("dev", "INBOX", "123");
 
-        $resultList   = new FileAttachmentItemList;
+        $resultList   = new FileAttachmentItemList();
         $resultList[] = new FileAttachmentItem(
-            new AttachmentKey("dev", "INBOX", "123", "1"), [
+            new AttachmentKey("dev", "INBOX", "123", "1"),
+            [
                 "size" => 0,
                 "type" => "text/plain",
                 "text"  => "file",
                 "downloadUrl" => "",
                 "previewImgSrc" => ""
-            ]);
+            ]
+        );
 
         $service->expects($this->once())
             ->method("getFileAttachmentItemList")
@@ -87,7 +97,5 @@ class AttachmentControllerTest extends TestCase
             "success" => true,
             "data"    => $resultList->toJson()
         ]);
-
     }
-
 }
