@@ -24,6 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Test\App\Http\V0\Controllers;
+
 use Conjoon\Mail\Client\Data\MailAccount,
     App\Imap\ImapUser;
 
@@ -40,7 +42,7 @@ class UserControllerTest extends TestCase
         $endpoint = $this->getImapUserEndpoint("auth");
 
 
-        $repository = $this->getMockBuilder('App\Imap\DefaultImapUserRepository')
+        $repository = $this->getMockBuilder("App\Imap\DefaultImapUserRepository")
                            ->disableOriginalConstructor()
                            ->getMock();
 
@@ -51,35 +53,35 @@ class UserControllerTest extends TestCase
             });
 
         $repository->expects($this->exactly(2))
-                   ->method('getUser')
+                   ->method("getUser")
                    ->will(
                        $this->onConsecutiveCalls(
                             null,
-                            new ImapUser('foo', 'bar', new MailAccount([]))
+                            new ImapUser("foo", "bar", new MailAccount([]))
                         )
                    );
 
         $response = $this->call(
-            'POST',
+            "POST",
             $endpoint,
-            ['username' => 'dev@conjoon.org', 'password' => 'test']
+            ["username" => "dev@conjoon.org", "password" => "test"]
         );
 
         $this->assertEquals(401, $response->status());
         $this->assertEquals(
-            ['success' => false, "msg" => "Unauthorized.", "status" => 401],
+            ["success" => false, "msg" => "Unauthorized.", "status" => 401],
             $response->getData(true)
         );
 
 
         $response = $this->call(
-            'POST',
+            "POST",
             $endpoint,
-            ['username' => 'safsafasfsa', 'password' => 'test']
+            ["username" => "safsafasfsa", "password" => "test"]
         );
         $this->assertEquals(200, $response->status());
         $this->assertEquals(
-            ['success' => true, "data" => ['username' => 'foo', 'password' => 'bar']],
+            ["success" => true, "data" => ["username" => "foo", "password" => "bar"]],
             $response->getData(true)
         );
     }

@@ -25,6 +25,8 @@
  */
 
 
+namespace Test\App\Http\V0\Controllers;
+
 class MailAccountControllerTest extends TestCase
 {
     use TestTrait;
@@ -38,7 +40,7 @@ class MailAccountControllerTest extends TestCase
     public function testIndex_success()
     {
         $response = $this->actingAs($this->getTestUserStub())
-                         ->call('GET', 'cn_mail/MailAccounts');
+                         ->call("GET", "cn_mail/MailAccounts");
 
         $this->assertEquals(200, $response->status());
 

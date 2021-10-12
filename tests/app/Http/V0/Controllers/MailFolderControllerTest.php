@@ -24,6 +24,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Test\App\Http\V0\Controllers;
+
 use Conjoon\Mail\Client\Folder\MailFolderChildList,
     Conjoon\Mail\Client\Folder\MailFolder,
     Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
@@ -42,7 +44,7 @@ class MailFolderControllerTest extends TestCase
      */
     public function testIndex_success()
     {
-        $service = $this->getMockBuilder('Conjoon\Mail\Client\Service\DefaultMailFolderService')
+        $service = $this->getMockBuilder("Conjoon\Mail\Client\Service\DefaultMailFolderService")
                            ->disableOriginalConstructor()
                            ->getMock();
 
@@ -61,13 +63,13 @@ class MailFolderControllerTest extends TestCase
         );
 
         $service->expects($this->once())
-                   ->method('getMailFolderChildList')
+                   ->method("getMailFolderChildList")
                    ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
                    ->willReturn($resultList);
 
 
         $response = $this->actingAs($this->getTestUserStub())
-                         ->call('GET', 'cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders');
+                         ->call("GET", "cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders");
 
         $this->assertEquals(200, $response->status());
 

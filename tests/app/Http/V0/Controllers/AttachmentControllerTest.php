@@ -24,7 +24,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
+namespace Test\App\Http\V0\Controllers;
+
+use
+    Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
     Conjoon\Mail\Client\Attachment\FileAttachmentItem,
     Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
     Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
@@ -40,15 +43,16 @@ class AttachmentControllerTest extends TestCase
      *
      * @return void
      */
-    public function testIndex_success()
+    public function testIndexSuccess()
     {
-        $service = $this->getMockBuilder('Conjoon\Mail\Client\Service\DefaultAttachmentService')
+        $service = $this->getMockBuilder("Conjoon\Mail\Client\Service\DefaultAttachmentService")
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->app->when(App\Http\Controllers\AttachmentController::class)
+        $this->app->when(\App\Http\V0\Controllers\AttachmentController::class)
             ->needs(Conjoon\Mail\Client\Service\AttachmentService::class)
             ->give(function () use ($service) {
+
                 return $service;
             });
 
@@ -56,22 +60,26 @@ class AttachmentControllerTest extends TestCase
 
         $resultList   = new FileAttachmentItemList;
         $resultList[] = new FileAttachmentItem(
-            new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["size" => 0,
-             "type" => "text/plain",
-             "text"  => "file",
-            "downloadUrl" => "",
-            "previewImgSrc" => ""]
-        );
+            new AttachmentKey("dev", "INBOX", "123", "1"), [
+                "size" => 0,
+                "type" => "text/plain",
+                "text"  => "file",
+                "downloadUrl" => "",
+                "previewImgSrc" => ""
+            ]);
 
         $service->expects($this->once())
-            ->method('getFileAttachmentItemList')
+            ->method("getFileAttachmentItemList")
             ->with($messageKey)
             ->willReturn($resultList);
 
 
-        $response = $this->actingAs($this->getTestUserStub())
-            ->call('GET', 'cn_mail/MailAccounts/dev/MailFolders/INBOX/MessageItems/123/Attachments');
+        $actor = $this->actingAs($this->getTestUserStub());
+        $endpoint = $this->getImapEndpoint(
+            "MailAccounts/dev/MailFolders/INBOX/MessageItems/123/Attachments",
+            "v0"
+        );
+        $response = $actor->call("GET", $endpoint);
 
         $this->assertEquals(200, $response->status());
 
