@@ -27,6 +27,11 @@
 
 declare(strict_types=1);
 
+namespace Tests;
+
+use ReflectionClass;
+use Tests\TestCase;
+use Illuminate\Http\Request;
 use App\Imap\DefaultImapUserRepository;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
@@ -45,6 +50,15 @@ use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 
+/**
+ * Class VariousTest
+ *
+ * Various tests that check for functionality mainly set up during the bootstrapping-process.
+ *
+ * @method getMockBuilder(string $string)
+ * @method callback(\Closure $param)
+ * @method returnCallback(\Closure $param)
+ */
 class VariousTest extends TestCase
 {
     use TestTrait;
@@ -69,14 +83,14 @@ class VariousTest extends TestCase
     public function testMiddleware()
     {
         $reflection = new ReflectionClass($this->app);
-        $property = $reflection->getMethod('gatherMiddlewareClassNames');
+        $property = $reflection->getMethod("gatherMiddlewareClassNames");
         $property->setAccessible(true);
 
         $versions = config("app.api.versions");
         $this->assertGreaterThan(0, $versions);
         foreach ($versions as $version) {
             $version = ucfirst($version);
-            $ret = $property->invokeArgs($this->app, ['auth_' . $version]);
+            $ret = $property->invokeArgs($this->app, ["auth_" . $version]);
             $this->assertSame($ret[0], "App\Http\\" . ucfirst($version) . "\Middleware\Authenticate");
         }
     }
@@ -94,7 +108,7 @@ class VariousTest extends TestCase
 
         $versions = config("app.api.versions");
         $latest   = config("app.api.latest");
-
+        $messageItemsEndpoint = "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems";
         $this->assertGreaterThan(0, $versions);
 
         $versions[] = "latest";
@@ -105,12 +119,15 @@ class VariousTest extends TestCase
             $testAuthsFor = [
                 "GET/" . $this->getImapEndpoint("MailAccounts", $version),
                 "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders", $version),
-                "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems", $version),
-                "POST/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems", $version),
-                "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}", $version),
-                "PUT/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}", $version),
-                "DELETE/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}", $version),
-                "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments", $version),
+                "GET/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
+                "POST/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
+                "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "PUT/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "DELETE/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "GET/" . $this->getImapEndpoint(
+                    $messageItemsEndpoint . "/{messageItemId}/Attachments",
+                    $version
+                ),
                 "POST/" . $this->getImapEndpoint("SendMessage", $version)
             ];
 
@@ -128,34 +145,43 @@ class VariousTest extends TestCase
     public function testConcretes()
     {
 
-        $userStub = $this->getTemplateUserStub(['getMailAccount']);
-        $userStub->method('getMailAccount')
+        $userStub = $this->getTemplateUserStub(["getMailAccount"]);
+        $userStub->method("getMailAccount")
             ->with(null)
             ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
         $this->app->auth->setUser($userStub);
 
-        config(['imapserver' => ["mock" => "default"]]);
+        config(["imapserver" => ["mock" => "default"]]);
         $reflection = new ReflectionClass($this->app);
-        $property = $reflection->getMethod('getConcrete');
+        $property = $reflection->getMethod("getConcrete");
         $property->setAccessible(true);
 
 
         $this->assertInstanceOf(
             DefaultImapUserRepository::class,
-            $this->app->build($property->invokeArgs($this->app, ['App\Imap\ImapUserRepository']))
+            $this->app->build($property->invokeArgs($this->app, ["App\Imap\ImapUserRepository"]))
         );
 
         $this->assertInstanceOf(
             DefaultMessageItemDraftJsonTransformer::class,
-            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer']))
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                ["Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer"]
+            ))
         );
 
         $this->assertInstanceOf(
             DefaultMessageBodyDraftJsonTransformer::class,
-            $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer']))
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                ["Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer"]
+            ))
         );
 
-        $attachmentService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\AttachmentService']));
+        $attachmentService = $this->app->build($property->invokeArgs(
+            $this->app,
+            ["Conjoon\Mail\Client\Service\AttachmentService"]
+        ));
         $attachmentServiceMailClient = $attachmentService->getMailClient();
         $this->assertInstanceOf(
             DefaultAttachmentService::class,
@@ -166,7 +192,10 @@ class VariousTest extends TestCase
             $attachmentService->getFileAttachmentProcessor()
         );
 
-        $mailFolderService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MailFolderService']));
+        $mailFolderService = $this->app->build($property->invokeArgs(
+            $this->app,
+            ["Conjoon\Mail\Client\Service\MailFolderService"]
+        ));
         $mailFolderServiceMailClient = $mailFolderService->getMailClient();
         $mailFolderTreeBuilder = $mailFolderService->getMailFolderTreeBuilder();
         $folderIdToTypeMapper = $mailFolderTreeBuilder->getFolderIdToTypeMapper();
@@ -181,7 +210,10 @@ class VariousTest extends TestCase
         // sharing the same client
         $this->assertSame($attachmentServiceMailClient, $mailFolderServiceMailClient);
 
-        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
+        $messageItemService = $this->app->build($property->invokeArgs(
+            $this->app,
+            ["Conjoon\Mail\Client\Service\MessageItemService"]
+        ));
         $this->assertInstanceOf(
             DefaultMessageItemService::class,
             $messageItemService
@@ -193,13 +225,31 @@ class VariousTest extends TestCase
         $this->assertSame($messageItemServiceMailClient, $mailFolderServiceMailClient);
         $this->assertInstanceOf(HordeClient::class, $messageItemServiceMailClient);
 
-        $this->assertInstanceOf(HordeBodyComposer::class, $messageItemServiceMailClient->getBodyComposer());
-        $this->assertInstanceOf(HordeHeaderComposer::class, $messageItemServiceMailClient->getHeaderComposer());
+        $this->assertInstanceOf(
+            HordeBodyComposer::class,
+            $messageItemServiceMailClient->getBodyComposer()
+        );
+        $this->assertInstanceOf(
+            HordeHeaderComposer::class,
+            $messageItemServiceMailClient->getHeaderComposer()
+        );
 
-        $this->assertInstanceOf(DefaultMessageItemFieldsProcessor::class, $messageItemService->getMessageItemFieldsProcessor());
-        $this->assertInstanceOf(ReadableMessagePartContentProcessor::class, $messageItemService->getReadableMessagePartContentProcessor());
-        $this->assertInstanceOf(WritableMessagePartContentProcessor::class, $messageItemService->getWritableMessagePartContentProcessor());
-        $this->assertInstanceOf(DefaultPreviewTextProcessor::class, $messageItemService->getPreviewTextProcessor());
+        $this->assertInstanceOf(
+            DefaultMessageItemFieldsProcessor::class,
+            $messageItemService->getMessageItemFieldsProcessor()
+        );
+        $this->assertInstanceOf(
+            ReadableMessagePartContentProcessor::class,
+            $messageItemService->getReadableMessagePartContentProcessor()
+        );
+        $this->assertInstanceOf(
+            WritableMessagePartContentProcessor::class,
+            $messageItemService->getWritableMessagePartContentProcessor()
+        );
+        $this->assertInstanceOf(
+            DefaultPreviewTextProcessor::class,
+            $messageItemService->getPreviewTextProcessor()
+        );
     }
 
 
@@ -207,27 +257,29 @@ class VariousTest extends TestCase
      * Test to retrieve the MessageItemService with configured MailAccount
      * retrieved from input
      */
-    public function testMessageItemService_input()
+    public function testMessageItemServiceInput()
     {
 
         $cmpId = "8998";
 
-        $userStub = $this->getTemplateUserStub(['getMailAccount']);
-        $userStub->method('getMailAccount')
+        $userStub = $this->getTemplateUserStub(["getMailAccount"]);
+        $userStub->method("getMailAccount")
             ->with($cmpId)
             ->willReturn(new MailAccount(["id" => $cmpId]));
         $this->app->auth->setUser($userStub);
 
 
         $reflection = new ReflectionClass($this->app);
-        $property = $reflection->getMethod('getConcrete');
+        $property = $reflection->getMethod("getConcrete");
         $property->setAccessible(true);
 
-        $request = new Illuminate\Http\Request();
+        $request = new Request();
         $request["mailAccountId"] = $cmpId;
         $this->app->request = $request;
 
-        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
+        $messageItemService = $this->app->build(
+            $property->invokeArgs($this->app, ["Conjoon\Mail\Client\Service\MessageItemService"])
+        );
 
         $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
     }
@@ -236,26 +288,26 @@ class VariousTest extends TestCase
     /**
      * Test to retrieve the MessageItemService with configured MailAccount
      * retrieved from route; route params should be given precedence to
-     *input params
+     * input params
      */
-    public function testMessageItemService_route()
+    public function testMessageItemServiceRoute()
     {
 
         $cmpId = "8998";
 
-        $userStub = $this->getTemplateUserStub(['getMailAccount']);
-        $userStub->method('getMailAccount')
+        $userStub = $this->getTemplateUserStub(["getMailAccount"]);
+        $userStub->method("getMailAccount")
             ->with($cmpId)
             ->willReturn(new MailAccount(["id" => $cmpId]));
         $this->app->auth->setUser($userStub);
 
 
         $reflection = new ReflectionClass($this->app);
-        $property = $reflection->getMethod('getConcrete');
+        $property = $reflection->getMethod("getConcrete");
         $property->setAccessible(true);
 
 
-        $request = Illuminate\Http\Request::create("dummyurl", "GET", ["mailAccountId" => $cmpId . "ztr"]);
+        $request = Request::create("dummyurl", "GET", ["mailAccountId" => $cmpId . "ztr"]);
 
         // make sure routing works
         $request->setRouteResolver(function () use ($cmpId) {
@@ -278,7 +330,9 @@ class VariousTest extends TestCase
 
         $this->app->request = $request;
 
-        $messageItemService = $this->app->build($property->invokeArgs($this->app, ['Conjoon\Mail\Client\Service\MessageItemService']));
+        $messageItemService = $this->app->build(
+            $property->invokeArgs($this->app, ["Conjoon\Mail\Client\Service\MessageItemService"])
+        );
 
         $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
     }

@@ -28,46 +28,39 @@
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| The following routes represent the rest-imap API V0.1.
+| The following routes represent the rest-imap API V0.
 | https://github.com/conjoon/rest-api-description
 */
 
+$router->post('SendMessage', 'MessageItemController@sendMessageDraft');
 
-//$router->group([],
-  //  function () use ($router) {
+$router->get('MailAccounts', 'MailAccountController@index');
 
-    $router->post('/SendMessage', 'MessageItemController@sendMessageDraft');
+$router->get('MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
 
-    $router->get('/MailAccounts', 'MailAccountController@index');
-
-    $router->get('/MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
-
-    // {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
-    // webserver option is set to "on"
-    $router->get(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-        'MessageItemController@index'
-    );
-    $router->post(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-        'MessageItemController@post'
-    );
-    $router->get(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@get'
-    );
-    $router->put(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@put'
-    );
-    $router->delete(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-        'MessageItemController@delete'
-    );
-    $router->get(
-        '/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
-        'AttachmentController@index'
-    );
-
-
-//});
+// {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
+// webserver option is set to "on"
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
+    'MessageItemController@index'
+);
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
+    'MessageItemController@post'
+);
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@get'
+);
+$router->put(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@put'
+);
+$router->delete(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@delete'
+);
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
+    'AttachmentController@index'
+);

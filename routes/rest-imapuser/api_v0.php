@@ -28,7 +28,7 @@
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| The following routes represent the rest-imapuser API V0.1.
+| The following routes represent the rest-imapuser API V0
 | https://github.com/conjoon/rest-api-description
 */
 

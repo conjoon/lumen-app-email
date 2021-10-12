@@ -41,9 +41,10 @@ foreach ($versions as $version) {
 
     $router->group([
         "middleware" => "auth_" . ucfirst($version),
-        'namespace'  => "\App\Http\\" . ucfirst($version) . "\Controllers",
+        'namespace'  => "App\Http\\" . ucfirst($version) . "\Controllers",
         'prefix'     => "rest-imap/api/" . $version
     ], function () use ($router, $version) {
+
         require base_path("routes/rest-imap/api_" . $version . ".php");
     });
 }
@@ -51,7 +52,7 @@ foreach ($versions as $version) {
 // config for latest
 $router->group([
     "middleware" => "auth_" . ucfirst($latest),
-    'namespace'  => "\App\Http\\" . ucfirst($latest) . "\Controllers",
+    'namespace'  => "App\Http\\" . ucfirst($latest) . "\Controllers",
     'prefix'     => "rest-imap/api"
 ], function () use ($router, $latest) {
     require base_path("routes/rest-imap/api_" . $latest . ".php");

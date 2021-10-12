@@ -25,19 +25,26 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/TestTrait.php';
+namespace Tests;
 
-abstract class TestCase extends Laravel\Lumen\Testing\TestCase
+use App\Exceptions\Handler;
+use Exception;
+use Laravel\Lumen\Application;
+use RuntimeException;
+
+require_once __DIR__ . "/TestTrait.php";
+
+abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 {
 
     /**
      * Creates the application.
      *
-     * @return \Laravel\Lumen\Application
+     * @return Application
      */
-    public function createApplication()
+    public function createApplication(): Application
     {
-        return require __DIR__.'/../bootstrap/app.php';
+        return require __DIR__."/../bootstrap/app.php";
     }
 
 
@@ -49,13 +56,13 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
      *
      * @return string The relative path to the endpoints used with this api.
      *
-     * @throws if $type is neither "imap" nor "imapuser"
+     * @throws RuntimeException $type is neither "imap" nor "imapuser"
      */
     public function getServicePrefix(string $type, string $version) : string {
 
         $type = strtolower($type);
         if (!in_array($type, ["imap", "imapuser"])) {
-            throw new \RuntimeException("\"$type\" is not valid");
+            throw new RuntimeException("\"$type\" is not valid");
         }
         return implode("", [
             "rest-",
@@ -69,8 +76,8 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     /**
      * Returns the relative path to the rest-imapuser endpoint.
      *
-     * @param $endpoint
-     *
+     * @param string $endpoint
+     * @param string $version
      * @return string The relative path to the endpoint according to the api version used with this
      * tests.
      *
@@ -84,8 +91,8 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     /**
      * Returns the relative path to the rest-imap endpoint.
      *
-     * @param $endpoint
-     *
+     * @param string $endpoint
+     * @param string $version
      * @return string The relative path to the endpoint according to the api version used with this
      * tests.
      *
@@ -99,23 +106,21 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
     /**
      * Set an expected exception.
      *
-     * @param string $class
+     * @param string $exception
      *
-     * @return $this
+     * @return void
      *
      * @see @see https://laracasts.com/discuss/channels/testing/testing-that-exception-was-thrown
      */
     public function expectException(string $exception) :void {
 
-        $this->app->instance(\App\Exceptions\Handler::class, new class extends \App\Exceptions\Handler {
+        $this->app->instance(Handler::class, new class extends Handler {
             public function __construct() {}
-            public function report(Exception $e) {}
-            public function render($request, Exception $e)
-            {
-                throw $e;
+            public function report(Exception $exception) {}
+            public function render($request, Exception $exception) {
+                throw $exception;
             }
         });
-
 
         parent::expectException($exception);
     }
