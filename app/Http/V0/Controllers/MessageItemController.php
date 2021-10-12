@@ -97,23 +97,23 @@ class MessageItemController extends Controller {
         $messageItemService = $this->messageItemService;
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
-        $sort = $request->input('sort');
+        $sort = $request->input("sort");
         if ($sort) {
             $sort = json_decode($sort, true);
         } else {
             $sort = [["property" => "date", "direction" => "DESC"]];
         }
 
-        $start = (int)$request->input('start');
-        $limit = (int)$request->input('limit');
+        $start = (int)$request->input("start");
+        $limit = (int)$request->input("limit");
 
         $mailFolderId = urldecode($mailFolderId);
 
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
 
-        $excludeFields = $request->input('excludeFields') ? explode(",",$request->input('excludeFields')) : [];
-        $messageItemIds = $request->input('messageItemIds') ? explode(",",$request->input('messageItemIds')) : null;
+        $excludeFields = $request->input("excludeFields") ? explode(",",$request->input("excludeFields")) : [];
+        $messageItemIds = $request->input("messageItemIds") ? explode(",",$request->input("messageItemIds")) : null;
 
         if ($messageItemIds !== null) {
             $options = [
@@ -163,7 +163,7 @@ class MessageItemController extends Controller {
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem, MessageBody
-        $target = $request->input('target');
+        $target = $request->input("target");
 
         $mailFolderId = urldecode($mailFolderId);
 
@@ -206,7 +206,7 @@ class MessageItemController extends Controller {
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem, MessageBody
-        $target = $request->input('target');
+        $target = $request->input("target");
 
         $mailFolderId = urldecode($mailFolderId);
 
@@ -259,7 +259,7 @@ class MessageItemController extends Controller {
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem
-        $target = $request->input('target');
+        $target = $request->input("target");
 
         $mailFolderId = urldecode($mailFolderId);
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
@@ -330,11 +330,11 @@ class MessageItemController extends Controller {
                 $action = $request->input("action");
                 $isMove = $action === "move";
 
-                $seen    = $request->input('seen');
-                $flagged = $request->input('flagged');
-                $draft   = $request->input('draft');
+                $seen    = $request->input("seen");
+                $flagged = $request->input("flagged");
+                $draft   = $request->input("draft");
 
-                $newMailFolderId = $request->input('mailFolderId');
+                $newMailFolderId = $request->input("mailFolderId");
 
                 // check required parameters first
                 if ($seen === null && $flagged === null && $draft === null && !$isMove) {
@@ -442,7 +442,7 @@ class MessageItemController extends Controller {
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageBody
-        $target = $request->input('target');
+        $target = $request->input("target");
 
         if ($target !== "MessageBodyDraft") {
             return response()->json([

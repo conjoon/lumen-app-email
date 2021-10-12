@@ -68,12 +68,12 @@ class UserController extends Controller
 
         if ($user) {
              return response()->json([
-                 'success' => true,
-                 'data'    => $user->toArray()
+                 "success" => true,
+                 "data"    => $user->toArray()
              ]);
         }
 
-        return response()->json(['success' => false, "msg" => "Unauthorized.", "status" => 401], 401);
+        return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
     }
 
 }
