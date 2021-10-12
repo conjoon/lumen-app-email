@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,20 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Test\App\Http\V0\Controllers;
+namespace Tests\App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Data\MailAccount,
-    App\Imap\ImapUser;
+use Tests\TestCase,
 
+    Conjoon\Mail\Client\Data\MailAccount,
+    App\Http\V0\Controllers\UserController,
+    App\Imap\ImapUserRepository,
+    App\Imap\ImapUser,
+    App\Imap\DefaultImapUserRepository;
 
+/**
+ * Tests UserController.
+ *
+ */
 class UserControllerTest extends TestCase
 {
     /**
@@ -39,26 +48,26 @@ class UserControllerTest extends TestCase
      */
     public function testAuthenticate()
     {
-        $endpoint = $this->getImapUserEndpoint("auth");
+        $endpoint = $this->getImapUserEndpoint("auth", "v0");
 
 
-        $repository = $this->getMockBuilder("App\Imap\DefaultImapUserRepository")
+        $repository = $this->getMockBuilder(DefaultImapUserRepository::class)
                            ->disableOriginalConstructor()
                            ->getMock();
 
-        $this->app->when(App\Http\Controllers\UserController::class)
-              ->needs(App\Imap\ImapUserRepository::class)
+        $this->app->when(UserController::class)
+              ->needs(ImapUserRepository::class)
               ->give(function () use ($repository) {
                  return $repository;
-            });
+              });
 
         $repository->expects($this->exactly(2))
                    ->method("getUser")
                    ->will(
                        $this->onConsecutiveCalls(
-                            null,
-                            new ImapUser("foo", "bar", new MailAccount([]))
-                        )
+                           null,
+                           new ImapUser("foo", "bar", new MailAccount([]))
+                       )
                    );
 
         $response = $this->call(
