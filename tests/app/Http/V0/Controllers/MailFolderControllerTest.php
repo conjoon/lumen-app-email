@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Test\App\Http\V0\Controllers;
+namespace Tests\App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use App\Http\V0\Controllers\MailFolderController;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Service\DefaultMailFolderService;
+use Conjoon\Mail\Client\Service\MailFolderService;
+use Tests\TestCase;
+use Tests\TestTrait;
 
+/**
+ * Tests for MailFolderController.
+ *
+ */
 class MailFolderControllerTest extends TestCase
 {
     use TestTrait;
@@ -37,24 +47,24 @@ class MailFolderControllerTest extends TestCase
 
     /**
      * Tests get() to make sure method returns list of available MailFolders associated with
-     * the current signed in user.
+     * the current signed-in user.
      *
      *
      * @return void
      */
-    public function testIndex_success()
+    public function testIndexSuccess()
     {
-        $service = $this->getMockBuilder("Conjoon\Mail\Client\Service\DefaultMailFolderService")
+        $service = $this->getMockBuilder(DefaultMailFolderService::class)
                            ->disableOriginalConstructor()
                            ->getMock();
 
-        $this->app->when(App\Http\Controllers\MailFolderController::class)
-            ->needs(Conjoon\Mail\Client\Service\MailFolderService::class)
+        $this->app->when(MailFolderController::class)
+            ->needs(MailFolderService::class)
             ->give(function () use ($service) {
                 return $service;
             });
 
-        $resultList   = new MailFolderChildList;
+        $resultList   = new MailFolderChildList();
         $resultList[] = new MailFolder(
             new FolderKey("dev", "INBOX"),
             ["name"        => "INBOX",
@@ -69,7 +79,13 @@ class MailFolderControllerTest extends TestCase
 
 
         $response = $this->actingAs($this->getTestUserStub())
-                         ->call("GET", "cn_mail/MailAccounts/dev_sys_conjoon_org/MailFolders");
+                         ->call(
+                             "GET",
+                             $this->getImapEndpoint(
+                                 "MailAccounts/dev_sys_conjoon_org/MailFolders",
+                                 "v0"
+                             )
+                         );
 
         $this->assertEquals(200, $response->status());
 
@@ -78,6 +94,4 @@ class MailFolderControllerTest extends TestCase
             "data"    => $resultList->toJson()
           ]);
     }
-
-
 }
