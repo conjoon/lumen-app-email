@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,9 +25,15 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\App\Http\V0\Controllers;
 
-namespace Test\App\Http\V0\Controllers;
+use Tests\TestCase;
+use Tests\TestTrait;
 
+/**
+ * Tests for MailAccountController.
+ *
+ */
 class MailAccountControllerTest extends TestCase
 {
     use TestTrait;
@@ -37,10 +44,13 @@ class MailAccountControllerTest extends TestCase
      *
      * @return void
      */
-    public function testIndex_success()
+    public function testIndexSuccess()
     {
         $response = $this->actingAs($this->getTestUserStub())
-                         ->call("GET", "cn_mail/MailAccounts");
+                         ->call(
+                             "GET",
+                             $this->getImapEndpoint("MailAccounts", "v0")
+                         );
 
         $this->assertEquals(200, $response->status());
 
@@ -49,6 +59,4 @@ class MailAccountControllerTest extends TestCase
             "data"    => [$this->getTestMailAccount("dev_sys_conjoon_org")->toArray()]
           ]);
     }
-
-
 }
