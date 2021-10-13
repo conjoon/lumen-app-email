@@ -132,7 +132,8 @@ class MessageItemController extends Controller {
         }
 
 
-        $data = $messageItemService->getMessageItemList($folderKey, $options)->toJson();
+        $data = $messageItemService->getMessageItemList($folderKey, $options);
+        $json = $data->toJson();
 
         return response()->json([
             "success" => true,
@@ -142,7 +143,7 @@ class MessageItemController extends Controller {
                  "mailAccountId" =>  $mailAccount->getId()
             ],
             "total" => $messageItemService->getTotalMessageCount($folderKey),
-            "data" => $data
+            "data" => $json
         ]);
 
     }
