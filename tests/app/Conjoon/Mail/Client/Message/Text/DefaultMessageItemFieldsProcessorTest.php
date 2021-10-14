@@ -55,7 +55,7 @@ class DefaultMessageItemFieldsProcessorTest extends TestCase {
         $processor = $this->createProcessor();
 
         $messageItem = new MessageItem(
-            new MessageKey('dev', 'INBOX', '1'),
+            new MessageKey("dev", "INBOX", "1"),
             ["charset" => "utf-8", "subject" => "foo"]
         );
 

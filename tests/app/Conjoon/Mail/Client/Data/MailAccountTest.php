@@ -24,38 +24,39 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase,
+    Conjoon\Mail\Client\Data\MailAccount;
 
 
 class MailAccountTest extends TestCase
 {
 
     protected $accountConfig = [
-        'id'               => "dev_sys_conjoon_org",
-        'name'            => "conjoon developer",
-        'from'            => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
-        'replyTo'         => ["name" => 'John Smith', "address" => 'dev@conjoon.org'],
-        'inbox_type'      => 'IMAP',
-        'inbox_address'   => 'sfsffs.ffssf.sffs',
-        'inbox_port'      => 993,
-        'inbox_user'      => 'inboxuser',
-        'inbox_password'  => 'inboxpassword',
-        'inbox_ssl'       => true,
-        'outbox_address'  => 'sfsffs.ffssf.sffs',
-        'outbox_port'     => 993,
-        'outbox_user'     => 'outboxuser',
-        'outbox_password' => 'outboxpassword',
-        'outbox_ssl'      => true,
-        'root'            => ['[Gmail]']
+        "id"               => "dev_sys_conjoon_org",
+        "name"            => "conjoon developer",
+        "from"            => ["name" => "John Smith", "address" => "dev@conjoon.org"],
+        "replyTo"         => ["name" => "John Smith", "address" => "dev@conjoon.org"],
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => "sfsffs.ffssf.sffs",
+        "inbox_port"      => 993,
+        "inbox_user"      => "inboxuser",
+        "inbox_password"  => "inboxpassword",
+        "inbox_ssl"       => true,
+        "outbox_address"  => "sfsffs.ffssf.sffs",
+        "outbox_port"     => 993,
+        "outbox_user"     => "outboxuser",
+        "outbox_password" => "outboxpassword",
+        "outbox_ssl"      => true,
+        "root"            => ["[Gmail]"]
     ];
 
     public function testGetter()
     {
         $config = $this->accountConfig;
 
-        $oldRoot = $config['root'];
-        $this->assertSame(['[Gmail]'], $oldRoot);
-        unset($config['root']);
+        $oldRoot = $config["root"];
+        $this->assertSame(["[Gmail]"], $oldRoot);
+        unset($config["root"]);
 
         $account = new MailAccount($config);
         $this->assertSame(["INBOX"], $account->getRoot());
@@ -66,12 +67,12 @@ class MailAccountTest extends TestCase
         foreach ($config as $property => $value) {
 
 
-            if ($property === 'from' || $property === 'replyTo') {
-                $method = $property == 'from' ? 'getFrom' : 'getReplyTo';
+            if ($property === "from" || $property === "replyTo") {
+                $method = $property == "from" ? "getFrom" : "getReplyTo";
             } else {
-                $camelKey = '_' . str_replace('_', ' ', strtolower($property));
-                $camelKey = ltrim(str_replace(' ', '', ucwords($camelKey)), '_');
-                $method   = 'get' . ucfirst($camelKey);
+                $camelKey = "_" . str_replace("_", " ", strtolower($property));
+                $camelKey = ltrim(str_replace(" ", "", ucwords($camelKey)), "_");
+                $method   = "get" . ucfirst($camelKey);
             }
 
             $this->assertSame($value, $account->{$method}());

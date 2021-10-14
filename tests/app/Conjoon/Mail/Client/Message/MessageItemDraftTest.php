@@ -311,14 +311,14 @@ class MessageItemDraftTest extends TestCase {
     protected function getItemConfig() {
 
         return [
-            'from'    => $this->createFrom(),
-            'replyTo' => $this->createReplyTo(),
-            'to'      => $this->createTo(),
-            'cc'      => $this->createCc(),
-            'bcc'     => $this->createBcc(),
-            'replyTo' => $this->createReplyTo(),
-            'draft'   => true,
-            'xCnDraftInfo' => "WyJzaXRlYXJ0d29yayIsIklOQk9YIiwiMTU5NzUyIl0="
+            "from"    => $this->createFrom(),
+            "replyTo" => $this->createReplyTo(),
+            "to"      => $this->createTo(),
+            "cc"      => $this->createCc(),
+            "bcc"     => $this->createBcc(),
+            "replyTo" => $this->createReplyTo(),
+            "draft"   => true,
+            "xCnDraftInfo" => "WyJzaXRlYXJ0d29yayIsIklOQk9YIiwiMTU5NzUyIl0="
         ];
 
     }

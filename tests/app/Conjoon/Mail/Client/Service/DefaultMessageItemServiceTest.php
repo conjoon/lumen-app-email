@@ -119,7 +119,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageItemListMock[] = new ListMessageItem($this->createMessageKey(null, $mailFolderId, 3),
             null, new MessagePart("foo3", "UTF-8", "text/html"));
 
-        $clientStub->method('getMessageItemList')
+        $clientStub->method("getMessageItemList")
                    ->with($folderKey, $options)
                     ->willReturn($messageItemListMock);
 
@@ -150,7 +150,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('getMessageItem')
+        $clientStub->method("getMessageItem")
             ->with($messageKey)
             ->willReturn(
                 $this->buildTestMessageItem($account->getId(), $mailFolderId, $messageItemId)
@@ -193,7 +193,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageKey = $this->createMessageKey($account->getId(), $mailFolderId, $messageItemId);
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('getMessageItemDraft')
+        $clientStub->method("getMessageItemDraft")
             ->with($messageKey)
             ->willReturn(
                 $this->buildTestMessageItem($account->getId(), $mailFolderId, $messageItemId, true)
@@ -274,7 +274,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $folderKey = $this->createFolderKey($account, $mailFolderId);
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('getTotalMessageCount')
+        $clientStub->method("getTotalMessageCount")
             ->with($folderKey)
             ->willReturn(
                 300
@@ -299,7 +299,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $folderKey = $this->createFolderKey($account, $mailFolderId);
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('getUnreadMessageCount')
+        $clientStub->method("getUnreadMessageCount")
             ->with($folderKey)
             ->willReturn(311);
 
@@ -326,7 +326,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $flagList[] = new SeenFlag(true);
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('setFlags')
+        $clientStub->method("setFlags")
             ->with($messageKey, $flagList)
             ->willReturn(false);
 
@@ -377,7 +377,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -388,7 +388,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -399,7 +399,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
@@ -411,7 +411,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method('createMessageBodyDraft')->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
@@ -437,7 +437,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageBodyDraft = new MessageBodyDraft();
         $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
 
-        $clientStub->method('createMessageBodyDraft')
+        $clientStub->method("createMessageBodyDraft")
             ->with($folderKey, $messageBodyDraft)
             ->willThrowException(new MailClientException);
 
@@ -467,7 +467,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub = $service->getMailClient();
 
-        $clientStub->method('updateMessageDraft')
+        $clientStub->method("updateMessageDraft")
             ->with($messageItemDraft)
             ->willReturn($transformDraft);
 
@@ -495,7 +495,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub = $service->getMailClient();
 
-        $clientStub->method('updateMessageDraft')
+        $clientStub->method("updateMessageDraft")
                    ->with($transformDraft)
                    ->willThrowException(new MailClientException);
 
@@ -540,7 +540,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub = $service->getMailClient();
 
-        $clientStub->method('updateMessageBodyDraft')
+        $clientStub->method("updateMessageBodyDraft")
             ->with($messageBodyDraft)
             ->willThrowException(new MailClientException);
 
@@ -570,7 +570,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -581,7 +581,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -592,7 +592,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
@@ -604,7 +604,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method('updateMessageBodyDraft')->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
@@ -629,7 +629,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
             $service    = $this->createService();
             $clientStub = $service->getMailClient();
-            $clientStub->method('sendMessageDraft')->with($messageKey)->willReturn($expected);
+            $clientStub->method("sendMessageDraft")->with($messageKey)->willReturn($expected);
 
             $this->assertSame($service->sendMessageDraft($messageKey), $expected);
         };
@@ -654,7 +654,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
-        $clientStub->method('sendMessageDraft')
+        $clientStub->method("sendMessageDraft")
                    ->with($messageKey)
                    ->willThrowException(new MailClientException);
 
@@ -680,7 +680,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
-        $clientStub->method('moveMessage')->with($messageKey, $folderKey)->willReturn($expected);
+        $clientStub->method("moveMessage")->with($messageKey, $folderKey)->willReturn($expected);
 
         $this->assertSame($service->moveMessage($messageKey, $folderKey), $expected);
 
@@ -703,7 +703,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
-        $clientStub->method('moveMessage')->with($messageKey, $folderKey)
+        $clientStub->method("moveMessage")->with($messageKey, $folderKey)
                    ->willThrowException(new MailClientException("should not bubble"));
 
         $this->assertSame($service->moveMessage($messageKey, $folderKey), null);
@@ -733,7 +733,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageItemListMock[] = new ListMessageItem($messageKey,
             null, new MessagePart("preview", "UTF-8", "text/html"));
 
-        $clientStub->method('getMessageItemList')
+        $clientStub->method("getMessageItemList")
             ->with($folderKey, ["ids" => [$messageKey->getId()]])
             ->willReturn($messageItemListMock);
 
@@ -796,7 +796,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $messageKey = $this->createMessageKey($account, $mailFolderId, $messageItemId);
 
         $clientStub = $service->getMailClient();
-        $clientStub->method('getMessageBody')
+        $clientStub->method("getMessageBody")
             ->with($messageKey)
             ->willReturn(
                 $this->buildTestMessageBody($account->getId(), $mailFolderId, $messageKey->getId(), $plain, $html)
@@ -840,7 +840,7 @@ class DefaultMessageItemServiceTest extends TestCase {
         $service    = $this->createService();
         $clientStub = $service->getMailClient();
 
-        $op = $clientStub->method('deleteMessage')->with($messageKey);
+        $op = $clientStub->method("deleteMessage")->with($messageKey);
 
         if ($type === "exception") {
             $op->willThrowException(new MailClientException);
@@ -852,7 +852,7 @@ class DefaultMessageItemServiceTest extends TestCase {
             $this->fail("No valid type configured for test.");
         }
 
-        $clientStub->method('deleteMessage')->with($messageKey)->willReturn($expected);
+        $clientStub->method("deleteMessage")->with($messageKey)->willReturn($expected);
 
         $this->assertSame($service->deleteMessage($messageKey), $expected);
     }
@@ -889,7 +889,7 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @return mixed
      */
     protected function getMailClientMock() {
-        return $this->getMockBuilder('Conjoon\Mail\Client\MailClient')
+        return $this->getMockBuilder("Conjoon\Mail\Client\MailClient")
                     ->setMethods([
                         "getMessageItemList", "getMessageItem", "getListMessageItem", "getMessageItemDraft", "getMessageBody",
                         "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",

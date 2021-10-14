@@ -112,7 +112,7 @@ class DefaultPreviewTextProcessorTest extends TestCase{
 
                 $messagePart = parent::process($messagePart, $toCharset);
 
-                $messagePart->setContents(' CALLED' . $messagePart->getContents(), $toCharset);
+                $messagePart->setContents(" CALLED" . $messagePart->getContents(), $toCharset);
 
                 return $messagePart;
             }

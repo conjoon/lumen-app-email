@@ -92,7 +92,7 @@ class AbstractListTest extends TestCase
 
         $mock = $this->getMockForAbstractClass(AbstractList::class);
         $mock->expects($this->any())
-             ->method('getEntityType')
+             ->method("getEntityType")
              ->will($this->returnValue(\stdClass::class));
 
         return $mock;

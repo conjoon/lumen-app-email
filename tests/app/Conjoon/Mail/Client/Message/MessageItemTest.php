@@ -123,9 +123,9 @@ class MessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
-            'charset'        => "ISO-8859-1",
-            'size'           => 83,
-            'hasAttachments' => true
+            "charset"        => "ISO-8859-1",
+            "size"           => 83,
+            "hasAttachments" => true
         ];
 
     }

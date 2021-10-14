@@ -83,15 +83,15 @@ class AbstractMessageItemTest extends TestCase
             $method = "get" . ucfirst($key);
 
             switch ($key) {
-                case 'date':
+                case "date":
                     $this->assertNotSame($item["date"], $messageItem->getDate());
                     $this->assertEquals($item["date"], $messageItem->getDate());
                     break;
-                case 'from':
+                case "from":
                     $this->assertNotSame($item["from"], $messageItem->getFrom());
                     $this->assertEquals($item["from"], $messageItem->getFrom());
                     break;
-                case 'to':
+                case "to":
                     $this->assertNotSame($item["to"], $messageItem->getTo());
                     $this->assertEquals($item["to"], $messageItem->getTo());
                     break;
@@ -423,19 +423,19 @@ class AbstractMessageItemTest extends TestCase
     protected function getItemConfig() {
 
         return [
-            'from'           => $this->createFrom(),
-            'to'             => $this->createTo(),
-            'subject'        => "SUBJECT",
-            'date'           => new \DateTime(),
-            'seen'           => false,
-            'answered'       => true,
-            'draft'          => false,
-            'flagged'        => true,
-            'recent'         => false,
-            'charset'        => "ISO-8859-1",
-            'messageId'      => 'mid',
-            'inReplyTo'      => 'midrt',
-            'references'     => 'midr'
+            "from"           => $this->createFrom(),
+            "to"             => $this->createTo(),
+            "subject"        => "SUBJECT",
+            "date"           => new \DateTime(),
+            "seen"           => false,
+            "answered"       => true,
+            "draft"          => false,
+            "flagged"        => true,
+            "recent"         => false,
+            "charset"        => "ISO-8859-1",
+            "messageId"      => "mid",
+            "inReplyTo"      => "midrt",
+            "references"     => "midr"
         ];
 
     }

@@ -79,7 +79,7 @@ class DefaultAttachmentServiceTest extends TestCase {
         );
 
         $service->getMailClient()
-            ->shouldReceive('getFileAttachmentList')
+            ->shouldReceive("getFileAttachmentList")
             ->with($messageKey)
             ->andReturn($fileAttachmentList);
 
@@ -111,7 +111,7 @@ class DefaultAttachmentServiceTest extends TestCase {
      */
     protected function getMailClientMock() {
 
-        return \Mockery::mock('overload:'.MailClient::class);
+        return \Mockery::mock("overload:".MailClient::class);
 
     }
 

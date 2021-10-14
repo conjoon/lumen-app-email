@@ -102,7 +102,7 @@ class MailFolderTest extends TestCase
     public function testSetFolderType_exception() {
         $this->expectException(\InvalidArgumentException::class);
 
-        new MailFolder($this->createKey(), ['folderType' => 'foo']);
+        new MailFolder($this->createKey(), ["folderType" => "foo"]);
     }
 
 

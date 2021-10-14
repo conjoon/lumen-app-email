@@ -55,7 +55,7 @@ class JsonableTest extends TestCase
 
         $mock = $this->getMockForAbstractClass(Jsonable::class);
         $mock->expects($this->any())
-             ->method('toJson')
+             ->method("toJson")
              ->will($this->returnValue(self::$myJson));
 
         return $mock;

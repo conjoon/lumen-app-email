@@ -68,7 +68,7 @@ class DefaultMailFolderServiceTest extends TestCase {
         $mailFolderList = new MailFolderList();
 
         $service->getMailClient()
-            ->shouldReceive('getMailFolderList')
+            ->shouldReceive("getMailFolderList")
             ->with($mailAccount)
             ->andReturn($mailFolderList);
 
@@ -76,7 +76,7 @@ class DefaultMailFolderServiceTest extends TestCase {
         $resultList = new MailFolderChildList();
 
         $service->getMailFolderTreeBuilder()
-                ->shouldReceive('listToTree')
+                ->shouldReceive("listToTree")
                 ->with($mailFolderList, ["INBOX"])
                 ->andReturn($resultList);
 
@@ -105,7 +105,7 @@ class DefaultMailFolderServiceTest extends TestCase {
      */
     protected function getMailClientMock() {
 
-        return \Mockery::mock('overload:'.MailClient::class);
+        return \Mockery::mock("overload:".MailClient::class);
 
     }
 
@@ -116,7 +116,7 @@ class DefaultMailFolderServiceTest extends TestCase {
      */
     protected function getMailFolderTreeBuilderMock() {
 
-        return \Mockery::mock('overload:' . MailFolderTreeBuilder::class);
+        return \Mockery::mock("overload:" . MailFolderTreeBuilder::class);
 
     }
 
