@@ -32,7 +32,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\App\\": "tests/app/",
+            "Tests\\Conjoon\\": "tests/app/Conjoon/",
+            "Tests\\": "tests"
         }
     },
     "config": {
