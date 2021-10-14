@@ -1,8 +1,9 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,10 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data\CompoundKey;
 
+use Conjoon\Mail\Client\Data\MailAccount;
+use InvalidArgumentException;
 
 /**
  * Class MessageKey models a class for compound keys for identifying (IMAP) Messages.
@@ -53,7 +57,8 @@ namespace Conjoon\Mail\Client\Data\CompoundKey;
  *
  * @package Conjoon\Mail\Client\Data\CompoundKey
  */
-class MessageKey extends CompoundKey {
+class MessageKey extends CompoundKey
+{
 
 
     /**
@@ -65,32 +70,81 @@ class MessageKey extends CompoundKey {
     /**
      * MessageKey constructor.
      *
-     * @param string|MailAccount|FolderKey $mailAccountId
-     * @param string $mailFolderId
-     * @param string $id
+     * @param string|MailAccount|FolderKey $keyPart1
+     * @param string $keyPart2
+     * @param string|null $keyPart3
      *
-     * @throws \InvalidArgumentException if $mailAccountId is not a FolderKey and $id is null
+     * @see constructFromFolderKey
+     * @see constructFromMailAccount
+     * @see constructFromMessageKeyParts
      */
-    public function __construct($mailAccountId, string $mailFolderId, string $id = null) {
+    public function __construct($keyPart1, string $keyPart2, string $keyPart3 = null)
+    {
 
-        if ($mailAccountId instanceof FolderKey) {
-            $id            = $mailFolderId;
-            $mailFolderId  = $mailAccountId->getId();
-            $mailAccountId = $mailAccountId->getMailAccountId();
-        } else if ($id === null) {
-            throw new \InvalidArgumentException("\"id\" must not be null.");
+        if ($keyPart1 instanceof FolderKey) {
+            $this->constructFromFolderKey($keyPart1, $keyPart2);
+            return;
         }
 
-        parent::__construct($mailAccountId, $id);
+        if ($keyPart3 === null) {
+            throw new InvalidArgumentException("\"$keyPart3\" representing the \"id\" must not be null.");
+        }
 
+        if ($keyPart1 instanceof MailAccount) {
+            $this->constructFromMailAccount($keyPart1, $keyPart2, $keyPart3);
+            return;
+        }
+
+        $this->constructFromMessageKeyParts($keyPart1, $keyPart2, $keyPart3);
+    }
+
+
+    /**
+     * Constructs from the passed arguments.
+     *
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $id
+     */
+    private function constructFromMessageKeyParts(string $mailAccountId, string $mailFolderId, string $id)
+    {
+        parent::__construct($mailAccountId, $id);
         $this->mailFolderId = $mailFolderId;
+    }
+
+
+    /**
+     * Constructs given the information from the submitted MaiLAccount.
+     *
+     * @param MailAccount $mailAccount
+     * @param string $folderId
+     * @param string $id
+     */
+    private function constructFromMailAccount(MaiLAccount $mailAccount, string $folderId, string $id)
+    {
+        parent::__construct($mailAccount, $id);
+        $this->mailFolderId = $folderId;
+    }
+
+
+    /**
+     * Constructs given the information from the submitted FolderKey.
+     *
+     * @param FolderKey $folderKey
+     * @param string $id
+     */
+    private function constructFromFolderKey(FolderKey $folderKey, string $id)
+    {
+        parent::__construct($folderKey->getMailAccountId(), $id);
+        $this->mailFolderId = $folderKey->getId();
     }
 
 
     /**
      * @return string
      */
-    public function getMailFolderId() :string {
+    public function getMailFolderId(): string
+    {
         return $this->mailFolderId;
     }
 
@@ -100,7 +154,8 @@ class MessageKey extends CompoundKey {
      *
      * @return FolderKey
      */
-    public function getFolderKey() :FolderKey {
+    public function getFolderKey(): FolderKey
+    {
         return new FolderKey($this->mailAccountId, $this->mailFolderId);
     }
 
@@ -110,11 +165,11 @@ class MessageKey extends CompoundKey {
      *
      * @return array
      */
-    public function toJson() :array {
+    public function toJson(): array
+    {
         $json = parent::toJson();
         $json["mailFolderId"] = $this->getMailFolderId();
 
         return $json;
     }
-
 }

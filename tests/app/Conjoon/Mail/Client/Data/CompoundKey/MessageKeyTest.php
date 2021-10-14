@@ -1,8 +1,9 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,23 +25,23 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\CompoundKey\CompoundKey,
-    Conjoon\Mail\Client\Data\MailAccount;
+namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 
+use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
+use InvalidArgumentException;
 
 class MessageKeyTest extends TestCase
 {
 
-
-// ---------------------
-//    Tests
-// ---------------------
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
@@ -68,7 +69,8 @@ class MessageKeyTest extends TestCase
     /**
      * Test Constructor with FolderKey
      */
-    public function testConstructorWithFolderKey() {
+    public function testConstructorWithFolderKey()
+    {
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
         $id = "123";
@@ -94,11 +96,12 @@ class MessageKeyTest extends TestCase
     /**
      * Test Constructor with omitted id
      */
-    public function testConstructorWithOmittedId() {
+    public function testConstructorWithOmittedId()
+    {
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new MessageKey($mailAccountId, $mailFolderId);
     }
 
@@ -106,7 +109,8 @@ class MessageKeyTest extends TestCase
     /**
      * Test getFolderKey
      */
-    public function testGetFolderKey() {
+    public function testGetFolderKey()
+    {
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
         $id = "123";
@@ -118,5 +122,4 @@ class MessageKeyTest extends TestCase
         $this->assertEquals($key->getFolderKey(), $key->getFolderKey());
         $this->assertNotSame($key->getFolderKey(), $key->getFolderKey());
     }
-
 }
