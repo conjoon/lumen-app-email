@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use Closure;
 use ReflectionClass;
-use Tests\TestCase;
 use Illuminate\Http\Request;
 use App\Imap\DefaultImapUserRepository;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
@@ -49,6 +49,7 @@ use Conjoon\Mail\Client\Service\DefaultAttachmentService;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use ReflectionException;
 
 /**
  * Class VariousTest
@@ -56,8 +57,8 @@ use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
  * Various tests that check for functionality mainly set up during the bootstrapping-process.
  *
  * @method getMockBuilder(string $string)
- * @method callback(\Closure $param)
- * @method returnCallback(\Closure $param)
+ * @method callback(Closure $param)
+ * @method returnCallback(Closure $param)
  */
 class VariousTest extends TestCase
 {
@@ -70,8 +71,8 @@ class VariousTest extends TestCase
      */
     public function testApi()
     {
-        $this->assertEquals(config("app.api.versions"), ["v0"]);
-        $this->assertSame(config("app.api.latest"), "v0");
+        $this->assertEquals(["v0"], config("app.api.versions"));
+        $this->assertSame("v0", config("app.api.latest"));
     }
 
     /**
