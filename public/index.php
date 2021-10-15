@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -35,7 +36,7 @@
 |
 */
 
-$app = require __DIR__.'/../bootstrap/app.php';
+$app = require __DIR__ . "/../bootstrap/app.php";
 
 /*
 |--------------------------------------------------------------------------
