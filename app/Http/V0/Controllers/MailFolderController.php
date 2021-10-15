@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,27 +24,27 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
 use Conjoon\Mail\Client\Service\MailFolderService;
-
+use Illuminate\Http\JsonResponse;
 use Auth;
-
-
 
 /**
  * Class MailFolderController
  * @package App\Http\Controllers
  */
-class MailFolderController extends Controller {
+class MailFolderController extends Controller
+{
 
 
     /**
      * @var MailFolderService
      */
-    protected $mailFolderService;
+    protected MailFolderService $mailFolderService;
 
 
     /**
@@ -51,10 +52,10 @@ class MailFolderController extends Controller {
      *
      * @param MailFolderService $mailFolderService
      */
-    public function __construct(MailFolderService $mailFolderService) {
+    public function __construct(MailFolderService $mailFolderService)
+    {
 
         $this->mailFolderService = $mailFolderService;
-
     }
 
 
@@ -64,9 +65,10 @@ class MailFolderController extends Controller {
      *
      * @param string $mailAccountId
      *
-     * @return ResponseJson
+     * @return JsonResponse
      */
-    public function index($mailAccountId) {
+    public function index(string $mailAccountId): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -78,7 +80,5 @@ class MailFolderController extends Controller {
             "success" => true,
             "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
         ]);
-
     }
-
 }
