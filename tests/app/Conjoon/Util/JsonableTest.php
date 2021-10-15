@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,15 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\Jsonable;
+namespace Tests\Conjoon\Util;
 
+use Conjoon\Util\Jsonable;
+use Tests\TestCase;
 
 class JsonableTest extends TestCase
 {
 
-    protected static $myJson = ["foo" => "bar"];
+    protected static array $myJson = ["foo" => "bar"];
 
 // ---------------------
 //    Tests
@@ -39,7 +42,8 @@ class JsonableTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $jsonable = $this->getMockForJsonable();
         $this->assertSame(self::$myJson, $jsonable->toJson());
@@ -51,7 +55,8 @@ class JsonableTest extends TestCase
 //    Helper Functions
 // ---------------------
 
-    protected function getMockForJsonable() {
+    protected function getMockForJsonable()
+    {
 
         $mock = $this->getMockForAbstractClass(Jsonable::class);
         $mock->expects($this->any())
@@ -60,7 +65,4 @@ class JsonableTest extends TestCase
 
         return $mock;
     }
-
-
-
 }

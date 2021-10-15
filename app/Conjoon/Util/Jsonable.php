@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
@@ -31,7 +33,8 @@ namespace Conjoon\Util;
  * Interface Jsonable
  * @package Conjoon\Util
  */
-interface Jsonable {
+interface Jsonable
+{
 
 
     /**
@@ -41,7 +44,5 @@ interface Jsonable {
      *
      * @return array
      */
-    public function toJson() :array;
-
-
+    public function toJson(): array;
 }
