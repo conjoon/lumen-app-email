@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,27 +24,29 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
 use Auth;
-
-
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class MailAccountController
  * @package App\Http\Controllers
  */
-class MailAccountController extends Controller {
+class MailAccountController extends Controller
+{
 
     /**
      * Returns all available MailAccounts for the user that is currently
      * authenticated with this application in the json response.
      *
-     * @return ResponseJson
+     * @return JsonResponse
      */
-    public function index() {
+    public function index(): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -57,7 +60,5 @@ class MailAccountController extends Controller {
             "success" => true,
             "data" => $res
         ]);
-
     }
-
 }
