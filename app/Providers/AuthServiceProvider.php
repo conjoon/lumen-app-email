@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,13 +27,16 @@
 
 namespace App\Providers;
 
-
-use Illuminate\Support\Facades\Gate;
+use App\Imap\ImapUser;
+use App\Imap\ImapUserRepository;
+use Closure;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\ServiceProvider;
-
+use Illuminate\Http\Request;
 
 class AuthServiceProvider extends ServiceProvider
 {
+
     /**
      * Register any application services.
      *
@@ -40,8 +44,9 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        // intentionally left empty
     }
+
 
     /**
      * Boot the authentication services for the application.
@@ -50,26 +55,29 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Here you may define how you wish users to be authenticated for your Lumen
-        // application. The callback which receives the incoming request instance
-        // should return either a User instance or null. You're free to obtain
-        // the User instance via an API token or any other method necessary.
+        $this->app['auth']->viaRequest('api', Closure::fromCallable([$this, "getUser"]));
+    }
 
-        $this->app['auth']->viaRequest('api', function ($request) {
 
-            if (!$request->hasHeader('Authorization')) {
-                return null;
-            }
+    /**
+     * Returns the user for the request, if any.
+     *
+     * @param Request $request
+     * @return ImapUser|null
+     *
+     * @throws BindingResolutionException
+     */
+    protected function getUser(Request $request): ?ImapUser
+    {
+        $username = $request->getUser();
+        $password = $request->getPassword();
 
-            $repository = $this->app->make('App\Imap\ImapUserRepository');
+        if (!$username || !$password) {
+            return null;
+        }
 
-            $username = $request->getUser();
-            $password = $request->getPassword();
+        $repository = $this->app->make(ImapUserRepository::class);
 
-            if ($username && $password) {
-                $user = $repository->getUser($username, $password);
-                return $user;
-            }
-        });
+        return $repository->getUser($username, $password);
     }
 }
