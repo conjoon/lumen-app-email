@@ -56,7 +56,7 @@ trait TestTrait
             return $m->getName();
         }, (new ReflectionClass(Authenticatable::class))->getMethods());
 
-        return $this->getMockBuilder("\Illuminate\Contracts\Auth\Authenticatable")
+        return $this->getMockBuilder(Authenticatable::class)
                     ->onlyMethods($methods)
                     ->addMethods($pMethods)
                     ->getMock();
@@ -73,7 +73,7 @@ trait TestTrait
         }, (new ReflectionClass(Authenticatable::class))->getMethods());
         $methods = ["getMailAccount", "getMailAccounts"];
 
-        $userStub = $this->getMockBuilder("\Illuminate\Contracts\Auth\Authenticatable")
+        $userStub = $this->getMockBuilder(Authenticatable::class)
                          ->addMethods($methods)
                          ->onlyMethods($onlyMethods)
                          ->getMock();

@@ -50,6 +50,7 @@ use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 use ReflectionException;
+use Conjoon\Mail\Client\Service\MessageItemService;
 
 /**
  * Class VariousTest
@@ -332,7 +333,7 @@ class VariousTest extends TestCase
         $this->app->request = $request;
 
         $messageItemService = $this->app->build(
-            $property->invokeArgs($this->app, ["Conjoon\Mail\Client\Service\MessageItemService"])
+            $property->invokeArgs($this->app, [MessageItemService::class])
         );
 
         $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
