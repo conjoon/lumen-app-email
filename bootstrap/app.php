@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,9 +25,46 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-(new Laravel\Lumen\Bootstrap\LoadEnvironmentVariables(
+use App\Console\Kernel as ConsoleKernel;
+use App\Exceptions\Handler;
+use App\Imap\DefaultImapUserRepository;
+use App\Imap\ImapUserRepository;
+use App\Providers\AuthServiceProvider;
+use Conjoon\Horde\Mail\Client\Imap\HordeClient;
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
+use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
+use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
+use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Service\AttachmentService;
+use Conjoon\Mail\Client\Service\DefaultAttachmentService;
+use Conjoon\Mail\Client\Service\DefaultMailFolderService;
+use Conjoon\Mail\Client\Service\DefaultMessageItemService;
+use Conjoon\Mail\Client\Service\MailFolderService;
+use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
+use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Text\CharsetConverter;
+use Fruitcake\Cors\CorsServiceProvider;
+use Fruitcake\Cors\HandleCors;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Laravel\Lumen\Bootstrap\LoadEnvironmentVariables;
+
+(new LoadEnvironmentVariables(
     dirname(__DIR__)
 ))->bootstrap();
 
@@ -63,10 +101,10 @@ $app->configure('imapserver');
 
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
-$hordeBodyComposer   = new Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
-$hordeHeaderComposer = new Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+$hordeBodyComposer   = new HordeBodyComposer();
+$hordeHeaderComposer = new HordeHeaderComposer();
 
-$getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
+$getMailClient = function (MailAccount $account) use (&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
 
     $accountId = $account->getId();
 
@@ -75,94 +113,86 @@ $getMailClient = function(Conjoon\Mail\Client\Data\MailAccount $account) use(&$m
     }
 
 
-    $mailClient = new Conjoon\Horde\Mail\Client\Imap\HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
+    $mailClient = new HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };
 
-
 $app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
+    ExceptionHandler::class,
+    Handler::class
 );
 
 $app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
+    Kernel::class,
+    ConsoleKernel::class
 );
 
-$app->singleton('App\Imap\ImapUserRepository', function ($app) {
-    return new App\Imap\DefaultImapUserRepository(config('imapserver'));
+$app->singleton(ImapUserRepository::class, function () {
+    return new DefaultImapUserRepository(config('imapserver'));
 });
 
-$app->singleton('Conjoon\Mail\Client\Service\MailFolderService', function ($app) use($getMailClient) {
+$app->singleton(MailFolderService::class, function ($app) use ($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
-    return new Conjoon\Mail\Client\Service\DefaultMailFolderService(
+    return new DefaultMailFolderService(
         $mailClient,
-        new Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder(
-            new Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper()
+        new DefaultMailFolderTreeBuilder(
+            new DefaultFolderIdToTypeMapper()
         )
     );
 });
 
-
-$app->singleton('Conjoon\Mail\Client\Service\AttachmentService', function ($app) use($getMailClient) {
+$app->singleton(AttachmentService::class, function ($app) use ($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
-    return new Conjoon\Mail\Client\Service\DefaultAttachmentService(
-        $mailClient, new Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor
+    return new DefaultAttachmentService(
+        $mailClient,
+        new InlineDataProcessor()
     );
 });
 
 
-$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer',  function ($app) {
-    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
+$app->singleton(MessageItemDraftJsonTransformer::class, function () {
+    return new DefaultMessageItemDraftJsonTransformer();
 });
 
-$app->singleton('Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer',  function ($app) {
-    return new Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
+$app->singleton(MessageBodyDraftJsonTransformer::class, function () {
+    return new DefaultMessageBodyDraftJsonTransformer();
 });
 
-$app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app) use($getMailClient) {
-    $mailAccountId = null;
+$app->singleton(MessageItemService::class, function ($app) use ($getMailClient) {
 
-    if ($app->request->route('mailAccountId')) {
-        $mailAccountId = $app->request->route('mailAccountId');
-    } else {
-        // mailAccountId not part of the routing url, but request parameters
-        $mailAccountId = $app->request->input('mailAccountId');
-    }
+    // if mailAccountId not part of the routing url, but request parameters, use those
+    $mailAccountId = $app->request->route('mailAccountId') ?? $app->request->input('mailAccountId');
 
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($mailAccountId));
-    $charsetConverter = new Conjoon\Text\CharsetConverter();
+    $charsetConverter = new CharsetConverter();
 
-    $readableMessagePartContentProcessor = new Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor(
+    $readableMessagePartContentProcessor = new ReadableMessagePartContentProcessor(
         $charsetConverter,
-        new Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
-        new Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy
+        new DefaultPlainReadableStrategy(),
+        new PurifiedHtmlStrategy()
     );
 
-    $writableMessagePartContentProcessor = new Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor(
+    $writableMessagePartContentProcessor = new WritableMessagePartContentProcessor(
         $charsetConverter,
-        new Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
-        new Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy
+        new DefaultPlainWritableStrategy(),
+        new DefaultHtmlWritableStrategy()
     );
 
-    $defaultMessageItemFieldsProcessor = new Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor(
+    $defaultMessageItemFieldsProcessor = new DefaultMessageItemFieldsProcessor(
         $charsetConverter
     );
 
-    return new Conjoon\Mail\Client\Service\DefaultMessageItemService(
+    return new DefaultMessageItemService(
         $mailClient,
         $defaultMessageItemFieldsProcessor,
         $readableMessagePartContentProcessor,
         $writableMessagePartContentProcessor,
-        new Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor(
+        new DefaultPreviewTextProcessor(
             $readableMessagePartContentProcessor
         )
     );
 });
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -174,11 +204,9 @@ $app->singleton('Conjoon\Mail\Client\Service\MessageItemService', function ($app
 | route or middleware that'll be assigned to some specific routes.
 |
 */
-$app->register(Fruitcake\Cors\CorsServiceProvider::class);
+$app->register(CorsServiceProvider::class);
 $app->configure('cors');
-$app->middleware([
-    Fruitcake\Cors\HandleCors::class
-]);
+$app->middleware([HandleCors::class]);
 
 $versions = config("app.api.versions");
 $authMiddleware = [];
@@ -199,7 +227,7 @@ $app->routeMiddleware($authMiddleware);
 |
 */
 
-$app->register(App\Providers\AuthServiceProvider::class);
+$app->register(AuthServiceProvider::class);
 
 
 /*
@@ -213,6 +241,6 @@ $app->register(App\Providers\AuthServiceProvider::class);
 |
 */
 
-require __DIR__.'/../routes/web.php';
+require __DIR__ . '/../routes/web.php';
 
 return $app;
