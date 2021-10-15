@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -28,6 +29,7 @@ namespace App\Http\V0\Middleware;
 
 use Closure;
 use Illuminate\Contracts\Auth\Factory as Auth;
+use Illuminate\Http\Request;
 
 class Authenticate
 {
@@ -36,7 +38,7 @@ class Authenticate
      *
      * @var Auth
      */
-    protected $auth;
+    protected Auth $auth;
 
     /**
      * Create a new middleware instance.
@@ -55,12 +57,13 @@ class Authenticate
      * user can access the mailAccountId specified in the request. This will fail if
      * the mailAccountId is not the id of the MailAccount associated with the user.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param Request $request
+     * @param Closure $next
      * @param  string|null  $guard
+     *
      * @return mixed
      */
-    public function handle($request, Closure $next, $guard = null)
+    public function handle(Request $request, Closure $next, $guard = null)
     {
         if ($this->auth->guard($guard)->guest()) {
             return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
@@ -70,13 +73,11 @@ class Authenticate
         // that the currently signed in user can access it
         $mailAccountId = $request->route("mailAccountId");
         if ($mailAccountId) {
-
             $account = $this->auth->user()->getMailAccount($mailAccountId);
 
             if (!$account) {
                 return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
             }
-
         }
 
         return $next($request);

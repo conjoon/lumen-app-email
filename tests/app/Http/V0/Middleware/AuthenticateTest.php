@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,16 +27,15 @@
 
 namespace Tests\App\Http\V0\Middleware;
 
-use App\Http\V0\Middleware\Authenticate,
-    Tests\TestCase,
-    Tests\TestTrait,
-    Illuminate\Auth\AuthManager,
-    Illuminate\Http\Request,
-    Illuminate\Http\JsonResponse;
+use App\Http\V0\Middleware\Authenticate;
+use Illuminate\Auth\AuthManager;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Tests\TestCase;
+use Tests\TestTrait;
 
 class AuthenticateTest extends TestCase
 {
-
     use TestTrait;
 
     /**
@@ -51,9 +51,10 @@ class AuthenticateTest extends TestCase
 
         $stubbedStub = new class {
 
-            public static $ISGUEST = true;
+            public static bool $ISGUEST = true;
 
-            public function guest() {
+            public function guest(): bool
+            {
                 return self::$ISGUEST;
             }
         };
@@ -65,16 +66,16 @@ class AuthenticateTest extends TestCase
 
         // test for is guest
         $stubbedStub::$ISGUEST = true;
-        $response = $authenticate->handle(new Request(), function(){});
+        $response = $authenticate->handle(new Request(), function () {
+        });
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // test for authenticated
         $stubbedStub::$ISGUEST = false;
         $newRequest = new Request();
-        $cmpRequest = null;
         $called = false;
-        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
             $this->assertSame($newRequest, $request);
             $called = true;
         });
@@ -89,17 +90,17 @@ class AuthenticateTest extends TestCase
      *
      * @return void
      */
-    public function testHandle_accountCompare()
+    public function testHandleAccountCompare()
     {
         $authStub = $this->getMockBuilder(AuthManager::class)
             ->disableOriginalConstructor()
             ->getMock();
 
         $stubbedStub = new class {
-            public function guest() {
+            public function guest(): bool
+            {
                 return false;
             }
-
         };
 
         $user = $this->getTestUserStub();
@@ -116,9 +117,10 @@ class AuthenticateTest extends TestCase
 
         // test for authenticated
         $newRequest = new Request();
-        $newRequest->setRouteResolver(function() {
+        $newRequest->setRouteResolver(function () {
             return new class {
-                public function parameter($param) {
+                public function parameter($param): ?string
+                {
                     if ($param === "mailAccountId") {
                         return "TESTFAIL";
                     }
@@ -128,22 +130,24 @@ class AuthenticateTest extends TestCase
         });
 
         // 401
-        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
             $this->assertSame($newRequest, $request);
         });
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // OKAY
-        $newRequest->setRouteResolver(function() use($user) {
-            return new class($user) {
+        $newRequest->setRouteResolver(function () use ($user) {
+            return new class ($user) {
 
                 protected $user;
 
-                public function __construct($user) {
+                public function __construct($user)
+                {
                     $this->user = $user;
                 }
-                public function parameter($param) {
+                public function parameter($param)
+                {
                     if ($param === "mailAccountId") {
                         return $this->user->getMailAccount("someid")->getId();
                     }
@@ -153,13 +157,11 @@ class AuthenticateTest extends TestCase
         });
 
         $called = false;
-        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called){
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
             $this->assertSame($newRequest, $request);
             $called = true;
         });
         $this->assertNull($response);
         $this->assertTrue($called);
-
-
     }
 }
