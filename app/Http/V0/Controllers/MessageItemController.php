@@ -91,12 +91,12 @@ class MessageItemController extends Controller
      * authenticated for the specified $mailAccountId and the specified $mailFolderId.
      *
      * @param Request $request
-     * @param $mailAccountId
-     * @param $mailFolderId
+     * @param string $mailAccountId
+     * @param string $mailFolderId
      *
      * @return JsonResponse
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId): JsonResponse
+    public function index(Request $request, string $mailAccountId, string $mailFolderId): JsonResponse
     {
 
         $user = Auth::user();
@@ -160,14 +160,18 @@ class MessageItemController extends Controller
      * default to "MessageBody" or "MessageItem", a "400 - Bad Request" is returned.
      *
      * @param Request $request
-     * @param $mailAccountId
-     * @param $mailFolderId
-     * @param $messageItemId
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
      *
      * @return JsonResponse
      */
-    public function get(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
-    {
+    public function get(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
 
         $user = Auth::user();
 
@@ -207,10 +211,19 @@ class MessageItemController extends Controller
      * The target parameter must be set to "MessageItem" in order to process
      * the request. Returns a 400 - Bad Request if missing.
      *
+     * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     *
      * @return JsonResponse with status 200 if deleting the message succeeded, otherwise a 500
      */
-    public function delete(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
-    {
+    public function delete(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
 
         $user = Auth::user();
 
@@ -260,14 +273,19 @@ class MessageItemController extends Controller
      * Everything else returns a 405.
      *
      * @param Request $request
-     * @param $mailAccountId
-     * @param $mailFolderId
-     * @param $messageItemId
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
      *
      * @return JsonResponse
      */
-    public function put(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
-    {
+    public function put(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
+
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
