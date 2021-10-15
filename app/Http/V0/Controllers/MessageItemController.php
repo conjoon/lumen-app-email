@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,31 +24,31 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Service\MessageItemService,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer,
-    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
-    Conjoon\Util\ArrayUtil,
-    Auth;
-
+use Auth;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\Flag\DraftFlag;
+use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\SeenFlag;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\Request;
-
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class MessageItemController
  * @package App\Http\Controllers
  */
-class MessageItemController extends Controller {
-
+class MessageItemController extends Controller
+{
 
     /**
      * @type MessageItemService
@@ -73,9 +74,10 @@ class MessageItemController extends Controller {
      * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
      * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
      */
-    public function __construct(MessageItemService $messageItemService,
-                                MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
-                                MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer
+    public function __construct(
+        MessageItemService $messageItemService,
+        MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
+        MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer
     ) {
 
         $this->messageItemService              = $messageItemService;
@@ -88,9 +90,14 @@ class MessageItemController extends Controller {
      * Returns all available MessageItems for the user that is currently
      * authenticated for the specified $mailAccountId and the specified $mailFolderId.
      *
-     * @return ResponseJson
+     * @param Request $request
+     * @param $mailAccountId
+     * @param $mailFolderId
+     *
+     * @return JsonResponse
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId) {
+    public function index(Request $request, $mailAccountId, $mailFolderId): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -112,8 +119,8 @@ class MessageItemController extends Controller {
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
 
-        $excludeFields = $request->input("excludeFields") ? explode(",",$request->input("excludeFields")) : [];
-        $messageItemIds = $request->input("messageItemIds") ? explode(",",$request->input("messageItemIds")) : null;
+        $excludeFields = $request->input("excludeFields") ? explode(",", $request->input("excludeFields")) : [];
+        $messageItemIds = $request->input("messageItemIds") ? explode(",", $request->input("messageItemIds")) : null;
 
         if ($messageItemIds !== null) {
             $options = [
@@ -121,7 +128,6 @@ class MessageItemController extends Controller {
                 "sort"  => $sort,
                 "preview" => !in_array("previewText", $excludeFields, true)
             ];
-
         } else {
             $options = [
                 "start" => $start,
@@ -145,7 +151,6 @@ class MessageItemController extends Controller {
             "total" => $messageItemService->getTotalMessageCount($folderKey),
             "data" => $json
         ]);
-
     }
 
 
@@ -154,9 +159,15 @@ class MessageItemController extends Controller {
      * The entity to return is specified in the parameter "target". If that is missing or does not
      * default to "MessageBody" or "MessageItem", a "400 - Bad Request" is returned.
      *
-     * @return ResponseJson
+     * @param Request $request
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $messageItemId
+     *
+     * @return JsonResponse
      */
-    public function get(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+    public function get(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -172,23 +183,22 @@ class MessageItemController extends Controller {
 
         if ($target === "MessageBody") {
             $item = $messageItemService->getMessageBody($messageKey);
-        } else if ($target === "MessageItem") {
+        } elseif ($target === "MessageItem") {
             $item = $messageItemService->getMessageItem($messageKey);
-        } else if ($target === "MessageDraft") {
+        } elseif ($target === "MessageDraft") {
             $item = $messageItemService->getMessageItemDraft($messageKey);
         } else {
             return response()->json([
                 "success" => false,
-                "msg" =>  "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
+                "msg" => "\"target\" must be specified with either \"MessageBody\", " .
+                         "\"MessageItem\" or \"MessageDraft\"."
             ], 400);
-
         }
 
         return response()->json([
             "success" => true,
             "data" => $item->toJson()
         ]);
-
     }
 
 
@@ -197,9 +207,10 @@ class MessageItemController extends Controller {
      * The target parameter must be set to "MessageItem" in order to process
      * the request. Returns a 400 - Bad Request if missing.
      *
-     * @return ResponseJson with status 200 if deleting the message succeeded, otherwise a 500
+     * @return JsonResponse with status 200 if deleting the message succeeded, otherwise a 500
      */
-    public function delete(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+    public function delete(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -220,13 +231,11 @@ class MessageItemController extends Controller {
                 "success" => false,
                 "msg" =>  "\"target\" must be specified with \"MessageItem\"."
             ], 400);
-
         }
 
         return response()->json([
             "success" => $result
         ], $result ? 200 : 500);
-
     }
 
 
@@ -250,10 +259,15 @@ class MessageItemController extends Controller {
      *
      * Everything else returns a 405.
      *
-     * @return ResponseJson
+     * @param Request $request
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $messageItemId
+     *
+     * @return JsonResponse
      */
-    public function put(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
-
+    public function put(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    {
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
@@ -266,8 +280,6 @@ class MessageItemController extends Controller {
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         switch ($target) {
-
-
             case "MessageBodyDraft":
                 $keys = [
                     "mailAccountId", "mailFolderId", "id", "textHtml", "textPlain"
@@ -284,11 +296,9 @@ class MessageItemController extends Controller {
                     $resp["msg"] = "Updating the MessageBodyDraft failed.";
                 }
                 return response()->json($resp, 200);
-                break;
 
 
             case "MessageDraft":
-
                 $isCreate = $request->input("origin") === "create";
 
                 $keys = [
@@ -315,17 +325,12 @@ class MessageItemController extends Controller {
                     } else {
                         $resp["data"] = ArrayUtil::intersect($json, array_keys($data));
                     }
-
                 } else {
                     $resp["msg"] = "Updating the MessageDraft failed.";
                 }
                 return response()->json($resp, 200);
 
-                break;
-
             case "MessageItem":
-
-                $flagResult = null;
                 $response   = [];
 
                 $action = $request->input("action");
@@ -394,7 +399,8 @@ class MessageItemController extends Controller {
 
                 // if we are here, we require to move messages
                 $newMessageKey = $messageItemService->moveMessage(
-                    $messageKey, new FolderKey($mailAccountId, $newMailFolderId)
+                    $messageKey,
+                    new FolderKey($mailAccountId, $newMailFolderId)
                 );
 
                 if ($newMessageKey) {
@@ -411,17 +417,13 @@ class MessageItemController extends Controller {
                     ], 500);
                 }
 
-
-                break;
-
             default:
                 return response()->json([
                     "success" => false,
-                    "msg" =>  "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
+                    "msg" => "\"target\" must be specified with \"MessageDraft\", " .
+                             "\"MessageItem\" or \"MessageBodyDraft\"."
                 ], 400);
-                break;
         }
-
     }
 
 
@@ -433,10 +435,10 @@ class MessageItemController extends Controller {
      * @param string $mailAccountId
      * @param string $mailFolderId
      *
-     * @return ResponseJson
+     * @return JsonResponse
      */
-    public function post(Request $request, $mailAccountId, $mailFolderId) {
-
+    public function post(Request $request, string $mailAccountId, string $mailFolderId): JsonResponse
+    {
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
@@ -472,7 +474,6 @@ class MessageItemController extends Controller {
             "success" => !!$createdMessageBodyDraft ,
             "data"    => $createdMessageBodyDraft->toJson()
         ], 200);
-
     }
 
 
@@ -480,10 +481,12 @@ class MessageItemController extends Controller {
      * Sends the Draft identified by the POST-parameters "mailAccountId",
      * "mailFolderId" and "id".
      *
-     * @return ResponseJson
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
-    public function sendMessageDraft(Request $request) {
-
+    public function sendMessageDraft(Request $request): JsonResponse
+    {
         $user = Auth::user();
 
         $keys = ["mailAccountId", "mailFolderId", "id"];
@@ -507,7 +510,5 @@ class MessageItemController extends Controller {
         return response()->json([
             "success" => true
         ], 200);
-
     }
-
 }
