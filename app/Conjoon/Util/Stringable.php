@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
@@ -31,7 +33,8 @@ namespace Conjoon\Util;
  * Interface Stringable
  * @package Conjoon\Util
  */
-interface Stringable {
+interface Stringable
+{
 
 
     /**
@@ -39,7 +42,5 @@ interface Stringable {
      *
      * @return string
      */
-    public function toString() :string;
-
-
+    public function toString(): string;
 }

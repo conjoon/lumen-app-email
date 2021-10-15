@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
@@ -31,14 +33,13 @@ namespace Conjoon\Util;
  * Interface Modifiable
  * @package Conjoon\Util
  */
-interface Modifiable {
+interface Modifiable
+{
 
     /**
      * Returns all field names that have been tracked as modified.
      *
-     * @return this
+     * @return array
      */
-    public function getModifiedFields() :array;
-
-
+    public function getModifiedFields(): array;
 }

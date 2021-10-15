@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
@@ -31,7 +33,8 @@ namespace Conjoon\Util;
  * Interface JsonDecodable
  * @package Conjoon\Util
  */
-interface JsonDecodable extends Jsonable {
+interface JsonDecodable extends Jsonable
+{
 
 
     /**
@@ -42,7 +45,5 @@ interface JsonDecodable extends Jsonable {
      *
      * @return Jsonable returns null if the passed string could not be json-decoded
      */
-    public static function fromJsonString(string $value) :?Jsonable;
-
-
+    public static function fromJsonString(string $value): ?Jsonable;
 }
