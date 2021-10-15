@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,27 +24,29 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Auth,
-    Illuminate\Http\Request;
-
+use Auth;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Service\AttachmentService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Class AttachmentController
  * @package App\Http\Controllers
  */
-class AttachmentController extends Controller {
+class AttachmentController extends Controller
+{
 
 
     /**
      * @var attachmentService
      */
-    protected $attachmentService;
+    protected AttachmentService $attachmentService;
 
 
     /**
@@ -51,10 +54,10 @@ class AttachmentController extends Controller {
      *
      * @param AttachmentService $attachmentService
      */
-    public function __construct(AttachmentService $attachmentService) {
+    public function __construct(AttachmentService $attachmentService)
+    {
 
         $this->attachmentService = $attachmentService;
-
     }
 
 
@@ -63,9 +66,15 @@ class AttachmentController extends Controller {
      * $mailFolderId,
      * and the specified $messageItemId
      *
-     * @return ResponseJson
+     * @param Request $request
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $messageItemId
+     *
+     * @return JsonResponse
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId) {
+    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    {
 
         $user = Auth::user();
 
@@ -77,8 +86,5 @@ class AttachmentController extends Controller {
             "success" => true,
             "data"    => $attachmentService->getFileAttachmentItemList($key)->toJson()
         ]);
-
     }
-
-
 }

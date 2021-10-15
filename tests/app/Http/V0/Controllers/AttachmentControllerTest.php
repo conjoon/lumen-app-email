@@ -44,7 +44,6 @@ class AttachmentControllerTest extends TestCase
 {
     use TestTrait;
 
-
     /**
      * Tests index() to make sure method returns list of available Attachments
      * for the specified keys.
