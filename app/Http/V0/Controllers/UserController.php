@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,14 +24,14 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
 use Illuminate\Http\Request;
-
 use App\Imap\ImapUserRepository;
-
+use Illuminate\Http\JsonResponse;
 
 /**
  * Class UserController
@@ -42,7 +43,7 @@ class UserController extends Controller
     /**
      * @var ImapUserRepository
      */
-    protected $repository;
+    protected ImapUserRepository $repository;
 
 
     /**
@@ -50,7 +51,8 @@ class UserController extends Controller
      *
      * @param ImapUserRepository $repository
      */
-    public function __construct(ImapUserRepository $repository) {
+    public function __construct(ImapUserRepository $repository)
+    {
 
         $this->repository = $repository;
     }
@@ -58,8 +60,11 @@ class UserController extends Controller
     /**
      * Action for validating a set of username/password against this ImapUserRepository.
      *
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
-    public function authenticate(Request $request)
+    public function authenticate(Request $request): JsonResponse
     {
         $username = (string)$request->input("username");
         $password = (string)$request->input("password");
@@ -75,5 +80,4 @@ class UserController extends Controller
 
         return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
     }
-
 }
