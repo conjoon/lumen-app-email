@@ -84,7 +84,7 @@ trait ModifiableTrait
      *
      * @return $this the implementing class instance
      */
-    protected function suspendModifiable()
+    protected function suspendModifiable(): self
     {
         $this->suspendModifiable = true;
 
@@ -97,7 +97,7 @@ trait ModifiableTrait
      *
      * @return $this the implementing class instance
      */
-    protected function resumeModifiable()
+    protected function resumeModifiable(): self
     {
         $this->suspendModifiable = false;
 
@@ -112,7 +112,7 @@ trait ModifiableTrait
      *
      * @return $this the implementing class instance
      */
-    protected function addModified(string $fieldName)
+    protected function addModified(string $fieldName): self
     {
         if ($this->suspendModifiable === true) {
             return $this;
