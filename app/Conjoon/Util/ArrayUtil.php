@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,29 +24,37 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
-
 
 /**
  * Class ArrayUtil
  *
  * @package Conjoon\Util
  */
-class ArrayUtil {
+class ArrayUtil
+{
 
     /**
      * Returns an array that contains only the keys specified in $keys
+     *
+     * @example
+     *   $data = [
+     *     "foo" => "bar", "bar" => "snafu", 3 => 4
+     *  ];
+     *  $keys = ["foo", "bar"];
+     *
+     *  ArrayUtil::intersect($data, $keys)); // returns ["foo" => "bar", "bar" => "snafu"]
      *
      * @param array $data
      * @param array $keys
      *
      * @return array
      */
-    public static function intersect(array $data, array $keys) :array {
-        return array_intersect_key($data, array_flip((array) $keys));
+    public static function intersect(array $data, array $keys): array
+    {
+        return array_intersect_key($data, array_flip($keys));
     }
-
-
 }

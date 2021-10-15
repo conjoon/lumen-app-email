@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,13 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\Conjoon\Util;
+
 use Conjoon\Util\ArrayUtil;
+use Tests\TestCase;
 
-
-class ArrayUtilTest extends TestCase {
+class ArrayUtilTest extends TestCase
+{
 
 
 // ---------------------
@@ -37,7 +41,8 @@ class ArrayUtilTest extends TestCase {
     /**
      * Tests intersect()
      */
-    public function testIntersect() {
+    public function testIntersect()
+    {
 
         $data = [
             1, 2, 3, 4
@@ -46,8 +51,22 @@ class ArrayUtilTest extends TestCase {
         $keys = [1, 3];
 
         $this->assertEquals([1 => 2, 3 => 4], ArrayUtil::intersect($data, $keys));
+
+        $data = [
+            "foo" => "bar", "bar" => "snafu", 3 => 4
+        ];
+
+        $keys = ["foo", "bar"];
+
+        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::intersect($data, $keys));
+
+
+        $data = [
+            "foo" => "bar", "bar" => "snafu", 3 => 4
+        ];
+
+        $keys = ["foo", "bar"];
+
+        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::intersect($data, $keys));
     }
-
-
-
 }
