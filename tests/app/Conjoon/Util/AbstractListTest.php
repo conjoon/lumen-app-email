@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,8 +25,15 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList;
+namespace Tests\Conjoon\Util;
 
+use ArrayAccess;
+use Conjoon\Util\AbstractList;
+use Countable;
+use Iterator;
+use stdClass;
+use Tests\TestCase;
+use TypeError;
 
 class AbstractListTest extends TestCase
 {
@@ -38,22 +46,24 @@ class AbstractListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $abstractList = $this->getMockForAbstractList();
-        $this->assertSame(\stdClass::class, $abstractList->getEntityType());
-        $this->assertInstanceOf(\Countable::class, $abstractList);
-        $this->assertInstanceOf(\ArrayAccess::class, $abstractList);
-        $this->assertInstanceOf(\Iterator::class, $abstractList);
+        $this->assertSame(stdClass::class, $abstractList->getEntityType());
+        $this->assertInstanceOf(Countable::class, $abstractList);
+        $this->assertInstanceOf(ArrayAccess::class, $abstractList);
+        $this->assertInstanceOf(Iterator::class, $abstractList);
     }
 
 
     /**
      * Tests ArrayAccess /w type exception
      */
-    public function testArrayAccessException() {
+    public function testArrayAccessException()
+    {
 
-        $this->expectException(\TypeError::class);
+        $this->expectException(TypeError::class);
 
         $abstractList = $this->getMockForAbstractList();
         $abstractList[] = "foo";
@@ -63,13 +73,14 @@ class AbstractListTest extends TestCase
     /**
      * Tests ArrayAccess
      */
-    public function testArrayAccessAndCountable() {
+    public function testArrayAccessAndCountable()
+    {
 
         $abstractList = $this->getMockForAbstractList();
 
         $cmpList = [
-            new \stdClass,
-            new \stdClass
+            new stdClass(),
+            new stdClass()
         ];
 
         $abstractList[] = $cmpList[0];
@@ -80,7 +91,6 @@ class AbstractListTest extends TestCase
         foreach ($abstractList as $key => $item) {
             $this->assertSame($cmpList[$key], $item);
         }
-
     }
 
 
@@ -88,16 +98,14 @@ class AbstractListTest extends TestCase
 //    Helper Functions
 // ---------------------
 
-    protected function getMockForAbstractList() {
+    protected function getMockForAbstractList()
+    {
 
         $mock = $this->getMockForAbstractClass(AbstractList::class);
         $mock->expects($this->any())
              ->method("getEntityType")
-             ->will($this->returnValue(\stdClass::class));
+             ->will($this->returnValue(stdClass::class));
 
         return $mock;
     }
-
-
-
 }

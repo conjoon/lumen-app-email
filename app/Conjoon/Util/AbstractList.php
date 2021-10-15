@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,28 +24,37 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
 
+use ArrayAccess;
+use Countable;
+use Iterator;
+use TypeError;
 
 /**
- * Class AbstractList
+ * Class AbstractList.
+ * Type-safe approach for maintaining lists holding element of a specific data type.
+ *
+ * 
  * @package Conjoon\Util
  */
-abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
+abstract class AbstractList implements ArrayAccess, Iterator, Countable
+{
 
 
     /**
      * @var array
      */
-    protected $data = [];
+    protected array $data = [];
 
     /**
      * \Iterator Interface
      * @var int
      */
-    protected $position = 0;
+    protected int $position = 0;
 
 
     /**
@@ -53,7 +63,7 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
      *
      * @return string
      */
-    abstract public function getEntityType() :string;
+    abstract public function getEntityType(): string;
 
 
 // -------------------------
@@ -63,15 +73,16 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      *
-     * @throws \TypeException if $value is not of the type MessageItem
+     * @throws TypeError if $value is not of the type MessageItem
      */
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value)
+    {
 
         $entityType = $this->getEntityType();
 
         if (!$value instanceof $entityType) {
-            throw new \TypeError(
-                "Expected type \"".$entityType."\" for value-argument"
+            throw new TypeError(
+                "Expected type \"" . $entityType . "\" for value-argument"
             );
         }
 
@@ -87,7 +98,8 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      */
-    public function offsetExists($offset) {
+    public function offsetExists($offset): bool
+    {
         return isset($this->data[$offset]);
     }
 
@@ -95,7 +107,8 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      */
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset)
+    {
         unset($this->data[$offset]);
     }
 
@@ -103,8 +116,9 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      */
-    public function offsetGet($offset) {
-        return isset($this->data[$offset]) ? $this->data[$offset] : null;
+    public function offsetGet($offset)
+    {
+        return $this->data[$offset] ?? null;
     }
 
 
@@ -115,7 +129,8 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      */
-    public function rewind() {
+    public function rewind()
+    {
 
         $this->position = 0;
     }
@@ -123,28 +138,32 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @inheritdoc
      */
-    public function key() {
+    public function key()
+    {
         return $this->position;
     }
 
     /**
      * @inheritdoc
      */
-    public function current() {
+    public function current()
+    {
         return $this->data[$this->position];
     }
 
     /**
      * @inheritdoc
      */
-    public function next() {
+    public function next()
+    {
         $this->position++;
     }
 
     /**
      * @inheritdoc
      */
-    public function valid() {
+    public function valid(): bool
+    {
         return isset($this->data[$this->position]);
     }
 
@@ -155,8 +174,8 @@ abstract class AbstractList implements \ArrayAccess, \Iterator, \Countable {
     /**
      * @return int|void
      */
-    public function count() {
+    public function count()
+    {
         return count($this->data);
     }
-
 }
