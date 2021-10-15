@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,34 +24,68 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Util;
 
 /**
- * Trait ModifiableTrait
+ * Trait ModifiableTrait.
+ * Allows for keeping track of modified fields in implementing classes.
+ *
+ * @example
+ *
+ *   class User
+ *   {
+ *      use ModifiableTrait;
+ *
+ *      // Use suspend-/ resumeModifiable when the trait should not be updated
+ *      // with updated fields
+ *      // modified fields should only be tracked once the instance was fully
+ *      // configured
+ *      public function __construct($username)
+ *     {
+ *          $this->suspendModifiable();
+ *          $this->setUsername($username);
+ *          $this->resumeModifiable();
+ *      }
+ *
+ *      public function setUsername(string $username): User
+ *      {
+ *          $this->addModified("userName");
+ *          $this->userName = $username;
+ *
+ *          return $this;
+ *      }
+ *   }
+ *
+ *   $user = new User();
+ *   $user->setUsername("admin"); // ;)
+ *   $user->getModifiedFields();  // ["userName"]
  *
  * @package Conjoon\Util
  */
-trait ModifiableTrait  {
+trait ModifiableTrait
+{
 
     /**
      * @var array
      */
-    protected $modifiedFields = [];
+    protected array $modifiedFields = [];
 
     /**
      * @var bool
      */
-    protected $suspendModifiable = false;
+    protected bool $suspendModifiable = false;
 
 
     /**
      * Suspends marking fields as modified.
      *
-     * @return self
+     * @return $this the implementing class instance
      */
-    protected function suspendModifiable() {
+    protected function suspendModifiable()
+    {
         $this->suspendModifiable = true;
 
         return $this;
@@ -60,9 +95,10 @@ trait ModifiableTrait  {
     /**
      * Resumes marking fields as modified.
      *
-     * @return self
+     * @return $this the implementing class instance
      */
-    protected function resumeModifiable() {
+    protected function resumeModifiable()
+    {
         $this->suspendModifiable = false;
 
         return $this;
@@ -70,24 +106,30 @@ trait ModifiableTrait  {
 
 
     /**
-     * @param $fieldName
+     * Add a field to the list of modified fields.
+     *
+     * @param string $fieldName
+     *
+     * @return $this the implementing class instance
      */
-    protected function addModified($fieldName) {
+    protected function addModified(string $fieldName)
+    {
         if ($this->suspendModifiable === true) {
-            return;
+            return $this;
         }
         $this->modifiedFields[$fieldName] = true;
+
+        return $this;
     }
 
 
     /**
      * Returns an array of all modified fields .
      *
-     * @return this
+     * @return array
      */
-    public function getModifiedFields() :array {
+    public function getModifiedFields(): array
+    {
         return array_keys($this->modifiedFields);
     }
-
-
 }

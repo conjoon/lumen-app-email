@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,13 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\Conjoon\Util;
+
 use Conjoon\Util\ModifiableTrait;
+use Tests\TestCase;
 
-
-class ModifiableTraitTest extends TestCase {
+class ModifiableTraitTest extends TestCase
+{
 
 
 // ---------------------
@@ -37,18 +41,19 @@ class ModifiableTraitTest extends TestCase {
     /**
      * Tests instance
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $trait = $this->getMockedTrait();
 
         $this->assertSame([], $trait->getModifiedFields());
 
-        $trait->suspendModifiableProxy();
-        $trait->setField();
+        $this->assertSame($trait, $trait->suspendModifiableProxy());
+        $this->assertSame($trait, $trait->setField("foo"));
         $this->assertSame([], $trait->getModifiedFields());
-        $trait->resumeModifiableProxy();
+        $this->assertSame($trait, $trait->resumeModifiableProxy());
 
-        $trait->setField();
+        $this->assertSame($trait, $trait->setField());
 
         $this->assertSame(["field"], $trait->getModifiedFields());
     }
@@ -59,30 +64,28 @@ class ModifiableTraitTest extends TestCase {
 // ---------------------
 
     /**
-     * @return  anonymous anonymous class implementing trait
+     * @return __anonymous(class)
      */
-    protected function getMockedTrait() {
+    protected function getMockedTrait()
+    {
 
-        return new class() {
-
+        return new class () {
             use ModifiableTrait;
 
-            public function suspendModifiableProxy() {
-                $this->suspendModifiable();
+            public function suspendModifiableProxy()
+            {
+                return $this->suspendModifiable();
             }
 
-            public function resumeModifiableProxy() {
-                $this->resumeModifiable();
+            public function resumeModifiableProxy()
+            {
+                return $this->resumeModifiable();
             }
 
-            public function setField() {
-                $this->addModified("field");
+            public function setField()
+            {
+                return $this->addModified("field");
             }
-
         };
-
     }
-
-
-
 }
