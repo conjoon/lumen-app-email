@@ -30,12 +30,11 @@ declare(strict_types=1);
 namespace Tests;
 
 use Closure;
-use ReflectionClass;
-use Illuminate\Http\Request;
-use App\Imap\DefaultImapUserRepository;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -45,12 +44,19 @@ use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Service\AttachmentService;
 use Conjoon\Mail\Client\Service\DefaultAttachmentService;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
-use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use ReflectionException;
+use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\Request;
+use ReflectionClass;
+use ReflectionException;
 
 /**
  * Class VariousTest
@@ -144,6 +150,11 @@ class VariousTest extends TestCase
     }
 
 
+    /**
+     *
+     * @throws ReflectionException
+     * @throws BindingResolutionException
+     */
     public function testConcretes()
     {
 
@@ -151,7 +162,7 @@ class VariousTest extends TestCase
         $userStub->method("getMailAccount")
             ->with(null)
             ->willReturn($this->getTestMailAccount("dev_sys_conjoon_org"));
-        $this->app->auth->setUser($userStub);
+        $this->app["auth"]->setUser($userStub);
 
         config(["imapserver" => ["mock" => "default"]]);
         $reflection = new ReflectionClass($this->app);
@@ -160,15 +171,15 @@ class VariousTest extends TestCase
 
 
         $this->assertInstanceOf(
-            DefaultImapUserRepository::class,
-            $this->app->build($property->invokeArgs($this->app, ["App\Imap\ImapUserRepository"]))
+            DefaultImapUserProvider::class,
+            $this->app->build($property->invokeArgs($this->app, [ImapUserProvider::class]))
         );
 
         $this->assertInstanceOf(
             DefaultMessageItemDraftJsonTransformer::class,
             $this->app->build($property->invokeArgs(
                 $this->app,
-                ["Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer"]
+                [MessageItemDraftJsonTransformer::class]
             ))
         );
 
@@ -176,13 +187,13 @@ class VariousTest extends TestCase
             DefaultMessageBodyDraftJsonTransformer::class,
             $this->app->build($property->invokeArgs(
                 $this->app,
-                ["Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer"]
+                [MessageBodyDraftJsonTransformer::class]
             ))
         );
 
         $attachmentService = $this->app->build($property->invokeArgs(
             $this->app,
-            ["Conjoon\Mail\Client\Service\AttachmentService"]
+            [AttachmentService::class]
         ));
         $attachmentServiceMailClient = $attachmentService->getMailClient();
         $this->assertInstanceOf(
@@ -196,7 +207,7 @@ class VariousTest extends TestCase
 
         $mailFolderService = $this->app->build($property->invokeArgs(
             $this->app,
-            ["Conjoon\Mail\Client\Service\MailFolderService"]
+            [MailFolderService::class]
         ));
         $mailFolderServiceMailClient = $mailFolderService->getMailClient();
         $mailFolderTreeBuilder = $mailFolderService->getMailFolderTreeBuilder();
@@ -214,7 +225,7 @@ class VariousTest extends TestCase
 
         $messageItemService = $this->app->build($property->invokeArgs(
             $this->app,
-            ["Conjoon\Mail\Client\Service\MessageItemService"]
+            [MessageItemService::class]
         ));
         $this->assertInstanceOf(
             DefaultMessageItemService::class,
@@ -258,6 +269,9 @@ class VariousTest extends TestCase
     /**
      * Test to retrieve the MessageItemService with configured MailAccount
      * retrieved from input
+     *
+     * @throws ReflectionException
+     * @throws BindingResolutionException
      */
     public function testMessageItemServiceInput()
     {
@@ -268,7 +282,7 @@ class VariousTest extends TestCase
         $userStub->method("getMailAccount")
             ->with($cmpId)
             ->willReturn(new MailAccount(["id" => $cmpId]));
-        $this->app->auth->setUser($userStub);
+        $this->app["auth"]->setUser($userStub);
 
 
         $reflection = new ReflectionClass($this->app);
@@ -277,10 +291,10 @@ class VariousTest extends TestCase
 
         $request = new Request();
         $request["mailAccountId"] = $cmpId;
-        $this->app->request = $request;
+        $this->app["request"] = $request;
 
         $messageItemService = $this->app->build(
-            $property->invokeArgs($this->app, ["Conjoon\Mail\Client\Service\MessageItemService"])
+            $property->invokeArgs($this->app, [MessageItemService::class])
         );
 
         $this->assertSame($messageItemService->getMailClient()->getMailAccount($cmpId)->getId(), $cmpId);
@@ -291,6 +305,10 @@ class VariousTest extends TestCase
      * Test to retrieve the MessageItemService with configured MailAccount
      * retrieved from route; route params should be given precedence to
      * input params
+     *
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     *
      */
     public function testMessageItemServiceRoute()
     {
@@ -301,7 +319,7 @@ class VariousTest extends TestCase
         $userStub->method("getMailAccount")
             ->with($cmpId)
             ->willReturn(new MailAccount(["id" => $cmpId]));
-        $this->app->auth->setUser($userStub);
+        $this->app["auth"]->setUser($userStub);
 
 
         $reflection = new ReflectionClass($this->app);
@@ -315,11 +333,13 @@ class VariousTest extends TestCase
         $request->setRouteResolver(function () use ($cmpId) {
             return new class ($cmpId) {
 
+                protected string $cmpId;
+
                 public function __construct($cmpId)
                 {
                     $this->cmpId = $cmpId;
                 }
-                public function parameter($param)
+                public function parameter($param): ?string
                 {
                     if ($param === "mailAccountId") {
                         return $this->cmpId;
@@ -330,7 +350,7 @@ class VariousTest extends TestCase
             };
         });
 
-        $this->app->request = $request;
+        $this->app["request"] = $request;
 
         $messageItemService = $this->app->build(
             $property->invokeArgs($this->app, [MessageItemService::class])
