@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,10 +24,12 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
+use BadMethodCallException;
 
 /**
  * Class MailAccount models account information for a mail server.
@@ -59,103 +62,120 @@ namespace Conjoon\Mail\Client\Data;
  * The property "root" allows for specifying a root mailbox and defaults to "INBOX".
  *
  * @package Conjoon\Mail\Client\Data
+ *
+ * @method string getName()
+ * @method array getFrom()
+ * @method array getReplyTo()
+ * @method string getInboxUser()
+ * @method string getInboxPassword()
+ * @method string getOutboxUser()
+ * @method string getOutboxPassword()
+ * @method string getId()
+ * @method string getInboxAddress()
+ * @method string getInboxType()
+ * @method int getInboxPort()
+ * @method bool getInboxSsl()
+ * @method string getOutboxAddress()
+ * @method int getOutboxPort()
+ * @method bool getOutboxSsl()
+ * @method array getRoot()
+ *
+ * @noinspection SpellCheckingInspection
  */
-class MailAccount  {
-
+class MailAccount
+{
 
     /**
-     * @var
+     * @var string
      */
-    protected $id;
+    protected string $id;
 
     /**
      * @var string clear text name
      */
-    protected $name;
+    protected string $name;
 
     /**
      * @var array name, address
      */
-    protected $from;
+    protected array $from;
 
     /**
      * @var array name, address
      */
-    protected $replyTo;
+    protected array $replyTo;
 
     /**
      * @var string
      */
-    protected $inbox_type = 'IMAP';
+    protected string $inbox_type = 'IMAP';
 
     /**
      * @var string
      */
-    protected $inbox_address;
+    protected string $inbox_address;
 
     /**
      * @var int
      */
-    protected $inbox_port;
+    protected int $inbox_port;
 
     /**
      * @var string
      */
-    protected $inbox_user;
+    protected string $inbox_user;
 
     /**
      * @var string
      */
-    protected $inbox_password;
+    protected string $inbox_password;
 
     /**
      * @var boolean
      */
-    protected $inbox_ssl;
+    protected bool $inbox_ssl;
 
     /**
      * @var string
      */
-    protected $outbox_address;
+    protected string $outbox_address;
 
     /**
      * @var int
      */
-    protected $outbox_port;
+    protected int $outbox_port;
 
     /**
      * @var string
      */
-    protected $outbox_user;
+    protected string $outbox_user;
 
     /**
      * @var string
      */
-    protected $outbox_password;
+    protected string $outbox_password;
 
     /**
      * @var boolean
      */
-    protected $outbox_ssl;
+    protected bool $outbox_ssl;
 
     /**
      * @var array
      */
-    protected $root = ["INBOX"];
+    protected array $root = ["INBOX"];
 
     /**
      * MailAccount constructor.
      *
      * @param array $config
      */
-    public function __construct(array $config) {
-
-
+    public function __construct(array $config)
+    {
         foreach ($config as $key => $value) {
             if (property_exists($this, $key)) {
                 $this->{$key} = $value;
             }
-
         }
     }
 
@@ -170,12 +190,12 @@ class MailAccount  {
      *
      * @return mixed
      *
-     * @throws \BadMethodCallException if a method is called for which no property exists
+     * @throws BadMethodCallException if a method is called for which no property exists
      */
-    public function __call($method, $arguments) {
+    public function __call(string $method, $arguments)
+    {
 
         if (strpos($method, 'get') === 0) {
-
             if ($method !== 'getReplyTo') {
                 $method = substr($method, 3);
                 $property = strtolower(preg_replace('/([a-z])([A-Z])/', "$1_$2", $method));
@@ -189,16 +209,17 @@ class MailAccount  {
         }
 
 
-        throw new \BadMethodCallException("no method \"".$method."\" found.");
+        throw new BadMethodCallException("no method named \"$method\" found.");
     }
 
 
     /**
      * Returns an Array representation of this instance.
      *
-     * @inheritdoc
+     * @return array
      */
-    public function toArray() :array {
+    public function toArray(): array
+    {
         return [
             "id"              => $this->getId(),
             "name"            => $this->getName(),
@@ -218,5 +239,4 @@ class MailAccount  {
             "root"            => $this->getRoot()
         ];
     }
-
 }

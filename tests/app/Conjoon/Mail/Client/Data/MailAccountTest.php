@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,32 +25,43 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Tests\TestCase,
-    Conjoon\Mail\Client\Data\MailAccount;
 
+namespace Tests\Conjoon\Mail\Client\Data;
 
+use BadMethodCallException;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
+
+/**
+ * Class MailAccountTest
+ * @package Tests\Conjoon\Mail\Client\Data
+ */
 class MailAccountTest extends TestCase
 {
 
-    protected $accountConfig = [
+    protected array $accountConfig = [
         "id"               => "dev_sys_conjoon_org",
         "name"            => "conjoon developer",
         "from"            => ["name" => "John Smith", "address" => "dev@conjoon.org"],
         "replyTo"         => ["name" => "John Smith", "address" => "dev@conjoon.org"],
         "inbox_type"      => "IMAP",
-        "inbox_address"   => "sfsffs.ffssf.sffs",
+        "inbox_address"   => "some.address.server",
         "inbox_port"      => 993,
-        "inbox_user"      => "inboxuser",
-        "inbox_password"  => "inboxpassword",
+        "inbox_user"      => "user inbox",
+        "inbox_password"  => "password",
         "inbox_ssl"       => true,
-        "outbox_address"  => "sfsffs.ffssf.sffs",
+        "outbox_address"  => "some.outbox.server",
         "outbox_port"     => 993,
-        "outbox_user"     => "outboxuser",
-        "outbox_password" => "outboxpassword",
+        "outbox_user"     => "user",
+        "outbox_password" => "password outbox",
         "outbox_ssl"      => true,
         "root"            => ["[Gmail]"]
     ];
 
+
+    /**
+     * magic methods
+     */
     public function testGetter()
     {
         $config = $this->accountConfig;
@@ -65,8 +77,6 @@ class MailAccountTest extends TestCase
         $account = new MailAccount($config);
 
         foreach ($config as $property => $value) {
-
-
             if ($property === "from" || $property === "replyTo") {
                 $method = $property == "from" ? "getFrom" : "getReplyTo";
             } else {
@@ -80,18 +90,28 @@ class MailAccountTest extends TestCase
     }
 
 
-    public function testGetterException() {
+    /**
+     * not existing method
+     *
+     * @noinspection PhpUndefinedMethodInspection
+     */
+    public function testGetterException()
+    {
 
         $config = $this->accountConfig;
         $account = new MailAccount($config);
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
 
         $account->getSomeFoo();
     }
 
 
-    public function testToArray() {
+    /**
+     * toArray()
+     */
+    public function testToArray()
+    {
 
         $config = $this->accountConfig;
 
@@ -99,5 +119,4 @@ class MailAccountTest extends TestCase
 
         $this->assertSame($config, $account->toArray());
     }
-
 }
