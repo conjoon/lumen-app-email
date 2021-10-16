@@ -27,41 +27,9 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Console\Kernel as ConsoleKernel;
-use App\Exceptions\Handler;
-use App\Imap\DefaultImapUserRepository;
-use App\Imap\ImapUserRepository;
-use App\Providers\AuthServiceProvider;
-use Conjoon\Horde\Mail\Client\Imap\HordeClient;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
-use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
-use Conjoon\Mail\Client\Data\MailAccount;
-use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
-use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
-use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
-use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
-use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
-use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
-use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Service\AttachmentService;
-use Conjoon\Mail\Client\Service\DefaultAttachmentService;
-use Conjoon\Mail\Client\Service\DefaultMailFolderService;
-use Conjoon\Mail\Client\Service\DefaultMessageItemService;
-use Conjoon\Mail\Client\Service\MailFolderService;
-use Conjoon\Mail\Client\Service\MessageItemService;
-use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
-use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
-use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use Conjoon\Text\CharsetConverter;
+use App\Providers\ImapAuthServiceProvider;
 use Fruitcake\Cors\CorsServiceProvider;
 use Fruitcake\Cors\HandleCors;
-use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Laravel\Lumen\Bootstrap\LoadEnvironmentVariables;
 
 (new LoadEnvironmentVariables(
@@ -98,101 +66,7 @@ $app->configure('imapserver');
 | your own bindings here if you like or you can make another file.
 |
 */
-
-// helper function to make sure Services can share HordeClients for the same account
-$mailClients = [];
-$hordeBodyComposer   = new HordeBodyComposer();
-$hordeHeaderComposer = new HordeHeaderComposer();
-
-$getMailClient = function (MailAccount $account) use (&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
-
-    $accountId = $account->getId();
-
-    if (isset($mailClients[$accountId])) {
-        return $mailClients[$accountId];
-    }
-
-
-    $mailClient = new HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
-    $mailClients[$accountId] = $mailClient;
-    return $mailClient;
-};
-
-$app->singleton(
-    ExceptionHandler::class,
-    Handler::class
-);
-
-$app->singleton(
-    Kernel::class,
-    ConsoleKernel::class
-);
-
-$app->singleton(ImapUserRepository::class, function () {
-    return new DefaultImapUserRepository(config('imapserver'));
-});
-
-$app->singleton(MailFolderService::class, function ($app) use ($getMailClient) {
-    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
-    return new DefaultMailFolderService(
-        $mailClient,
-        new DefaultMailFolderTreeBuilder(
-            new DefaultFolderIdToTypeMapper()
-        )
-    );
-});
-
-$app->singleton(AttachmentService::class, function ($app) use ($getMailClient) {
-    $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));
-    return new DefaultAttachmentService(
-        $mailClient,
-        new InlineDataProcessor()
-    );
-});
-
-
-$app->singleton(MessageItemDraftJsonTransformer::class, function () {
-    return new DefaultMessageItemDraftJsonTransformer();
-});
-
-$app->singleton(MessageBodyDraftJsonTransformer::class, function () {
-    return new DefaultMessageBodyDraftJsonTransformer();
-});
-
-$app->singleton(MessageItemService::class, function ($app) use ($getMailClient) {
-
-    // if mailAccountId not part of the routing url, but request parameters, use those
-    $mailAccountId = $app->request->route('mailAccountId') ?? $app->request->input('mailAccountId');
-
-    $mailClient = $getMailClient($app->auth->user()->getMailAccount($mailAccountId));
-    $charsetConverter = new CharsetConverter();
-
-    $readableMessagePartContentProcessor = new ReadableMessagePartContentProcessor(
-        $charsetConverter,
-        new DefaultPlainReadableStrategy(),
-        new PurifiedHtmlStrategy()
-    );
-
-    $writableMessagePartContentProcessor = new WritableMessagePartContentProcessor(
-        $charsetConverter,
-        new DefaultPlainWritableStrategy(),
-        new DefaultHtmlWritableStrategy()
-    );
-
-    $defaultMessageItemFieldsProcessor = new DefaultMessageItemFieldsProcessor(
-        $charsetConverter
-    );
-
-    return new DefaultMessageItemService(
-        $mailClient,
-        $defaultMessageItemFieldsProcessor,
-        $readableMessagePartContentProcessor,
-        $writableMessagePartContentProcessor,
-        new DefaultPreviewTextProcessor(
-            $readableMessagePartContentProcessor
-        )
-    );
-});
+require __DIR__ . "/bindings.php";
 
 /*
 |--------------------------------------------------------------------------
@@ -227,8 +101,7 @@ $app->routeMiddleware($authMiddleware);
 |
 */
 
-$app->register(AuthServiceProvider::class);
-
+$app->register(ImapAuthServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
