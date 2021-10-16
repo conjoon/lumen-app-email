@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Tests;
@@ -31,8 +33,7 @@ use App\Exceptions\Handler;
 use Exception;
 use Laravel\Lumen\Application;
 use RuntimeException;
-
-require_once __DIR__ . "/TestTrait.php";
+use Illuminate\Http\Response;
 
 abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 {
@@ -44,7 +45,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      */
     public function createApplication(): Application
     {
-        return require __DIR__."/../bootstrap/app.php";
+        return require __DIR__ . "/../bootstrap/app.php";
     }
 
 
@@ -58,7 +59,8 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      *
      * @throws RuntimeException $type is neither "imap" nor "imapuser"
      */
-    public function getServicePrefix(string $type, string $version) : string {
+    public function getServicePrefix(string $type, string $version): string
+    {
 
         $type = strtolower($type);
         if (!in_array($type, ["imap", "imapuser"])) {
@@ -83,7 +85,8 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      *
      * @see #getServicePrefix
      */
-    public function getImapUserEndpoint(string $endpoint, string $version): string {
+    public function getImapUserEndpoint(string $endpoint, string $version): string
+    {
         return $this->getServicePrefix("imapuser", $version) . "/" . $endpoint;
     }
 
@@ -98,7 +101,8 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      *
      * @see #getServicePrefix
      */
-    public function getImapEndpoint(string $endpoint, string $version) : string {
+    public function getImapEndpoint(string $endpoint, string $version): string
+    {
         return $this->getServicePrefix("imap", $version) . "/" . $endpoint;
     }
 
@@ -112,17 +116,22 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      *
      * @see @see https://laracasts.com/discuss/channels/testing/testing-that-exception-was-thrown
      */
-    public function expectException(string $exception) :void {
+    public function expectException(string $exception): void
+    {
 
         $this->app->instance(Handler::class, new class extends Handler {
-            public function __construct() {}
-            public function report(Exception $exception) {}
-            public function render($request, Exception $exception) {
-                throw $exception;
+            public function __construct()
+            {
+            }
+            public function report(Exception $e)
+            {
+            }
+            public function render($request, Exception $e): Response
+            {
+                throw $e;
             }
         });
 
         parent::expectException($exception);
     }
-
 }
