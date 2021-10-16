@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
@@ -47,7 +49,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBody extends AbstractMessageBody {
+class MessageBody extends AbstractMessageBody
+{
 
 
     /**
@@ -55,11 +58,8 @@ class MessageBody extends AbstractMessageBody {
      *
      * @param MessageKey $messageKey
      */
-    public function __construct(MessageKey $messageKey) {
-
-        $this->messageKey = $messageKey;
+    public function __construct(MessageKey $messageKey)
+    {
+        parent::__construct($messageKey);
     }
-
-
-
 }

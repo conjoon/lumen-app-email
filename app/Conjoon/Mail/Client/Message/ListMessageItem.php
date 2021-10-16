@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
@@ -30,7 +32,7 @@ namespace Conjoon\Mail\Client\Message;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 
 /**
- * Class ListMessageItem models envelope informations along with a MessagePart
+ * Class ListMessageItem models envelope information along with a MessagePart
  * for preview purposes.
  * It is up to the implementing client to make sure that the MessagePart's contents
  * are set to a proper readable text for the requesting client.
@@ -58,21 +60,23 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class ListMessageItem extends MessageItem {
+class ListMessageItem extends MessageItem
+{
 
     /**
-     * @var MessagePart
+     * @var MessagePart|null
      */
-    protected $messagePart;
+    protected ?MessagePart $messagePart = null;
 
     /**
      * ListMessageItem constructor.
      *
      * @param MessageKey $messageKey
      * @param array|null $data
-     * @param MessagePart $messagePart
+     * @param MessagePart|null $messagePart
      */
-    public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart = null) {
+    public function __construct(MessageKey $messageKey, array $data = null, MessagePart $messagePart = null)
+    {
 
         parent::__construct($messageKey, $data);
 
@@ -85,7 +89,8 @@ class ListMessageItem extends MessageItem {
      *
      * @return MessagePart
      */
-    public function getMessagePart() : ?MessagePart {
+    public function getMessagePart(): ?MessagePart
+    {
         return $this->messagePart;
     }
 
@@ -96,7 +101,8 @@ class ListMessageItem extends MessageItem {
     /**
      * @inheritdoc
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $fields = [];
 
@@ -109,8 +115,4 @@ class ListMessageItem extends MessageItem {
             $fields
         );
     }
-
-
-
-
 }

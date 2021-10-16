@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,44 +24,49 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClientException;
-
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\MailClientException;
 
 /**
  * Class MessageItemDraft models envelope informations of a Message Draft.
  * A MessageDraft that was stored and exists physically provides also a MessageKey.
  *
  * @package Conjoon\Mail\Client\Message
+ * @method getReplyTo()
+ * @method getBcc()
+ * @method getCc()
+ * @method getXCnDraftInfo()
  */
-class MessageItemDraft extends AbstractMessageItem {
+class MessageItemDraft extends AbstractMessageItem
+{
 
     /**
-     * @var MailAddressList
+     * @var MailAddressList|null
      */
-    protected $cc;
+    protected ?MailAddressList $cc = null;
 
     /**
-     * @var MailAddressList
+     * @var MailAddressList|null
      */
-    protected $bcc;
+    protected ?MailAddressList $bcc = null;
 
     /**
-     * @var MailAddress
+     * @var MailAddress|null
      */
-    protected $replyTo;
+    protected ?MailAddress $replyTo = null;
 
     /**
      * A MessageItemDraft "draft" flag is by default always true.
      * @var boolean
      */
-    protected $draft = true;
+    protected ?bool $draft = true;
 
     /**
      * A json encoded array, encoded as a base64-string, containing information about the
@@ -71,18 +77,17 @@ class MessageItemDraft extends AbstractMessageItem {
      * gets send to update the message represented by the info in this field with
      * appropriate message flags (e.g. \answered).
      *
-     * @var string
+     * @var string|null
      */
-    protected $xCnDraftInfo;
+    protected ?string $xCnDraftInfo = null;
 
 
     /**
      * @inheritdoc
      */
-    public static function isHeaderField($field) {
-
+    public static function isHeaderField($field): bool
+    {
         return parent::isHeaderField($field) || in_array($field, ["cc", "bcc", "replyTo"]);
-
     }
 
 
@@ -96,7 +101,8 @@ class MessageItemDraft extends AbstractMessageItem {
      *
      * @return $this
      */
-    public function setMessageKey(MessageKey $messageKey) :MessageItemDraft {
+    public function setMessageKey(MessageKey $messageKey): MessageItemDraft
+    {
 
         $d = $this->toJson();
 
@@ -104,7 +110,6 @@ class MessageItemDraft extends AbstractMessageItem {
 
         $draft->suspendModifiable();
         foreach ($d as $key => $value) {
-
             if (in_array($key, ["id", "mailAccountId", "mailFolderId"])) {
                 continue;
             }
@@ -134,10 +139,11 @@ class MessageItemDraft extends AbstractMessageItem {
      * Sets the "cc" property of this message.
      * Makes sure no reference to the MailAddressList-object is stored.
      *
-     * @param MailAddressList $mailAddressList
+     * @param MailAddressList|null $mailAddressList
      * @return $this
      */
-    public function setCc(MailAddressList $mailAddressList = null) {
+    public function setCc(MailAddressList $mailAddressList = null): MessageItemDraft
+    {
         $this->addModified("cc");
         $this->cc = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
@@ -148,10 +154,11 @@ class MessageItemDraft extends AbstractMessageItem {
      * Sets the "bcc" property of this message.
      * Makes sure no reference to the MailAddressList-object is stored.
      *
-     * @param MailAddressList $mailAddressList
+     * @param MailAddressList|null $mailAddressList
      * @return $this
      */
-    public function setBcc(MailAddressList $mailAddressList = null) {
+    public function setBcc(MailAddressList $mailAddressList = null): MessageItemDraft
+    {
         $this->addModified("bcc");
         $this->bcc = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
@@ -162,10 +169,11 @@ class MessageItemDraft extends AbstractMessageItem {
      * Sets the "replyTo" property of this message.
      * Makes sure no reference to the MailAddress-object is stored.
      *
-     * @param MailAddress $replyTo
+     * @param MailAddress|null $replyTo
      * @return $this
      */
-    public function setReplyTo(MailAddress $replyTo = null) {
+    public function setReplyTo(MailAddress $replyTo = null): MessageItemDraft
+    {
         $this->addModified("replyTo");
         $this->replyTo = $replyTo === null ? null : clone($replyTo);
         return $this;
@@ -176,13 +184,11 @@ class MessageItemDraft extends AbstractMessageItem {
      * Sets the xCnDraftInfo for this MessageItemDraft and throws if
      * the value was already set.
      *
-     * @param $string $xCnDraftInfo
-     *
+     * @param string|null $xCnDraftInfo
      * @return $this
-     *
-     * @throws MailClientException if xCnDraftInfo was already set
      */
-    public function setXCnDraftInfo($xCnDraftInfo) {
+    public function setXCnDraftInfo(string $xCnDraftInfo = null): MessageItemDraft
+    {
 
         if (is_string($this->getXCnDraftInfo())) {
             throw new MailClientException("\"xCnDraftInfo\" was already set.");
@@ -201,15 +207,13 @@ class MessageItemDraft extends AbstractMessageItem {
     /**
      * @inheritdoc
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
-        $data = array_merge(parent::toJson(), [
-            'cc'      => $this->getCc() ? $this->getCc()->toJson() : [],
-            'bcc'     => $this->getBcc() ? $this->getBcc()->toJson() : [],
+        return array_merge(parent::toJson(), [
+            'cc' => $this->getCc() ? $this->getCc()->toJson() : [],
+            'bcc' => $this->getBcc() ? $this->getBcc()->toJson() : [],
             'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : []
         ]);
-
-        return $data;
     }
-
 }

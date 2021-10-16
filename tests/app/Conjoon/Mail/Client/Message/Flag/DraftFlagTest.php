@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Flag\AbstractFlag,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag;
+namespace Tests\Conjoon\Mail\Client\Message\Flag;
 
+use Conjoon\Mail\Client\Message\Flag\AbstractFlag;
+use Conjoon\Mail\Client\Message\Flag\DraftFlag;
+use Tests\TestCase;
 
-class DraftFlagTest extends TestCase {
-
+/**
+ * Class DraftFlagTest
+ * @package Tests\Conjoon\Mail\Client\Message\Flag
+ */
+class DraftFlagTest extends TestCase
+{
 
 
 // ---------------------
@@ -39,16 +46,14 @@ class DraftFlagTest extends TestCase {
     /**
      * Tests constructor
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $flag = new DraftFlag(false);
 
         $this->assertInstanceOf(AbstractFlag::class, $flag);
 
         $this->assertSame("\\Draft", $flag->getName());
-        $this->assertSame(false,    $flag->getValue());
+        $this->assertSame(false, $flag->getValue());
     }
-
-
-
 }

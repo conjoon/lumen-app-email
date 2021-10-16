@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+namespace Tests\Conjoon\Mail\Client\Message\Flag;
+
 use Conjoon\Mail\Client\Message\Flag\AbstractFlag;
+use Tests\TestCase;
 
-
+/**
+ * Class AbstractFlagTest
+ * @package Tests\Conjoon\Mail\Client\Message\Flag
+ */
 class AbstractFlagTest extends TestCase
 {
-
 
 
 // ---------------------
@@ -39,7 +45,8 @@ class AbstractFlagTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $abstractFlag = $this->createAbstractFlag(true);
 
@@ -60,13 +67,14 @@ class AbstractFlagTest extends TestCase
      *
      * @return AbstractFlag
      */
-    protected function createAbstractFlag(bool $value) :AbstractFlag {
+    protected function createAbstractFlag(bool $value): AbstractFlag
+    {
         // Create a new instance from the Abstract Class
-        return new class($value) extends AbstractFlag {
-            public function getName() :string {
+        return new class ($value) extends AbstractFlag {
+            public function getName(): string
+            {
                 return "\\Dummy";
             }
         };
     }
-
 }

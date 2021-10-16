@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,14 +25,20 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Tests\TestCase;
+use TypeError;
 
+/**
+ * Class MessageItemTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class MessageItemTest extends TestCase
 {
-
 
 
 // ---------------------
@@ -41,7 +48,8 @@ class MessageItemTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $messageKey = $this->createMessageKey();
         $messageItem = $this->createMessageItem($messageKey);
@@ -53,11 +61,12 @@ class MessageItemTest extends TestCase
     /**
      * Test type exceptions.
      */
-    public function testTypeException() {
+    public function testTypeException()
+    {
 
         $caught = [];
 
-        $testException = function($key, $type) use (&$caught) {
+        $testException = function ($key, $type) use (&$caught) {
 
             $item = $this->getItemConfig();
 
@@ -76,13 +85,12 @@ class MessageItemTest extends TestCase
 
             try {
                 $this->createMessageItem($this->createMessageKey(), $item);
-            } catch (\TypeError $e) {
+            } catch (TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
                 }
                 $caught[] = $e->getMessage();
             }
-
         };
 
         $testException("hasAttachments", "string");
@@ -95,10 +103,11 @@ class MessageItemTest extends TestCase
     /**
      * toJson()
      */
-    public function testToJson() {
+    public function testToJson()
+    {
 
         $messageKey = $this->createMessageKey();
-        $item       = $this->createMessageItem($this->createMessageKey(), $this->getItemConfig());
+        $item = $this->createMessageItem($this->createMessageKey(), $this->getItemConfig());
 
         $json = $item->toJson();
 
@@ -109,8 +118,6 @@ class MessageItemTest extends TestCase
         foreach ($subset as $entry => $value) {
             $this->assertSame($value, $json[$entry]);
         }
-
-
     }
 
 // ---------------------
@@ -120,14 +127,14 @@ class MessageItemTest extends TestCase
     /**
      * Returns an MessageItem as array.
      */
-    protected function getItemConfig() {
+    protected function getItemConfig(): array
+    {
 
         return [
-            "charset"        => "ISO-8859-1",
-            "size"           => 83,
+            "charset" => "ISO-8859-1",
+            "size" => 83,
             "hasAttachments" => true
         ];
-
     }
 
 
@@ -137,23 +144,27 @@ class MessageItemTest extends TestCase
      * @param array|null $data
      * @return AbstractMessageItem
      */
-    protected function createMessageItem(MessageKey $key, array $data = null) :AbstractMessageItem {
+    protected function createMessageItem(MessageKey $key, array $data = null): AbstractMessageItem
+    {
         // Create a new instance from the Abstract Class
-       return new MessageItem($key, $data);
+        return new MessageItem($key, $data);
     }
 
 
     /**
      * Returns a MessageKey.
      *
+     * @param string $mailAccountId
      * @param string $mailFolderId
      * @param string $id
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+    protected function createMessageKey(
+        string $mailAccountId = "dev",
+        string $mailFolderId = "INBOX",
+        string $id = "232"
+    ): MessageKey {
         return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,39 +24,41 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
-
 /**
- * Class MessageItem models envelope informations of a Message.
+ * Class MessageItem models envelope information of a Message.
  *
  *
  * @package Conjoon\Mail\Client\Message
+ * @method getHasAttachments()
+ * @method getSize()
  */
-class MessageItem extends AbstractMessageItem {
+class MessageItem extends AbstractMessageItem
+{
 
 
     /**
-     * @var int
+     * @var int|null
      */
-    protected $size;
+    protected ?int $size = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $hasAttachments;
+    protected ?bool $hasAttachments = null;
 
 
     /**
      * @inheritdoc
      */
-    protected function checkType($property, $value) {
+    protected function checkType(string $property, $value)
+    {
 
         switch ($property) {
-
             case "size":
                 if (!is_int($value)) {
                     return "int";
@@ -83,12 +86,12 @@ class MessageItem extends AbstractMessageItem {
      *
      * @return array
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         return array_merge(parent::toJson(), [
-            'size'           => $this->getSize(),
+            'size' => $this->getSize(),
             'hasAttachments' => $this->getHasAttachments()
         ]);
     }
-
 }

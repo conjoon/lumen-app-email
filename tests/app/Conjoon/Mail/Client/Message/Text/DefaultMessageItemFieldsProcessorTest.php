@@ -36,8 +36,8 @@ use Conjoon\Text\Converter;
 use Tests\TestCase;
 
 /**
- * Class PreviewTextProcessorTest
- *
+ * Class DefaultMessageItemFieldsProcessorTest
+ * @package Tests\Conjoon\Mail\Client\Message\Text
  */
 class DefaultMessageItemFieldsProcessorTest extends TestCase
 {

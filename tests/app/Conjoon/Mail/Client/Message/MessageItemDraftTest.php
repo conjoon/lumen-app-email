@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,17 +25,24 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\MailClientException,
-    Conjoon\Util\Modifiable;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Util\Modifiable;
+use Tests\TestCase;
+use TypeError;
 
-class MessageItemDraftTest extends TestCase {
-
+/**
+ * Class MessageItemDraftTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
+class MessageItemDraftTest extends TestCase
+{
 
 
 // ---------------------
@@ -44,20 +52,21 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Tests instance
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
         $this->assertInstanceOf(Modifiable::class, $messageItem);
 
         $this->assertTrue($messageItem->getDraft());
-
     }
 
     /**
      * Tests setMessageKey
      */
-    public function testSetMessageKey() {
+    public function testSetMessageKey()
+    {
 
         $messageKey = $this->createMessageKey("a", "b", "c");
         $messageItem = $this->createMessageItem(null, $this->getItemConfig());
@@ -70,7 +79,7 @@ class MessageItemDraftTest extends TestCase {
         $this->assertSame([], $messageItem->getModifiedFields());
         $this->assertSame([], $newItem->getModifiedFields());
 
-        $newJson = $newItem->toJson();
+        $newItem->toJson();
         $oldJson = $messageItem->toJson();
 
         $expCaught = count(array_keys($oldJson)) - 3; // w/o messageKey data
@@ -78,7 +87,6 @@ class MessageItemDraftTest extends TestCase {
         $caught = 0;
 
         foreach ($oldJson as $key => $value) {
-
             $getter = "get" . ucfirst($key);
 
             if (in_array($key, ["id", "mailAccountId", "mailFolderId"])) {
@@ -88,28 +96,26 @@ class MessageItemDraftTest extends TestCase {
             if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
                 $this->assertNotSame($newItem->{$getter}(), $messageItem->{$getter}());
                 $this->assertEquals($newItem->{$getter}(), $messageItem->{$getter}());
-                $caught++;
             } else {
                 $this->assertSame($newItem->{$getter}(), $messageItem->{$getter}());
-                $caught++;
             }
-
+            $caught++;
         }
 
         $this->assertTrue($expCaught > 0);
         $this->assertSame($caught, $expCaught);
-
     }
 
 
     /**
      * Test type exceptions.
      */
-    public function testTypeException() {
+    public function testTypeException()
+    {
 
         $caught = [];
 
-        $testException = function($key, $type) use (&$caught) {
+        $testException = function ($key, $type) use (&$caught) {
 
             $item = $this->getItemConfig();
 
@@ -128,13 +134,12 @@ class MessageItemDraftTest extends TestCase {
 
             try {
                 $this->createMessageItem($item);
-            } catch (\TypeError $e) {
+            } catch (TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
                 }
                 $caught[] = $e->getMessage();
             }
-
         };
 
         $testException("draft", "string");
@@ -146,7 +151,8 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Test toJson
      */
-    public function testToJson() {
+    public function testToJson()
+    {
         $item = $this->getItemConfig();
 
         $messageKey = $this->createMessageKey();
@@ -163,7 +169,7 @@ class MessageItemDraftTest extends TestCase {
             }
             if (in_array($key, ["from", "replyTo", "to", "cc", "bcc"])) {
                 $this->assertEquals($item[$key]->toJson(), $messageItem->toJson()[$key]);
-            } else{
+            } else {
                 $this->assertSame($item[$key], $messageItem->toJson()[$key]);
             }
         }
@@ -173,7 +179,7 @@ class MessageItemDraftTest extends TestCase {
         $messageItem = $this->createMessageItem($messageKey, $item);
 
 
-        $json    = $messageItem->toJson();
+        $json = $messageItem->toJson();
         $keyJson = $messageKey->toJson();
 
         $this->assertSame($json["id"], $keyJson["id"]);
@@ -181,21 +187,21 @@ class MessageItemDraftTest extends TestCase {
         $this->assertSame($json["mailFolderId"], $keyJson["mailFolderId"]);
 
         $messageItem = $this->createMessageItem();
-        $json        = $messageItem->toJson();
+        $json = $messageItem->toJson();
 
         $this->assertSame([], $json["replyTo"]);
         $this->assertSame([], $json["cc"]);
         $this->assertSame([], $json["bcc"]);
-
     }
 
 
     /**
- * Tests modifiable
- */
-    public function testModifiable() {
+     * Tests modifiable
+     */
+    public function testModifiable()
+    {
 
-        $messageKey  = $this->createMessageKey();
+        $messageKey = $this->createMessageKey();
         $messageItem = $this->createMessageItem($messageKey);
 
         $this->assertSame([], $messageItem->getModifiedFields());
@@ -213,7 +219,8 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Tests various nullable address header fields
      */
-    public function testAddressesNull() {
+    public function testAddressesNull()
+    {
 
         $messageItem = $this->createMessageItem(null, $this->getItemConfig());
 
@@ -224,11 +231,11 @@ class MessageItemDraftTest extends TestCase {
         $this->assertFalse(in_array("cc", $modified));
         $this->assertFalse(in_array("bcc", $modified));
 
-        $messageItem->setFrom(null);
-        $messageItem->setReplyTo(null);
-        $messageItem->setTo(null);
-        $messageItem->setCc(null);
-        $messageItem->setBcc(null);
+        $messageItem->setFrom();
+        $messageItem->setReplyTo();
+        $messageItem->setTo();
+        $messageItem->setCc();
+        $messageItem->setBcc();
 
         $json = $messageItem->toJson();
 
@@ -244,14 +251,14 @@ class MessageItemDraftTest extends TestCase {
         $this->assertTrue(in_array("to", $modified));
         $this->assertTrue(in_array("cc", $modified));
         $this->assertTrue(in_array("bcc", $modified));
-
     }
 
 
     /**
      * Tests isHeaderField
      */
-    public function testIsHeaderField() {
+    public function testIsHeaderField()
+    {
 
         $fields = ["from", "to", "subject", "date", "replyTo", "cc", "bcc"];
 
@@ -270,7 +277,8 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Tests xCnDraftInfo Field w/ setters and getters
      */
-    public function testXCnDraftInfo() {
+    public function testXCnDraftInfo()
+    {
 
         $draft = $this->createMessageItem(null, $this->getItemConfig());
         $this->assertSame($draft->getXCnDraftInfo(), $this->getItemConfig()["xCnDraftInfo"]);
@@ -282,7 +290,7 @@ class MessageItemDraftTest extends TestCase {
         $this->assertSame($draft->getXCnDraftInfo(), $val);
 
         $draft = $this->createMessageItem(null, ["messageId" => "mid"]);
-        $draft->setXCnDraftInfo(null);
+        $draft->setXCnDraftInfo();
         $this->assertNull($draft->getXCnDraftInfo());
     }
 
@@ -290,7 +298,8 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Tests setting xCnDraftInfo if already set
      */
-    public function testSetXCnDraftInfo_exception() {
+    public function testSetXCnDraftInfoException()
+    {
 
         $draft = $this->createMessageItem(null, $this->getItemConfig());
 
@@ -308,46 +317,52 @@ class MessageItemDraftTest extends TestCase {
     /**
      * Returns an MessageItem as array.
      */
-    protected function getItemConfig() {
+    protected function getItemConfig(): array
+    {
 
         return [
-            "from"    => $this->createFrom(),
+            "from" => $this->createFrom(),
             "replyTo" => $this->createReplyTo(),
-            "to"      => $this->createTo(),
-            "cc"      => $this->createCc(),
-            "bcc"     => $this->createBcc(),
-            "replyTo" => $this->createReplyTo(),
-            "draft"   => true,
+            "to" => $this->createTo(),
+            "cc" => $this->createCc(),
+            "bcc" => $this->createBcc(),
+            "draft" => true,
             "xCnDraftInfo" => "WyJzaXRlYXJ0d29yayIsIklOQk9YIiwiMTU5NzUyIl0="
         ];
-
     }
 
 
     /**
      * Returns a MessageItemDraft.
      *
+     * @param MessageKey|null $key
      * @param array|null $data
-     * @return AbstractMessageItem
+     * @return MessageItemDraft
      */
-    protected function createMessageItem(MessageKey $key = null, array $data = null) :MessageItemDraft {
+    protected function createMessageItem(MessageKey $key = null, array $data = null): MessageItemDraft
+    {
         if (!$key) {
             $key = $this->createMessageKey();
         }
 
-       return new MessageItemDraft($key, $data);
+        return new MessageItemDraft($key, $data);
     }
 
 
     /**
      * Returns a MessageKey.
      *
+     * @param string $mailAccountId
      * @param string $mailFolderId
      * @param string $id
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+    protected function createMessageKey(
+        string $mailAccountId = "dev",
+        string $mailFolderId = "INBOX",
+        string $id = "232"
+    ): MessageKey {
         return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
@@ -357,7 +372,8 @@ class MessageItemDraftTest extends TestCase {
      *
      * @return MailAddress
      */
-    protected function createFrom() :MailAddress {
+    protected function createFrom(): MailAddress
+    {
         return new MailAddress("from@from.com", "From From");
     }
 
@@ -368,7 +384,8 @@ class MessageItemDraftTest extends TestCase {
      *
      * @return MailAddress
      */
-    protected function createReplyTo() :MailAddress {
+    protected function createReplyTo(): MailAddress
+    {
         return new MailAddress("peterParker@newyork.com", "Peter Parker");
     }
 
@@ -376,9 +393,10 @@ class MessageItemDraftTest extends TestCase {
      * Returns a MailAddressList to be used with the "to" property of the MessageItem
      * @return MailAddressList
      */
-    protected function createTo() : MailAddressList {
+    protected function createTo(): MailAddressList
+    {
 
-        $list = new MailAddressList;
+        $list = new MailAddressList();
 
         $list[] = new MailAddress("to1", "to1@address.testcomdomaindev");
         $list[] = new MailAddress("to2", "to2@address.testcomdomaindev");
@@ -390,9 +408,10 @@ class MessageItemDraftTest extends TestCase {
      * Returns a MailAddressList to be used with the "cc" property of the MessageItem
      * @return MailAddressList
      */
-    protected function createCc() : MailAddressList {
+    protected function createCc(): MailAddressList
+    {
 
-        $list = new MailAddressList;
+        $list = new MailAddressList();
 
         $list[] = new MailAddress("name1", "name1@address.testcomdomaindev");
         $list[] = new MailAddress("name2", "name2@address.testcomdomaindev");
@@ -404,14 +423,14 @@ class MessageItemDraftTest extends TestCase {
      * Returns a MailAddressList to be used with the "bcc" property of the MessageItem
      * @return MailAddressList
      */
-    protected function createBcc() : MailAddressList {
+    protected function createBcc(): MailAddressList
+    {
 
-        $list = new MailAddressList;
+        $list = new MailAddressList();
 
         $list[] = new MailAddress("name1", "name1@address.testcomdomaindev");
         $list[] = new MailAddress("name2", "name2@address.testcomdomaindev");
 
         return $list;
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,16 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Util\Copyable;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Util\Copyable;
+use Tests\TestCase;
 
+/**
+ * Class MessagePartTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class MessagePartTest extends TestCase
 {
 
@@ -38,7 +45,8 @@ class MessagePartTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
 
         $messagePart = new MessagePart("foo", "bar", "text/html");
@@ -59,7 +67,4 @@ class MessagePartTest extends TestCase
         $this->assertNotSame($copy, $messagePart);
         $this->assertEquals($copy, $messagePart);
     }
-
-
-
 }

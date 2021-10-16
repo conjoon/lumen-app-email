@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,22 +25,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\MailClientException,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Util\Modifiable;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\Flag\DraftFlag;
+use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\SeenFlag;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\Modifiable;
+use DateTime;
+use Tests\TestCase;
+use TypeError;
 
+/**
+ * Class AbstractMessageItemTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class AbstractMessageItemTest extends TestCase
 {
-
 
 
 // ---------------------
@@ -49,7 +57,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(Jsonable::class, $messageItem);
@@ -70,7 +79,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Test class.
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $item = $this->getItemConfig();
 
@@ -79,7 +89,6 @@ class AbstractMessageItemTest extends TestCase
         $this->assertSame([], $messageItem->getModifiedFields());
 
         foreach ($item as $key => $value) {
-
             $method = "get" . ucfirst($key);
 
             switch ($key) {
@@ -95,8 +104,8 @@ class AbstractMessageItemTest extends TestCase
                     $this->assertNotSame($item["to"], $messageItem->getTo());
                     $this->assertEquals($item["to"], $messageItem->getTo());
                     break;
-                default :
-                    $this->assertSame($messageItem->{$method}(), $item[$key], $key);
+                default:
+                    $this->assertSame($messageItem->{$method}(), $value, $key);
             }
         }
     }
@@ -105,11 +114,12 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Test type exceptions.
      */
-    public function testTypeException() {
+    public function testTypeException()
+    {
 
         $caught = [];
 
-        $testException = function($key, $type) use (&$caught) {
+        $testException = function ($key, $type) use (&$caught) {
 
             $item = $this->getItemConfig();
 
@@ -128,13 +138,12 @@ class AbstractMessageItemTest extends TestCase
 
             try {
                 $this->createMessageItem(null, $item);
-            } catch (\TypeError $e) {
+            } catch (TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
                     return;
                 }
                 $caught[] = $e->getMessage();
             }
-
         };
 
         $testException("subject", "int");
@@ -158,7 +167,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Test toJson
      */
-    public function testToJson() {
+    public function testToJson()
+    {
         $item = $this->getItemConfig();
 
         $messageItem = $this->createMessageItem(null, $item);
@@ -170,9 +180,9 @@ class AbstractMessageItemTest extends TestCase
         foreach ($keys as $key) {
             if ($key === "from" || $key === "to") {
                 $this->assertEquals($item[$key]->toJson(), $json[$key]);
-            } else if ($key == "date") {
+            } elseif ($key == "date") {
                 $this->assertEquals($item[$key]->format("Y-m-d H:i:s O"), $json[$key]);
-            } else if ($key == "charset" || $key == "inReplyTo") {
+            } elseif ($key == "charset" || $key == "inReplyTo") {
                 $this->assertArrayNotHasKey($key, $json);
             } else {
                 $this->assertSame($item[$key], $json[$key]);
@@ -191,25 +201,25 @@ class AbstractMessageItemTest extends TestCase
         $this->assertSame("1970-01-01 00:00:00 +0000", $json["date"]);
         $this->assertSame([], $json["to"]);
         $this->assertSame([], $json["from"]);
-
     }
 
 
     /**
      * Test setFrom /w null
      */
-    public function testSetFromWithNull() {
+    public function testSetFromWithNull()
+    {
 
         $messageItem = $this->createMessageItem(null, ["from" => null]);
 
         $this->assertSame(null, $messageItem->getFrom());
-
     }
 
     /**
      * getFlagList()
      */
-    public function testGetFlagList() {
+    public function testGetFlagList()
+    {
 
         $item = $this->createMessageItem(null, $this->getItemConfig());
 
@@ -220,16 +230,9 @@ class AbstractMessageItemTest extends TestCase
         $caught = 0;
 
         foreach ($flagList as $flag) {
-
             switch (true) {
-
-                case ($flag instanceof DraftFlag):
-                    if ($flag->getValue() === false) {
-                        $caught++;
-                    }
-                    break;
-
                 case ($flag instanceof SeenFlag):
+                case ($flag instanceof DraftFlag):
                     if ($flag->getValue() === false) {
                         $caught++;
                     }
@@ -240,20 +243,18 @@ class AbstractMessageItemTest extends TestCase
                         $caught++;
                     }
                     break;
-
             }
-
         }
 
         $this->assertSame(3, $caught);
-
     }
 
 
     /**
      * getFlagList()
      */
-    public function testGetFlagList_empty() {
+    public function testGetFlagListEmpty()
+    {
 
         $item = $this->createMessageItem();
 
@@ -266,14 +267,15 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests modifiable
      */
-    public function testModifiable() {
+    public function testModifiable()
+    {
 
-        $messageKey  = $this->createMessageKey();
+        $messageKey = $this->createMessageKey();
         $messageItem = $this->createMessageItem($messageKey);
 
         $conf = $this->getItemConfig();
-        $mod  = [];
-        $it   = 0;
+        $mod = [];
+        $it = 0;
 
         $skipFields = ["messageId"];
 
@@ -297,7 +299,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests isHeaderField
      */
-    public function testIsHeaderField() {
+    public function testIsHeaderField()
+    {
 
         $fields = ["from", "to", "subject", "date", "references", "inReplyTo"];
 
@@ -315,7 +318,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests setMessageItem
      */
-    public function testSetMessageItem() {
+    public function testSetMessageItem()
+    {
 
         $item = $this->createMessageitem(null, ["messageId" => "mid"]);
 
@@ -329,21 +333,20 @@ class AbstractMessageItemTest extends TestCase
         }
 
         $this->assertNotNull($exp);
-
     }
 
 
     /**
      * Tests setting various fields to null or empty string
      */
-    public function testSetNullOrEmptyStringFields() {
+    public function testSetNullOrEmptyStringFields()
+    {
 
         $item = $this->createMessageitem(null, ["messageId" => "mid"]);
 
         $fields = ["references", "inReplyTo"];
 
         foreach ($fields as $field) {
-
             $getter = "get" . ucfirst($field);
             $setter = "set" . ucfirst($field);
 
@@ -353,8 +356,6 @@ class AbstractMessageItemTest extends TestCase
 
             $item->{$setter}("");
             $this->assertSame("", $item->{$getter}());
-
-
         }
     }
 
@@ -362,7 +363,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests setReferences w/ exception
      */
-    public function testSetReferences_exception() {
+    public function testSetReferencesException()
+    {
 
         $item = $this->createMessageitem(null, $this->getItemConfig());
 
@@ -375,7 +377,8 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Tests setInReplyTo w/ exception
      */
-    public function testSetInReplyTo_exception() {
+    public function testSetInReplyToException()
+    {
 
         $item = $this->createMessageitem(null, $this->getItemConfig());
 
@@ -392,17 +395,20 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Returns an anonymous class extending AbstractMessageItem.
      *
+     * @param MessageKey|null $key
      * @param array|null $data
+     * @return AbstractMessageItem
      * @parsm MessageKey $key
      *
-     * @return AbstractMessageItem
      */
-    protected function createMessageItem(MessageKey $key = null, array $data = null) :AbstractMessageItem {
+    protected function createMessageItem(MessageKey $key = null, array $data = null): AbstractMessageItem
+    {
         // Create a new instance from the Abstract Class
         if (!$key) {
             $key = $this->createMessageKey();
         }
-       return new class($key, $data) extends AbstractMessageItem {};
+        return new class ($key, $data) extends AbstractMessageItem {
+        };
     }
 
 
@@ -411,7 +417,8 @@ class AbstractMessageItemTest extends TestCase
      *
      * @return MessageKey
      */
-    protected function createMessageKey() :MessageKey {
+    protected function createMessageKey(): MessageKey
+    {
         // Create a new instance from the Abstract Class
         return new MessageKey("a", "b", "c");
     }
@@ -420,24 +427,24 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Returns an MessageItem as array.
      */
-    protected function getItemConfig() {
+    protected function getItemConfig(): array
+    {
 
         return [
-            "from"           => $this->createFrom(),
-            "to"             => $this->createTo(),
-            "subject"        => "SUBJECT",
-            "date"           => new \DateTime(),
-            "seen"           => false,
-            "answered"       => true,
-            "draft"          => false,
-            "flagged"        => true,
-            "recent"         => false,
-            "charset"        => "ISO-8859-1",
-            "messageId"      => "mid",
-            "inReplyTo"      => "midrt",
-            "references"     => "midr"
+            "from" => $this->createFrom(),
+            "to" => $this->createTo(),
+            "subject" => "SUBJECT",
+            "date" => new DateTime(),
+            "seen" => false,
+            "answered" => true,
+            "draft" => false,
+            "flagged" => true,
+            "recent" => false,
+            "charset" => "ISO-8859-1",
+            "messageId" => "mid",
+            "inReplyTo" => "midrt",
+            "references" => "midr"
         ];
-
     }
 
 
@@ -447,7 +454,8 @@ class AbstractMessageItemTest extends TestCase
      *
      * @return MailAddress
      */
-    protected function createFrom() :MailAddress {
+    protected function createFrom(): MailAddress
+    {
         return new MailAddress("peterParker@newyork.com", "Peter Parker");
     }
 
@@ -455,14 +463,14 @@ class AbstractMessageItemTest extends TestCase
      * Returns a MailAddressList to be used with the "to" property of the MessageItem
      * @return MailAddressList
      */
-    protected function createTo() : MailAddressList {
+    protected function createTo(): MailAddressList
+    {
 
-        $list = new MailAddressList;
+        $list = new MailAddressList();
 
         $list[] = new MailAddress("name1", "name1@address.testcomdomaindev");
         $list[] = new MailAddress("name2", "name2@address.testcomdomaindev");
 
         return $list;
     }
-
 }

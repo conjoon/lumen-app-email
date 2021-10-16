@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,12 +24,12 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Util\Copyable;
-
 
 /**
  * Class MessagePart models a simplified representation of a Mail Message Part,
@@ -46,22 +47,23 @@ use Conjoon\Util\Copyable;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessagePart implements Copyable  {
+class MessagePart implements Copyable
+{
 
     /**
      * @vr string
      */
-    protected $mimeType = "";
+    protected string $mimeType = "";
 
     /**
      * @var string
      */
-    protected $contents = "";
+    protected string $contents = "";
 
     /**
      * @var string
      */
-    protected $charset = "";
+    protected string $charset = "";
 
 
     /**
@@ -69,8 +71,10 @@ class MessagePart implements Copyable  {
      *
      * @param string $contents
      * @param string $charset
+     * @param string $mimeType
      */
-    public function __construct(string $contents, string $charset, string $mimeType) {
+    public function __construct(string $contents, string $charset, string $mimeType)
+    {
         $this->setContents($contents, $charset);
         $this->setMimeType($mimeType);
     }
@@ -84,7 +88,8 @@ class MessagePart implements Copyable  {
      *
      * @return $this
      */
-    public function setContents(string $contents, string $charset) {
+    public function setContents(string $contents, string $charset): MessagePart
+    {
         $this->contents = $contents;
         $this->setCharset($charset);
         return $this;
@@ -96,7 +101,8 @@ class MessagePart implements Copyable  {
      *
      * @return string
      */
-    public function getContents() {
+    public function getContents(): string
+    {
         return $this->contents;
     }
 
@@ -104,11 +110,11 @@ class MessagePart implements Copyable  {
     /**
      * Sets the "$charset" for this part.
      *
-     * @param String $contents
-     *
+     * @param string $charset
      * @return $this
      */
-    protected function setCharset(string $charset) {
+    protected function setCharset(string $charset): MessagePart
+    {
         $this->charset = $charset;
         return $this;
     }
@@ -119,7 +125,8 @@ class MessagePart implements Copyable  {
      *
      * @return string
      */
-    public function getCharset() {
+    public function getCharset(): string
+    {
         return $this->charset;
     }
 
@@ -131,7 +138,8 @@ class MessagePart implements Copyable  {
      *
      * @return $this
      */
-    protected function setMimeType(string $mimeType) {
+    protected function setMimeType(string $mimeType): MessagePart
+    {
         $this->mimeType = $mimeType;
         return $this;
     }
@@ -142,7 +150,8 @@ class MessagePart implements Copyable  {
      *
      * @return string
      */
-    public function getMimeType() {
+    public function getMimeType(): string
+    {
         return $this->mimeType;
     }
 
@@ -154,11 +163,13 @@ class MessagePart implements Copyable  {
     /**
      * @inheritdoc
      */
-    public function copy() :MessagePart {
+    public function copy(): MessagePart
+    {
 
-        return new MessagePart($this->getContents(), $this->getCharset(), $this->getMimeType());
-
+        return new MessagePart(
+            $this->getContents(),
+            $this->getCharset(),
+            $this->getMimeType()
+        );
     }
-
-
 }

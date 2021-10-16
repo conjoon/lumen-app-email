@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,21 +24,25 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Util\Jsonable,
-    Conjoon\Util\Modifiable,
-    Conjoon\Util\ModifiableTrait,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\DraftFlag,
-    Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClientException;
+use BadMethodCallException;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Message\Flag\DraftFlag;
+use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\SeenFlag;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\Modifiable;
+use Conjoon\Util\ModifiableTrait;
+use DateTime;
+use TypeError;
 
 /**
  * Class MessageItem models simplified envelope informations for a Mail Message.
@@ -58,80 +63,92 @@ use Conjoon\Mail\Client\Data\MailAddressList,
  * @method getSubject()
  * @method getCharset()
  * @method setCharset(string $toCharset)
+ * @method getMessageKey()
+ * @method getFrom()
+ * @method getTo()
+ * @method getDate()
+ * @method getSeen()
+ * @method getAnswered()
+ * @method getDraft()
+ * @method getFlagged()
+ * @method getRecent()
+ * @method getMessageId()
+ * @method getReferences()
+ * @method getInReplyTo()
  */
-abstract class AbstractMessageItem implements Jsonable, Modifiable {
-
+abstract class AbstractMessageItem implements Jsonable, Modifiable
+{
     use ModifiableTrait;
 
     /**
      * @var MessageKey
      */
-    protected $messageKey;
+    protected MessageKey $messageKey;
 
     /**
-     * @var MailAddress
+     * @var MailAddress|null
      */
-    protected $from;
+    protected ?MailAddress $from = null;
 
     /**
-     * @var MailAddressList
+     * @var MailAddressList|null
      */
-    protected $to;
+    protected ?MailAddressList $to = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $subject;
+    protected ?string $subject = null;
 
     /**
-     * @var \DateTime
+     * @var DateTime|null
      */
-    protected $date;
+    protected ?DateTime $date = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $seen;
+    protected ?bool $seen = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $answered;
+    protected ?bool $answered = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $draft;
+    protected ?bool $draft = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $flagged;
+    protected ?bool $flagged = null;
 
     /**
-     * @var bool
+     * @var bool|null
      */
-    protected $recent;
+    protected ?bool $recent = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $charset;
+    protected ?string $charset = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $messageId;
+    protected ?string $messageId = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $inReplyTo;
+    protected ?string $inReplyTo = null;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $references;
+    protected ?string $references = null;
 
 
     /**
@@ -141,10 +158,10 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      *
      * @return boolean
      */
-    public static function isHeaderField($field) {
+    public static function isHeaderField($field): bool
+    {
 
         return in_array($field, ["from", "to", "subject", "date", "inReplyTo", "references"]);
-
     }
 
 
@@ -152,13 +169,12 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * MessageItem constructor.
      *
      * @param MessageKey $messageKey
-     * @param array $data
+     * @param array|null $data
      *
      *
-     * @throws \TypeError if any of the submitted values for the properties do not match
-     * their expected type
      */
-    public function __construct(MessageKey $messageKey, array $data = null) {
+    public function __construct(MessageKey $messageKey, array $data = null)
+    {
 
         $this->messageKey = $messageKey;
 
@@ -181,10 +197,11 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * Sets the "to" property of this message.
      * Makes sure no reference to the MailAddressList-object is stored.
      *
-     * @param MailAddressList $mailAddressList
+     * @param MailAddressList|null $mailAddressList
      * @return $this
      */
-    public function setTo(MailAddressList $mailAddressList = null) {
+    public function setTo(MailAddressList $mailAddressList = null): AbstractMessageItem
+    {
         $this->addModified("to");
         $this->to = $mailAddressList ? clone($mailAddressList) : null;
         return $this;
@@ -195,10 +212,11 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * Sets the "from" property of this message.
      * Makes sure no reference to the MailAddress-object is stored.
      *
-     * @param MailAddress $mailAddress
+     * @param MailAddress|null $mailAddress
      * @return $this
      */
-    public function setFrom(MailAddress $mailAddress = null) {
+    public function setFrom(MailAddress $mailAddress = null): AbstractMessageItem
+    {
         $this->addModified("from");
         $this->from = $mailAddress === null ? null : clone($mailAddress);
         return $this;
@@ -209,10 +227,11 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * Sets the Date of this message.
      * Makes sure no reference is stored to the date-object.
      *
-     * @param \DateTime $date
+     * @param DateTime $date
      * @return $this
      */
-    public function setDate(\DateTime $date) {
+    public function setDate(DateTime $date): AbstractMessageItem
+    {
         $this->addModified("date");
         $this->date = clone($date);
         return $this;
@@ -224,8 +243,10 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * set.
      *
      * @param string $messageId
+     * @return AbstractMessageItem
      */
-    public function setMessageId(string $messageId) {
+    public function setMessageId(string $messageId): AbstractMessageItem
+    {
         if ($this->getMessageId()) {
             throw new MailClientException("\"messageId\" was already set.");
         }
@@ -235,13 +256,17 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
         return $this;
     }
 
+
     /**
      * Sets the inReplyTo of this MessageItem and throws if a value was already
      * set.
      *
-     * @param string $inReplyTo
+     * @param string|null $inReplyTo
+     *
+     * @return AbstractMessageItem
      */
-    public function setInReplyTo($inReplyTo) {
+    public function setInReplyTo(string $inReplyTo = null): AbstractMessageItem
+    {
         if (!is_null($this->getInReplyTo())) {
             throw new MailClientException("\"inReplyTo\" was already set.");
         }
@@ -256,9 +281,11 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * Sets the references of this MessageItem and throws if a value was already
      * set.
      *
-     * @param string $references
+     * @param string|null $references
+     * @return AbstractMessageItem
      */
-    public function setReferences($references) {
+    public function setReferences(string $references = null): AbstractMessageItem
+    {
         if (!is_null($this->getReferences())) {
             throw new MailClientException("\"references\" was already set.");
         }
@@ -278,30 +305,32 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * @return mixed The value of the property if a getter was called, otherwise this instance
      * if a property was successfully set.
      *
-     * @throws \BadMethodCallException if a method is called for which no property exists
-     * @throws \TypeError if a value is of the wrong type for a property.
+     * @throws BadMethodCallException if a method is called for which no property exists
+     * @throws TypeError if a value is of the wrong type for a property.
      */
-    public function __call($method, $arguments) {
+    public function __call(string $method, $arguments)
+    {
+        $isSetter = false;
 
-
-        if (($isGetter = strpos($method, 'get') === 0) ||
-            ($isSetter = strpos($method, 'set') === 0)) {
-
+        if (
+            ($isGetter = strpos($method, 'get') === 0) ||
+            ($isSetter = strpos($method, 'set') === 0)
+        ) {
             $property = lcfirst(substr($method, 3));
 
             if ($isGetter) {
                 if (property_exists($this, $property)) {
                     return $this->{$property};
                 }
-            } else if ($isSetter) {
-
-                if (property_exists($this, $property) &&
-                    !in_array($property, ['messageKey'])) {
-
+            } elseif ($isSetter) {
+                if (
+                    property_exists($this, $property) &&
+                    !in_array($property, ['messageKey'])
+                ) {
                     $value = $arguments[0];
 
-                    if (($typeFail = $this->checkType($property, $value)) !== true) {
-                        throw new \TypeError("Wrong type for \"$property\" submitted");
+                    if (($this->checkType($property, $value)) !== true) {
+                        throw new TypeError("Wrong type for \"$property\" submitted");
                     }
 
                     $this->addModified($property);
@@ -309,11 +338,9 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
                     return $this;
                 }
             }
-
-
         }
 
-        throw new \BadMethodCallException("no method \"".$method."\" found.");
+        throw new BadMethodCallException("no method named \"$method\" found.");
     }
 
 
@@ -322,8 +349,9 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      *
      * @return FlagList
      */
-    public function getFlagList() :FlagList {
-        $flagList   = new FlagList();
+    public function getFlagList(): FlagList
+    {
+        $flagList = new FlagList();
 
         $this->getDraft() !== null && $flagList[] = new DraftFlag($this->getDraft());
         $this->getSeen() !== null && $flagList[] = new SeenFlag($this->getSeen());
@@ -343,7 +371,8 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      * @return bool|string Returns true if the passed $value matches the expected type
      * of $property, otherwise a string containing the expected type.
      */
-    protected function checkType($property, $value) {
+    protected function checkType(string $property, $value)
+    {
         switch ($property) {
             case "inReplyTo":
             case "references":
@@ -384,28 +413,23 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable {
      *
      * @return array
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $mk = $this->getMessageKey();
 
-        $ret = array_merge($mk->toJson(), [
-            'from'           => $this->getFrom() ? $this->getFrom()->toJson() : [],
-            'to'             => $this->getTo() ? $this->getTo()->toJson() : [],
-            'subject'        => $this->getSubject(),
-            'date'           => ($this->getDate() ? $this->getDate() : new \DateTime("1970-01-01 +0000"))->format("Y-m-d H:i:s O"),
-            'seen'           => $this->getSeen(),
-            'answered'       => $this->getAnswered(),
-            'draft'          => $this->getDraft(),
-            'flagged'        => $this->getFlagged(),
-            'recent'         => $this->getRecent(),
-            'messageId'      => $this->getMessageId(),
-            'references'     => $this->getReferences()
+        return array_merge($mk->toJson(), [
+            'from' => $this->getFrom() ? $this->getFrom()->toJson() : [],
+            'to' => $this->getTo() ? $this->getTo()->toJson() : [],
+            'subject' => $this->getSubject(),
+            'date' => ($this->getDate() ? $this->getDate() : new DateTime("1970-01-01 +0000"))->format("Y-m-d H:i:s O"),
+            'seen' => $this->getSeen(),
+            'answered' => $this->getAnswered(),
+            'draft' => $this->getDraft(),
+            'flagged' => $this->getFlagged(),
+            'recent' => $this->getRecent(),
+            'messageId' => $this->getMessageId(),
+            'references' => $this->getReferences()
         ]);
-
-
-        return $ret;
     }
-
-
-
 }

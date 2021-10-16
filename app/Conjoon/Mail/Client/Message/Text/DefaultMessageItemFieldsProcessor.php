@@ -40,7 +40,7 @@ class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor
     /**
      * @var Converter
      */
-    protected $converter;
+    protected Converter $converter;
 
 
     /**

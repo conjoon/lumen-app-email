@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\AbstractMessageBody,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\AbstractMessageBody;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Tests\TestCase;
 
+/**
+ * Class MessageBodyTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class MessageBodyTest extends TestCase
 {
 
@@ -40,7 +47,8 @@ class MessageBodyTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $messageKey = new MessageKey("dev", "INBOX", "232");
 
@@ -58,11 +66,10 @@ class MessageBodyTest extends TestCase
 
         $this->assertEquals([
             "mailAccountId" => "dev",
-            "mailFolderId"  => "INBOX",
-            "id"            => "232",
-            "textPlain"     => "foo",
-            "textHtml"     => "<b>bar</b>"
+            "mailFolderId" => "INBOX",
+            "id" => "232",
+            "textPlain" => "foo",
+            "textHtml" => "<b>bar</b>"
         ], $body->toJson());
     }
-
 }

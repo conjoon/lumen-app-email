@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
@@ -46,8 +48,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageBodyDraft extends AbstractMessageBody {
-
+class MessageBodyDraft extends AbstractMessageBody
+{
 
 
     /**
@@ -59,10 +61,11 @@ class MessageBodyDraft extends AbstractMessageBody {
      *
      * @return $this
      */
-    public function setMessageKey(MessageKey $messageKey) :MessageBodyDraft {
+    public function setMessageKey(MessageKey $messageKey): MessageBodyDraft
+    {
 
         $plain = $this->getTextPlain() ? $this->getTextPlain()->copy() : null;
-        $html  = $this->getTextHtml() ? $this->getTextHtml()->copy() : null;
+        $html = $this->getTextHtml() ? $this->getTextHtml()->copy() : null;
 
         $copy = new self($messageKey);
 
@@ -71,5 +74,4 @@ class MessageBodyDraft extends AbstractMessageBody {
 
         return $copy;
     }
-
 }

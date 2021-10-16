@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,10 +24,10 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Flag;
-
 
 /**
  * Base class for Message Flags
@@ -34,12 +35,13 @@ namespace Conjoon\Mail\Client\Message\Flag;
  *
  * @package Conjoon\Mail\Client\Message\Flag
  */
-abstract class AbstractFlag  {
+abstract class AbstractFlag
+{
 
     /**
      * @var Boolean
      */
-    protected $value;
+    protected bool $value;
 
 
     /**
@@ -47,7 +49,8 @@ abstract class AbstractFlag  {
      *
      * @param bool $value
      */
-    public function __construct(bool $value) {
+    public function __construct(bool $value)
+    {
         $this->value = $value;
     }
 
@@ -56,7 +59,8 @@ abstract class AbstractFlag  {
      * Returns true if this flag is / should be actively set, otherwise false.
      * @return bool
      */
-    public function getValue() {
+    public function getValue(): bool
+    {
         return $this->value;
     }
 
@@ -67,6 +71,5 @@ abstract class AbstractFlag  {
      *
      * @return string
      */
-    abstract public function getName() :string;
-
+    abstract public function getName(): string;
 }

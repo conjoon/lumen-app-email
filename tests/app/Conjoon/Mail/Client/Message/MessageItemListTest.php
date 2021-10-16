@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,14 +25,20 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Message\MessageItemList;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
+use Tests\TestCase;
 
+/**
+ * Class MessageItemListTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class MessageItemListTest extends TestCase
 {
 
@@ -43,7 +50,8 @@ class MessageItemListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $messageItemList = new MessageItemList();
         $this->assertInstanceOf(AbstractList::class, $messageItemList);
@@ -52,12 +60,13 @@ class MessageItemListTest extends TestCase
         $this->assertSame(ListMessageItem::class, $messageItemList->getEntityType());
 
         $messageItemList[] = new ListMessageItem(
-            new MessageKey("dev", "INBOX", "1"), null,
+            new MessageKey("dev", "INBOX", "1"),
+            null,
             new MessagePart("foo", "bar", "text/plain")
-
         );
         $messageItemList[] = new ListMessageItem(
-            new MessageKey("dev", "INBOX", "2"), null,
+            new MessageKey("dev", "INBOX", "2"),
+            null,
             new MessagePart("foo", "bar", "text/plain")
         );
 
@@ -67,6 +76,4 @@ class MessageItemListTest extends TestCase
             $messageItemList[1]->toJson()
         ], $messageItemList->toJson());
     }
-
-
 }

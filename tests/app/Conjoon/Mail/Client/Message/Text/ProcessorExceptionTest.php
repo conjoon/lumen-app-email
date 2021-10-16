@@ -33,7 +33,7 @@ use Tests\TestCase;
 
 /**
  * Class ProcessorExceptionTest
- *
+ * @package Tests\Conjoon\Mail\Client\Message\Text
  */
 class ProcessorExceptionTest extends TestCase
 {

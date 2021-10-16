@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,10 +24,10 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Flag;
-
 
 /**
  * Class representing \Answered-Flag
@@ -34,13 +35,14 @@ namespace Conjoon\Mail\Client\Message\Flag;
  *
  * @package Conjoon\Mail\Client\Message\Flag
  */
-final class AnsweredFlag extends AbstractFlag {
+final class AnsweredFlag extends AbstractFlag
+{
 
     /**
      * @inheritdoc
      */
-    public function getName() :string {
+    public function getName(): string
+    {
         return "\\Answered";
     }
-
 }

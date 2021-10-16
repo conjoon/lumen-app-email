@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Tests\TestCase;
 
+/**
+ * Class ListMessageItemTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class ListMessageItemTest extends TestCase
 {
 
@@ -41,7 +48,8 @@ class ListMessageItemTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $messageKey = $this->createMessageKey();
         $messageItem = new ListMessageItem($messageKey, null, $this->createMessagePart());
@@ -52,14 +60,16 @@ class ListMessageItemTest extends TestCase
     /**
      * Test class.
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $previewText = "foobar";
 
         $messageKey = $this->createMessageKey();
 
         $messageItem = new ListMessageItem(
-            $messageKey, ["subject" => "YO!"],
+            $messageKey,
+            ["subject" => "YO!"],
             $this->createMessagePart($previewText, "UTF-8", "text/plain")
         );
 
@@ -69,11 +79,8 @@ class ListMessageItemTest extends TestCase
         $this->assertSame("snafu", $messageItem->getMessagePart()->getContents());
 
         $arr = $messageItem->toJson();
-        $this->assertArraySubset([
-            "subject" => "YO!",
-            "previewText" => "snafu"
-        ], $arr);
-
+        $this->assertSame("YO!", $arr["subject"]);
+        $this->assertSame("snafu", $arr["previewText"]);
     }
 
 
@@ -90,12 +97,17 @@ class ListMessageItemTest extends TestCase
      *
      * @return MessageKey
      */
-    protected function createMessageKey($mailAccountId = "dev", $mailFolderId = "INBOX", $id = "232") :MessageKey {
+    protected function createMessageKey(
+        string $mailAccountId = "dev", 
+        string $mailFolderId = "INBOX",
+        string $id = "232"
+    ): MessageKey {
         return new MessageKey($mailAccountId, $mailFolderId, $id);
     }
 
 
-    protected function createMessagePart($text = "a", $charset = "b", $mimeType = "c") {
+    protected function createMessagePart($text = "a", $charset = "b", $mimeType = "c"): MessagePart
+    {
         return new MessagePart($text, $charset, $mimeType);
     }
 }

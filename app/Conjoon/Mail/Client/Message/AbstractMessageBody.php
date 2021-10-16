@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,12 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Util\Jsonable;
 
 /**
  * Class AbstractMessageBody models a simplified representation of mail message
@@ -36,32 +38,33 @@ use Conjoon\Util\Jsonable,
  *
  * @package Conjoon\Mail\Client\Message
  */
-abstract class AbstractMessageBody implements Jsonable {
+abstract class AbstractMessageBody implements Jsonable
+{
 
 
     /**
-     * @var MessagePart
+     * @var MessagePart|null
      */
-    protected $textHtml;
+    protected ?MessagePart $textHtml = null;
 
     /**
-     * @var MessagePart
+     * @var MessagePart|null
      */
-    protected $textPlain;
+    protected ?MessagePart $textPlain = null;
 
     /**
-     * @var MessageKey
+     * @var MessageKey|null
      */
-    protected $messageKey;
+    protected ?MessageKey $messageKey = null;
 
 
     /**
      * MessageBody constructor.
      *
-     * @param MessageKey $messageKey
+     * @param MessageKey|null $messageKey
      */
-    public function __construct(MessageKey $messageKey = null) {
-
+    public function __construct(MessageKey $messageKey = null)
+    {
         $this->messageKey = $messageKey;
     }
 
@@ -69,9 +72,10 @@ abstract class AbstractMessageBody implements Jsonable {
     /**
      * Returns the MessageKey of this MessageBody.
      *
-     * @return MessageKey
+     * @return MessageKey|null
      */
-    public function getMessageKey() {
+    public function getMessageKey(): ?MessageKey
+    {
         return $this->messageKey;
     }
 
@@ -82,7 +86,8 @@ abstract class AbstractMessageBody implements Jsonable {
      * @param MessagePart $textHtml
      * @return $this
      */
-    public function setTextHtml(MessagePart $textHtml) {
+    public function setTextHtml(MessagePart $textHtml): AbstractMessageBody
+    {
         $this->textHtml = $textHtml;
         return $this;
     }
@@ -90,9 +95,10 @@ abstract class AbstractMessageBody implements Jsonable {
 
     /**
      * Returns the textHtml property of this body.
-     * @return MessagePart
+     * @return MessagePart|null
      */
-    public function getTextHtml() {
+    public function getTextHtml(): ?MessagePart
+    {
         return $this->textHtml;
     }
 
@@ -103,7 +109,8 @@ abstract class AbstractMessageBody implements Jsonable {
      * @param MessagePart $textPlain
      * @return $this
      */
-    public function setTextPlain(MessagePart $textPlain) {
+    public function setTextPlain(MessagePart $textPlain): AbstractMessageBody
+    {
         $this->textPlain = $textPlain;
         return $this;
     }
@@ -111,9 +118,10 @@ abstract class AbstractMessageBody implements Jsonable {
 
     /**
      * Returns the textPlain property of this body.
-     * @return MessagePart
+     * @return MessagePart|null
      */
-    public function getTextPlain() {
+    public function getTextPlain(): ?MessagePart
+    {
         return $this->textPlain;
     }
 
@@ -137,14 +145,14 @@ abstract class AbstractMessageBody implements Jsonable {
      * @return array
      *
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $keyJson = $this->getMessageKey() ? $this->getMessageKey()->toJson() : null;
 
-        return array_merge($keyJson ? $keyJson : [], [
+        return array_merge($keyJson ?? [], [
             "textHtml" => $this->getTextHtml() ? $this->getTextHtml()->getContents() : "",
             "textPlain" => $this->getTextPlain() ? $this->getTextPlain()->getContents() : ""
         ]);
     }
-
 }

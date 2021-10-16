@@ -38,8 +38,8 @@ use Conjoon\Text\Converter;
 use Tests\TestCase;
 
 /**
- * Class PreviewTextProcessorTest
- *
+ * Class DefaultPreviewTextProcessorTest
+ * @package Tests\Conjoon\Mail\Client\Message\Text
  */
 class DefaultPreviewTextProcessorTest extends TestCase
 {

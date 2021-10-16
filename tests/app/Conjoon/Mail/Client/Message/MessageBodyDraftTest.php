@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\AbstractMessageBody,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Util\Jsonable;
+namespace Tests\Conjoon\Mail\Client\Message;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\AbstractMessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Util\Jsonable;
+use Tests\TestCase;
 
+/**
+ * Class MessageBodyDraftTest
+ * @package Tests\Conjoon\Mail\Client\Message
+ */
 class MessageBodyDraftTest extends TestCase
 {
 
@@ -41,7 +48,8 @@ class MessageBodyDraftTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $body = new MessageBodyDraft();
 
@@ -52,22 +60,22 @@ class MessageBodyDraftTest extends TestCase
         $htmlPart = new MessagePart("<b>bar</b>", "UTF-8", "text/html");
 
         $this->assertEquals([
-            "textPlain"     => "",
-            "textHtml"     => ""
+            "textPlain" => "",
+            "textHtml" => ""
         ], $body->toJson());
 
         $body->setTextPlain($plainPart);
 
         $this->assertEquals([
-            "textPlain"     => "foo",
-            "textHtml"     => ""
+            "textPlain" => "foo",
+            "textHtml" => ""
         ], $body->toJson());
 
         $body->setTextHtml($htmlPart);
 
         $this->assertEquals([
-            "textPlain"     => "foo",
-            "textHtml"     => "<b>bar</b>"
+            "textPlain" => "foo",
+            "textHtml" => "<b>bar</b>"
         ], $body->toJson());
 
         $this->assertSame($plainPart, $body->getTextPlain());
@@ -80,17 +88,17 @@ class MessageBodyDraftTest extends TestCase
             "mailAccountId" => "a",
             "mailFolderId" => "b",
             "id" => "c",
-            "textPlain"     => "",
-            "textHtml"     => ""
+            "textPlain" => "",
+            "textHtml" => ""
         ], $body->toJson());
-
     }
 
 
     /**
      * Test setMessageKey()
      */
-    public function testSetMessageKey() {
+    public function testSetMessageKey()
+    {
 
         $body = new MessageBodyDraft(new MessageKey("a", "b", "c"));
 
@@ -107,7 +115,5 @@ class MessageBodyDraftTest extends TestCase
         $this->assertSame($copy->getMessageKey(), $newKey);
         $this->assertEquals($copy->getTextPlain(), $body->getTextPlain());
         $this->assertEquals($copy->getTextHtml(), $body->getTextHtml());
-
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Composer;
@@ -37,7 +39,8 @@ use Conjoon\Mail\Client\Message\MessageBodyDraft;
  *
  * @package Conjoon\Mail\Client\Message\Composer
  */
-interface BodyComposer {
+interface BodyComposer
+{
 
 
     /**
@@ -51,7 +54,5 @@ interface BodyComposer {
      *
      * @return string A valid MIME message text
      */
-    public function compose(string $target, MessageBodyDraft $messageBodyDraft) :string;
-
-
+    public function compose(string $target, MessageBodyDraft $messageBodyDraft): string;
 }

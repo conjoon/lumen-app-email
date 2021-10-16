@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Flag;
@@ -35,8 +37,8 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Message\Flag
  */
-class FlagList extends AbstractList {
-
+class FlagList extends AbstractList
+{
 
 
 // -------------------------
@@ -46,8 +48,8 @@ class FlagList extends AbstractList {
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return AbstractFlag::class;
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Composer;
@@ -34,7 +36,8 @@ use Conjoon\Mail\Client\Message\MessageItemDraft;
  *
  * @package Conjoon\Mail\Client\Message\Composer
  */
-interface HeaderComposer {
+interface HeaderComposer
+{
 
 
     /**
@@ -53,7 +56,5 @@ interface HeaderComposer {
      *
      * @return string
      */
-    public function compose(string $target, MessageItemDraft $source = null) :string;
-
-
+    public function compose(string $target, MessageItemDraft $source = null): string;
 }

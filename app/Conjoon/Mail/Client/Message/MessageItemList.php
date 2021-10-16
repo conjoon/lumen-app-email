@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,12 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Util\AbstractList;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
 
 /**
  * Class MessageItemList organizes a list of ListMessageItems.
@@ -46,8 +48,8 @@ use Conjoon\Util\Jsonable,
  *
  * @package Conjoon\Mail\Client\Message
  */
-class MessageItemList extends AbstractList implements Jsonable {
-
+class MessageItemList extends AbstractList implements Jsonable
+{
 
 
 // -------------------------
@@ -57,7 +59,8 @@ class MessageItemList extends AbstractList implements Jsonable {
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return ListMessageItem::class;
     }
 
@@ -74,16 +77,15 @@ class MessageItemList extends AbstractList implements Jsonable {
      *
      * @return array
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $data = [];
 
-        foreach ($this->data as $key => $messageItem) {
+        foreach ($this->data as $messageItem) {
             $data[] = $messageItem->toJson();
         }
 
         return $data;
     }
-
-
 }
