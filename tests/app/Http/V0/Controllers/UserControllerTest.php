@@ -27,17 +27,16 @@
 
 namespace Tests\App\Http\V0\Controllers;
 
-use Tests\TestCase,
-
-    Conjoon\Mail\Client\Data\MailAccount,
-    App\Http\V0\Controllers\UserController,
-    App\Imap\ImapUserRepository,
-    App\Imap\ImapUser,
-    App\Imap\DefaultImapUserRepository;
+use App\Http\V0\Controllers\UserController;
+use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use Conjoon\Illuminate\Auth\Imap\ImapUser;
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
 
 /**
- * Tests UserController.
- *
+ * Class UserControllerTest
+ * @package Tests\App\Http\V0\Controllers
  */
 class UserControllerTest extends TestCase
 {
@@ -45,18 +44,20 @@ class UserControllerTest extends TestCase
      * Tests authenticate() to make sure method either returns an imap user or not.
      *
      * @return void
+     *
+     * @noinspection PhpUndefinedMethodInspection
      */
     public function testAuthenticate()
     {
         $endpoint = $this->getImapUserEndpoint("auth", "v0");
 
 
-        $repository = $this->getMockBuilder(DefaultImapUserRepository::class)
+        $repository = $this->getMockBuilder(DefaultImapUserProvider::class)
                            ->disableOriginalConstructor()
                            ->getMock();
 
         $this->app->when(UserController::class)
-              ->needs(ImapUserRepository::class)
+              ->needs(ImapUserProvider::class)
               ->give(function () use ($repository) {
                  return $repository;
               });
@@ -86,7 +87,7 @@ class UserControllerTest extends TestCase
         $response = $this->call(
             "POST",
             $endpoint,
-            ["username" => "safsafasfsa", "password" => "test"]
+            ["username" => "user", "password" => "test"]
         );
         $this->assertEquals(200, $response->status());
         $this->assertEquals(

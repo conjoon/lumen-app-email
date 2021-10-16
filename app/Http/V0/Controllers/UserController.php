@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Illuminate\Http\Request;
-use App\Imap\ImapUserRepository;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -41,24 +41,24 @@ class UserController extends Controller
 {
 
     /**
-     * @var ImapUserRepository
+     * @var ImapUserProvider
      */
-    protected ImapUserRepository $repository;
+    protected ImapUserProvider $repository;
 
 
     /**
      * UserController constructor.
      *
-     * @param ImapUserRepository $repository
+     * @param ImapUserProvider $repository
      */
-    public function __construct(ImapUserRepository $repository)
+    public function __construct(ImapUserProvider $repository)
     {
 
         $this->repository = $repository;
     }
 
     /**
-     * Action for validating a set of username/password against this ImapUserRepository.
+     * Action for validating a set of username/password against this ImapUserProvider.
      *
      * @param Request $request
      *
