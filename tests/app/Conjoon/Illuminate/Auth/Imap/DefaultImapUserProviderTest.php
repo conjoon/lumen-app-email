@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,16 +25,25 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Tests\App\Imap;
+namespace Tests\Conjoon\Illuminate\Auth\Imap;
 
-use App\Imap\DefaultImapUserRepository,
-    App\Imap\ImapUserRepository,
-    App\Imap\ImapUser,
-    Tests\TestCase,
-    Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use Conjoon\Illuminate\Auth\Imap\ImapUser;
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
 
-class DefaultImapUserRepositoryTest extends TestCase
+/**
+ * Class DefaultImapUserProviderTest
+ * @package Tests\Conjoon\Illuminate\Auth\Imap
+ */
+class DefaultImapUserProviderTest extends TestCase
 {
+
+    /**
+     * getUser()
+     * @noinspection SpellCheckingInspection
+     */
     public function testGetUser()
     {
         $config = [
@@ -60,10 +70,9 @@ class DefaultImapUserRepositoryTest extends TestCase
             ]];
 
 
-        $repository = new DefaultImapUserRepository($config);
+        $repository = new DefaultImapUserProvider($config);
 
-
-        $this->assertInstanceOf(ImapUserRepository::class, $repository);
+        $this->assertInstanceOf(ImapUserProvider::class, $repository);
 
         $ret = $repository->getUser("a", "b");
         $this->assertNull($ret);
@@ -74,12 +83,47 @@ class DefaultImapUserRepositoryTest extends TestCase
         $this->assertInstanceOf(MailAccount::class, $user->getMailAccount("dev_sys_conjoon_org"));
         $this->assertSame($config[0]["id"], $user->getMailAccount("dev_sys_conjoon_org")->getId());
 
-
         $user = $repository->getUser("@sNafu", "b");
         $this->assertInstanceOf(ImapUser::class, $user);
         $this->assertNull($user->getMailAccount("dev_sys_conjoon_org"));
         $this->assertInstanceOf(MailAccount::class, $user->getMailAccount("imap_test"));
         $this->assertSame($config[1]["id"], $user->getMailAccount("imap_test")->getId());
+    }
 
+
+    /**
+     * Makes sure retrieveByCredentials calls getUser()
+     */
+    public function testRetrieveByCredentials()
+    {
+        $repository = $this->getMockBuilder(DefaultImapUserProvider::class)
+                           ->disableOriginalConstructor()
+                           ->onlyMethods(["getUser"])
+                           ->getMock();
+
+        $repository->expects($this->once())->method("getUser")
+                   ->with("user", "password");
+
+        $repository->retrieveByCredentials(["username" => "user", "password" => "password"]);
+    }
+
+
+    /**
+     * UserProvider
+     *
+     * @noinspection SpellCheckingInspection
+     */
+    public function testUserProviderInterface()
+    {
+        $repository = new DefaultImapUserProvider([]);
+
+        $this->assertNull($repository->retrieveById("random"));
+        $this->assertNull($repository->retrieveByToken("random", "sometoken"));
+        $this->assertFalse($repository->validateCredentials(
+            $this->getMockBuilder(ImapUser::class)
+                 ->disableOriginalConstructor()
+                 ->getMock(),
+            ["user", "password"]
+        ));
     }
 }

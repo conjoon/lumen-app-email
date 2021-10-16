@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,29 +24,26 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace App\Imap;
+namespace Tests\Conjoon\Illuminate\Auth\Imap;
 
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Illuminate\Contracts\Auth\UserProvider;
+use Tests\TestCase;
 
 /**
- * Interface describing an ImapUserRepository.
- *
- * @package App\Imap
+ * Class ImapUserRepositoryTest
+ * @package Tests\Conjoon\Illuminate\Auth\Imap
  */
-interface ImapUserRepository {
-
+class ImapUserProviderTest extends TestCase
+{
 
     /**
-     * Queries this ImapUserRepository and returns App\Imap\ImapUser that is associated
-     * with the specified $username and $password, or null if no match was found.
-     *
-     * @param string $username
-     * @param string $password
-     *
-     * @return App\Imap\ImapUser|null
+     * getUser()
      */
-    public function getUser(string $username, string $password): ?ImapUser;
-
-
+    public function testClass()
+    {
+        $repository = $this->getMockForAbstractClass(ImapUserProvider::class);
+        $this->assertInstanceOf(UserProvider::class, $repository);
+    }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,16 +24,16 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
-namespace App\Imap;
+namespace Conjoon\Illuminate\Auth\Imap;
 
-
-use App\Imap\Util as ImapUtil;
-
+use Conjoon\Illuminate\Auth\Imap\Util as ImapUtil;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Class DefaultImapUserRepository provides a default implementation for an ImapUserRepository
+ * Class DefaultImapUserRepository provides a default implementation for an ImapUserProvider
  * which statically holds a list of Imap Server-configurations, against which the username is tested
  * (@see #match).
  * In order for this to work, the configuration feed into an instance of this class has to
@@ -76,15 +77,16 @@ use App\Imap\Util as ImapUtil;
  *
  *
  *
- * @package App\Imap
+ * @package Conjoon\Illuminate\Auth\Imap
  */
-class DefaultImapUserRepository implements ImapUserRepository {
+class DefaultImapUserProvider implements ImapUserProvider
+{
 
     /**
      * A list of Imap Server Configuration entries, set in the constructor.
      * @var array
      */
-    protected $entries;
+    protected array $entries;
 
 
     /**
@@ -102,34 +104,90 @@ class DefaultImapUserRepository implements ImapUserRepository {
      *   "outbox_ssl"
      *   "match"
      */
-    public function __construct(array $config) {
+    public function __construct(array $config)
+    {
 
         $this->entries = $config;
-
     }
 
 
     /**
      * @inheritdoc
      */
-    public function getUser(string $username, string $password): ?ImapUser {
+    public function getUser(string $username, string $password): ?ImapUser
+    {
 
         foreach ($this->entries as $entry) {
-
             foreach ($entry['match'] as $regex) {
-
                 if (preg_match($regex, $username) === 1) {
                     return new ImapUser($username, $password, ImapUtil::makeAccount(
-                        $username, $password, $entry
+                        $username,
+                        $password,
+                        $entry
                     ));
                 }
             }
-
         }
 
         return null;
-
     }
 
+// -------------- UserProvider
 
+    /**
+     * Retrieve a user by their unique identifier.
+     *
+     * @param  mixed  $identifier
+     * @return Authenticatable|null
+     */
+    public function retrieveById($identifier): ?Authenticatable
+    {
+        return null;
+    }
+
+    /**
+     * Retrieve a user by their unique identifier and "remember me" token.
+     *
+     * @param  mixed  $identifier
+     * @param  string  $token
+     * @return Authenticatable|null
+     */
+    public function retrieveByToken($identifier, $token): ?Authenticatable
+    {
+        return null;
+    }
+
+    /**
+     * Update the "remember me" token for the given user in storage.
+     *
+     * @param Authenticatable $user
+     * @param  string  $token
+     * @return void
+     */
+    public function updateRememberToken(Authenticatable $user, $token)
+    {
+    }
+
+    /**
+     * Retrieve a user by the given credentials.
+     *
+     * @param  array  $credentials
+     * @return ImapUser|null
+     */
+    public function retrieveByCredentials(array $credentials): ?ImapUser
+    {
+        return $this->getUser($credentials["username"], $credentials["password"]);
+    }
+
+    /**
+     * Validate a user against the given credentials.
+     *
+     * @param Authenticatable $user
+     * @param  array  $credentials
+     * @return bool
+     */
+    public function validateCredentials(Authenticatable $user, array $credentials): bool
+    {
+        return false;
+    }
 }

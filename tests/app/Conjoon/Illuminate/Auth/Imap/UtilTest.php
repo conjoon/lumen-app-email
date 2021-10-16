@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection SpellCheckingInspection */
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,16 +25,16 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Tests\App\Imap;
+namespace Tests\Conjoon\Illuminate\Auth\Imap;
 
-use App\Imap\Util,
-    Tests\TestCase,
-    Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Illuminate\Auth\Imap\Util;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
 
 class UtilTest extends TestCase
 {
 
-    protected $config = [
+    protected array $config = [
         "id"               => "dev_sys_conjoon_org",
         "inbox_type"      => "IMAP",
         "inbox_address"   => "sfsffs.ffssf.sffs",
@@ -46,8 +47,6 @@ class UtilTest extends TestCase
 
     public function testMake()
     {
-        $config = $this->config;
-
         $username = "dev@conjoon.org";
         $password = "foo";
 
@@ -75,7 +74,5 @@ class UtilTest extends TestCase
 
         $this->assertSame($username, $account->getOutboxUser());
         $this->assertSame($password, $account->getOutboxPassword());
-
     }
-
 }

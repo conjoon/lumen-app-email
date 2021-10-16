@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,18 +24,19 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
-namespace App\Imap;
+namespace Conjoon\Illuminate\Auth\Imap;
 
 use Conjoon\Mail\Client\Data\MailAccount;
 
 /**
  * Class Util
- *
- * @package App\Imap
+ * @package Conjoon\Illuminate\Auth\Imap
  */
-class Util  {
+class Util
+{
 
 
     /**
@@ -77,7 +79,8 @@ class Util  {
      *
      * @return MailAccount
      */
-    public static function makeAccount(string $username, string $password, array $config): MailAccount {
+    public static function makeAccount(string $username, string $password, array $config): MailAccount
+    {
 
         $config['name']    = $username;
         $config['from']    = ["name" => $username, "address" => $username];
@@ -91,7 +94,4 @@ class Util  {
 
         return new MailAccount($config);
     }
-
-
-
 }

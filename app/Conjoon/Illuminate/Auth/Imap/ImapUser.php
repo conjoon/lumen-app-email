@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,30 +24,37 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
-namespace App\Imap;
+namespace Conjoon\Illuminate\Auth\Imap;
 
 use Conjoon\Mail\Client\Data\MailAccount;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
  * Class ImapUser encapsulates a user for the php-ms-imapuser package, containing
  * associated MailAccount-information.
  *
- * @package App\Imap
+ * @package Conjoon\Illuminate\Auth\Imap
  */
-class ImapUser {
-
-
-    /**
-     * @var MailAccount
-     */
-    protected $imapAccount;
+class ImapUser implements Authenticatable
+{
 
     /**
      * @var string
      */
-    protected $username;
+    protected string $username;
+
+    /**
+     * @var string
+     */
+    private string $password;
+
+    /**
+     * @var MailAccount $mailAccount
+     */
+    private MailAccount $mailAccount;
 
 
     /**
@@ -54,21 +62,22 @@ class ImapUser {
      *
      * @param string $username
      * @param string $password
-     * @param MailAccount $account
+     * @param MailAccount $mailAccount
      */
-    public function __construct(string $username, string $password, MailAccount $imapAccount) {
-
+    public function __construct(string $username, string $password, MailAccount $mailAccount)
+    {
         $this->username = $username;
         $this->password = $password;
 
-        $this->mailAccount = $imapAccount;
+        $this->mailAccount = $mailAccount;
     }
 
 
     /**
      * @return string
      */
-    public function getUsername() :string {
+    public function getUsername(): string
+    {
         return $this->username;
     }
 
@@ -76,7 +85,8 @@ class ImapUser {
     /**
      * @return string
      */
-    public function getPassword() :string {
+    public function getPassword(): string
+    {
         return $this->password;
     }
 
@@ -91,9 +101,10 @@ class ImapUser {
      *
      * @return MailAccount
      */
-    public function getMailAccount(string $mailAccountId) :?MailAccount {
+    public function getMailAccount(string $mailAccountId): ?MailAccount
+    {
 
-        if ((string)$this->mailAccount->getId() !== $mailAccountId) {
+        if ($this->mailAccount->getId() !== $mailAccountId) {
             return null;
         }
         return $this->mailAccount;
@@ -104,7 +115,8 @@ class ImapUser {
      *
      * @return array
      */
-    public function getMailAccounts() :array {
+    public function getMailAccounts(): array
+    {
         return [$this->mailAccount];
     }
 
@@ -114,13 +126,75 @@ class ImapUser {
      *
      * @return array
      */
-    public function toArray() :array {
+    public function toArray(): array
+    {
 
         return [
             'username' => $this->username,
             'password' => $this->password
         ];
-
     }
 
+
+// ------ Authenticable
+
+    /**
+     * Get the name of the unique identifier for the user.
+     *
+     * @return string|null
+     */
+    public function getAuthIdentifierName(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get the unique identifier for the user.
+     *
+     * @return void
+     */
+    public function getAuthIdentifier(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get the password for the user.
+     *
+     * @return string
+     */
+    public function getAuthPassword(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Get the token value for the "remember me" session.
+     *
+     * @return string
+     */
+    public function getRememberToken(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Set the token value for the "remember me" session.
+     *
+     * @param  string  $value
+     * @return void
+     */
+    public function setRememberToken($value)
+    {
+    }
+
+    /**
+     * Get the column name for the "remember me" token.
+     *
+     * @return string
+     */
+    public function getRememberTokenName(): ?string
+    {
+        return null;
+    }
 }

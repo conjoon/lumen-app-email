@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,22 +25,31 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Tests\App\Imap;
+namespace Tests\Conjoon\Illuminate\Auth\Imap;
 
-use App\Imap\ImapUser,
-    Tests\TestCase,
-    Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Illuminate\Auth\Imap\ImapUser;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Tests\TestCase;
 
+/**
+ * Class ImapUserTest
+ * @package Tests\Conjoon\Illuminate\Auth\Imap
+ */
 class ImapUserTest extends TestCase
 {
 
+    /**
+     * Tests ImapUser getter/constructor.
+     */
     public function testClass()
     {
-        $mailAccount = new MailAccount(array("id" => "foo"));
+        $mailAccount = new MailAccount(["id" => "foo"]);
         $username    = "foo";
         $password     = "bar";
 
-        $user = new ImapUser($username, $password, $mailAccount);
+        $user = $this->createUser($username, $password, $mailAccount);
+        $this->assertInstanceOf(Authenticatable::class, $user);
 
         $this->assertSame($username, $user->getUsername());
         $this->assertSame($password, $user->getPassword());
@@ -55,8 +65,42 @@ class ImapUserTest extends TestCase
         foreach ($accounts as $account) {
             $this->assertSame($account, $user->getMailAccount($account->getId()));
         }
-
-
     }
 
+
+    /**
+     * Authenticable interface
+     */
+    public function testAuthenticable()
+    {
+        $user = $this->createUser();
+        $user->setRememberToken("token");
+        $this->assertNull($user->getAuthIdentifierName());
+        $this->assertNull($user->getAuthIdentifier());
+        $this->assertNull($user->getAuthPassword());
+        $this->assertNull($user->getRememberToken());
+        $this->assertNull($user->getRememberTokenName());
+    }
+
+
+    /**
+     * Creates a new user.
+     *
+     * @param string|null $username
+     * @param string|null $password
+     * @param MailAccount|null $mailAccount
+     *
+     * @return ImapUser
+     */
+    protected function createUser(
+        string $username = null,
+        string $password = null,
+        MailAccount $mailAccount = null
+    ): ImapUser {
+        $mailAccount = $mailAccount ?? new MailAccount(["id" => "foo"]);
+        $username    = $username ?? "foobar";
+        $password    = $password ?? "barfoo";
+
+        return new ImapUser($username, $password, $mailAccount);
+    }
 }
