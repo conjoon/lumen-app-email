@@ -32,7 +32,7 @@ use Illuminate\Contracts\Auth\UserProvider;
 use Tests\TestCase;
 
 /**
- * Class ImapUserRepositoryTest
+ * Class ImapUserProviderTest
  * @package Tests\Conjoon\Illuminate\Auth\Imap
  */
 class ImapUserProviderTest extends TestCase
