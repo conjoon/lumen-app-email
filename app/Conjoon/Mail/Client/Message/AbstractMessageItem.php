@@ -54,6 +54,10 @@ use Conjoon\Mail\Client\Data\MailAddressList,
  *    $item->getSubject(); // "Foo"
  *
  * @package Conjoon\Mail\Client\Message
+ * @method setSubject(string $convert)
+ * @method getSubject()
+ * @method getCharset()
+ * @method setCharset(string $toCharset)
  */
 abstract class AbstractMessageItem implements Jsonable, Modifiable {
 
