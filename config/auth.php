@@ -49,7 +49,7 @@ return [
              * Must be registered in the (Auth)ServiceProvider used with this
              * app and allows for returning a custom UserProvider.
              */
-            "driver" => "ImapUserRepositoryDriver"
+            "driver" => "ImapUserProviderDriver"
         ]
     ]
 ];

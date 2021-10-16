@@ -51,7 +51,7 @@ class ImapAuthServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app["auth"]->provider(
-            "ImapUserRepositoryDriver",
+            "ImapUserProviderDriver",
             function ($app, array $config) {
                 return $app->make(ImapUserProvider::class);
             }
@@ -75,7 +75,7 @@ class ImapAuthServiceProvider extends ServiceProvider
 
     /**
      * Returns the user for the request, if any.
-     * Delegates to the ImapUserProvider registered via "ImapUserRepositoryDriver".
+     * Delegates to the ImapUserProvider registered via "ImapUserProviderDriver".
      *
      * @param Request $request
      * @param ImapUserProvider $provider

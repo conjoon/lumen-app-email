@@ -62,7 +62,7 @@ class ImapAuthServiceProviderTest extends TestCase
             ->shouldReceive("provider")
             ->withArgs(
                 function ($driverName, $callback) use ($app) {
-                    $this->assertSame("ImapUserRepositoryDriver", $driverName);
+                    $this->assertSame("ImapUserProviderDriver", $driverName);
                     $this->assertIsCallable($callback);
 
                     $this->assertInstanceOf(

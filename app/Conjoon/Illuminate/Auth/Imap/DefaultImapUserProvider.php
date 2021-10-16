@@ -33,7 +33,7 @@ use Conjoon\Illuminate\Auth\Imap\Util as ImapUtil;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Class DefaultImapUserRepository provides a default implementation for an ImapUserProvider
+ * Class DefaultImapUserProvider provides a default implementation for an ImapUserProvider
  * which statically holds a list of Imap Server-configurations, against which the username is tested
  * (@see #match).
  * In order for this to work, the configuration feed into an instance of this class has to
@@ -43,7 +43,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
  *
  * @example
  *
- *    $repository = new DefaultImapUserRepository([
+ *    $repository = new DefaultImapUserProvider([
  *                      [
  *                          "id"              => "dev_sys_conjoon_org",
  *                          "inbox_type"      => "IMAP",
@@ -90,7 +90,7 @@ class DefaultImapUserProvider implements ImapUserProvider
 
 
     /**
-     * DefaultImapUserRepository constructor.
+     * DefaultImapUserProvider constructor.
      *
      * @param array $config An array of objects containing the following
      * key/value-pairs:
