@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -36,7 +37,8 @@ use Conjoon\Mail\Client\Message\MessagePart;
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-interface MessagePartContentProcessor {
+interface MessagePartContentProcessor
+{
 
     /**
      * Converts the contents of the MessagePart to the specified charset.
@@ -48,7 +50,5 @@ interface MessagePartContentProcessor {
      *
      * @throws ProcessorException
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart;
-
-
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart;
 }

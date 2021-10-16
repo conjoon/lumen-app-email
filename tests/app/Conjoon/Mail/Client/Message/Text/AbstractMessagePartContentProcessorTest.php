@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,25 +25,30 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\ProcessorException,
-    Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\Text\PlainTextStrategy,
-    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+namespace Tests\Conjoon\Mail\Client\Message\Text;
+
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor;
+use Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+use Conjoon\Mail\Client\Message\Text\MessagePartContentProcessor;
+use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
+use Conjoon\Mail\Client\Message\Text\ProcessorException;
+use Conjoon\Text\Converter;
+use Tests\TestCase;
 
 /**
  * Class DefaultMessagePartContentProcessorTest
  *
  */
-class AbstractMessagePartContentProcessorTest extends TestCase {
+class AbstractMessagePartContentProcessorTest extends TestCase
+{
 
 
     /**
      * Test instance.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(MessagePartContentProcessor::class, $processor);
     }
@@ -51,7 +57,8 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
     /**
      * Test process w/ exception
      */
-    public function testProcess_exception() {
+    public function testProcessException()
+    {
 
         $this->expectException(ProcessorException::class);
 
@@ -66,18 +73,19 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
     /**
      * Test process
      */
-    public function testProcess() {
+    public function testProcess()
+    {
 
         $processor = $this->createProcessor();
 
-        $textPlain = new MessagePart("plain", "FROMUTF-8", "text/plain");
-        $textHtml = new MessagePart("html", "FROMUTF-8", "text/html");
+        $textPlain = new MessagePart("plain", "FROM UTF-8", "text/plain");
+        $textHtml = new MessagePart("html", "FROM UTF-8", "text/html");
 
         $processedTextPlain = $processor->process($textPlain, "ABC");
-        $this->assertSame("PLAINplain FROMUTF-8 ABC", $textPlain->getContents());
+        $this->assertSame("PLAIN plain FROM UTF-8 ABC", $textPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml, "ABC");
-        $this->assertSame("<HTML>html FROMUTF-8 ABC", $textHtml->getContents());
+        $this->assertSame("<HTML>html FROM UTF-8 ABC", $textHtml->getContents());
 
         $this->assertSame($textPlain, $processedTextPlain);
         $this->assertSame($textHtml, $processedTextHtml);
@@ -88,14 +96,16 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
 // +--------------------------
 
     /**
-     * @return DefaultMessagePartContentProcessor
+     * @return AbstractMessagePartContentProcessor
      */
-    protected function createProcessor() {
+    protected function createProcessor()
+    {
 
-        return new class(
+        return new class (
             $this->createConverter(),
             $this->createPlainTextStrategy(),
-            $this->createHtmlTextStrategy()) extends AbstractMessagePartContentProcessor{
+            $this->createHtmlTextStrategy()
+        ) extends AbstractMessagePartContentProcessor {
 
         };
     }
@@ -104,40 +114,42 @@ class AbstractMessagePartContentProcessorTest extends TestCase {
     /**
      * @return Converter
      */
-    protected function createConverter() :Converter{
+    protected function createConverter(): Converter
+    {
 
         return new class implements Converter {
-            public function convert(string $text, string $fromCharset, string $targetCharset) :string {
+            public function convert(string $text, string $fromCharset, string $targetCharset): string
+            {
                 return implode(" ", [$text, $fromCharset, $targetCharset]);
             }
         };
-
     }
 
     /**
-     * @return HtmlReadableStrategy
+     * @return HtmlTextStrategy
      */
-    protected function createHtmlTextStrategy() :HtmlTextStrategy{
+    protected function createHtmlTextStrategy(): HtmlTextStrategy
+    {
 
         return new class implements HtmlTextStrategy {
-            public function process(string $text) :string {
-                return "<HTML>" . $text ;
+            public function process(string $text): string
+            {
+                return "<HTML>" . $text;
             }
         };
-
     }
 
     /**
-     * @return PlainReadableStrategy
+     * @return PlainTextStrategy
      */
-    protected function createPlainTextStrategy() :PlainTextStrategy{
+    protected function createPlainTextStrategy(): PlainTextStrategy
+    {
 
         return new class implements PlainTextStrategy {
-            public function process(string $text) :string {
-                return "PLAIN" . $text ;
+            public function process(string $text): string
+            {
+                return "PLAIN " . $text;
             }
         };
-
     }
-
 }

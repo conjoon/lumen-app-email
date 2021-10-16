@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,14 +27,15 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-use Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Text\Converter;
 
 /**
  * Class DefaultMessageItemFieldsProcessor
  * @package Conjoon\Mail\Client\Message\Text
  */
-class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor {
+class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor
+{
 
     /**
      * @var Converter
@@ -45,9 +47,9 @@ class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor {
      * DefaultMessageItemFieldsProcessor constructor.
      *
      * @param Converter $converter
-     * @param HtmlReadableStrategy $htmlReadableStrategy
      */
-    public function __construct(Converter $converter)  {
+    public function __construct(Converter $converter)
+    {
         $this->converter = $converter;
     }
 
@@ -57,7 +59,8 @@ class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor {
     /**
      * @inheritdoc
      */
-    public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8") : AbstractMessageItem {
+    public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem
+    {
         // Item needs charset information
         $messageItem->setSubject(
             $this->converter->convert(
@@ -71,6 +74,4 @@ class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor {
 
         return $messageItem;
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -34,7 +35,8 @@ use Conjoon\Mail\Client\Message\AbstractMessageItem;
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-interface MessageItemFieldsProcessor {
+interface MessageItemFieldsProcessor
+{
 
     /**
      * Converts field values of of the AbstractMessageItem to the specified charset.
@@ -48,7 +50,5 @@ interface MessageItemFieldsProcessor {
      *
      * @throws ProcessorException
      */
-    public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8") : AbstractMessageItem;
-
-
+    public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem;
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,13 +27,13 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-
 /**
  * Interface PreviewProcessor
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-interface PreviewTextProcessor extends MessagePartContentProcessor {
+interface PreviewTextProcessor extends MessagePartContentProcessor
+{
 
 
 }

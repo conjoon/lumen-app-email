@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Message\Text;
@@ -34,7 +36,8 @@ namespace Conjoon\Mail\Client\Message\Text;
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-interface HtmlTextStrategy {
+interface HtmlTextStrategy
+{
 
 
     /**
@@ -44,8 +47,5 @@ interface HtmlTextStrategy {
      *
      * @return string
      */
-    public function process(string $text) :string;
-
-
-
+    public function process(string $text): string;
 }

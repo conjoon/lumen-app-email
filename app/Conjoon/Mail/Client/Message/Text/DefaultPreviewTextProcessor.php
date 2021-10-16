@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,28 +27,30 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-use Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
 
 /**
  * Class PreviewProcessor
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-class DefaultPreviewTextProcessor implements PreviewTextProcessor {
+class DefaultPreviewTextProcessor implements PreviewTextProcessor
+{
 
 
     /**
-     * @var DefaultMessagePartContentProcessor
+     * @var ReadableMessagePartContentProcessor
      */
-    protected $processor;
+    protected ReadableMessagePartContentProcessor $processor;
 
 
     /**
      * DefaultPreviewTextProcessor constructor.
      * @param ReadableMessagePartContentProcessor $processor
      */
-    public function __construct(ReadableMessagePartContentProcessor $processor) {
+    public function __construct(ReadableMessagePartContentProcessor $processor)
+    {
         $this->processor = $processor;
     }
 
@@ -57,7 +60,8 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor {
      *
      * @return ReadableMessagePartContentProcessor
      */
-    public function getReadableMessagePartContentProcessor() {
+    public function getReadableMessagePartContentProcessor(): ReadableMessagePartContentProcessor
+    {
         return $this->processor;
     }
 
@@ -71,14 +75,18 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor {
      *
      * @inheritdoc
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart {
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+    {
 
         $messagePart = $this->processor->process($messagePart, $toCharset);
 
         $messagePart->setContents(
             htmlentities(
                 mb_substr(
-                    strip_tags(trim($messagePart->getContents())),0,200,  $toCharset
+                    strip_tags(trim($messagePart->getContents())),
+                    0,
+                    200,
+                    $toCharset
                 )
             ),
             $toCharset
@@ -86,6 +94,4 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor {
 
         return $messagePart;
     }
-
-
 }

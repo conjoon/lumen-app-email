@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,31 +27,31 @@
 
 namespace Conjoon\Mail\Client\Message\Text;
 
-use Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\MessagePart;
-
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Text\Converter;
 
 /**
  * AbstractMessagePartContentProcessor.
  *
  * @package Conjoon\Mail\Client\Message\Text
  */
-abstract class AbstractMessagePartContentProcessor implements MessagePartContentProcessor{
+abstract class AbstractMessagePartContentProcessor implements MessagePartContentProcessor
+{
 
     /**
      * @var Converter
      */
-    protected $converter;
+    protected Converter $converter;
 
     /**
      * @var PlainTextStrategy
      */
-    protected $plainTextStrategy;
+    protected PlainTextStrategy $plainTextStrategy;
 
     /**
      * @var HtmlTextStrategy
      */
-    protected $htmlTextStrategy;
+    protected HtmlTextStrategy $htmlTextStrategy;
 
 
     /**
@@ -60,9 +61,11 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
      * @param PlainTextStrategy $plainTextStrategy
      * @param HtmlTextStrategy $htmlTextStrategy
      */
-    public function __construct(Converter $converter,
-                                PlainTextStrategy $plainTextStrategy,
-                                HtmlTextStrategy $htmlTextStrategy)  {
+    public function __construct(
+        Converter $converter,
+        PlainTextStrategy $plainTextStrategy,
+        HtmlTextStrategy $htmlTextStrategy
+    ) {
 
         $this->converter = $converter;
         $this->plainTextStrategy = $plainTextStrategy;
@@ -80,12 +83,12 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
      *
      * @inheritdoc
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8") : MessagePart {
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+    {
 
         $mimeType = $messagePart->getMimeType();
 
         switch ($mimeType) {
-
             case "text/plain":
                 $messagePart->setContents($this->plainTextStrategy->process($this->converter->convert(
                     $messagePart->getContents(),
@@ -104,11 +107,8 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
 
             default:
                 throw new ProcessorException("Cannot process any mime type other than \"text/plain\"/\"text/html\"");
-
         }
 
         return $messagePart;
     }
-
-
 }

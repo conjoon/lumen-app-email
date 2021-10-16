@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,24 +25,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
-    Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor,
-    Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+namespace Tests\Conjoon\Mail\Client\Message\Text;
+
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
+use Conjoon\Text\Converter;
+use Tests\TestCase;
 
 /**
  * Class PreviewTextProcessorTest
  *
  */
-class DefaultMessageItemFieldsProcessorTest extends TestCase {
+class DefaultMessageItemFieldsProcessorTest extends TestCase
+{
 
 
     /**
      * Test instance.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(MessageItemFieldsProcessor::class, $processor);
     }
@@ -50,7 +56,8 @@ class DefaultMessageItemFieldsProcessorTest extends TestCase {
     /**
      * Test process
      */
-    public function testProcess() {
+    public function testProcess()
+    {
 
         $processor = $this->createProcessor();
 
@@ -63,8 +70,6 @@ class DefaultMessageItemFieldsProcessorTest extends TestCase {
 
         $this->assertSame("bar", $messageItem->getSubject());
         $this->assertSame("ISO-8859-1", $messageItem->getCharset());
-
-
     }
 
 // +--------------------------
@@ -74,13 +79,13 @@ class DefaultMessageItemFieldsProcessorTest extends TestCase {
     /**
      * @return DefaultMessageItemFieldsProcessor
      */
-    protected function createProcessor() {
+    protected function createProcessor()
+    {
 
-        $proc = new class($this->createConverter()) extends DefaultMessageItemFieldsProcessor {
+        return new class ($this->createConverter()) extends DefaultMessageItemFieldsProcessor {
 
-            public $def;
-
-            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8") :AbstractMessageItem {
+            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem
+            {
 
                 $messagePart = parent::process($messageItem, $toCharset);
 
@@ -89,22 +94,19 @@ class DefaultMessageItemFieldsProcessorTest extends TestCase {
                 return $messagePart;
             }
         };
-
-        return $proc;
     }
 
     /**
      * @return Converter
      */
-    protected function createConverter() :Converter{
+    protected function createConverter(): Converter
+    {
 
         return new class implements Converter {
-            public function convert(string $text, string $fromCharset, string $targetCharset) :string {
+            public function convert(string $text, string $fromCharset, string $targetCharset): string
+            {
                 return $text;
             }
         };
-
     }
-
-
 }
