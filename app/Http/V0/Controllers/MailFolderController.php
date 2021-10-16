@@ -31,7 +31,7 @@ namespace App\Http\V0\Controllers;
 
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Illuminate\Http\JsonResponse;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Class MailFolderController

@@ -29,11 +29,11 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Service\AttachmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Class AttachmentController

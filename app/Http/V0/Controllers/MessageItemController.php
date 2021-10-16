@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Message\Flag\DraftFlag;
