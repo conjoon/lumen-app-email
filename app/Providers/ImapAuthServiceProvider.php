@@ -27,24 +27,35 @@
 
 namespace App\Providers;
 
-use App\Imap\ImapUser;
-use App\Imap\ImapUserRepository;
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Closure;
-use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\ServiceProvider;
 
-class AuthServiceProvider extends ServiceProvider
+/**
+ * Class ImapAuthServiceProvider.
+ * Uses a RequestGuard for authorization of API calls.
+ *
+ * @package App\Providers
+ */
+class ImapAuthServiceProvider extends ServiceProvider
 {
 
     /**
      * Register any application services.
      *
      * @return void
+     * @noinspection PhpUnusedParameterInspection
      */
     public function register()
     {
-        // intentionally left empty
+        $this->app["auth"]->provider(
+            "ImapUserRepositoryDriver",
+            function ($app, array $config) {
+                return $app->make(ImapUserProvider::class);
+            }
+        );
     }
 
 
@@ -55,29 +66,30 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->app['auth']->viaRequest('api', Closure::fromCallable([$this, "getUser"]));
+        $this->app["auth"]->viaRequest(
+            "api",
+            Closure::fromCallable([$this, "getImapUser"])
+        );
     }
 
 
     /**
      * Returns the user for the request, if any.
+     * Delegates to the ImapUserProvider registered via "ImapUserRepositoryDriver".
      *
      * @param Request $request
-     * @return ImapUser|null
+     * @param ImapUserProvider $provider
      *
-     * @throws BindingResolutionException
+     * @return Authenticatable
      */
-    protected function getUser(Request $request): ?ImapUser
+    protected function getImapUser(Request $request, ImapUserProvider $provider): Authenticatable
     {
         $username = $request->getUser();
         $password = $request->getPassword();
 
-        if (!$username || !$password) {
-            return null;
-        }
-
-        $repository = $this->app->make(ImapUserRepository::class);
-
-        return $repository->getUser($username, $password);
+        return $provider->retrieveByCredentials([
+           "username" => $username,
+           "password" => $password
+        ]);
     }
 }
