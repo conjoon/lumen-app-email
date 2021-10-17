@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,10 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Reader;
 
+use HTMLPurifier;
+use HTMLPurifier_Config;
 
 /**
  * Class PurifiedHtmlStrategy
@@ -35,27 +39,24 @@ namespace Conjoon\Mail\Client\Reader;
  *
  * @package Conjoon\Mail\Client\Reader
  */
-class PurifiedHtmlStrategy implements HtmlReadableStrategy {
+class PurifiedHtmlStrategy implements HtmlReadableStrategy
+{
 
 
     /**
      * @inheritdoc
      */
-    public function process(string $text) :string {
+    public function process(string $text): string
+    {
 
-        // require_once 'HTMLPurifier.auto.php';
-        $htmlPurifierConfig = \HTMLPurifier_Config::createDefault();
+        $htmlPurifierConfig = HTMLPurifier_Config::createDefault();
         $htmlPurifierConfig->set('HTML.Trusted', false);
         $htmlPurifierConfig->set('CSS.AllowTricky', false);
         $htmlPurifierConfig->set('CSS.AllowImportant', false);
         $htmlPurifierConfig->set('CSS.Trusted', false);
 
-        $inst =  new \HTMLPurifier($htmlPurifierConfig);
+        $inst = new HTMLPurifier($htmlPurifierConfig);
 
         return $inst->purify($text);
-
     }
-
-
-
 }

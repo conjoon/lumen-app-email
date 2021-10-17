@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Reader;
@@ -35,7 +37,8 @@ use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
  *
  * @package Conjoon\Mail\Client\Reader
  */
-interface PlainReadableStrategy extends PlainTextStrategy {
+interface PlainReadableStrategy extends PlainTextStrategy
+{
 
 
 }

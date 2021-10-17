@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Reader;
@@ -34,17 +36,16 @@ namespace Conjoon\Mail\Client\Reader;
  *
  * @package Conjoon\Mail\Client\Reader
  */
-class DefaultPlainReadableStrategy implements PlainReadableStrategy {
+class DefaultPlainReadableStrategy implements PlainReadableStrategy
+{
 
 
     /**
      * @inheritdoc
      */
-    public function process(string $text) :string {
+    public function process(string $text): string
+    {
 
         return $text;
     }
-
-
-
 }

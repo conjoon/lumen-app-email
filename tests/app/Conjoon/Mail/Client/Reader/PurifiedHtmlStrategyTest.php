@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,15 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy,
-    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Reader;
+
+use Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+use Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
+use Tests\TestCase;
+
+class PurifiedHtmlStrategyTest extends TestCase
+{
 
 
-class PurifiedHtmlStrategyTest extends TestCase {
-
-
-    public function testClass() {
+    public function testClass()
+    {
 
         $strategy = new PurifiedHtmlStrategy();
         $this->assertInstanceOf(HtmlReadableStrategy::class, $strategy);
@@ -40,7 +47,8 @@ class PurifiedHtmlStrategyTest extends TestCase {
     }
 
 
-    public function testProcess() {
+    public function testProcess()
+    {
 
         $strategy = new PurifiedHtmlStrategy();
         $text = "randomstring";
@@ -48,11 +56,7 @@ class PurifiedHtmlStrategyTest extends TestCase {
         $this->assertSame($text, $strategy->process($text));
 
 
-        $text = "<html><head></head><body>Test</body></html>html>";
+        $text = "<html><head></head><body>Test</body></html>";
         $this->assertSame("Test", $strategy->process($text));
-
     }
-
-
-
 }

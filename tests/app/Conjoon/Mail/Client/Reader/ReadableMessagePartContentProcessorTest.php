@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,83 +25,91 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require_once(dirname(__FILE__). "/../Message/Text/AbstractMessagePartContentProcessorTest.php");
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Reader;
 
-use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
-    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
-    Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Reader\PlainReadableStrategy,
-    Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor;
+use Conjoon\Mail\Client\Reader\HtmlReadableStrategy;
+use Conjoon\Mail\Client\Reader\PlainReadableStrategy;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Text\Converter;
+use Tests\Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessorTest;
+
 /**
  * Class DefaultMessagePartContentProcessorTest
  *
  */
-class ReadableMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest {
+class ReadableMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest
+{
 
     /**
      * Test instance.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(AbstractMessagePartContentProcessor::class, $processor);
     }
 
 
-    // +--------------------------
+// +--------------------------
 // | Helper
 // +--------------------------
 
     /**
      * @return ReadableMessagePartContentProcessor
      */
-    protected function createProcessor() :ReadableMessagePartContentProcessor {
+    protected function createProcessor(): ReadableMessagePartContentProcessor
+    {
 
         return new ReadableMessagePartContentProcessor(
             $this->createConverter(),
             $this->createPlainReadableStrategy(),
-            $this->createHtmlReadableStrategy());
+            $this->createHtmlReadableStrategy()
+        );
     }
 
 
     /**
      * @return Converter
      */
-    protected function createConverter() :Converter{
+    protected function createConverter(): Converter
+    {
 
         return new class implements Converter {
-            public function convert(string $text, string $fromCharset, string $targetCharset) :string {
+            public function convert(string $text, string $fromCharset, string $targetCharset): string
+            {
                 return implode(" ", [$text, $fromCharset, $targetCharset]);
             }
         };
-
     }
 
     /**
      * @return HtmlReadableStrategy
      */
-    protected function createHtmlReadableStrategy() :HtmlReadableStrategy{
+    protected function createHtmlReadableStrategy(): HtmlReadableStrategy
+    {
 
         return new class implements HtmlReadableStrategy {
-            public function process(string $text) :string {
-                return "<HTML>" . $text ;
+            public function process(string $text): string
+            {
+                return "<HTML>" . $text;
             }
         };
-
     }
 
     /**
      * @return PlainReadableStrategy
      */
-    protected function createPlainReadableStrategy() :PlainReadableStrategy{
+    protected function createPlainReadableStrategy(): PlainReadableStrategy
+    {
 
         return new class implements PlainReadableStrategy {
-            public function process(string $text) :string {
-                return "PLAIN" . $text ;
+            public function process(string $text): string
+            {
+                return "PLAIN" . $text;
             }
         };
-
     }
-
-
 }

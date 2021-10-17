@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,15 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
-    Conjoon\Mail\Client\Reader\PlainReadableStrategy,
-    Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Reader;
+
+use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
+use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
+use Conjoon\Mail\Client\Reader\PlainReadableStrategy;
+use Tests\TestCase;
+
+class DefaultPlainReadableStrategyTest extends TestCase
+{
 
 
-class DefaultPlainReadableStrategyTest extends TestCase {
-
-
-    public function testClass() {
+    public function testClass()
+    {
 
         $strategy = new DefaultPlainReadableStrategy();
         $this->assertInstanceOf(PlainReadableStrategy::class, $strategy);
@@ -40,14 +47,12 @@ class DefaultPlainReadableStrategyTest extends TestCase {
     }
 
 
-    public function testProcess() {
+    public function testProcess()
+    {
 
         $strategy = new DefaultPlainReadableStrategy();
-        $text = "notosrandomstring";
+        $text = "notSoRandomstring";
 
         $this->assertSame($text, $strategy->process($text));
     }
-
-
-
 }
