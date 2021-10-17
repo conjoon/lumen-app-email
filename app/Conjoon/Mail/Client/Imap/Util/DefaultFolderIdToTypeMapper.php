@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,14 +24,14 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Imap\Util;
 
-use Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
-    Conjoon\Mail\Client\Folder\ListMailFolder;
-
+use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper;
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolder;
 
 /**
  * Class DefaultFolderIdToTypeMapper.
@@ -38,7 +39,8 @@ use Conjoon\Mail\Client\Folder\MailFolder,
  *
  * @package Conjoon\Mail\Client\Imap\Util
  */
-class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
+class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper
+{
 
 
 // +-------------------------------
@@ -53,15 +55,19 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
      * will be of type "DRAFT". Global names consisting of more than 2 parts will
      * automatically have the type "FOLDER".
      *
+     * @param ListMailFolder $listMailFolder
+     *
+     * @return string MailFolder::TYPE_FOLDER|MailFolder::TYPE_TRASH|MailFolder::TYPE_SENT|
+     *                MailFolder::TYPE_DRAFT|MailFolder::TYPE_JUNK|MailFolder::TYPE_FOLDER
      * @example
      *
      *   $listMailFolder = new ListMailFolder(new FolderKey("dev", "INBOX"),
      *                                       ["name"        => "INBOX",
      *                                        "delimiter"   => "."
      *                                        "unreadCount" => 4]);
-     *   $this->getFolderType($listmailFolder); // returns "INBOX"
+     *   $this->getFolderType($listMailFolder); // returns "INBOX"
      *
-     *   $listMailFolder = new ListMailFolder(new FolderKey("dev", "INBOX.Somefolder.Deep.Drafts"),
+     *   $listMailFolder = new ListMailFolder(new FolderKey("dev", "INBOX.SomeFolder.Deep.Drafts"),
      *                                       ["name"        => "Drafts",
      *                                        "delimiter"   => "."
      *                                        "unreadCount" => 4]);
@@ -79,14 +85,11 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
      *                                        "unreadCount" => 4]);
      *   $this->getFolderType($listMailFolder); // returns "FOLDER"
      *
-     * @param ListMailFolder $listMailFolder
-     *
-     * @return string MailFolder::TYPE_FOLDER|MailFolder::TYPE_TRASH|MailFolder::TYPE_SENT|
-     *                MailFolder::TYPE_DRAFT|MailFolder::TYPE_JUNK|MailFolder::TYPE_FOLDER
      */
-    public function getFolderType(ListMailFolder $listMailFolder) :string {
+    public function getFolderType(ListMailFolder $listMailFolder): string
+    {
 
-        $name      = $listMailFolder->getFolderKey()->getId();
+        $name = $listMailFolder->getFolderKey()->getId();
         $delimiter = $listMailFolder->getDelimiter();
 
         $path = explode($delimiter, $name);
@@ -98,7 +101,6 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
         }
 
         switch (strtoupper($name)) {
-
 // +------------------
 // | INBOX
 // +------------------
@@ -112,9 +114,9 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
 // +------------------
             case "[GOOGLE MAIL]/PAPIERKORB":
             case "TRASH":
-            case "INBOX".$delimiter."TRASH":
-            case "INBOX".$delimiter."PAPIERKORB":
-            case "INBOX".$delimiter."DELETED ITEMS":
+            case "INBOX" . $delimiter . "TRASH":
+            case "INBOX" . $delimiter . "PAPIERKORB":
+            case "INBOX" . $delimiter . "DELETED ITEMS":
                 $type = MailFolder::TYPE_TRASH;
                 break;
 
@@ -123,7 +125,7 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
 // +------------------
             case "[GOOGLE MAIL]/ENTWüRFE":
             case "DRAFTS":
-            case "INBOX".$delimiter."DRAFTS":
+            case "INBOX" . $delimiter . "DRAFTS":
                 $type = MailFolder::TYPE_DRAFT;
                 break;
 
@@ -132,9 +134,9 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
 // +------------------
             case "[GOOGLE MAIL]/GESENDET":
             case "SENT":
-            case "INBOX".$delimiter."SENT":
-            case "INBOX".$delimiter."SENT MESSAGES":
-            case "INBOX".$delimiter."SENT ITEMS":
+            case "INBOX" . $delimiter . "SENT":
+            case "INBOX" . $delimiter . "SENT MESSAGES":
+            case "INBOX" . $delimiter . "SENT ITEMS":
                 $type = MailFolder::TYPE_SENT;
                 break;
 
@@ -143,14 +145,12 @@ class DefaultFolderIdToTypeMapper implements FolderIdToTypeMapper {
 // +------------------
             case "[GOOGLE MAIL]/SPAM":
             case "JUNK":
-            case "INBOX".$delimiter."JUNK":
-            case "INBOX".$delimiter."SPAM":
+            case "INBOX" . $delimiter . "JUNK":
+            case "INBOX" . $delimiter . "SPAM":
                 $type = MailFolder::TYPE_JUNK;
                 break;
         }
 
         return $type;
     }
-
-
 }

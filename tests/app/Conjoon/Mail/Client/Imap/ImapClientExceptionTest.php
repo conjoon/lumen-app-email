@@ -24,17 +24,24 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Imap\ImapClientException,
-    Conjoon\Mail\Client\MailClientException;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Imap\Util;
+
+use Conjoon\Mail\Client\Imap\ImapClientException;
+use Conjoon\Mail\Client\MailClientException;
+use Tests\TestCase;
 
 /**
- * Class MessageItemServiceExceptionTest
- *
+ * Class ImapClientExceptionTest
+ * @package Tests\Conjoon\Mail\Client\Imap\Util
  */
-class ImapClientExceptionTest extends TestCase {
+class ImapClientExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $exception = new ImapClientException();
 

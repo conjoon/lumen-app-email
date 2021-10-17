@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,77 +25,117 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
-    Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper,
-    Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Imap\Util;
+
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper;
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
+use Tests\TestCase;
 
 /**
  * Class DefaultFolderIdToTypeMapperTest
  */
-class DefaultFolderIdToTypeMapperTest extends TestCase {
-
-    use TestTrait;
+class DefaultFolderIdToTypeMapperTest extends TestCase
+{
 
 
     /**
      * Tests constructor and base class.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $mapper = $this->createMapper();
         $this->assertInstanceOf(FolderIdToTypeMapper::class, $mapper);
-
     }
 
 
     /**
      * Tests getFolderType
      */
-    public function testGetFolderType() {
+    public function testGetFolderType()
+    {
 
         $mapper = $this->createMapper();
 
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("SomeRandomFolder/Draft", "/")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("SomeRandomFolder/Draft/Test", "/")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("SomeRandom", ".")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX", ".")),
-            MailFolder::TYPE_INBOX);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX/Somefolder/Deep/Drafts", "/")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX.Drafts", ".")),
-            MailFolder::TYPE_DRAFT);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX.Trash.Deep.Deeper.Folder", ".")),
-            MailFolder::TYPE_FOLDER);
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("SomeRandomFolder/Draft", "/")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("SomeRandomFolder/Draft/Test", "/")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("SomeRandom", ".")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX", ".")
+            ),
+            MailFolder::TYPE_INBOX
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX/SomeFolder/Deep/Drafts", "/")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX.Drafts", ".")
+            ),
+            MailFolder::TYPE_DRAFT
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX.Trash.Deep.Deeper.Folder", ".")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
 
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("Junk/Draft", "/")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("TRASH.Draft.folder", ".")),
-            MailFolder::TYPE_FOLDER);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("TRASH", "/")),
-            MailFolder::TYPE_TRASH);
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("Junk/Draft", "/")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("TRASH.Draft.folder", ".")
+            ),
+            MailFolder::TYPE_FOLDER
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("TRASH", "/")
+            ),
+            MailFolder::TYPE_TRASH
+        );
 
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX:TRASH", ":")),
-            MailFolder::TYPE_TRASH);
-        $this->assertSame($mapper->getFolderType(
-            $this->createListMailFolder("INBOX-DRAFTS", "-")),
-            MailFolder::TYPE_DRAFT);
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX:TRASH", ":")
+            ),
+            MailFolder::TYPE_TRASH
+        );
+        $this->assertSame(
+            $mapper->getFolderType(
+                $this->createListMailFolder("INBOX-DRAFTS", "-")
+            ),
+            MailFolder::TYPE_DRAFT
+        );
     }
 
 
@@ -107,15 +148,18 @@ class DefaultFolderIdToTypeMapperTest extends TestCase {
      * @param string $delimiter
      * @return ListMailFolder
      */
-    public function createListMailFolder($id, $delimiter) :ListMailFolder {
+    public function createListMailFolder(string $id, string $delimiter): ListMailFolder
+    {
 
         $parts = explode($id, $delimiter);
 
         return new ListMailFolder(
             new FolderKey("dev", $id),
-            ["name"        => array_pop($parts),
-             "delimiter"   => $delimiter,
-             "unreadCount" => 0]
+            [
+                "name" => array_pop($parts),
+                "delimiter" => $delimiter,
+                "unreadCount" => 0
+            ]
         );
     }
 
@@ -123,7 +167,8 @@ class DefaultFolderIdToTypeMapperTest extends TestCase {
     /**
      * @return DefaultFolderIdToTypeMapper
      */
-    protected function createMapper() :DefaultFolderIdToTypeMapper {
+    protected function createMapper(): DefaultFolderIdToTypeMapper
+    {
         return new DefaultFolderIdToTypeMapper();
     }
 
@@ -133,9 +178,8 @@ class DefaultFolderIdToTypeMapperTest extends TestCase {
      * @param $id
      * @return FolderKey
      */
-    protected function createFolderKey($mid, $id) :FolderKey {
+    protected function createFolderKey($mid, $id): FolderKey
+    {
         return new FolderKey($mid, $id);
-
     }
-
 }
