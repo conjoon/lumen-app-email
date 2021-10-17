@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,25 +25,27 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Atatchment\Processor;
+namespace Tests\Conjoon\Mail\Client\Atatchment\Processor;
 
-use Conjoon\Mail\Client\Attachment\Processor\ProcessorException,
-    Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Attachment\Processor\ProcessorException;
+use Conjoon\Mail\Client\MailClientException;
+use Tests\TestCase;
 
 /**
  * Class ProcessorExceptionTest
  *
  */
-class ProcessorExceptionTest extends \TestCase {
+class ProcessorExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $exception = new ProcessorException();
 
         $this->assertInstanceOf(MailClientException::class, $exception);
     }
-
-
 }

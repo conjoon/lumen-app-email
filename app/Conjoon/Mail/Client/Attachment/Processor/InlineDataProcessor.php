@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,11 +25,12 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Conjoon\Mail\Client\Attachment\Processor;
 
-use Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem;
-
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
 
 /**
  * Class InlineDataProcessor.
@@ -36,8 +38,8 @@ use Conjoon\Mail\Client\Attachment\FileAttachment,
  *
  * @package Conjoon\Mail\Client\Attachment\Processor
  */
-class InlineDataProcessor implements FileAttachmentProcessor {
-
+class InlineDataProcessor implements FileAttachmentProcessor
+{
 
 
 // +----------------------------
@@ -47,9 +49,10 @@ class InlineDataProcessor implements FileAttachmentProcessor {
     /**
      * @inheritdoc
      */
-    public function process(FileAttachment $fileAttachment) : FileAttachmentItem {
+    public function process(FileAttachment $fileAttachment): FileAttachmentItem
+    {
 
-        $content  = $fileAttachment->getContent();
+        $content = $fileAttachment->getContent();
         $encoding = $fileAttachment->getEncoding();
 
         if ($encoding !== "base64") {
@@ -62,7 +65,7 @@ class InlineDataProcessor implements FileAttachmentProcessor {
             "size" => $fileAttachment->getSize(),
             "type" => $type,
             "text" => $fileAttachment->getText(),
-            "downloadUrl"   => 'data:application/octet-stream;base64,' . $content,
+            "downloadUrl" => 'data:application/octet-stream;base64,' . $content,
             "previewImgSrc" => stripos($type, "image") === 0
                 ? "data:" . $type . ";base64," . $content
                 : ""
@@ -70,6 +73,4 @@ class InlineDataProcessor implements FileAttachmentProcessor {
 
         return new FileAttachmentItem($fileAttachment->getAttachmentKey(), $data);
     }
-
-
 }

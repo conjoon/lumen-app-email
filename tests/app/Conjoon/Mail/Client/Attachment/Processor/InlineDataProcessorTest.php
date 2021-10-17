@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,26 +25,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Conjoon\Mail\Client\Atatchment\Processor;
+declare(strict_types=1);
 
-use Conjoon\Mail\Client\Attachment\Processor\ProcessorException,
-    Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor,
-    Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+namespace Tests\Conjoon\Mail\Client\Atatchment\Processor;
+
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
+use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Tests\TestCase;
 
 /**
  * Class ProcessorExceptionTest
  *
  */
-class InlineDataProcessorTest extends \TestCase {
+class InlineDataProcessorTest extends TestCase
+{
 
 
     /**
      * Test class
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $processor = new InlineDataProcessor();
 
@@ -65,17 +69,22 @@ class InlineDataProcessorTest extends \TestCase {
         $this->assertSame(123, $item->getSize());
         $this->assertSame("file1.jpg", $item->getText());
         $this->assertSame("image/jpeg", $item->getType());
-        $this->assertSame("data:application/octet-stream;base64," . $fileAttachment->getContent(), $item->getDownloadUrl());
-        $this->assertSame("data:image/jpeg;base64," . $fileAttachment->getContent(), $item->getPreviewImgSrc());
-
-
+        $this->assertSame(
+            "data:application/octet-stream;base64,{$fileAttachment->getContent()}",
+            $item->getDownloadUrl()
+        );
+        $this->assertSame(
+            "data:image/jpeg;base64,{$fileAttachment->getContent()}",
+            $item->getPreviewImgSrc()
+        );
     }
 
 
     /**
      * Test missing previewImgSrc
      */
-    public function testPreviewImgSrcMissing() {
+    public function testPreviewImgSrcMissing()
+    {
 
         $processor = new InlineDataProcessor();
 
@@ -93,9 +102,5 @@ class InlineDataProcessorTest extends \TestCase {
         $item = $processor->process($fileAttachment);
 
         $this->assertSame("", $item->getPreviewImgSrc());
-
-
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,11 +25,12 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Conjoon\Mail\Client\Attachment\Processor;
 
-use Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem;
-
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
 
 /**
  * Interface FileAttachmentProcessor.
@@ -37,13 +39,14 @@ use Conjoon\Mail\Client\Attachment\FileAttachment,
  *
  * @package Conjoon\Mail\Client\Attachment\Processor
  */
-interface FileAttachmentProcessor {
+interface FileAttachmentProcessor
+{
 
     /**
      * Processes the FileAttachment ad returns a FileAttachmentItem
      * with the properties previewImgSrc and downloadUrl computed by the content and
      * encoding of the FileAttachment.
-     * Both entities need to share the same AttachmentKey-informations.
+     * Both entities need to share the same AttachmentKey-information.
      *
      * @param FileAttachment $fileAttachment
      *
@@ -51,7 +54,5 @@ interface FileAttachmentProcessor {
      *
      * @throws ProcessorException if any error occurs.
      */
-    public function process(FileAttachment $fileAttachment) : FileAttachmentItem;
-
-
+    public function process(FileAttachment $fileAttachment): FileAttachmentItem;
 }
