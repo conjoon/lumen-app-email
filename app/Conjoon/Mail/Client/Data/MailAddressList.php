@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,15 +24,16 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Stringable,
-    Conjoon\Util\Copyable;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Copyable;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\Stringable;
 
 /**
  * Class MailAddressList organizes a list of MailAddresses.
@@ -49,7 +51,8 @@ use Conjoon\Util\AbstractList,
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddressList extends AbstractList implements JsonDecodable, Stringable, Copyable {
+class MailAddressList extends AbstractList implements JsonDecodable, Stringable, Copyable
+{
 
 
 // --------------------------------
@@ -59,9 +62,10 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
     /**
      * @inheritdoc
      */
-    public function copy() : MailAddressList {
+    public function copy(): MailAddressList
+    {
 
-        $list = new MailAddressList;
+        $list = new MailAddressList();
 
         foreach ($this as $entry) {
             $list[] = $entry->copy();
@@ -80,7 +84,8 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
     /**
      * @inheritdoc
      */
-    public static function fromJsonString(string $value) :? Jsonable {
+    public static function fromJsonString(string $value): ?Jsonable
+    {
 
         $val = json_decode($value, true);
 
@@ -88,7 +93,7 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
             return null;
         }
 
-        $list = new self;
+        $list = new self();
 
         foreach ($val as $entry) {
             $address = MailAddress::fromJsonString(json_encode($entry));
@@ -97,7 +102,7 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
                 continue;
             }
 
-            $list[]  = $address;
+            $list[] = $address;
         }
 
         if (count($list) === 0) {
@@ -114,6 +119,7 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
     /**
      * Returns a string representation of this email address list.
      *
+     * @return string
      * @example
      *   $list = new MailAddressList();
      *   $list[] = new MailAddress("PeterParker@newyork.com", "Peter Parker");
@@ -121,9 +127,9 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
      *
      *   $list->toString(); // returns "Peter Parker <PeterParker@newyork.com>, Peter Griffin <PeterGriffin@quahog.com>"
      *
-     * @return string
      */
-    public function toString() :string {
+    public function toString(): string
+    {
 
         $data = [];
         foreach ($this->data as $address) {
@@ -145,7 +151,8 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
      *
      * @see MailAddress::toJson()
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $d = [];
 
@@ -165,8 +172,8 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return MailAddress::class;
     }
-
 }

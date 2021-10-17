@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,14 +24,15 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Util\Stringable,
-    Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Copyable;
+use Conjoon\Util\Copyable;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\Stringable;
 
 /**
  * Class MailAddress models a Mail Address, containing a "name" and an "address".
@@ -53,18 +55,19 @@ use Conjoon\Util\Jsonable,
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddress  implements Stringable, JsonDecodable, Copyable {
+class MailAddress implements Stringable, JsonDecodable, Copyable
+{
 
 
     /**
      * @var string
      */
-    protected $name;
+    protected string $name;
 
     /**
      * @var string
      */
-    protected $address;
+    protected string $address;
 
 
     /**
@@ -73,7 +76,8 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
      * @param string $address
      * @param string $name
      */
-    public function __construct(string $address, string $name) {
+    public function __construct(string $address, string $name)
+    {
         $this->address = $address;
         $this->name = $name;
     }
@@ -82,7 +86,8 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
     /**
      * @return string
      */
-    public function getName() :string {
+    public function getName(): string
+    {
         return $this->name;
     }
 
@@ -90,7 +95,8 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
     /**
      * @return string
      */
-    public function getAddress() :string {
+    public function getAddress(): string
+    {
         return $this->address;
     }
 
@@ -101,11 +107,10 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
     /**
      * @inheritdoc
      */
-    public function copy() :MailAddress {
+    public function copy(): MailAddress
+    {
 
-        $add = new MailAddress($this->getAddress(), $this->getName());
-
-        return $add;
+        return new MailAddress($this->getAddress(), $this->getName());
     }
 
 
@@ -116,7 +121,8 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
     /**
      * @inheritdoc
      */
-    public static function fromJsonString(string $value) :? Jsonable {
+    public static function fromJsonString(string $value): ?Jsonable
+    {
 
         $val = json_decode($value, true);
 
@@ -125,7 +131,7 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
         }
 
         $address = $val["address"];
-        $name    = isset($val["name"]) ? $val["name"] : $val["address"];
+        $name = $val["name"] ?? $val["address"];
 
         return new self($address, $name);
     }
@@ -138,17 +144,18 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
     /**
      * Returns a string representation of this email address.
      *
+     * @return string
      * @example
      *   $address = new MailAddress("PeterParker@newyork.com", "Peter Parker");
      *
      *   $address->toString(); // returns "Peter Parker <PeterParker@newyork.com>"
      *
-     * @return string
      */
-    public function toString() :string {
+    public function toString(): string
+    {
 
         $address = $this->getAddress();
-        $name    = $this->getName();
+        $name = $this->getName();
 
         return $name . " <" . $address . ">";
     }
@@ -168,13 +175,12 @@ class MailAddress  implements Stringable, JsonDecodable, Copyable {
      *
      * @return array
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         return [
             'address' => $this->getAddress(),
-            'name'    => $this->getName()
+            'name' => $this->getName()
         ];
     }
-
-
 }

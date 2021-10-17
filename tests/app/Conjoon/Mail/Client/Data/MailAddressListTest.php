@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,14 +25,22 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Copyable;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Data;
 
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Copyable;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodable;
+use Tests\TestCase;
+
+/**
+ * Class MailAddressListTest
+ * @package Tests\Conjoon\Mail\Client\Data
+ */
 class MailAddressListTest extends TestCase
 {
 
@@ -43,7 +52,8 @@ class MailAddressListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailAddressList = new MailAddressList();
         $this->assertInstanceOf(AbstractList::class, $mailAddressList);
@@ -60,9 +70,10 @@ class MailAddressListTest extends TestCase
     /**
      * Tests toArray
      */
-    public function testToJson() {
+    public function testToJson()
+    {
 
-        $mailAddressList = new MailAddressList;
+        $mailAddressList = new MailAddressList();
         $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
@@ -76,9 +87,10 @@ class MailAddressListTest extends TestCase
     /**
      * fromJsonString
      */
-    public function testFromJsonString() {
+    public function testFromJsonString()
+    {
 
-        $mailAddressList = new MailAddressList;
+        $mailAddressList = new MailAddressList();
         $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
@@ -88,7 +100,7 @@ class MailAddressListTest extends TestCase
         $jsonString = json_encode([]);
         $this->assertNull(MailAddressList::fromJsonString($jsonString));
 
-        $jsonString = "{khlhoi:1)";
+        $jsonString = "{json:1)";
         $this->assertNull(MailAddressList::fromJsonString($jsonString));
 
         $jsonString = "[{\"name\" : \"foo\"}]";
@@ -98,9 +110,10 @@ class MailAddressListTest extends TestCase
     /**
      * toString
      */
-    public function testToString() {
+    public function testToString()
+    {
 
-        $mailAddressList = new MailAddressList;
+        $mailAddressList = new MailAddressList();
         $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
@@ -108,22 +121,20 @@ class MailAddressListTest extends TestCase
             $mailAddressList[0]->toString() . ", " . $mailAddressList[1]->toString(),
             $mailAddressList->toString()
         );
-
     }
 
     /**
      *
      */
-    public function testCopy() {
+    public function testCopy()
+    {
 
-        $mailAddressList = new MailAddressList;
+        $mailAddressList = new MailAddressList();
         $mailAddressList[] = new MailAddress("name1@address.testcomdomaindev", "name1");
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
         $copy = $mailAddressList->copy();
         $this->assertEquals($copy, $mailAddressList);
         $this->assertNotSame($copy, $mailAddressList);
-
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Util\Jsonable,
-    Conjoon\Util\JsonDecodable,
-    Conjoon\Util\Stringable,
-    Conjoon\Util\Copyable;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Data;
 
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Util\Copyable;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\Stringable;
+use Tests\TestCase;
+
+/**
+ * Class MailAddressTest
+ * @package Tests\Conjoon\Mail\Client\Data
+ */
 class MailAddressTest extends TestCase
 {
 
@@ -41,7 +50,8 @@ class MailAddressTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $name = "Peter Parker";
         $address = "peter.parker@newyork.com";
@@ -61,20 +71,21 @@ class MailAddressTest extends TestCase
     /**
      * toString()
      */
-    public function testToString() {
+    public function testToString()
+    {
 
         $name = "Peter Parker";
         $address = "peter.parker@newyork.com";
         $mailAddress = new MailAddress($address, $name);
 
         $this->assertSame("Peter Parker <peter.parker@newyork.com>", $mailAddress->toString());
-
     }
 
     /**
      * toString()
      */
-    public function testFromJsonString() {
+    public function testFromJsonString()
+    {
 
         $name = "Peter Parker";
         $address = "peter.parker@newyork.com";
@@ -99,7 +110,8 @@ class MailAddressTest extends TestCase
     /**
      * copy()
      */
-    public function testCopy() {
+    public function testCopy()
+    {
 
         $name = "Peter Parker";
         $address = "peter.parker@newyork.com";
@@ -111,5 +123,4 @@ class MailAddressTest extends TestCase
         $this->assertSame($address1->getName(), $mailAddress->getName());
         $this->assertNotSame($address1, $mailAddress);
     }
-
 }

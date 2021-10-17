@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,22 +25,27 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\DataException,
-    Conjoon\Mail\Client\MailClientException;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Data;
+
+use Conjoon\Mail\Client\Data\DataException;
+use Conjoon\Mail\Client\MailClientException;
+use Tests\TestCase;
 
 /**
  * Class DataExceptionTest
- *
+ * @package Tests\Conjoon\Mail\Client\Data
  */
-class DataExceptionTest extends TestCase {
+class DataExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $exception = new DataException();
 
         $this->assertInstanceOf(MailClientException::class, $exception);
     }
-
-
 }
