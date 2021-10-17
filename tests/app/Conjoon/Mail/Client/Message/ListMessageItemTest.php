@@ -25,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -98,7 +100,7 @@ class ListMessageItemTest extends TestCase
      * @return MessageKey
      */
     protected function createMessageKey(
-        string $mailAccountId = "dev", 
+        string $mailAccountId = "dev",
         string $mailFolderId = "INBOX",
         string $id = "232"
     ): MessageKey {
