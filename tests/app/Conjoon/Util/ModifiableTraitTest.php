@@ -25,11 +25,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\ModifiableTrait;
 use Tests\TestCase;
 
+/**
+ * Class ModifiableTraitTest
+ * @package Tests\Conjoon\Util
+ */
 class ModifiableTraitTest extends TestCase
 {
 
@@ -82,7 +88,7 @@ class ModifiableTraitTest extends TestCase
                 return $this->resumeModifiable();
             }
 
-            public function setField()
+            public function setField($notUsed = null)
             {
                 return $this->addModified("field");
             }

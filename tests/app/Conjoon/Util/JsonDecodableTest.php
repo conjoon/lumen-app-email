@@ -25,12 +25,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\Jsonable;
 use Conjoon\Util\JsonDecodable;
 use Tests\TestCase;
 
+/**
+ * Class JsonDecodableTest
+ * @package Tests\Conjoon\Util
+ */
 class JsonDecodableTest extends TestCase
 {
 

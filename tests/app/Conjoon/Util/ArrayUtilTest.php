@@ -25,11 +25,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\ArrayUtil;
 use Tests\TestCase;
 
+/**
+ * Class ArrayUtilTest
+ * @package Tests\Conjoon\Util
+ */
 class ArrayUtilTest extends TestCase
 {
 

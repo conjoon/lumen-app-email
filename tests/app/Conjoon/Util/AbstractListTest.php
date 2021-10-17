@@ -25,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Util;
 
 use ArrayAccess;
@@ -35,6 +37,10 @@ use stdClass;
 use Tests\TestCase;
 use TypeError;
 
+/**
+ * Class AbstractListTest
+ * @package Tests\Conjoon\Util
+ */
 class AbstractListTest extends TestCase
 {
 

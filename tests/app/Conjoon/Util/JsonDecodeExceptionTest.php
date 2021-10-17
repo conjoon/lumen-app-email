@@ -34,8 +34,8 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * Class DataExceptionTest
- * @package Tests\Conjoon\Mail\Client\Data
+ * Class JsonDecodeExceptionTest
+ * @package Tests\Conjoon\Util
  */
 class JsonDecodeExceptionTest extends TestCase
 {

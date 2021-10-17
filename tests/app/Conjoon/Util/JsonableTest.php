@@ -25,11 +25,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\Jsonable;
 use Tests\TestCase;
 
+/**
+ * Class JsonableTest
+ * @package Tests\Conjoon\Util
+ */
 class JsonableTest extends TestCase
 {
 
