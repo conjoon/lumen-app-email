@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,15 +25,28 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy,
-    Conjoon\Mail\Client\Writer\HtmlWritableStrategy,
-    Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Writer;
+
+use Conjoon\Mail\Client\Message\Text\HtmlTextStrategy;
+use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
+use Conjoon\Mail\Client\Writer\HtmlWritableStrategy;
+use Tests\TestCase;
+
+/**
+ * Class DefaultHtmlWritableStrategyTest
+ * @package Tests\Conjoon\Mail\Client\Writer
+ */
+class DefaultHtmlWritableStrategyTest extends TestCase
+{
 
 
-class DefaultHtmlWritableStrategyTest extends TestCase {
-
-
-    public function testClass() {
+    /**
+     * Test inheritance
+     */
+    public function testClass()
+    {
 
         $strategy = new DefaultHtmlWritableStrategy();
         $this->assertInstanceOf(HtmlWritableStrategy::class, $strategy);
@@ -40,16 +54,16 @@ class DefaultHtmlWritableStrategyTest extends TestCase {
     }
 
 
-    public function testProcess() {
+    /**
+     * Test process
+     */
+    public function testProcess()
+    {
 
         $strategy = new DefaultHtmlWritableStrategy();
         $text = "randomstring\r\ntest\n 1";
         $result = "randomstring<br />test<br /> 1";
 
         $this->assertSame($result, $strategy->process($text));
-
     }
-
-
-
 }

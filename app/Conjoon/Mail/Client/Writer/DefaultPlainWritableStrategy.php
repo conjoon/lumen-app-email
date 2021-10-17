@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Writer;
@@ -34,19 +36,18 @@ namespace Conjoon\Mail\Client\Writer;
  *
  * @package Conjoon\Mail\Client\Reader
  */
-class DefaultPlainWritableStrategy implements PlainWritableStrategy {
+class DefaultPlainWritableStrategy implements PlainWritableStrategy
+{
 
 
     /**
      * @inheritdoc
      */
-    public function process(string $text) :string {
+    public function process(string $text): string
+    {
 
         $text = str_replace(["<br />", "<br>"], "\n", $text);
 
         return strip_tags($text);
     }
-
-
-
 }

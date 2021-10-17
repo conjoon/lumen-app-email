@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,83 +25,91 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require_once(dirname(__FILE__). "/../Message/Text/AbstractMessagePartContentProcessorTest.php");
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Writer;
 
-use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Text\Converter,
-    Conjoon\Mail\Client\Writer\PlainWritableStrategy,
-    Conjoon\Mail\Client\Writer\HtmlWritableStrategy;
+use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor;
+use Conjoon\Mail\Client\Writer\HtmlWritableStrategy;
+use Conjoon\Mail\Client\Writer\PlainWritableStrategy;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Text\Converter;
+use Tests\Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessorTest;
+
 /**
  * Class WritableMessagePartContentProcessorTest
- *
+ * @package Tests\Conjoon\Mail\Client\Writer
  */
-class WritableMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest {
+class WritableMessagePartContentProcessorTest extends AbstractMessagePartContentProcessorTest
+{
 
     /**
      * Test instance.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
         $processor = $this->createProcessor();
         $this->assertInstanceOf(AbstractMessagePartContentProcessor::class, $processor);
     }
 
 
-    // +--------------------------
+// +--------------------------
 // | Helper
 // +--------------------------
 
     /**
      * @return WritableMessagePartContentProcessor
      */
-    protected function createProcessor() :WritableMessagePartContentProcessor {
+    protected function createProcessor(): WritableMessagePartContentProcessor
+    {
 
         return new WritableMessagePartContentProcessor(
             $this->createConverter(),
             $this->createPlainWritableStrategy(),
-            $this->createHtmlWritableStrategy());
+            $this->createHtmlWritableStrategy()
+        );
     }
 
 
     /**
      * @return Converter
      */
-    protected function createConverter() :Converter{
+    protected function createConverter(): Converter
+    {
 
         return new class implements Converter {
-            public function convert(string $text, string $fromCharset, string $targetCharset) :string {
+            public function convert(string $text, string $fromCharset, string $targetCharset): string
+            {
                 return implode(" ", [$text, $fromCharset, $targetCharset]);
             }
         };
-
     }
 
     /**
      * @return HtmlWritableStrategy
      */
-    protected function createHtmlWritableStrategy() :HtmlWritableStrategy{
+    protected function createHtmlWritableStrategy(): HtmlWritableStrategy
+    {
 
         return new class implements HtmlWritableStrategy {
-            public function process(string $text) :string {
-                return "<HTML>" . $text ;
+            public function process(string $text): string
+            {
+                return "<HTML>" . $text;
             }
         };
-
     }
 
     /**
      * @return PlainWritableStrategy
      */
-    protected function createPlainWritableStrategy() :PlainWritableStrategy{
+    protected function createPlainWritableStrategy(): PlainWritableStrategy
+    {
 
         return new class implements PlainWritableStrategy {
-            public function process(string $text) :string {
-                return "PLAIN" . $text ;
+            public function process(string $text): string
+            {
+                return "PLAIN" . $text;
             }
         };
-
     }
-
-
 }

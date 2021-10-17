@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -26,26 +27,26 @@
 
 namespace Conjoon\Mail\Client\Writer;
 
-use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor,
-    Conjoon\Text\Converter;
-
+use Conjoon\Mail\Client\Message\Text\AbstractMessagePartContentProcessor;
+use Conjoon\Text\Converter;
 
 /**
  * WritableMessagePartContentProcessor
  *
  * @package Conjoon\Mail\Client\Message\Writer
  */
-class WritableMessagePartContentProcessor extends AbstractMessagePartContentProcessor{
+class WritableMessagePartContentProcessor extends AbstractMessagePartContentProcessor
+{
 
     /**
      * @inheritdoc
      */
-    public function __construct(Converter $converter,
-                                PlainWritableStrategy $plainTextStrategy,
-                                HtmlWritableStrategy $htmlTextStrategy)  {
+    public function __construct(
+        Converter $converter,
+        PlainWritableStrategy $plainTextStrategy,
+        HtmlWritableStrategy $htmlTextStrategy
+    ) {
 
         parent::__construct($converter, $plainTextStrategy, $htmlTextStrategy);
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,23 +25,38 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
-    Conjoon\Mail\Client\Writer\PlainWritableStrategy,
-    Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Writer;
 
-class DefaultPlainWritableStrategyTest extends TestCase {
+use Conjoon\Mail\Client\Message\Text\PlainTextStrategy;
+use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
+use Conjoon\Mail\Client\Writer\PlainWritableStrategy;
+use Tests\TestCase;
 
+/**
+ * Class DefaultPlainWritableStrategyTest
+ * @package Tests\Conjoon\Mail\Client\Writer
+ */
+class DefaultPlainWritableStrategyTest extends TestCase
+{
 
-    public function testClass() {
+    /**
+     * Test inheritance
+     */
+    public function testClass()
+    {
 
         $strategy = new DefaultPlainWritableStrategy();
         $this->assertInstanceOf(PlainWritableStrategy::class, $strategy);
         $this->assertInstanceOf(PlainTextStrategy::class, $strategy);
     }
 
-
-    public function testProcess() {
+    /**
+     * @noinspection SpellCheckingInspection
+     */
+    public function testProcess()
+    {
 
         $strategy = new DefaultPlainWritableStrategy();
 
@@ -50,7 +66,4 @@ class DefaultPlainWritableStrategyTest extends TestCase {
 
         $this->assertSame($result, $strategy->process($text));
     }
-
-
-
 }
