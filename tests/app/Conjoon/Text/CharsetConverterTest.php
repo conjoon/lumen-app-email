@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,21 +25,37 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Text;
+
 use Conjoon\Text\CharsetConverter;
+use Conjoon\Text\Converter;
+use Tests\TestCase;
 
+/**
+ * Class CharsetConverterTest
+ * @package Tests\Conjoon\Text
+ */
+class CharsetConverterTest extends TestCase
+{
 
-class CharsetConverterTest extends TestCase {
-
-
-
-
-    public function testInstance() {
+    /**
+     * Test inheritance
+     */
+    public function testInstance()
+    {
 
         $decoder = new CharsetConverter();
-        $this->assertInstanceOf(\Conjoon\Text\Converter::class, $decoder);
+        $this->assertInstanceOf(Converter::class, $decoder);
     }
 
-    public function testConvert() {
+
+    /**
+     * Test convert()
+     */
+    public function testConvert()
+    {
 
         $decoder = new CharsetConverter();
         $text = "randomstring";
@@ -55,7 +72,4 @@ class CharsetConverterTest extends TestCase {
         $text = "€";
         $this->assertSame($text, $decoder->convert($text));
     }
-
-
-
 }

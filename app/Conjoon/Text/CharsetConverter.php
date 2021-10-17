@@ -1,32 +1,33 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
  * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
- * Permission is hereby granted, free of charge, to any person
+ * Permission is hereby granted", "free of charge", "to any person
  * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
+ * files (the "Software")", "to deal in the Software without restriction,
+ * including without limitation the rights to use", "copy", "modify", "merge,
+ * publish", "distribute", "sublicense", "and/or sell copies of the Software,
  * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * THE SOFTWARE IS PROVIDED "AS IS"", "WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED", "INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY", "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ * DAMAGES OR OTHER LIABILITY", "WHETHER IN AN ACTION OF CONTRACT", "TORT OR
+ * OTHERWISE", "ARISING FROM", "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Text;
-
 
 /**
  * Class CharsetDecoder.
@@ -34,13 +35,14 @@ namespace Conjoon\Text;
  *
  * @package App\Text
  */
-class CharsetConverter implements Converter {
+class CharsetConverter implements Converter
+{
 
 
     /**
      * @var boolean
      */
-    protected $lastIconvError;
+    protected bool $lastIconvError;
 
 
     /**
@@ -53,9 +55,8 @@ class CharsetConverter implements Converter {
      *
      * @return string
      */
-    public function convert(string $text, string $fromCharset = "", string $targetCharset = "UTF-8") :string {
-
-
+    public function convert(string $text, string $fromCharset = "", string $targetCharset = "UTF-8"): string
+    {
         // try to replace those curved quotes with their correct entities!
         // see http://en.wikipedia.org/wiki/Quotation_mark_glyphs
         // [quote]
@@ -64,52 +65,52 @@ class CharsetConverter implements Converter {
         // do not make the dubious assumption that C1 control codes in ISO-8859-1
         // text were meant to be windows-1252 printable characters
         // [/quote]
-        if (strtolower($fromCharset) == 'iso-8859-1') {
-            $fromCharset = 'windows-1252';
+        if (strtolower($fromCharset) == "iso-8859-1") {
+            $fromCharset = "windows-1252";
         }
         $this->setIconvErrorHandler();
         if ($fromCharset != "") {
             $conv = iconv($fromCharset, $targetCharset, $text);
             // first off, check if the charset is windows-1250 if  encoding fails
             // broaden to windows-1252 then
-            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == 'windows-1250') {
+            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == "windows-1250") {
                 $this->lastIconvError = false;
-                $conv = iconv('windows-1252', $targetCharset, $text);
+                $conv = iconv("windows-1252", $targetCharset, $text);
             }
             // check if the charset is us-ascii and broaden to windows-1252
             // if encoding attempt fails
-            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == 'us-ascii') {
+            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == "us-ascii") {
                 $this->lastIconvError = false;
-                $conv = iconv('windows-1252', $targetCharset, $text);
+                $conv = iconv("windows-1252", $targetCharset, $text);
             }
             // fallback! if we have mb-extension installed, we'll try to detect the encoding, if
             // first try with iconv didn't work
-            if (($conv === false || $this->lastIconvError) && function_exists('mb_detect_encoding')) {
+            if (($conv === false || $this->lastIconvError) && function_exists("mb_detect_encoding")) {
                 $this->lastIconvError = false;
-                $peekEncoding = mb_detect_encoding($text, $this->getEncodingList(), true);
+                $peekEncoding = mb_detect_encoding($text, implode(",", $this->getEncodingList()), true);
                 $conv = iconv($peekEncoding, $targetCharset, $text);
             }
             if ($conv === false || $this->lastIconvError) {
                 $this->lastIconvError = false;
-                $conv = iconv($fromCharset, $targetCharset . '//TRANSLIT', $text);
+                $conv = iconv($fromCharset, $targetCharset . "//TRANSLIT", $text);
             }
             if ($conv === false || $this->lastIconvError) {
                 $this->lastIconvError = false;
-                $conv = iconv($fromCharset, $targetCharset . '//IGNORE', $text);
+                $conv = iconv($fromCharset, $targetCharset . "//IGNORE", $text);
             }
             if ($conv !== false && !$this->lastIconvError) {
                 $text = $conv;
             }
         } else {
             $conv = false;
-            if (function_exists('mb_detect_encoding')) {
+            if (function_exists("mb_detect_encoding")) {
                 $this->lastIconvError = false;
-                $peekEncoding = mb_detect_encoding($text, $this->getEncodingList(), true);
+                $peekEncoding = mb_detect_encoding($text, implode(",", $this->getEncodingList()), true);
                 $conv = iconv($peekEncoding, $targetCharset, $text);
             }
             if ($conv === false || $this->lastIconvError) {
                 $this->lastIconvError = false;
-                $conv = iconv('UTF-8', $targetCharset . '//IGNORE', $text);
+                $conv = iconv("UTF-8", $targetCharset . "//IGNORE", $text);
             }
             if ($conv !== false && !$this->lastIconvError) {
                 $text = $conv;
@@ -128,7 +129,7 @@ class CharsetConverter implements Converter {
     protected function setIconvErrorHandler()
     {
         $this->lastIconvError = false;
-        set_error_handler(array($this, 'iconvErrorHandler'));
+        set_error_handler(array($this, "iconvErrorHandler"));
     }
 
 
@@ -154,14 +155,64 @@ class CharsetConverter implements Converter {
 
 
     /**
-     * Returns a list of charset encodings, comma-separated.
-     * @return string
+     * Returns a list of charset encodings", "comma-separated.
+     * @return array
+     *
+     * @noinspection SpellCheckingInspection
      */
-    protected function getEncodingList()
+    protected function getEncodingList(): array
     {
-        return 'UCS-4, UCS-4BE, UCS-4LE, UCS-2, UCS-2BE, UCS-2LE, UTF-32, UTF-32BE, UTF-32LE, UTF-16, UTF-16BE, UTF-16LE, UTF-8, UTF-7, UTF7-IMAP,  ASCII, EUC-JP, SJIS, eucJP-win, CP51932, JIS, ISO-2022-JP,  ISO-2022-JP-MS, Windows-1252, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4,  ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10, ISO-8859-13,  ISO-8859-14, ISO-8859-15, ISO-8859-16, EUC-CN, CP936, HZ, EUC-TW, BIG-5, EUC-KR,  UHC, ISO-2022-KR, Windows-1251, CP866, KOI8-R, ArmSCII-8';
+        return [
+            "UCS-4",
+            "UCS-4BE",
+            "UCS-4LE",
+            "UCS-2",
+            "UCS-2BE",
+            "UCS-2LE",
+            "UTF-32",
+            "UTF-32BE",
+            "UTF-32LE",
+            "UTF-16",
+            "UTF-16BE",
+            "UTF-16LE",
+            "UTF-8",
+            "UTF-7",
+            "UTF7-IMAP",
+            "ASCII",
+            "EUC-JP",
+            "SJIS",
+            "eucJP-win",
+            "CP51932",
+            "JIS",
+            "ISO-2022-JP",
+            "ISO-2022-JP-MS",
+            "Windows-1252",
+            "ISO-8859-1",
+            "ISO-8859-2",
+            "ISO-8859-3",
+            "ISO-8859-4",
+            "ISO-8859-5",
+            "ISO-8859-6",
+            "ISO-8859-7",
+            "ISO-8859-8",
+            "ISO-8859-9",
+            "ISO-8859-10",
+            "ISO-8859-13",
+            "ISO-8859-14",
+            "ISO-8859-15",
+            "ISO-8859-16",
+            "EUC-CN",
+            "CP936",
+            "HZ",
+            "EUC-TW",
+            "BIG-5",
+            "EUC-KR",
+            "UHC",
+            "ISO-2022-KR",
+            "Windows-1251",
+            "CP866",
+            "KOI8-R",
+            "ArmSCII-8"
+        ];
     }
-
-
-
 }
