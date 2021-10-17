@@ -78,11 +78,11 @@ class AbstractMessagePartContentProcessorTest extends TestCase
 
         $processor = $this->createProcessor();
 
-        $textPlain = new MessagePart("plain", "FROM UTF-8", "text/plain");
+        $textPlain = new MessagePart("IsPlain", "FROM UTF-8", "text/plain");
         $textHtml = new MessagePart("html", "FROM UTF-8", "text/html");
 
         $processedTextPlain = $processor->process($textPlain, "ABC");
-        $this->assertSame("PLAIN plain FROM UTF-8 ABC", $textPlain->getContents());
+        $this->assertSame("PLAINIsPlain FROM UTF-8 ABC", $textPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml, "ABC");
         $this->assertSame("<HTML>html FROM UTF-8 ABC", $textHtml->getContents());
@@ -148,7 +148,7 @@ class AbstractMessagePartContentProcessorTest extends TestCase
         return new class implements PlainTextStrategy {
             public function process(string $text): string
             {
-                return "PLAIN " . $text;
+                return "PLAIN" . $text;
             }
         };
     }
