@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Attachment;
@@ -34,8 +36,8 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Attachment
  */
-class FileAttachmentList extends AbstractList {
-
+class FileAttachmentList extends AbstractList
+{
 
 
 // -------------------------
@@ -45,10 +47,8 @@ class FileAttachmentList extends AbstractList {
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return FileAttachment::class;
     }
-
-
-
 }

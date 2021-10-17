@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
-    Conjoon\Mail\Client\Attachment\AbstractAttachment;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Attachment;
 
+use Conjoon\Mail\Client\Attachment\AbstractAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\Jsonable;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class FileAttachmentItemTest
+ * @package Tests\Conjoon\Mail\Client\Attachment
+ */
 class FileAttachmentItemTest extends TestCase
 {
 
@@ -41,7 +51,8 @@ class FileAttachmentItemTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $type          = "image/jpg";
         $text          = "Text";
@@ -61,7 +72,7 @@ class FileAttachmentItemTest extends TestCase
         $this->assertInstanceOf(Jsonable::class, $attachment);
         $this->assertInstanceOf(AbstractAttachment::class, $attachment);
 
-        $this->assertSame($downloadUrl,   $attachment->getDownloadUrl());
+        $this->assertSame($downloadUrl, $attachment->getDownloadUrl());
         $this->assertSame($previewImgSrc, $attachment->getPreviewImgSrc());
 
         $this->assertEquals(
@@ -75,25 +86,26 @@ class FileAttachmentItemTest extends TestCase
             ),
             $attachment->toJson()
         );
-
     }
 
 
     /**
      * Tests constructor with exception for missing downloadUrl
      */
-    public function testConstructor_exceptionDownloadUrl() {
+    public function testConstructorExceptionDownloadUrl()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("downloadUrl");
 
         new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
+            [
+                "type" => "1",
                 "text" => "2",
                 "size" => 3,
-                //"downloadUrl" => "4",
-                "previewImgSrc" => "5"]
+                "previewImgSrc" => "5"
+            ]
         );
     }
 
@@ -101,20 +113,20 @@ class FileAttachmentItemTest extends TestCase
     /**
      * Tests constructor with exception for missing previewImgSrc
      */
-    public function testConstructor_exceptionPreviewImgSrc() {
+    public function testConstructorExceptionPreviewImgSrc()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("previewImgSrc");
 
         new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
+            [
+                "type" => "1",
                 "text" => "2",
                 "size" => 3,
                 "downloadUrl" => "4"
-                //"previewImgSrc" => "5"
             ]
         );
     }
-
 }

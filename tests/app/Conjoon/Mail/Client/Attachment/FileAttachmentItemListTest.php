@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Attachment;
 
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
+use Tests\TestCase;
+
+/**
+ * Class FileAttachmentItemListTest
+ * @package Tests\Conjoon\Mail\Client\Attachment
+ */
 class FileAttachmentItemListTest extends TestCase
 {
 
@@ -42,7 +51,8 @@ class FileAttachmentItemListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $attachmentList = new FileAttachmentItemList();
         $this->assertInstanceOf(AbstractList::class, $attachmentList);
@@ -55,7 +65,8 @@ class FileAttachmentItemListTest extends TestCase
     /**
      * Test toJson
      */
-    public function testToJson() {
+    public function testToJson()
+    {
 
         $attachment1 = $this->createAttachment();
         $attachment2 = $this->createAttachment();
@@ -76,19 +87,20 @@ class FileAttachmentItemListTest extends TestCase
 // ---------------------
 
     /**
-     * @return Attachment
+     * @return FileAttachmentItem
      */
-    protected function createAttachment() :FileAttachmentItem {
+    protected function createAttachment(): FileAttachmentItem
+    {
 
         return new FileAttachmentItem(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type"          => "1",
-             "text"          => "2",
-             "size"          => 3,
-             "downloadUrl"   => "4",
-             "previewImgSrc" => "5"]
+            [
+                "type"          => "1",
+                 "text"          => "2",
+                 "size"          => 3,
+                 "downloadUrl"   => "4",
+                 "previewImgSrc" => "5"
+            ]
         );
-
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,30 +24,36 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Attachment;
 
-use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Util\Jsonable;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\Jsonable;
+use InvalidArgumentException;
 
 /**
  * FileAttachmentItem models a downloadable  email message file-attachment,
  * providing a preview-src and a download url.
  *
  * @package Conjoon\Mail\Client\Attachment
+ *
+ * @method string getPreviewImgSrc()
+ * @method string getDownloadUrl()
  */
-class FileAttachmentItem extends AbstractAttachment implements Jsonable {
+class FileAttachmentItem extends AbstractAttachment implements Jsonable
+{
 
     /**
      * @var string
      */
-    protected $downloadUrl;
+    protected string $downloadUrl;
 
     /**
      * @var string
      */
-    protected $previewImgSrc;
+    protected string $previewImgSrc;
 
     /**
      * DownloadableAttachment constructor.
@@ -54,22 +61,23 @@ class FileAttachmentItem extends AbstractAttachment implements Jsonable {
      * @param AttachmentKey $attachmentKey
      * @param array|null $data
      *
-     * @throws \InvalidArgumentException if text, type, downloadUrl, size or previewImgSrc
+     * @throws InvalidArgumentException if text, type, downloadUrl, size or previewImgSrc
      * in $data is missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data) {
+    public function __construct(AttachmentKey $attachmentKey, array $data)
+    {
 
         $this->attachmentKey = $attachmentKey;
 
         $missing = "";
         if (!isset($data["downloadUrl"])) {
             $missing = "downloadUrl";
-        } else if (!isset($data["previewImgSrc"])) {
+        } elseif (!isset($data["previewImgSrc"])) {
             $missing = "previewImgSrc";
         }
 
         if ($missing) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"" . $missing . "\" missing"
             );
         }
@@ -85,7 +93,8 @@ class FileAttachmentItem extends AbstractAttachment implements Jsonable {
     /**
      * @inheritdoc
      */
-    public function toJson() :array {
+    public function toJson(): array
+    {
 
         return array_merge($this->getAttachmentKey()->toJson(), [
             "type" => $this->getType(),
@@ -94,8 +103,5 @@ class FileAttachmentItem extends AbstractAttachment implements Jsonable {
             "downloadUrl" => $this->getDownloadUrl(),
             "previewImgSrc" => $this->getPreviewImgSrc()
         ]);
-
     }
-
-
 }

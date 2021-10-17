@@ -27,7 +27,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Conjoon\Mail\Client\Atatchment\Processor;
+namespace Tests\Conjoon\Mail\Client\Attachment\Processor;
 
 use Conjoon\Mail\Client\Attachment\FileAttachment;
 use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
@@ -36,8 +36,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Tests\TestCase;
 
 /**
- * Class ProcessorExceptionTest
- *
+ * Class InlineDataProcessorTest
+ * @package Tests\Conjoon\Mail\Client\Attachment\Processor
  */
 class InlineDataProcessorTest extends TestCase
 {

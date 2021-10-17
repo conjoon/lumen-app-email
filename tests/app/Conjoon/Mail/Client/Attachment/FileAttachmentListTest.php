@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,12 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\FileAttachmentList;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Attachment;
 
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Util\AbstractList;
+use Tests\TestCase;
+
+/**
+ * Class FileAttachmentListTest
+ * @package Tests\Conjoon\Mail\Client\Attachment
+ */
 class FileAttachmentListTest extends TestCase
 {
 
@@ -41,13 +49,12 @@ class FileAttachmentListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $attachmentList = new FileAttachmentList();
         $this->assertInstanceOf(AbstractList::class, $attachmentList);
 
         $this->assertSame(FileAttachment::class, $attachmentList->getEntityType());
     }
-
-
 }

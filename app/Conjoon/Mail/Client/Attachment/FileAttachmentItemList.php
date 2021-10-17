@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,12 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Attachment;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Util\AbstractList;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
 
 /**
  * Class FileAttachmentItemList organizes a list of FileAttachmentItems.
@@ -36,8 +38,8 @@ use Conjoon\Util\Jsonable,
  *
  * @package Conjoon\Mail\Client\Attachment
  */
-class FileAttachmentItemList extends AbstractList implements Jsonable {
-
+class FileAttachmentItemList extends AbstractList implements Jsonable
+{
 
 
 // -------------------------
@@ -47,7 +49,8 @@ class FileAttachmentItemList extends AbstractList implements Jsonable {
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return FileAttachmentItem::class;
     }
 
@@ -59,16 +62,15 @@ class FileAttachmentItemList extends AbstractList implements Jsonable {
     /**
      * @return array
      */
-    public function toJson() :array{
+    public function toJson(): array
+    {
 
         $data = [];
 
-        foreach ($this->data as $key => $item) {
+        foreach ($this->data as $item) {
             $data[] = $item->toJson();
         }
 
         return $data;
     }
-
-
 }

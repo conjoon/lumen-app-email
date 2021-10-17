@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\AbstractAttachment;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Attachment;
 
-class FilettachmentTest extends TestCase
+use Conjoon\Mail\Client\Attachment\AbstractAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class FileAttachmentTest
+ * @package Tests\Conjoon\Mail\Client\Attachment
+ */
+class FileAttachmentTest extends TestCase
 {
 
 
@@ -41,7 +50,8 @@ class FilettachmentTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $type     = "image/jpg";
         $text     = "Text";
@@ -60,7 +70,7 @@ class FilettachmentTest extends TestCase
 
         $this->assertInstanceOf(AbstractAttachment::class, $attachment);
 
-        $this->assertSame($content,  $attachment->getContent());
+        $this->assertSame($content, $attachment->getContent());
         $this->assertSame($encoding, $attachment->getEncoding());
     }
 
@@ -68,18 +78,20 @@ class FilettachmentTest extends TestCase
     /**
      * Tests constructor with exception for missing content
      */
-    public function testConstructor_exceptionContent() {
+    public function testConstructorExceptionContent()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("content");
 
         new FileAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
-             "text" => "2",
-             "size" => 3,
-             //"content" => "CONTENT",
-             "encoding" => "base64"]
+            [
+                "type" => "1",
+                 "text" => "2",
+                 "size" => 3,
+                 "encoding" => "base64"
+            ]
         );
     }
 
@@ -87,20 +99,20 @@ class FilettachmentTest extends TestCase
     /**
      * Tests constructor with exception for missing encoding
      */
-    public function testConstructor_exceptionEncoding() {
+    public function testConstructorExceptionEncoding()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("encoding");
 
         new FileAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
+            [
+                "type" => "1",
                 "text" => "2",
                 "size" => 3,
-                "content" => "CONTENT",
-                //"encoding" => "base64"
+                "content" => "CONTENT"
             ]
         );
     }
-
 }

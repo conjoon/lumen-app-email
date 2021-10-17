@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,11 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Attachment\AbstractAttachment;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Attachment;
 
+use Conjoon\Mail\Client\Attachment\AbstractAttachment;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class AbstractAttachmentTest
+ * @package Tests\Conjoon\Mail\Client\Attachment
+ */
 class AbstractAttachmentTest extends TestCase
 {
 
@@ -40,39 +49,43 @@ class AbstractAttachmentTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
-        $type          = "image/jpg";
-        $text          = "Text";
-        $size          = 123;
+        $type = "image/jpg";
+        $text = "Text";
+        $size = 123;
 
         $attachment = $this->createAbstractAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => $type,
-            "text" => $text,
-            "size" => $size]
+            [
+                "type" => $type,
+                "text" => $text,
+                "size" => $size
+            ]
         );
 
         $this->assertSame($type, $attachment->getType());
         $this->assertSame($text, $attachment->getText());
         $this->assertSame($size, $attachment->getSize());
-
     }
 
 
     /**
      * Tests constructor with exception for missing type
      */
-    public function testConstructor_exceptionType() {
+    public function testConstructorExceptionType()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("type");
 
         $this->createAbstractAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            [//type" => "1",
-             "text" => "2",
-             "size" => 3,]
+            [
+                "text" => "2",
+                "size" => 3
+            ]
         );
     }
 
@@ -80,16 +93,18 @@ class AbstractAttachmentTest extends TestCase
     /**
      * Tests constructor with exception for missing text
      */
-    public function testConstructor_exceptionText() {
+    public function testConstructorExceptionText()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("text");
 
         $this->createAbstractAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
-             //   "text" => "2",
-                "size" => 3]
+            [
+                "type" => "1",
+                "size" => 3
+            ]
         );
     }
 
@@ -97,18 +112,18 @@ class AbstractAttachmentTest extends TestCase
     /**
      * Tests constructor with exception for missing size
      */
-    public function testConstructor_exceptionSize() {
+    public function testConstructorExceptionSize()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("size");
 
         $this->createAbstractAttachment(
             new AttachmentKey("dev", "INBOX", "123", "1"),
-            ["type" => "1",
-                   "text" => "2"
-                //"size" => 3
+            [
+                "type" => "1",
+                "text" => "2"
             ]
-
         );
     }
 
@@ -119,14 +134,15 @@ class AbstractAttachmentTest extends TestCase
 // ---------------------
 
     /**
+     * @param $key
+     * @param $data
      * @return AbstractAttachment
      */
-    protected function createAbstractAttachment($key, $data) :AbstractAttachment {
+    protected function createAbstractAttachment($key, $data): AbstractAttachment
+    {
         // Create a new instance from the Abstract Class
-        return new class($key, $data) extends AbstractAttachment {
+        return new class ($key, $data) extends AbstractAttachment {
 
         };
     }
-
-
 }

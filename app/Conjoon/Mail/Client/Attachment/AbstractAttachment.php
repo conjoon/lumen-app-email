@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,39 +24,46 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Attachment;
 
+use BadMethodCallException;
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
-
+use InvalidArgumentException;
 
 /**
  * AbstractAttachment models an abstract base email message attachment.
  *
  * @package Conjoon\Mail\Client\Attachment
+ *
+ * @method string getType()
+ * @method string getText()
+ * @method int getSize()
  */
-abstract class AbstractAttachment {
+abstract class AbstractAttachment
+{
 
     /**
      * @var AttachmentKey
      */
-    protected $attachmentKey;
+    protected AttachmentKey $attachmentKey;
 
     /**
      * @var string
      */
-    protected $type;
+    protected string $type;
 
     /**
      * @var string
      */
-    protected $text;
+    protected string $text;
 
     /**
      * @var integer
      */
-    protected $size;
+    protected int $size;
 
 
     /**
@@ -64,23 +72,24 @@ abstract class AbstractAttachment {
      * @param AttachmentKey $attachmentKey
      * @param array|null $data
      *
-     * @throws \InvalidArgumentException if text, type or size in $data is missing
+     * @throws InvalidArgumentException if text, type or size in $data is missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data) {
+    public function __construct(AttachmentKey $attachmentKey, array $data)
+    {
 
         $this->attachmentKey = $attachmentKey;
 
         $missing = "";
         if (!isset($data["text"])) {
             $missing = "text";
-        } else if (!isset($data["type"])) {
+        } elseif (!isset($data["type"])) {
             $missing = "type";
-        } else if (!isset($data["size"])) {
+        } elseif (!isset($data["size"])) {
             $missing = "size";
         }
 
         if ($missing) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"" . $missing . "\" missing"
             );
         }
@@ -90,16 +99,16 @@ abstract class AbstractAttachment {
                 $this->{$key} = $value;
             }
         }
-
     }
 
 
     /**
-     * Returns the atatchment key for this attachment.
+     * Returns the attachment key for this attachment.
      *
      * @return AttachmentKey
      */
-    public function getAttachmentKey() :AttachmentKey {
+    public function getAttachmentKey(): AttachmentKey
+    {
         return $this->attachmentKey;
     }
 
@@ -114,9 +123,10 @@ abstract class AbstractAttachment {
      *
      * @return mixed
      *
-     * @throws \BadMethodCallException if a method is called for which no property exists
+     * @throws BadMethodCallException if a method is called for which no property exists
      */
-    public function __call($method, $arguments) {
+    public function __call(string $method, $arguments)
+    {
 
         if (strpos($method, 'get') === 0) {
             $property = lcfirst(substr($method, 3));
@@ -126,7 +136,7 @@ abstract class AbstractAttachment {
             }
         }
 
-        throw new \BadMethodCallException("no method \"".$method."\" found.");
+        throw new BadMethodCallException("no method \"" . $method . "\" found.");
     }
 
 
@@ -135,9 +145,8 @@ abstract class AbstractAttachment {
      *
      * @param int $size
      */
-    public function setSize(int $size) {
+    public function setSize(int $size)
+    {
         $this->size = $size;
     }
-
-
 }

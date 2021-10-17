@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,57 +24,61 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Attachment;
 
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use InvalidArgumentException;
 
 /**
  * FileAttachment models a file email message attachment.
  *
  * @package Conjoon\Mail\Client\Attachment
+ *
+ * @method string getContent()
+ * @method string getEncoding()
  */
-class FileAttachment extends AbstractAttachment {
+class FileAttachment extends AbstractAttachment
+{
 
     /**
      * @var string
      */
-    protected $content;
+    protected string $content;
 
     /**
      * @var string
      */
-    protected $encoding;
+    protected string $encoding;
 
     /**
-     * Atatchment constructor.
+     * Attachment constructor.
      *
      * @param AttachmentKey $attachmentKey
      * @param array|null $data
      *
-     * @throws \InvalidArgumentException if content or encoding  in $data is missing
+     * @throws InvalidArgumentException if content or encoding  in $data is missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data) {
+    public function __construct(AttachmentKey $attachmentKey, array $data)
+    {
 
         $this->attachmentKey = $attachmentKey;
 
         $missing = "";
         if (!isset($data["content"])) {
             $missing = "content";
-        } else if (!isset($data["encoding"])) {
+        } elseif (!isset($data["encoding"])) {
             $missing = "encoding";
         }
 
         if ($missing) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"" . $missing . "\" missing"
             );
         }
 
         parent::__construct($attachmentKey, $data);
     }
-
-
-
 }
