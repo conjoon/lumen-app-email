@@ -102,6 +102,7 @@ class MessageItemController extends Controller
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         $sort = $request->input("sort");
@@ -176,6 +177,7 @@ class MessageItemController extends Controller
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem, MessageBody
@@ -228,6 +230,7 @@ class MessageItemController extends Controller
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem, MessageBody
@@ -289,6 +292,7 @@ class MessageItemController extends Controller
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageItem
@@ -304,7 +308,7 @@ class MessageItemController extends Controller
                 ];
                 $data = $request->only($keys);
 
-                $messageBody        = $this->messageBodyDraftJsonTransformer->transform($data);
+                $messageBody        = $this->messageBodyDraftJsonTransformer::fromArray($data);
                 $updatedMessageBody = $messageItemService->updateMessageBodyDraft($messageBody);
 
                 $resp = ["success" => !!$updatedMessageBody];
@@ -313,7 +317,7 @@ class MessageItemController extends Controller
                 } else {
                     $resp["msg"] = "Updating the MessageBodyDraft failed.";
                 }
-                return response()->json($resp, 200);
+                return response()->json($resp);
 
 
             case "MessageDraft":
@@ -330,7 +334,7 @@ class MessageItemController extends Controller
 
                 $data = $request->only($keys);
 
-                $messageItemDraft        = $this->messageItemDraftJsonTransformer->transform($data);
+                $messageItemDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
                 $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageItemDraft);
 
                 $resp = [
@@ -346,7 +350,7 @@ class MessageItemController extends Controller
                 } else {
                     $resp["msg"] = "Updating the MessageDraft failed.";
                 }
-                return response()->json($resp, 200);
+                return response()->json($resp);
 
             case "MessageItem":
                 $response   = [];
@@ -427,7 +431,7 @@ class MessageItemController extends Controller
                     return response()->json([
                         "success" => true,
                         "data"    => $item->toJson()
-                    ], 200);
+                    ]);
                 } else {
                     return response()->json([
                         "success" => false,
@@ -460,6 +464,7 @@ class MessageItemController extends Controller
         $user = Auth::user();
 
         $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
         // possible targets: MessageBody
@@ -478,7 +483,7 @@ class MessageItemController extends Controller
         $keys = ["textHtml", "textPlain"];
         $data = $request->only($keys);
 
-        $messageBody             = $this->messageBodyDraftJsonTransformer->transform($data);
+        $messageBody             = $this->messageBodyDraftJsonTransformer::fromArray($data);
         $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
 
         if (!$createdMessageBodyDraft) {
@@ -491,7 +496,7 @@ class MessageItemController extends Controller
         return response()->json([
             "success" => !!$createdMessageBodyDraft ,
             "data"    => $createdMessageBodyDraft->toJson()
-        ], 200);
+        ]);
     }
 
 
@@ -510,6 +515,7 @@ class MessageItemController extends Controller
         $keys = ["mailAccountId", "mailFolderId", "id"];
         $data = $request->only($keys);
 
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount = $user->getMailAccount($data["mailAccountId"]);
 
         $messageItemService = $this->messageItemService;
@@ -527,6 +533,6 @@ class MessageItemController extends Controller
 
         return response()->json([
             "success" => true
-        ], 200);
+        ]);
     }
 }
