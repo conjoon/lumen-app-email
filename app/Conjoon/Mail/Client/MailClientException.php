@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,17 +24,20 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client;
+
+use RuntimeException;
 
 /**
  * Class MailClientException
  *
  * @package Conjoon\Mail\Client
  */
-class MailClientException extends \RuntimeException {
-
+class MailClientException extends RuntimeException
+{
 
 
 }

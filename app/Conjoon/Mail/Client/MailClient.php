@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,27 +24,29 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\Attachment\FileAttachmentList,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageItemList;
 
 /**
  * Interface MailClient
  * @package Conjoon\Mail\Client
  */
-interface MailClient {
+interface MailClient
+{
 
 
     /**
@@ -56,7 +59,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMailFolderList(MailAccount $mailAccount) :MailFolderList;
+    public function getMailFolderList(MailAccount $mailAccount): MailFolderList;
 
 
     /**
@@ -68,7 +71,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-     public function getMessageItem(MessageKey $key) :?MessageItem;
+    public function getMessageItem(MessageKey $key): ?MessageItem;
 
 
     /**
@@ -80,7 +83,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function deleteMessage(MessageKey $key) :bool;
+    public function deleteMessage(MessageKey $key): bool;
 
 
     /**
@@ -92,7 +95,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+    public function getMessageItemDraft(MessageKey $key): ?MessageItemDraft;
 
 
     /**
@@ -105,7 +108,7 @@ interface MailClient {
      * @throws MailClientException if any exception occurs, or if the message found
      * is not a Draft-Message.
      */
-    public function sendMessageDraft(MessageKey $key) : bool;
+    public function sendMessageDraft(MessageKey $key): bool;
 
 
     /**
@@ -117,7 +120,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageBody(MessageKey $key) :?MessageBody;
+    public function getMessageBody(MessageKey $key): ?MessageBody;
 
 
     /**
@@ -132,7 +135,7 @@ interface MailClient {
      * @throws MailClientException if any exception occurs, or of the MessageBodyDraft already has
      * a MessageKey
      */
-    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :MessageBodyDraft;
+    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft): MessageBodyDraft;
 
 
     /**
@@ -145,7 +148,7 @@ interface MailClient {
      * @throws MailClientException if any exception occurs, or of the MessageBodyDraft does not have a
      * MessageKey
      */
-    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :MessageBodyDraft;
+    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft): MessageBodyDraft;
 
 
     /**
@@ -158,7 +161,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft): ?MessageItemDraft;
 
 
     /**
@@ -166,13 +169,13 @@ interface MailClient {
      *
      * @param FolderKey $key
      * @param array|null $options An additional set of options for querying the MessageList, such
-     * as sort-direction or start/limit values.
+     * as sort-direction, start/limit values and the ids of the messageItems to return.
      *
      * @return MessageItemList
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(FolderKey $key , array $options = null) :MessageItemList;
+    public function getMessageItemList(FolderKey $key, array $options = null): MessageItemList;
 
 
     /**
@@ -184,11 +187,11 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getTotalMessageCount(FolderKey $key) : int;
+    public function getTotalMessageCount(FolderKey $key): int;
 
 
     /**
-     * Returns the total number of UNRWAD messages in the specified $mailFolderId for the specified $account;
+     * Returns the total number of UNREAD messages in the specified $mailFolderId for the specified $account;
      *
      * @param FolderKey $key
      *
@@ -196,7 +199,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getUnreadMessageCount(FolderKey $key) : int;
+    public function getUnreadMessageCount(FolderKey $key): int;
 
 
     /**
@@ -208,7 +211,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getFileAttachmentList(MessageKey $key) : FileAttachmentList;
+    public function getFileAttachmentList(MessageKey $key): FileAttachmentList;
 
 
     /**
@@ -222,7 +225,7 @@ interface MailClient {
      *
      * @throws MailClientException if any exception occurs
      */
-    public function setFlags(MessageKey $key, FlagList $flagList) : bool;
+    public function setFlags(MessageKey $key, FlagList $flagList): bool;
 
 
     /**
@@ -237,5 +240,5 @@ interface MailClient {
      * @throws MailClientException if the MailAccount-id found in $messageKey and $folderKey are
      * not the same, or if any other error occurs
      */
-    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) : MessageKey;
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey): MessageKey;
 }

@@ -24,11 +24,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client;
+
 use Conjoon\Mail\Client\MailClientException;
+use RuntimeException;
+use Tests\TestCase;
 
 /**
  * Class MailClientExceptionTest
- *
+ * @package Tests\Conjoon\Mail\Client
  */
 class MailClientExceptionTest extends TestCase {
 
@@ -37,7 +43,7 @@ class MailClientExceptionTest extends TestCase {
 
         $exception = new MailClientException();
 
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
+        $this->assertInstanceOf(RuntimeException::class, $exception);
     }
 
 
