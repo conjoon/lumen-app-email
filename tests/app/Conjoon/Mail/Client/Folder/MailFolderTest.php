@@ -1,5 +1,5 @@
-
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -25,12 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\Folder\AbstractMailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\AbstractMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class MailFolderTest
+ * @package Tests\Conjoon\Mail\Client\Folder
+ */
 class MailFolderTest extends TestCase
 {
 
@@ -42,7 +51,8 @@ class MailFolderTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
         $folderKey = $this->createKey();
 
@@ -54,11 +64,13 @@ class MailFolderTest extends TestCase
         $this->assertTrue(MailFolder::TYPE_FOLDER != "");
 
         $mailFolder = new MailFolder(
-            $folderKey, [
+            $folderKey,
+            [
             "name" => "Folder",
             "unreadCount" => 0,
             "folderType" => MailFolder::TYPE_INBOX
-        ]);
+            ]
+        );
 
         $this->assertInstanceOf(AbstractMailFolder::class, $mailFolder);
         $this->assertSame(MailFolder::TYPE_INBOX, $mailFolder->getFolderType());
@@ -84,23 +96,27 @@ class MailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing folderType
      */
-    public function testConstructor_exceptionFolderType() {
+    public function testConstructor_exceptionFolderType()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("folderType");
 
         $folderKey = $this->createKey();
         new MailFolder(
-            $folderKey, [
-        ]);
+            $folderKey,
+            [
+            ]
+        );
     }
 
 
     /**
      * Test for exception if invalid folder type gets submitted to setFolderType
      */
-    public function testSetFolderType_exception() {
-        $this->expectException(\InvalidArgumentException::class);
+    public function testSetFolderType_exception()
+    {
+        $this->expectException(InvalidArgumentException::class);
 
         new MailFolder($this->createKey(), ["folderType" => "foo"]);
     }
@@ -109,11 +125,12 @@ class MailFolderTest extends TestCase
     /**
      * Test for toJson
      */
-    public function testToJson() {
+    public function testToJson()
+    {
 
         $data = [
-            "folderType"  => MailFolder::TYPE_INBOX,
-            "name"        => "INBOX",
+            "folderType" => MailFolder::TYPE_INBOX,
+            "name" => "INBOX",
             "unreadCount" => 5
         ];
 
@@ -135,13 +152,13 @@ class MailFolderTest extends TestCase
         $json = $mf->toJson();
 
         $expected = array_merge($key->toJson(), $data);
-        $expected["data"] =  [[
+        $expected["data"] = [[
             "mailAccountId" => "dev",
-            "id"            => "INBOX.SubFolder",
-            "name"          => "A",
-            "unreadCount"   => 4,
-            "folderType"    => MailFolder::TYPE_INBOX,
-            "data"          => []
+            "id" => "INBOX.SubFolder",
+            "name" => "A",
+            "unreadCount" => 4,
+            "folderType" => MailFolder::TYPE_INBOX,
+            "data" => []
         ]];
 
 
@@ -158,10 +175,9 @@ class MailFolderTest extends TestCase
     /**
      * @return FolderKey
      */
-    public function createKey($account = "dev", $name = "INBOX.Some Folder") {
+    public function createKey($account = "dev", $name = "INBOX.Some Folder")
+    {
 
         return new FolderKey($account, $name);
     }
-
-
 }

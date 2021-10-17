@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,12 +24,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder\Tree;
 
-use Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\MailFolderList;
 
 /**
  * Interface MailFolderTreeBuilder.
@@ -36,7 +38,8 @@ use Conjoon\Mail\Client\Folder\MailFolderList,
  *
  * @package Conjoon\Mail\Client\Folder\Tree
  */
-interface MailFolderTreeBuilder {
+interface MailFolderTreeBuilder
+{
 
 
     /**
@@ -51,8 +54,5 @@ interface MailFolderTreeBuilder {
      *
      * @return MailFolderChildList
      */
-    public function listToTree(MailFolderList $mailFolderList, array $root) :MailFolderChildList;
-
-
-
+    public function listToTree(MailFolderList $mailFolderList, array $root): MailFolderChildList;
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,6 +24,7 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
@@ -47,8 +49,8 @@ use Conjoon\Util\AbstractList;
  *
  * @package Conjoon\Mail\Client\Folder
  */
-class MailFolderList extends AbstractList {
-
+class MailFolderList extends AbstractList
+{
 
 
 // -------------------------
@@ -58,10 +60,8 @@ class MailFolderList extends AbstractList {
     /**
      * @inheritdoc
      */
-    public function getEntityType() :string{
+    public function getEntityType(): string
+    {
         return ListMailFolder::class;
     }
-
-
-
 }

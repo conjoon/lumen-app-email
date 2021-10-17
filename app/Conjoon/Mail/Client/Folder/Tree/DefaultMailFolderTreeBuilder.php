@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,16 +24,16 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder\Tree;
 
-use Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Folder\FolderIdToTypeMapper,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\FolderIdToTypeMapper;
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\MailFolderList;
 
 /**
  * Class DefaultMailFolderTreeBuilder.
@@ -41,20 +42,22 @@ use Conjoon\Mail\Client\Folder\MailFolderList,
  *
  * @package Conjoon\Mail\Client\Folder\Tree
  */
-class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
+class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder
+{
 
 
     /**
      * @var FolderIdToTypeMapper
      */
-    protected $folderIdToTypeMapper;
+    protected FolderIdToTypeMapper $folderIdToTypeMapper;
 
 
     /**
      * DefaultMailFolderTreeBuilder constructor.
      * @param FolderIdToTypeMapper $folderIdToTypeMapper
      */
-    public function __construct(FolderIdToTypeMapper $folderIdToTypeMapper) {
+    public function __construct(FolderIdToTypeMapper $folderIdToTypeMapper)
+    {
         $this->folderIdToTypeMapper = $folderIdToTypeMapper;
     }
 
@@ -62,7 +65,8 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
     /**
      * @return FolderIdToTypeMapper
      */
-    public function getFolderIdToTypeMapper() : FolderIdToTypeMapper{
+    public function getFolderIdToTypeMapper(): FolderIdToTypeMapper
+    {
         return $this->folderIdToTypeMapper;
     }
 
@@ -74,19 +78,17 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
     /**
      * @inheritdoc
      */
-    public function listToTree(MailFolderList $mailFolderList, array $root) :MailFolderChildList {
-
-        $mailFolder = null;
+    public function listToTree(MailFolderList $mailFolderList, array $root): MailFolderChildList
+    {
 
         $folders = [];
 
         $systemFolderTypes = [];
 
         foreach ($mailFolderList as $mailbox) {
-
             if ($this->shouldSkipMailFolder($mailbox, $root)) {
                 continue;
-            };
+            }
 
             $parts = explode($mailbox->getDelimiter(), $mailbox->getFolderKey()->getId());
             array_pop($parts);
@@ -103,8 +105,8 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
             $mailFolder = new MailFolder(
                 $mailbox->getFolderKey(),
                 ["name" => $name,
-                 "unreadCount" => $mailbox->getUnreadCount(),
-                 "folderType" =>  $folderType]
+                    "unreadCount" => $mailbox->getUnreadCount(),
+                    "folderType" => $folderType]
             );
 
             if ($folderType !== MailFolder::TYPE_FOLDER) {
@@ -118,11 +120,10 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
             $folders[$parentKey][] = $mailFolder;
         }
 
-        $mailFolderChildList = new MailFolderChildList;
+        $mailFolderChildList = new MailFolderChildList();
 
         foreach ($folders as $parentKey => $mailFolders) {
-
-            usort($mailFolders, function($a, $b) {
+            usort($mailFolders, function ($a, $b) {
                 if ($a->getFolderType() == $b->getFolderType()) {
                     return 0;
                 }
@@ -131,7 +132,7 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
 
 
             if ($parentKey === "") {
-                $mailFolder            = $mailFolders[0];
+                $mailFolder = $mailFolders[0];
                 $mailFolderChildList[] = $mailFolder;
                 continue;
             }
@@ -150,7 +151,6 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
                     $tmp->addMailFolder($item);
                 }
             }
-
         }
 
         return $mailFolderChildList;
@@ -164,14 +164,15 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
     /**
      * Looks up the folder with the specified id in the list of MailFolders.
      *
-     * @param $id
-     * @param $folders
+     * @param string $id
+     * @param array $folders
+     *
      * @return MailFolder
      */
-    private function getMailFolderWithId(string $id, array $folders) :?MailFolder{
+    private function getMailFolderWithId(string $id, array $folders): ?MailFolder
+    {
 
-        foreach ($folders as $key => $folderList) {
-
+        foreach ($folders as $folderList) {
             foreach ($folderList as $item) {
                 if ($item->getFolderKey()->getId() === $id) {
                     return $item;
@@ -190,15 +191,17 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
      * a child relationship with the specified $root id.
      *
      * @param ListMailFolder $listMailFolder
+     * @param array $root
      *
      * @return boolean
      */
-    protected function shouldSkipMailFolder(ListMailFolder $listMailFolder, array $root) :bool {
+    protected function shouldSkipMailFolder(ListMailFolder $listMailFolder, array $root): bool
+    {
 
         $id = $listMailFolder->getFolderKey()->getId();
 
         $idParts = explode($listMailFolder->getDelimiter(), $id);
-        $skip    = 0;
+        $skip = 0;
         foreach ($root as $globalIds) {
             $rootParts = explode($listMailFolder->getDelimiter(), $globalIds);
             foreach ($rootParts as $key => $rootId) {
@@ -211,9 +214,7 @@ class DefaultMailFolderTreeBuilder implements MailFolderTreeBuilder {
             return true;
         }
 
-        return in_array("\\noselect",    $listMailFolder->getAttributes()) ||
-               in_array("\\nonexistent", $listMailFolder->getAttributes());
+        return in_array("\\noselect", $listMailFolder->getAttributes()) ||
+            in_array("\\nonexistent", $listMailFolder->getAttributes());
     }
-
-
 }

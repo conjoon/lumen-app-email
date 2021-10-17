@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Folder\AbstractMailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\AbstractMailFolder;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class AbstractMailFolderTest
+ * @package Tests\Conjoon\Mail\Client\Folder
+ */
 class AbstractMailFolderTest extends TestCase
 {
 
@@ -39,17 +49,20 @@ class AbstractMailFolderTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
-        $name        = "INBOX.Some Folder";
+        $name = "INBOX.Some Folder";
         $unreadCount = 23;
 
         $folderKey = new FolderKey("dev", $name);
         $abstractMailFolder = $this->createMailFolder(
-            $folderKey, [
+            $folderKey,
+            [
             "unreadCount" => $unreadCount,
-            "name"        => $name
-        ]);
+            "name" => $name
+            ]
+        );
 
         $this->assertInstanceOf(AbstractMailFolder::class, $abstractMailFolder);
 
@@ -62,33 +75,39 @@ class AbstractMailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing unreadCount
      */
-    public function testConstructor_exceptionUnreadCount() {
+    public function testConstructor_exceptionUnreadCount()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("unreadCount");
 
         $folderKey = new FolderKey("dev", "TEST");
         $this->createMailFolder(
-            $folderKey, [
+            $folderKey,
+            [
             "name" => "TEST"
-        ]);
+            ]
+        );
     }
 
 
     /**
      * Tests constructor with exception for missing name
      */
-    public function testConstructor_exceptionName() {
+    public function testConstructor_exceptionName()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("name");
 
 
         $folderKey = new FolderKey("dev", "TEST");
         $this->createMailFolder(
-            $folderKey, [
+            $folderKey,
+            [
             "unreadCount" => 0
-        ]);
+            ]
+        );
     }
 
 
@@ -103,12 +122,11 @@ class AbstractMailFolderTest extends TestCase
      * @param array|null $data
      * @return AbstractMailFolder
      */
-    protected function createMailFolder(FolderKey $key, array $data = null) :AbstractMailFolder {
+    protected function createMailFolder(FolderKey $key, array $data = null): AbstractMailFolder
+    {
         // Create a new instance from the Abstract Class
-        return new class($key, $data) extends AbstractMailFolder {
+        return new class ($key, $data) extends AbstractMailFolder {
 
         };
     }
-
-
 }

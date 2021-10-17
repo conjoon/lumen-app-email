@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,15 +24,16 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
-
+use InvalidArgumentException;
 
 /**
- * Class ListMailFolder models MailFolder-informations for a specified MailAccount,
+ * Class ListMailFolder models MailFolder-information for a specified MailAccount,
  * including delimiter property.
  *
  * @example
@@ -52,29 +54,31 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
  *
  * @package Conjoon\Mail\Client\Folder
  */
-class ListMailFolder extends AbstractMailFolder {
+class ListMailFolder extends AbstractMailFolder
+{
 
 
     /**
      * @var string
      */
-    protected $delimiter;
+    protected string $delimiter;
 
     /**
      * @var array
      */
-    protected $attributes;
+    protected array $attributes;
 
 
     /**
      * @inheritdoc
      *
-     * @throws \InvalidArgumentException if delimiter in $data is missing
+     * @throws InvalidArgumentException if delimiter in $data is missing
      */
-    public function __construct(FolderKey $folderKey, array $data) {
+    public function __construct(FolderKey $folderKey, array $data)
+    {
 
         if (!isset($data["delimiter"])) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"delimiter\" missing"
             );
         }
@@ -90,9 +94,10 @@ class ListMailFolder extends AbstractMailFolder {
     /**
      * Sets the delimiter for this ListMailFolder.
      *
-     * @param $delimiter
+     * @param string $delimiter
      */
-    protected function setDelimiter(string $delimiter) {
+    protected function setDelimiter(string $delimiter)
+    {
         $this->delimiter = $delimiter;
     }
 
@@ -101,7 +106,8 @@ class ListMailFolder extends AbstractMailFolder {
      * Returns the delimiter for this ListMailFolder.
      * @return string
      */
-    public function getDelimiter() :string {
+    public function getDelimiter(): string
+    {
         return $this->delimiter;
     }
 
@@ -109,9 +115,10 @@ class ListMailFolder extends AbstractMailFolder {
     /**
      * Sets the attributes for this ListMailFolder.
      *
-     * @param $delimiter
+     * @param array $attributes
      */
-    protected function setAttributes(array $attributes) {
+    protected function setAttributes(array $attributes)
+    {
         $this->attributes = $attributes;
     }
 
@@ -120,9 +127,8 @@ class ListMailFolder extends AbstractMailFolder {
      * Returns the attributes for this ListMailFolder.
      * @return array
      */
-    public function getAttributes() :array {
+    public function getAttributes(): array
+    {
         return $this->attributes;
     }
-
-
 }

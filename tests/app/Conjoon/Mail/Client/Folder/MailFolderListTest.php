@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,11 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Folder\MailFolderList;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Util\AbstractList;
+use Tests\TestCase;
+
+/**
+ * Class MailFolderListTest
+ * @package Tests\Conjoon\Mail\Client\Folder
+ */
 class MailFolderListTest extends TestCase
 {
 
@@ -40,13 +49,12 @@ class MailFolderListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailFolderList = new MailFolderList();
         $this->assertInstanceOf(AbstractList::class, $mailFolderList);
 
         $this->assertSame(ListMailFolder::class, $mailFolderList->getEntityType());
     }
-
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,16 +24,17 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
-use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Util\Jsonable;
-
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Util\Jsonable;
+use InvalidArgumentException;
 
 /**
- * Class MailFolder models MailFolder-informations for a specified MailAccount
+ * Class MailFolder models MailFolder-information for a specified MailAccount
  * in a tree structure, i.e. every MailFolder has a field "data" that contains
  * child MailFolder information.
  *
@@ -54,7 +56,8 @@ use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
  *
  * @package Conjoon\Mail\Client\Folder
  */
-class MailFolder extends AbstractMailFolder implements Jsonable {
+class MailFolder extends AbstractMailFolder implements Jsonable
+{
 
     public const TYPE_INBOX = "INBOX";
 
@@ -72,23 +75,24 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
     /**
      * @var string
      */
-    protected $folderType;
+    protected string $folderType;
 
     /**
-     * @var MailFolderChildList
+     * @var MailFolderChildList|null
      */
-    protected $data;
+    protected ?MailFolderChildList $data = null;
 
 
     /**
      * @inheritdoc
      *
-     * @throws \InvalidArgumentException if folderType in $data is missing
+     * @throws InvalidArgumentException if folderType in $data is missing
      */
-    public function __construct(FolderKey $folderKey, array $data) {
+    public function __construct(FolderKey $folderKey, array $data)
+    {
 
         if (!isset($data["folderType"])) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"folderType\" missing"
             );
         }
@@ -101,10 +105,11 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
      * Sets the type of this folder.
      * @param string $folderType
      *
-     * @throws \InvalidArgumentException if $type has not a valid
+     * @throws InvalidArgumentException if $type has not a valid
      * value
      */
-    public function setFolderType(string $folderType) {
+    public function setFolderType(string $folderType)
+    {
 
         $types = [
             self::TYPE_INBOX, self::TYPE_DRAFT, self::TYPE_JUNK,
@@ -112,7 +117,7 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
         ];
 
         if (!in_array($folderType, $types)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "The value \"" . $folderType . "\" is not a valid type for a MailFolder"
             );
         }
@@ -125,7 +130,8 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
      * Returns the type of this folder.
      * @return string
      */
-    public function getFolderType() :string {
+    public function getFolderType(): string
+    {
         return $this->folderType;
     }
 
@@ -135,9 +141,10 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
      *
      * @return MailFolderChildList
      */
-    public function getData() : MailFolderChildList {
+    public function getData(): MailFolderChildList
+    {
         if (!$this->data) {
-            $this->data = new MailFolderChildList;
+            $this->data = new MailFolderChildList();
         }
         return $this->data;
     }
@@ -150,10 +157,11 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
      *
      * @return MailFolder this
      */
-    public function addMailFolder(MailFolder $mailFolder) :MailFolder {
+    public function addMailFolder(MailFolder $mailFolder): MailFolder
+    {
 
         if (!$this->data) {
-            $this->data = new MailFolderChildList;
+            $this->data = new MailFolderChildList();
         }
 
         $this->data[] = $mailFolder;
@@ -169,19 +177,16 @@ class MailFolder extends AbstractMailFolder implements Jsonable {
     /**
      * @inheritdoc
      */
-    public function toJson() :array {
+    public function toJson(): array
+    {
 
         $json = [
-            "name"        => $this->getName(),
+            "name" => $this->getName(),
             "unreadCount" => $this->getUnreadCount(),
-            "folderType"  => $this->getFolderType(),
-            "data"        => $this->getData() ? $this->getData()->toJson() : []
+            "folderType" => $this->getFolderType(),
+            "data" => $this->getData() ? $this->getData()->toJson() : []
         ];
 
-        $json = array_merge($this->getFolderKey()->toJson(), $json);
-
-        return $json;
+        return array_merge($this->getFolderKey()->toJson(), $json);
     }
-
-
 }

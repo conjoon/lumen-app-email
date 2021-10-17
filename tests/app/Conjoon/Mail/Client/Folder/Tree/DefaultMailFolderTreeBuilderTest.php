@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,52 +25,56 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper,
-    Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder,
-    Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder\Tree;
+
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder;
+use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
+use Tests\TestCase;
 
 /**
  * Class DefaultMailFolderTreeBuilderTest
+ * @package Tests\Conjoon\Mail\Client\Folder\Tree
  */
-class DefaultMailFolderTreeBuilderTest extends TestCase {
-
-    use TestTrait;
-
+class DefaultMailFolderTreeBuilderTest extends TestCase
+{
 
     /**
      * Tests constructor and base class.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $builder = $this->createBuilder();
         $this->assertInstanceOf(MailFolderTreeBuilder::class, $builder);
-
     }
 
 
     /**
      * Tests listToTre
      */
-    public function testListToTree_INBOX() {
+    public function testListToTreeInbox()
+    {
 
         $builder = $this->createBuilder();
 
         $mailFolderList = $this->createMailFolderList(
             ["INBOX",
-            "INBOX.Drafts",
-            "INBOX.Drafts.Revision",
-            "INBOX.Drafts.Revision.TlDr",
-            ["INBOX.Drafts.Revision.SkipMe", ["attributes" => ["\\noselect"]]],
-            "INBOX.Drafts.Revision.TlNs",
+                "INBOX.Drafts",
+                "INBOX.Drafts.Revision",
+                "INBOX.Drafts.Revision.TlDr",
+                ["INBOX.Drafts.Revision.SkipMe", ["attributes" => ["\\noselect"]]],
+                "INBOX.Drafts.Revision.TlNs",
 
-            "INBOX.Sent",
-            "STUFF",
-            "STUFF.Folder"]
+                "INBOX.Sent",
+                "STUFF",
+                "STUFF.Folder"]
         );
 
         $mailFolderChildList = $builder->listToTree($mailFolderList, ["INBOX"]);
@@ -117,14 +122,14 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
         $this->assertSame(MailFolder::TYPE_SENT, $sent->getFolderType());
         $children = $sent->getData();
         $this->assertSame(0, count($children));
-
     }
 
 
     /**
      * Tests listToTre
      */
-    public function testListToTree_STUFF() {
+    public function testListToTreeStuff()
+    {
 
         $builder = $this->createBuilder();
 
@@ -167,12 +172,12 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
     /**
      * @return MailFolderList
      */
-    protected function createMailFolderList($data) {
+    protected function createMailFolderList($data): MailFolderList
+    {
 
         $mailFolderList = new MailFolderList();
 
         foreach ($data as $item) {
-
             $cData = [];
 
             if (is_array($item)) {
@@ -183,13 +188,12 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
             $delimiter = ".";
 
 
-
             $parts = explode($delimiter, $item);
             $listMailFolder = new ListMailFolder(
                 new FolderKey("dev", $item),
-                array_merge(["name"        => array_pop($parts),
-                 "unreadCount" => 0,
-                 "delimiter"   => $delimiter], $cData)
+                array_merge(["name" => array_pop($parts),
+                    "unreadCount" => 0,
+                    "delimiter" => $delimiter], $cData)
             );
 
             $mailFolderList[] = $listMailFolder;
@@ -201,12 +205,12 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
     /**
      * @return DefaultMailFolderTreeBuilder
      */
-    protected function createBuilder() {
+    protected function createBuilder(): DefaultMailFolderTreeBuilder
+    {
 
         return new DefaultMailFolderTreeBuilder(
             $this->createMapper()
         );
-
     }
 
 
@@ -215,15 +219,16 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
      * @param string $delimiter
      * @return ListMailFolder
      */
-    public function createListMailFolder($id, $delimiter) :ListMailFolder {
+    public function createListMailFolder(string $id, string $delimiter): ListMailFolder
+    {
 
         $parts = explode($id, $delimiter);
 
         return new ListMailFolder(
             new FolderKey("dev", $id),
-            ["name"        => array_pop($parts),
-             "delimiter"   => $delimiter,
-             "unreadCount" => 0]
+            ["name" => array_pop($parts),
+                "delimiter" => $delimiter,
+                "unreadCount" => 0]
         );
     }
 
@@ -231,7 +236,8 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
     /**
      * @return DefaultFolderIdToTypeMapper
      */
-    protected function createMapper() :DefaultFolderIdToTypeMapper {
+    protected function createMapper(): DefaultFolderIdToTypeMapper
+    {
         return new DefaultFolderIdToTypeMapper();
     }
 
@@ -241,9 +247,8 @@ class DefaultMailFolderTreeBuilderTest extends TestCase {
      * @param $id
      * @return FolderKey
      */
-    protected function createFolderKey($mid, $id) :FolderKey {
+    protected function createFolderKey($mid, $id): FolderKey
+    {
         return new FolderKey($mid, $id);
-
     }
-
 }

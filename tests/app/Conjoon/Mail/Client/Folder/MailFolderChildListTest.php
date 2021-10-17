@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,13 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Util\AbstractList,
-    Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Folder\MailFolder,
-    Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
+use Tests\TestCase;
+
+/**
+ * Class MailFolderChildListTest
+ * @package Tests\Conjoon\Mail\Client\Folder
+ */
 class MailFolderChildListTest extends TestCase
 {
 
@@ -42,7 +51,8 @@ class MailFolderChildListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailFolderChildList = new MailFolderChildList();
         $this->assertInstanceOf(AbstractList::class, $mailFolderChildList);
@@ -55,12 +65,13 @@ class MailFolderChildListTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testToJson() {
+    public function testToJson()
+    {
 
         $data = [
-            "name"        => "INBOX",
+            "name" => "INBOX",
             "unreadCount" => 5,
-            "folderType"  => MailFolder::TYPE_INBOX
+            "folderType" => MailFolder::TYPE_INBOX
         ];
 
         $folder = new MailFolder(
@@ -74,13 +85,11 @@ class MailFolderChildListTest extends TestCase
 
         $this->assertEquals([[
             "mailAccountId" => "dev",
-            "id"            => "INBOX",
-            "folderType"  => MailFolder::TYPE_INBOX,
-            "unreadCount"   => 5,
-            "name"          => "INBOX",
-            "data"          => []
+            "id" => "INBOX",
+            "folderType" => MailFolder::TYPE_INBOX,
+            "unreadCount" => 5,
+            "name" => "INBOX",
+            "data" => []
         ]], $mailFolderChildList->toJson());
-
     }
-
 }

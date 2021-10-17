@@ -1,5 +1,5 @@
-
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -25,11 +25,20 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Folder\ListMailFolder,
-    Conjoon\Mail\Client\Folder\AbstractMailFolder,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Folder;
 
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Folder\AbstractMailFolder;
+use Conjoon\Mail\Client\Folder\ListMailFolder;
+use InvalidArgumentException;
+use Tests\TestCase;
+
+/**
+ * Class ListMailFolderTest
+ * @package Tests\Conjoon\Mail\Client\Folder
+ */
 class ListMailFolderTest extends TestCase
 {
 
@@ -41,36 +50,41 @@ class ListMailFolderTest extends TestCase
     /**
      * Tests constructor
      */
-    public function testConstructor() {
+    public function testConstructor()
+    {
 
-        $delimiter   = ".";
-        $name        = "INBOX.Some Folder";
+        $delimiter = ".";
+        $name = "INBOX.Some Folder";
 
         $folderKey = new FolderKey("dev", $name);
         $listMailFolder = new ListMailFolder(
-            $folderKey, [
-            "delimiter"   => $delimiter,
-            "name"        => $name,
+            $folderKey,
+            [
+            "delimiter" => $delimiter,
+            "name" => $name,
             "unreadCount" => 0
-        ]);
+            ]
+        );
 
         $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
 
         $this->assertSame($delimiter, $listMailFolder->getDelimiter());
         $this->assertSame([], $listMailFolder->getAttributes());
 
-        $attributes     = ["\nonexistent", "\noselect"];
+        $attributes = ["\nonexistent", "\noselect"];
         $listMailFolder = new ListMailFolder(
-            $folderKey, [
-            "delimiter"   => $delimiter,
-            "name"        => $name,
+            $folderKey,
+            [
+            "delimiter" => $delimiter,
+            "name" => $name,
             "unreadCount" => 0,
-            "attributes"  => $attributes
-        ]);
+            "attributes" => $attributes
+            ]
+        );
 
         $this->assertInstanceOf(AbstractMailFolder::class, $listMailFolder);
 
-        $this->assertSame($delimiter,  $listMailFolder->getDelimiter());
+        $this->assertSame($delimiter, $listMailFolder->getDelimiter());
         $this->assertSame($attributes, $listMailFolder->getAttributes());
     }
 
@@ -78,20 +92,21 @@ class ListMailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing delimiter
      */
-    public function testConstructor_exceptionDelimiter() {
+    public function testConstructor_exceptionDelimiter()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("delimiter");
 
-        $name        = "INBOX.Some Folder";
+        $name = "INBOX.Some Folder";
 
         $folderKey = new FolderKey("dev", $name);
         new ListMailFolder(
-            $folderKey, [
-            "name"        => $name,
+            $folderKey,
+            [
+            "name" => $name,
             "unreadCount" => 0
-        ]);
-
+            ]
+        );
     }
-
 }

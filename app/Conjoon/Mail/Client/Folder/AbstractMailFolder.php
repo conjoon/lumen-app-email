@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,35 +24,38 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Folder;
 
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use InvalidArgumentException;
 
 /**
  * AbstractMailFolder models base information for a MailFolder.
  *
  * @package Conjoon\Mail\Client\Folder
  */
-abstract class AbstractMailFolder {
+abstract class AbstractMailFolder
+{
 
     /**
      * @var FolderKey
      */
-    protected $folderKey;
+    protected FolderKey $folderKey;
 
 
     /**
      * @var string
      */
-    protected $name;
+    protected string $name;
 
 
     /**
      * @var int
      */
-    protected $unreadCount;
+    protected int $unreadCount;
 
 
     /**
@@ -60,22 +64,23 @@ abstract class AbstractMailFolder {
      * @param FolderKey $folderKey
      * @param array|null $data
      *
-     * @throws \InvalidArgumentException if the name or unreadCount
+     * @throws InvalidArgumentException if the name or unreadCount
      * in $data is missing
      */
-    public function __construct(FolderKey $folderKey, array $data) {
+    public function __construct(FolderKey $folderKey, array $data)
+    {
 
         $this->folderKey = $folderKey;
 
         $missing = "";
         if (!isset($data["unreadCount"])) {
             $missing = "unreadCount";
-        } else if (!isset($data["name"])) {
+        } elseif (!isset($data["name"])) {
             $missing = "name";
         }
 
         if ($missing) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 "value for property \"" . $missing . "\" missing"
             );
         }
@@ -86,7 +91,6 @@ abstract class AbstractMailFolder {
                 $this->{$method}($value);
             }
         }
-
     }
 
 
@@ -95,7 +99,8 @@ abstract class AbstractMailFolder {
      *
      * @return FolderKey
      */
-    public function getFolderKey() :FolderKey {
+    public function getFolderKey(): FolderKey
+    {
         return $this->folderKey;
     }
 
@@ -103,9 +108,10 @@ abstract class AbstractMailFolder {
     /**
      * Sets the name for this ListMailFolder.
      *
-     * @param $delimiter
+     * @param string $name
      */
-    protected function setName(string $name) {
+    protected function setName(string $name)
+    {
         $this->name = $name;
     }
 
@@ -114,7 +120,8 @@ abstract class AbstractMailFolder {
      * Returns the name for this ListMailFolder.
      * @return string
      */
-    public function getName() :string {
+    public function getName(): string
+    {
         return $this->name;
     }
 
@@ -124,7 +131,8 @@ abstract class AbstractMailFolder {
      *
      * @param int $unreadCount
      */
-    protected function setUnreadCount(int $unreadCount) {
+    protected function setUnreadCount(int $unreadCount)
+    {
         $this->unreadCount = $unreadCount;
     }
 
@@ -134,8 +142,8 @@ abstract class AbstractMailFolder {
      *
      * @return int
      */
-    public function getUnreadCount() :int {
+    public function getUnreadCount(): int
+    {
         return $this->unreadCount;
     }
-
 }
