@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,21 +25,27 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Service;
+
 use Conjoon\Mail\Client\Service\ServiceException;
+use RuntimeException;
+use Tests\TestCase;
 
 /**
  * Class ServiceExceptionTest
  *
  */
-class ServiceExceptionTest extends TestCase {
+class ServiceExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $exception = new ServiceException();
 
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
+        $this->assertInstanceOf(RuntimeException::class, $exception);
     }
-
-
 }

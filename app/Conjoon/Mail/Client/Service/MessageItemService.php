@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,24 +24,25 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
-    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
-    Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
+use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 
 /**
  * Interface MessageItemService
@@ -49,71 +51,67 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
  *
  * @package Conjoon\Mail\Client\Service
  */
-interface MessageItemService {
+interface MessageItemService
+{
 
 
     /**
      * Returns a MessageItemList containing the MessageItems for the
      * specified MailAccount and the MailFolder.
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      * @param array $options An array with the following query options:
      *  - start (integer) The position from where the items should be returned
      *  - limit (integer) The number of items to return
      *
      * @return MessageItemList
      */
-    public function getMessageItemList(FolderKey $key, array $options) :MessageItemList;
+    public function getMessageItemList(FolderKey $folderKey, array $options): MessageItemList;
 
 
     /**
      * Returns a single MessageItem.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return MessageItem
      */
-    public function getMessageItem(MessageKey $key) :MessageItem;
+    public function getMessageItem(MessageKey $messageKey): MessageItem;
 
 
     /**
      * Deletes a single Message permanently.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return bool true if successful, otherwise false
      */
-    public function deleteMessage(MessageKey $key) :bool;
+    public function deleteMessage(MessageKey $messageKey): bool;
 
 
     /**
      * Returns a single ListMessageItem.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return ListMessageItem
      */
-    public function getListMessageItem(MessageKey $key) :ListMessageItem;
+    public function getListMessageItem(MessageKey $messageKey): ListMessageItem;
 
 
     /**
      * Returns a single MessageItemDraft.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return MessageItemDraft or null if no entity for the key was found
      */
-    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft;
+    public function getMessageItemDraft(MessageKey $messageKey): ?MessageItemDraft;
 
 
     /**
      * Returns a single MessageBody.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return MessageBody
      */
-    public function getMessageBody(MessageKey $key) :MessageBody;
+    public function getMessageBody(MessageKey $messageKey): MessageBody;
 
 
     /**
@@ -121,14 +119,14 @@ interface MessageItemService {
      * Returns null if the MessageBodyDraft could not be created.
      * The created message will be marked as a draft.
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      * @param MessageBodyDraft $draft The draft to create
      *
      * @return MessageBodyDraft
      *
      * @throws ServiceException if $draft already has a MessageKey
      */
-    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $draft) :?MessageBodyDraft;
+    public function createMessageBodyDraft(FolderKey $folderKey, MessageBodyDraft $draft): ?MessageBodyDraft;
 
 
     /**
@@ -136,7 +134,7 @@ interface MessageItemService {
      * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
      * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
      * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
-     * The MessageBodyDraft will explicitely get flagged as a "draft".
+     * The MessageBodyDraft will explicitly get flagged as a "draft".
      *
      * @param MessageBodyDraft $draft The draft to create
      *
@@ -144,7 +142,7 @@ interface MessageItemService {
      *
      * @throws ServiceException if $draft has no messageKey
      */
-    public function updateMessageBodyDraft(MessageBodyDraft $draft) :?MessageBodyDraft;
+    public function updateMessageBodyDraft(MessageBodyDraft $draft): ?MessageBodyDraft;
 
 
     /**
@@ -153,44 +151,41 @@ interface MessageItemService {
      * Implementing APIs should be aware of different protocol support and that some server implementations (IMAP)
      * need to create an entirely new Message if data needs to be adjusted, so the MessageKey  of the returned
      * MessageItemDraft might not equal to the MessageKey in $messageItemDraft.
-     * The MessageBodyDraft will explicitely get flagged as a "draft".
+     * The MessageBodyDraft will explicitly get flagged as a "draft".
      *
      * @param MessageItemDraft $messageItemDraft
      *
      * @return MessageItemDraft|null
      */
-    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft;
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft): ?MessageItemDraft;
 
 
     /**
      * Sends the MessageItemDraft with the specified $messageKey. The message will not
      * be send if it is not a DRAFT message.
      *
-     * @param MessageItemDraft $messageItemDraft
-     *
-     * @return bool true if sending was succesfull, otherwise false
+     * @param MessageKey $messageKey
+     * @return bool true if sending was successfully, otherwise false
      */
-    public function sendMessageDraft(MessageKey $messageKey) : bool;
+    public function sendMessageDraft(MessageKey $messageKey): bool;
 
 
     /**
      * Returns the total number of messages in the specified $mailFolderId for the specified $account;
      *
-     * @param FolderKey $key
-     *
+     * @param FolderKey $folderKey
      * @return int
      */
-    public function getTotalMessageCount(FolderKey $key) : int;
+    public function getTotalMessageCount(FolderKey $folderKey): int;
 
 
     /**
      * Returns the total number of UNREAD messages in the specified $mailFolderId for the specified $account;
      *
-     * @param FolderKey $key
-     *
+     * @param FolderKey $folderKey
      * @return int
      */
-    public function getUnreadMessageCount(FolderKey $key) : int;
+    public function getUnreadMessageCount(FolderKey $folderKey): int;
 
 
     /**
@@ -201,18 +196,18 @@ interface MessageItemService {
      *
      * @return boolean
      */
-    public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool;
+    public function setFlags(MessageKey $messageKey, FlagList $flagList): bool;
 
     /**
      * Moves the message identified by $messageKey to the destination folder specified with
      * $folderKey. Returns null if the operation failed.
      *
-     * @param MesageKey $messageKey
+     * @param MessageKey $messageKey
      * @param FolderKey $folderKey
      *
      * @return null|MessageKey
      */
-    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey;
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey): ?MessageKey;
 
 
     /**
@@ -220,7 +215,7 @@ interface MessageItemService {
      *
      * @return MessageItemFieldsProcessor
      */
-    public function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor;
+    public function getMessageItemFieldsProcessor(): MessageItemFieldsProcessor;
 
 
     /**
@@ -228,7 +223,7 @@ interface MessageItemService {
      *
      * @return ReadableMessagePartContentProcessor
      */
-    public function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor;
+    public function getReadableMessagePartContentProcessor(): ReadableMessagePartContentProcessor;
 
 
     /**
@@ -236,7 +231,7 @@ interface MessageItemService {
      *
      * @return WritableMessagePartContentProcessor
      */
-    public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor;
+    public function getWritableMessagePartContentProcessor(): WritableMessagePartContentProcessor;
 
 
     /**
@@ -244,7 +239,7 @@ interface MessageItemService {
      *
      * @return PreviewTextProcessor
      */
-    public function getPreviewTextProcessor() :PreviewTextProcessor;
+    public function getPreviewTextProcessor(): PreviewTextProcessor;
 
 
     /**
@@ -252,6 +247,5 @@ interface MessageItemService {
      *
      * @return MailClient
      */
-    public function getMailClient() :MailClient;
-
+    public function getMailClient(): MailClient;
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,23 +24,24 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\MailClient;
 
-interface MailFolderService {
+interface MailFolderService
+{
 
 
     /**
      * Returns MailFolderChildList MailFolders for the specified
      * MailAccount.
      *
-     * @param MailAccount $account The MailAccount for which the folder structure
-     * should be returned.
+     * @param MailAccount $mailAccount
      *
      * @return MailFolderChildList An MailFolderChildList of the Mailbox-structure
      * found on the server.
@@ -55,7 +57,7 @@ interface MailFolderService {
      *
      * @see \Horde_Imap_Client_Socket
      */
-    public function getMailFolderChildList(MailAccount $account) :MailFolderChildList;
+    public function getMailFolderChildList(MailAccount $mailAccount): MailFolderChildList;
 
 
     /**
@@ -63,7 +65,5 @@ interface MailFolderService {
      *
      * @return MailClient
      */
-    public function getMailClient() :MailClient;
-
-
+    public function getMailClient(): MailClient;
 }

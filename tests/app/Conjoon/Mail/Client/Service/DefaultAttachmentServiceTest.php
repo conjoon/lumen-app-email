@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,20 +25,25 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Service\DefaultAttachmentService,
-    Conjoon\Mail\Client\Service\AttachmentService,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey,
-    Conjoon\Mail\Client\Attachment\FileAttachmentList,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
-    Conjoon\Mail\Client\Attachment\FileAttachment,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItem,
-    Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor,
-    Conjoon\Mail\Client\MailClient;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Service;
 
-class DefaultAttachmentServiceTest extends TestCase {
+use Conjoon\Mail\Client\Attachment\FileAttachment;
+use Conjoon\Mail\Client\Attachment\FileAttachmentItem;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Service\AttachmentService;
+use Conjoon\Mail\Client\Service\DefaultAttachmentService;
+use Mockery;
+use Tests\TestCase;
+use Tests\TestTrait;
 
+class DefaultAttachmentServiceTest extends TestCase
+{
     use TestTrait;
 
 
@@ -47,7 +53,8 @@ class DefaultAttachmentServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $service = $this->createService();
         $this->assertInstanceOf(AttachmentService::class, $service);
@@ -59,8 +66,10 @@ class DefaultAttachmentServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetFileAttachmentItemList() {
+    public function testGetFileAttachmentItemList()
+    {
 
         $mailAccount = $this->getTestMailAccount("dev");
         $messageKey = new MessageKey($mailAccount, "INBOX", "123");
@@ -70,23 +79,23 @@ class DefaultAttachmentServiceTest extends TestCase {
         $fileAttachmentList[] = new FileAttachment(
             new AttachmentKey($messageKey, "1"),
             [
-                "size"     => 0,
-                "text"     => "file",
-                "type"     => "text/html",
-                "content"  => "CONTENT",
+                "size" => 0,
+                "text" => "file",
+                "type" => "text/html",
+                "content" => "CONTENT",
                 "encoding" => "base64"
             ]
         );
 
         $service->getMailClient()
-            ->shouldReceive("getFileAttachmentList")
-            ->with($messageKey)
-            ->andReturn($fileAttachmentList);
+                ->shouldReceive("getFileAttachmentList")
+                ->with($messageKey)
+                ->andReturn($fileAttachmentList);
 
         $result = $service->getFileAttachmentItemList($messageKey);
 
         $this->assertSame(1, count($result));
-        $this->assertSame("mockfile", $result[0]->getText());
+        $this->assertSame("mockFile", $result[0]->getText());
     }
 
 
@@ -97,7 +106,8 @@ class DefaultAttachmentServiceTest extends TestCase {
      * Helper function for creating the service.
      * @return DefaultAttachmentService
      */
-    protected function createService() {
+    protected function createService(): DefaultAttachmentService
+    {
         return new DefaultAttachmentService(
             $this->getMailClientMock(),
             $this->getFileAttachmentProcessorMock()
@@ -109,10 +119,10 @@ class DefaultAttachmentServiceTest extends TestCase {
      * Helper function for creating the client Mock.
      * @return mixed
      */
-    protected function getMailClientMock() {
+    protected function getMailClientMock()
+    {
 
-        return \Mockery::mock("overload:".MailClient::class);
-
+        return Mockery::mock("overload:" . MailClient::class);
     }
 
 
@@ -120,28 +130,26 @@ class DefaultAttachmentServiceTest extends TestCase {
      * Helper function for creating the FileAttachmentProcessor-Mock.
      * @return mixed
      */
-    protected function getFileAttachmentProcessorMock() :FileAttachmentProcessor{
+    protected function getFileAttachmentProcessorMock(): FileAttachmentProcessor
+    {
 
-       return new class() implements FileAttachmentProcessor {
+        return new class () implements FileAttachmentProcessor {
 
-            public $def;
-
-            public function process(FileAttachment $fileAttachment) :FileAttachmentItem {
+            public function process(FileAttachment $fileAttachment): FileAttachmentItem
+            {
 
 
                 return new FileAttachmentItem(
                     $fileAttachment->getAttachmentKey(),
                     [
-                        "size"          => 0,
-                        "type"          => "text/plain",
-                        "text"          => "mockfile",
-                        "downloadUrl"   => "",
+                        "size" => 0,
+                        "type" => "text/plain",
+                        "text" => "mockFile",
+                        "downloadUrl" => "",
                         "previewImgSrc" => ""
                     ]
                 );
             }
         };
-
     }
-
 }

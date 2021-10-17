@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,32 +24,33 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItemList,
-    Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
-
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\MailClient;
 
 /**
  * class DefaultAttachmentService
  *
  * @package Conjoon\Mail\Client\Service
  */
-class DefaultAttachmentService implements AttachmentService {
+class DefaultAttachmentService implements AttachmentService
+{
 
     /**
      * @var MailClient
      */
-    protected $mailClient;
+    protected MailClient $mailClient;
 
     /**
      * @var FileAttachmentProcessor
      */
-    protected $fileAttachmentProcessor;
+    protected FileAttachmentProcessor $fileAttachmentProcessor;
 
 
     /**
@@ -57,8 +59,9 @@ class DefaultAttachmentService implements AttachmentService {
      * @param MailClient $mailClient
      * @param FileAttachmentProcessor $fileAttachmentProcessor
      */
-    public function __construct(MailClient $mailClient, FileAttachmentProcessor $fileAttachmentProcessor) {
-        $this->mailClient              = $mailClient;
+    public function __construct(MailClient $mailClient, FileAttachmentProcessor $fileAttachmentProcessor)
+    {
+        $this->mailClient = $mailClient;
         $this->fileAttachmentProcessor = $fileAttachmentProcessor;
     }
 
@@ -68,7 +71,8 @@ class DefaultAttachmentService implements AttachmentService {
      *
      * @return FileAttachmentProcessor
      */
-    public function getFileAttachmentProcessor() :FileAttachmentProcessor {
+    public function getFileAttachmentProcessor(): FileAttachmentProcessor
+    {
         return $this->fileAttachmentProcessor;
     }
 
@@ -80,7 +84,8 @@ class DefaultAttachmentService implements AttachmentService {
     /**
      * @inheritdoc
      */
-    public function getFileAttachmentItemList(MessageKey $key) :FileAttachmentItemList {
+    public function getFileAttachmentItemList(MessageKey $key): FileAttachmentItemList
+    {
 
         $fileAttachmentList = $this->getMailClient()->getFileAttachmentList($key);
 
@@ -101,10 +106,8 @@ class DefaultAttachmentService implements AttachmentService {
      *
      * @return MailClient
      */
-    public function getMailClient() :MailClient {
+    public function getMailClient(): MailClient
+    {
         return $this->mailClient;
     }
-
-
-
 }

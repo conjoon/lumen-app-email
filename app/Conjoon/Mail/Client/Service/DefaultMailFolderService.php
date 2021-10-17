@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,14 +24,15 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder,
-    Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder;
+use Conjoon\Mail\Client\MailClient;
 
 /**
  * Class DefaultMailFolderService.
@@ -38,18 +40,19 @@ use Conjoon\Mail\Client\Data\MailAccount,
  *
  * @package Conjoon\Mail\Client\Service
  */
-class DefaultMailFolderService implements MailFolderService {
+class DefaultMailFolderService implements MailFolderService
+{
 
     /**
      * @var MailClient
      */
-    protected $mailClient;
+    protected MailClient $mailClient;
 
 
     /**
      * @var MailFolderTreeBuilder
      */
-    protected $mailFolderTreeBuilder;
+    protected MailFolderTreeBuilder $mailFolderTreeBuilder;
 
 
     /**
@@ -57,8 +60,9 @@ class DefaultMailFolderService implements MailFolderService {
      * @param MailFolderTreeBuilder $mailFolderTreeBuilder
      * @param MailClient $client
      */
-    public function __construct(MailClient $client, MailFolderTreeBuilder $mailFolderTreeBuilder) {
-        $this->mailClient            = $client;
+    public function __construct(MailClient $client, MailFolderTreeBuilder $mailFolderTreeBuilder)
+    {
+        $this->mailClient = $client;
         $this->mailFolderTreeBuilder = $mailFolderTreeBuilder;
     }
 
@@ -67,7 +71,8 @@ class DefaultMailFolderService implements MailFolderService {
      * Returns the MailFolderTreeBuilder used with this instance.
      * @return MailFolderTreeBuilder
      */
-    public function getMailFolderTreeBuilder() :MailFolderTreeBuilder{
+    public function getMailFolderTreeBuilder(): MailFolderTreeBuilder
+    {
         return $this->mailFolderTreeBuilder;
     }
 
@@ -79,7 +84,8 @@ class DefaultMailFolderService implements MailFolderService {
     /**
      * @inheritdoc
      */
-    public function getMailClient() :MailClient {
+    public function getMailClient(): MailClient
+    {
         return $this->mailClient;
     }
 
@@ -87,15 +93,10 @@ class DefaultMailFolderService implements MailFolderService {
     /**
      * @inheritdoc
      */
-    public function getMailFolderChildList(MailAccount $account) :MailFolderChildList {
-        $mailFolderList = $this->getMailClient()->getMailFolderList($account);
+    public function getMailFolderChildList(MailAccount $mailAccount): MailFolderChildList
+    {
+        $mailFolderList = $this->getMailClient()->getMailFolderList($mailAccount);
 
-        $mailFolderChildList = $this->getMailFolderTreeBuilder()->listToTree($mailFolderList, $account->getRoot());
-
-        return $mailFolderChildList;
+        return $this->getMailFolderTreeBuilder()->listToTree($mailFolderList, $mailAccount->getRoot());
     }
-
-
-
-
 }

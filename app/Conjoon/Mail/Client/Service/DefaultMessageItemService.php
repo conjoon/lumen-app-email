@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-cn_imapuser
@@ -23,62 +24,63 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor,
-    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
-    Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\MailClientException,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
+use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 
 /**
  * Class DefaultMessageItemService.
- * Default implementation of a MessageItemService, using \Horde_Imap_Client to communicate with
- * Imap Servers.
+ * Default implementation of a MessageItemService.
  *
  * @package App\Imap\Service
  */
-class DefaultMessageItemService implements MessageItemService {
+class DefaultMessageItemService implements MessageItemService
+{
 
 
     /**
      * @var MailClient
      */
-    protected $mailClient;
+    protected MailClient $mailClient;
 
     /**
      * @var PreviewTextProcessor
      */
-    protected $previewTextProcessor;
+    protected PreviewTextProcessor $previewTextProcessor;
 
     /**
      * @var ReadableMessagePartContentProcessor
      */
-    protected $readableMessagePartContentProcessor;
+    protected ReadableMessagePartContentProcessor $readableMessagePartContentProcessor;
 
     /**
      * @var WritableMessagePartContentProcessor
      */
-    protected $writableMessagePartContentProcessor;
+    protected WritableMessagePartContentProcessor $writableMessagePartContentProcessor;
 
     /**
      * @var MessageItemFieldsProcessor
      */
-    protected $messageItemFieldsProcessor;
+    protected MessageItemFieldsProcessor $messageItemFieldsProcessor;
 
 
     /**
@@ -95,7 +97,8 @@ class DefaultMessageItemService implements MessageItemService {
         MessageItemFieldsProcessor $messageItemFieldsProcessor,
         ReadableMessagePartContentProcessor $readableMessagePartContentProcessor,
         WritableMessagePartContentProcessor $writableMessagePartContentProcessor,
-        PreviewTextProcessor $previewTextProcessor) {
+        PreviewTextProcessor $previewTextProcessor
+    ) {
         $this->messageItemFieldsProcessor = $messageItemFieldsProcessor;
         $this->mailClient = $mailClient;
         $this->readableMessagePartContentProcessor = $readableMessagePartContentProcessor;
@@ -108,9 +111,10 @@ class DefaultMessageItemService implements MessageItemService {
 //  MessageItemService
 // -------------------------
     /**
-     *  @inheritdoc
+     * @inheritdoc
      */
-    public function getMailClient() :MailClient {
+    public function getMailClient(): MailClient
+    {
         return $this->mailClient;
     }
 
@@ -118,7 +122,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor {
+    public function getMessageItemFieldsProcessor(): MessageItemFieldsProcessor
+    {
         return $this->messageItemFieldsProcessor;
     }
 
@@ -126,7 +131,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getPreviewTextProcessor() :PreviewTextProcessor {
+    public function getPreviewTextProcessor(): PreviewTextProcessor
+    {
         return $this->previewTextProcessor;
     }
 
@@ -134,7 +140,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor {
+    public function getReadableMessagePartContentProcessor(): ReadableMessagePartContentProcessor
+    {
         return $this->readableMessagePartContentProcessor;
     }
 
@@ -142,7 +149,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor {
+    public function getWritableMessagePartContentProcessor(): WritableMessagePartContentProcessor
+    {
         return $this->writableMessagePartContentProcessor;
     }
 
@@ -150,14 +158,17 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options) :MessageItemList {
+    public function getMessageItemList(FolderKey $folderKey, array $options): MessageItemList
+    {
 
         $messageItemList = $this->mailClient->getMessageItemList(
-            $folderKey, $options);
+            $folderKey,
+            $options
+        );
 
         foreach ($messageItemList as $listMessageItem) {
             $this->charsetConvertHeaderFields($listMessageItem);
-            if ($options["preview"]) {
+            if (array_key_exists("preview", $options) && $options["preview"] === true) {
                 $this->processTextForPreview($listMessageItem->getMessagePart());
             }
         }
@@ -169,8 +180,9 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItem(MessageKey $key) :MessageItem {
-        $messageItem = $this->mailClient->getMessageItem($key);
+    public function getMessageItem(MessageKey $messageKey): MessageItem
+    {
+        $messageItem = $this->mailClient->getMessageItem($messageKey);
         $this->charsetConvertHeaderFields($messageItem);
         return $messageItem;
     }
@@ -179,11 +191,12 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function deleteMessage(MessageKey $key) :bool {
+    public function deleteMessage(MessageKey $messageKey): bool
+    {
         $result = false;
 
         try {
-            $result = $this->mailClient->deleteMessage($key);
+            $result = $this->mailClient->deleteMessage($messageKey);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
@@ -195,12 +208,15 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getListMessageItem(MessageKey $messageKey) :ListMessageItem {
+    public function getListMessageItem(MessageKey $messageKey): ListMessageItem
+    {
 
         $folderKey = $messageKey->getFolderKey();
 
         $messageItemList = $this->mailClient->getMessageItemList(
-            $folderKey, ["ids" => [$messageKey->getId()]]);
+            $folderKey,
+            ["ids" => [$messageKey->getId()]]
+        );
 
         return $messageItemList[0];
     }
@@ -208,8 +224,9 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getMessageItemDraft(MessageKey $key) :?MessageItemDraft {
-        $messageItemDraft = $this->mailClient->getMessageItemDraft($key);
+    public function getMessageItemDraft(MessageKey $messageKey): ?MessageItemDraft
+    {
+        $messageItemDraft = $this->mailClient->getMessageItemDraft($messageKey);
         $this->charsetConvertHeaderFields($messageItemDraft);
         return $messageItemDraft;
     }
@@ -218,12 +235,13 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function sendMessageDraft(MessageKey $key) : bool {
+    public function sendMessageDraft(MessageKey $messageKey): bool
+    {
 
         $result = false;
 
         try {
-            $result = $this->mailClient->sendMessageDraft($key);
+            $result = $this->mailClient->sendMessageDraft($messageKey);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
@@ -232,12 +250,12 @@ class DefaultMessageItemService implements MessageItemService {
     }
 
 
-
     /**
      * @inheritdoc
      */
-    public function getMessageBody(MessageKey $key) :MessageBody {
-        $messageBody = $this->mailClient->getMessageBody($key);
+    public function getMessageBody(MessageKey $messageKey): MessageBody
+    {
+        $messageBody = $this->mailClient->getMessageBody($messageKey);
         $this->processMessageBody($messageBody);
         return $messageBody;
     }
@@ -246,7 +264,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getUnreadMessageCount(FolderKey $folderKey) :int {
+    public function getUnreadMessageCount(FolderKey $folderKey): int
+    {
         return $this->getMailClient()->getUnreadMessageCount($folderKey);
     }
 
@@ -254,14 +273,16 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function getTotalMessageCount(FolderKey $folderKey) :int {
+    public function getTotalMessageCount(FolderKey $folderKey): int
+    {
         return $this->getMailClient()->getTotalMessageCount($folderKey);
     }
 
     /**
      * @inheritdoc
      */
-    public function setFlags(MessageKey $messageKey, FlagList $flagList) :bool {
+    public function setFlags(MessageKey $messageKey, FlagList $flagList): bool
+    {
         return $this->getMailClient()->setFlags($messageKey, $flagList);
     }
 
@@ -269,7 +290,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey) :?MessageKey {
+    public function moveMessage(MessageKey $messageKey, FolderKey $folderKey): ?MessageKey
+    {
 
         try {
             return $this->getMailClient()->moveMessage($messageKey, $folderKey);
@@ -284,18 +306,19 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
+    public function createMessageBodyDraft(FolderKey $folderKey, MessageBodyDraft $draft): ?MessageBodyDraft
+    {
 
-        if ($messageBodyDraft->getMessageKey()) {
+        if ($draft->getMessageKey()) {
             throw new ServiceException(
                 "Cannot create a MessageBodyDraft that has a MessageKey"
             );
         }
 
-        $this->processMessageBodyDraft($messageBodyDraft);
+        $this->processMessageBodyDraft($draft);
 
         try {
-            return $this->getMailClient()->createMessageBodyDraft($key, $messageBodyDraft);
+            return $this->getMailClient()->createMessageBodyDraft($folderKey, $draft);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
@@ -307,18 +330,19 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function updateMessageBodyDraft(MessageBodyDraft $messageBodyDraft) :?MessageBodyDraft {
+    public function updateMessageBodyDraft(MessageBodyDraft $draft): ?MessageBodyDraft
+    {
 
-        if (!$messageBodyDraft->getMessageKey()) {
+        if (!$draft->getMessageKey()) {
             throw new ServiceException(
                 "Cannot update a MessageBodyDraft that has no MessageKey"
             );
         }
 
-        $this->processMessageBodyDraft($messageBodyDraft);
+        $this->processMessageBodyDraft($draft);
 
         try {
-            return $this->getMailClient()->updateMessageBodyDraft($messageBodyDraft);
+            return $this->getMailClient()->updateMessageBodyDraft($draft);
         } catch (MailClientException $e) {
             // intentionally left empty
         }
@@ -330,7 +354,8 @@ class DefaultMessageItemService implements MessageItemService {
     /**
      * @inheritdoc
      */
-    public function updateMessageDraft(MessageItemDraft $messageItemDraft) :?MessageItemDraft {
+    public function updateMessageDraft(MessageItemDraft $messageItemDraft): ?MessageItemDraft
+    {
 
         $updated = null;
 
@@ -349,14 +374,15 @@ class DefaultMessageItemService implements MessageItemService {
 // -----------------------
 
     /**
-     * Mases sure that there is a text/plain part for this message if only text/html was
+     * Makes sure that there is a text/plain part for this message if only text/html was
      * available. If only text/plain is available, a text/html part will be created.
      *
      * @param MessageBodyDraft $messageBodyDraft
      *
      * @return MessageBodyDraft
      */
-    protected function processMessageBodyDraft(MessageBodyDraft $messageBodyDraft) {
+    protected function processMessageBodyDraft(MessageBodyDraft $messageBodyDraft): MessageBodyDraft
+    {
 
         $targetCharset = "UTF-8";
         $plainPart = $messageBodyDraft->getTextPlain();
@@ -393,14 +419,12 @@ class DefaultMessageItemService implements MessageItemService {
      * @param AbstractMessageItem $messageItem
      * @return AbstractMessageItem
      */
-    protected function charsetConvertHeaderFields(AbstractMessageItem $messageItem) :AbstractMessageItem {
+    protected function charsetConvertHeaderFields(AbstractMessageItem $messageItem): AbstractMessageItem
+    {
 
         $targetCharset = "UTF-8";
 
-        $messageItem = $this->getMessageItemFieldsProcessor()->process($messageItem, $targetCharset);
-
-        return $messageItem;
-
+        return $this->getMessageItemFieldsProcessor()->process($messageItem, $targetCharset);
     }
 
 
@@ -416,10 +440,11 @@ class DefaultMessageItemService implements MessageItemService {
      *
      * @see MessagePartContentProcessor::process
      */
-    protected function processMessageBody(MessageBody $messageBody) :MessageBody {
+    protected function processMessageBody(MessageBody $messageBody): MessageBody
+    {
 
         $textPlainPart = $messageBody->getTextPlain();
-        $textHtmlPart  = $messageBody->getTextHtml();
+        $textHtmlPart = $messageBody->getTextHtml();
 
         $targetCharset = "UTF-8";
 
@@ -445,9 +470,8 @@ class DefaultMessageItemService implements MessageItemService {
      *
      * @see PreviewTextProcessor::process
      */
-    protected function processTextForPreview(MessagePart $messagePart) :MessagePart {
+    protected function processTextForPreview(MessagePart $messagePart): MessagePart
+    {
         return $this->getPreviewTextProcessor()->process($messagePart);
     }
-
-
 }

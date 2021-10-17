@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,43 +25,50 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use
-    Conjoon\Mail\Client\Service\MessageItemService,
-    Conjoon\Mail\Client\Service\DefaultMessageItemService,
-    Conjoon\Mail\Client\Service\ServiceException,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\AbstractMessageItem,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\MailClientException,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor,
-    Conjoon\Mail\Client\Message\Text\PreviewTextProcessor,
-    Conjoon\Text\CharsetConverter,
-    Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy,
-    Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy,
-    Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy,
-    Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy,
-    Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Service;
+
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\MailClientException;
+use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\SeenFlag;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
+use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
+use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
+use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
+use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Service\DefaultMessageItemService;
+use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Mail\Client\Service\ServiceException;
+use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
+use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
+use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Text\CharsetConverter;
+use DateTime;
+use PHPUnit\Framework\MockObject\MockObject;
+use RuntimeException;
+use Tests\TestCase;
+use Tests\TestTrait;
 
 /**
  * Class DefaultMessageItemServiceTest
  *
  */
-class DefaultMessageItemServiceTest extends TestCase {
-
+class DefaultMessageItemServiceTest extends TestCase
+{
     use TestTrait;
 
 
@@ -74,7 +82,8 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $rP = $this->getReadableMessagePartContentProcessor();
         $wP = $this->getWritableMessagePartContentProcessor();
@@ -90,7 +99,6 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertSame($wP, $service->getWritableMessagePartContentProcessor());
         $this->assertSame($pP, $service->getPreviewTextProcessor());
         $this->assertSame($miP, $service->getMessageItemFieldsProcessor());
-
     }
 
 
@@ -99,8 +107,11 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
+     * @noinspection PhpUnusedLocalVariableInspection
      */
-    public function testGetMessageItemList() {
+    public function testGetMessageItemList()
+    {
 
         $service = $this->createService();
 
@@ -110,24 +121,34 @@ class DefaultMessageItemServiceTest extends TestCase {
         $folderKey = $this->createFolderKey(null, $mailFolderId);
 
         $options = ["start" => 0, "limit" => 2];
-
-        $messageItemListMock = new MessageItemList;
-        $messageItemListMock[] = new ListMessageItem($this->createMessageKey(null, $mailFolderId, 1),
-            null, new MessagePart("foo1", "UTF-8", "text/html"));
-        $messageItemListMock[] = new ListMessageItem($this->createMessageKey(null, $mailFolderId, 2),
-            null, new MessagePart("foo2", "UTF-8", "text/plain"));
-        $messageItemListMock[] = new ListMessageItem($this->createMessageKey(null, $mailFolderId, 3),
-            null, new MessagePart("foo3", "UTF-8", "text/html"));
+        $texts = ["foo1", "foo2", "foo3"];
+        $i = 0;
+        $messageItemListMock = new MessageItemList();
+        $messageItemListMock[] = new ListMessageItem(
+            $this->createMessageKey(null, $mailFolderId, "1"),
+            null,
+            new MessagePart($texts[$i++], "UTF-8", "text/html")
+        );
+        $messageItemListMock[] = new ListMessageItem(
+            $this->createMessageKey(null, $mailFolderId, "2"),
+            null,
+            new MessagePart($texts[$i++], "UTF-8", "text/plain")
+        );
+        $messageItemListMock[] = new ListMessageItem(
+            $this->createMessageKey(null, $mailFolderId, "3"),
+            null,
+            new MessagePart($texts[$i++], "UTF-8", "text/html")
+        );
 
         $clientStub->method("getMessageItemList")
-                   ->with($folderKey, $options)
-                    ->willReturn($messageItemListMock);
+            ->with($folderKey, $options)
+            ->willReturn($messageItemListMock);
 
         $results = $service->getMessageItemList($folderKey, $options);
-
+        $i = 0;
         foreach ($results as $resultItem) {
             $this->assertInstanceOf(ListMessageItem::Class, $resultItem);
-            $this->assertSame("preview", $resultItem->getMessagePart()->getContents());
+            $this->assertSame($texts[$i++], $resultItem->getMessagePart()->getContents());
         }
     }
 
@@ -137,8 +158,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetMessageItem() {
+    public function testGetMessageItem()
+    {
 
         $service = $this->createService();
 
@@ -165,7 +188,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $this->assertSame($messageItemId, $item->getMessageKey()->getId());
 
-        $cmpJson   = $cmpItem->toJson();
+        $cmpJson = $cmpItem->toJson();
         $itemJson = $item->toJson();
 
         $this->assertSame("MessageItemFieldsProcessor", $itemJson["subject"]);
@@ -181,8 +204,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetMessageItemDraft() {
+    public function testGetMessageItemDraft()
+    {
 
         $service = $this->createService();
 
@@ -208,7 +233,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $this->assertSame($messageItemId, $item->getMessageKey()->getId());
 
-        $cmpJson   = $cmpItem->toJson();
+        $cmpJson = $cmpItem->toJson();
         $itemJson = $item->toJson();
 
         $this->assertSame("MessageItemFieldsProcessor", $itemJson["subject"]);
@@ -225,10 +250,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageBodyFor_plain() {
+    public function testGetMessageBodyForPlain()
+    {
 
         $this->getMessageBodyForTestHelper("plain");
-
     }
 
 
@@ -238,10 +263,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageBodyFor_html() {
+    public function testGetMessageBodyForHtml()
+    {
 
         $this->getMessageBodyForTestHelper("", "html");
-
     }
 
 
@@ -251,10 +276,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageBodyFor_both() {
+    public function testGetMessageBodyForBoth()
+    {
 
         $this->getMessageBodyForTestHelper("plain", "html");
-
     }
 
 
@@ -263,8 +288,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetTotalMessageCount() {
+    public function testGetTotalMessageCount()
+    {
 
         $service = $this->createService();
 
@@ -289,8 +316,10 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testUnreadMessageCount() {
+    public function testUnreadMessageCount()
+    {
         $service = $this->createService();
 
         $mailFolderId = "INBOX";
@@ -312,13 +341,15 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testSetFlags() {
+    public function testSetFlags()
+    {
         $service = $this->createService();
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
@@ -340,16 +371,17 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBodyDraft_exception() {
+    public function testCreateMessageBodyDraftException()
+    {
         $service = $this->createService();
 
         $this->expectException(ServiceException::class);
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $folderKey  = $this->createFolderKey($account, $mailFolderId);
+        $folderKey = $this->createFolderKey($account, $mailFolderId);
         $messageBodyDraft = new MessageBodyDraft($this->createMessageKey($account, $mailFolderId, $id));
 
         $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
@@ -361,23 +393,28 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
+     * @noinspection SpellCheckingInspection
      */
-    public function testCreateMessageBodyDraft() {
+    public function testCreateMessageBodyDraft()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $folderKey    = $this->createFolderKey($account, $mailFolderId);
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $folderKey = $this->createFolderKey($account, $mailFolderId);
 
-        $clientMockedMethod = function($folderKey, $messageBodyDraft) use ($account, $mailFolderId, $id) {
+        $clientMockedMethod = function ($folderKey, $messageBodyDraft) use ($account, $mailFolderId, $id) {
             return $messageBodyDraft->setMessageKey($this->createMessageKey($account, $mailFolderId, $id));
         };
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -385,10 +422,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -396,10 +435,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
@@ -408,10 +449,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft();
-        $clientStub->method("createMessageBodyDraft")->with($folderKey, $messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBody = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
@@ -424,13 +467,15 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testCreateMessageBody_returning_null() {
+    public function testCreateMessageBodyReturningNull()
+    {
         $service = $this->createService();
 
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId = "INBOX";
-        $folderKey    = $this->createFolderKey($account, $mailFolderId);
+        $folderKey = $this->createFolderKey($account, $mailFolderId);
 
         $clientStub = $service->getMailClient();
 
@@ -439,7 +484,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub->method("createMessageBodyDraft")
             ->with($folderKey, $messageBodyDraft)
-            ->willThrowException(new MailClientException);
+            ->willThrowException(new MailClientException());
 
         $result = $service->createMessageBodyDraft($folderKey, $messageBodyDraft);
         $this->assertNull($result);
@@ -450,20 +495,22 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testUpdateMessageDraft() {
+    public function testUpdateMessageDraft()
+    {
         $service = $this->createService();
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $newId        = "1234";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $id = "123";
+        $newId = "1234";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
-        $newKey     = $this->createMessageKey($account, $mailFolderId, $newId);
+        $newKey = $this->createMessageKey($account, $mailFolderId, $newId);
 
         $messageItemDraft = new MessageItemDraft($messageKey);
-        $transformDraft   = new MessageItemDraft($newKey);
+        $transformDraft = new MessageItemDraft($newKey);
 
         $clientStub = $service->getMailClient();
 
@@ -481,23 +528,25 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testUpdateMessageDraft_returning_null() {
+    public function testUpdateMessageDraftReturningNull()
+    {
 
         $service = $this->createService();
 
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
+        $id = "123";
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
         $transformDraft = new MessageItemDraft($messageKey);
 
         $clientStub = $service->getMailClient();
 
         $clientStub->method("updateMessageDraft")
-                   ->with($transformDraft)
-                   ->willThrowException(new MailClientException);
+            ->with($transformDraft)
+            ->willThrowException(new MailClientException());
 
         $messageItemDraft = $service->updateMessageDraft($transformDraft);
         $this->assertNull($messageItemDraft);
@@ -510,7 +559,8 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testUpdateMessageBodyDraft_exception() {
+    public function testUpdateMessageBodyDraftException()
+    {
         $service = $this->createService();
 
         $this->expectException(ServiceException::class);
@@ -526,15 +576,17 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testUpdateMessageBodyDraft_returning_null() {
+    public function testUpdateMessageBodyDraftReturningNull()
+    {
 
         $service = $this->createService();
 
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $messageKey    = $this->createMessageKey($account, $mailFolderId, $id);
+        $id = "123";
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
         $messageBodyDraft = new MessageBodyDraft($messageKey);
 
@@ -542,7 +594,7 @@ class DefaultMessageItemServiceTest extends TestCase {
 
         $clientStub->method("updateMessageBodyDraft")
             ->with($messageBodyDraft)
-            ->willThrowException(new MailClientException);
+            ->willThrowException(new MailClientException());
 
         $newDraft = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertNull($newDraft);
@@ -554,23 +606,30 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
+     * @noinspection SpellCheckingInspection
      */
-    public function testUpdateMessageBodyDraft() {
+    public function testUpdateMessageBodyDraft()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $newId        = "abc";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $getKey       = function() use($account, $mailFolderId, $id){return $this->createMessageKey($account, $mailFolderId, $id);};
+        $id = "123";
+        $newId = "abc";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $getKey = function () use ($account, $mailFolderId, $id) {
+            return $this->createMessageKey($account, $mailFolderId, $id);
+        };
 
-        $clientMockedMethod = function($messageBodyDraft) use ($account, $mailFolderId, $newId) {
+        $clientMockedMethod = function ($messageBodyDraft) use ($account, $mailFolderId, $newId) {
             return $messageBodyDraft->setMessageKey($this->createMessageKey($account, $mailFolderId, $newId));
         };
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")
+            ->with($messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextHtml(new MessagePart("a", "UTF-8", "text/html"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -578,10 +637,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")
+            ->with($messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/htmla", $messageBody->getTextHtml()->getContents());
@@ -589,10 +650,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")
+            ->with($messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBodyDraft->setTextPlain(new MessagePart("a", "UTF-8", "text/plain"));
         $messageBodyDraft->setTextHtml(new MessagePart("b", "UTF-8", "text/html"));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
@@ -601,10 +664,12 @@ class DefaultMessageItemServiceTest extends TestCase {
         $this->assertNotSame($messageBodyDraft, $messageBody);
 
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $messageBodyDraft = new MessageBodyDraft($getKey());
-        $clientStub->method("updateMessageBodyDraft")->with($messageBodyDraft)->will($this->returnCallback($clientMockedMethod));
+        $clientStub->method("updateMessageBodyDraft")
+            ->with($messageBodyDraft)
+            ->will($this->returnCallback($clientMockedMethod));
         $messageBody = $service->updateMessageBodyDraft($messageBodyDraft);
         $this->assertSame("WRITTENtext/plain", $messageBody->getTextPlain()->getContents());
         $this->assertSame("WRITTENtext/html", $messageBody->getTextHtml()->getContents());
@@ -617,17 +682,19 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testSendMessageDraft() {
+    public function testSendMessageDraft()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
-        $testSend = function($expected) use ($messageKey) {
+        $testSend = function ($expected) use ($messageKey) {
 
-            $service    = $this->createService();
+            $service = $this->createService();
             $clientStub = $service->getMailClient();
             $clientStub->method("sendMessageDraft")->with($messageKey)->willReturn($expected);
 
@@ -644,19 +711,21 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testSendMessageDraft_exception() {
+    public function testSendMessageDraftException()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $clientStub->method("sendMessageDraft")
-                   ->with($messageKey)
-                   ->willThrowException(new MailClientException);
+            ->with($messageKey)
+            ->willThrowException(new MailClientException());
 
         $this->assertFalse($service->sendMessageDraft($messageKey));
     }
@@ -667,23 +736,25 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
+     * @noinspection SpellCheckingInspection
      */
-    public function testMoveMessage() {
+    public function testMoveMessage()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
-        $folderKey    = new FolderKey($account, "foo");
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+        $folderKey = new FolderKey($account, "foo");
 
         $expected = new MessageKey($account, "foo", "newid");
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $clientStub->method("moveMessage")->with($messageKey, $folderKey)->willReturn($expected);
 
         $this->assertSame($service->moveMessage($messageKey, $folderKey), $expected);
-
     }
 
 
@@ -692,22 +763,23 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testMoveMessage_exception() {
+    public function testMoveMessageException()
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
-        $folderKey    = new FolderKey($account, "foo");
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
+        $folderKey = new FolderKey($account, "foo");
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
         $clientStub->method("moveMessage")->with($messageKey, $folderKey)
-                   ->willThrowException(new MailClientException("should not bubble"));
+            ->willThrowException(new MailClientException("should not bubble"));
 
         $this->assertSame($service->moveMessage($messageKey, $folderKey), null);
-
     }
 
 
@@ -716,22 +788,27 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetListMessageItem() {
+    public function testGetListMessageItem()
+    {
 
         $service = $this->createService();
 
         $clientStub = $service->getMailClient();
 
         $mailAccountId = "dev";
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $messageItemId = "1234";
-        $messageKey    = $this->createMessageKey($mailAccountId, $mailFolderId, $messageItemId);
-        $folderKey     = $messageKey->getFolderKey();
+        $messageKey = $this->createMessageKey($mailAccountId, $mailFolderId, $messageItemId);
+        $folderKey = $messageKey->getFolderKey();
 
-        $messageItemListMock = new MessageItemList;
-        $messageItemListMock[] = new ListMessageItem($messageKey,
-            null, new MessagePart("preview", "UTF-8", "text/html"));
+        $messageItemListMock = new MessageItemList();
+        $messageItemListMock[] = new ListMessageItem(
+            $messageKey,
+            null,
+            new MessagePart("preview", "UTF-8", "text/html")
+        );
 
         $clientStub->method("getMessageItemList")
             ->with($folderKey, ["ids" => [$messageKey->getId()]])
@@ -750,7 +827,8 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_okay() {
+    public function testDeleteMessageOkay()
+    {
         $this->deleteMessageTest(true);
     }
 
@@ -761,7 +839,8 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_failed() {
+    public function testDeleteMessageFailed()
+    {
         $this->deleteMessageTest(false);
     }
 
@@ -772,7 +851,8 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_exeption() {
+    public function testDeleteMessageException()
+    {
         $this->deleteMessageTest("exception");
     }
 
@@ -782,10 +862,13 @@ class DefaultMessageItemServiceTest extends TestCase {
 // ------------------
 
     /**
-     * @param $plain
-     * @param $html
+     * @param string $plain
+     * @param string $html
+     * @noinspection PhpUndefinedMethodInspection
+     * @noinspection SpellCheckingInspection
      */
-    protected function getMessageBodyForTestHelper($plain ="", $html = "") {
+    protected function getMessageBodyForTestHelper(string $plain = "", string $html = "")
+    {
 
         $service = $this->createService();
 
@@ -821,7 +904,6 @@ class DefaultMessageItemServiceTest extends TestCase {
         } else {
             $this->assertSame(null, $body->getTextHtml());
         }
-
     }
 
 
@@ -829,23 +911,25 @@ class DefaultMessageItemServiceTest extends TestCase {
      * Helper for testDeleteMessage
      *
      * @param mixed $type bool|string=exception
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function deleteMessageTest($type) {
+    public function deleteMessageTest($type)
+    {
 
         $mailFolderId = "INBOX";
-        $id           = "123";
-        $account      = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $messageKey   = $this->createMessageKey($account, $mailFolderId, $id);
+        $id = "123";
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+        $messageKey = $this->createMessageKey($account, $mailFolderId, $id);
 
-        $service    = $this->createService();
+        $service = $this->createService();
         $clientStub = $service->getMailClient();
 
         $op = $clientStub->method("deleteMessage")->with($messageKey);
 
         if ($type === "exception") {
-            $op->willThrowException(new MailClientException);
+            $op->willThrowException(new MailClientException());
             $expected = false;
-        } else if (is_bool($type)) {
+        } elseif (is_bool($type)) {
             $expected = $type;
             $op->willReturn($expected);
         } else {
@@ -859,61 +943,95 @@ class DefaultMessageItemServiceTest extends TestCase {
 
 
     /**
+     * @param mixed $mailAccountId
+     * @param string $id
+     *
      * @return FolderKey
      */
-    protected function createFolderKey($mailAccountId = null, $id = "INBOX") {
+    protected function createFolderKey($mailAccountId, string $id = "INBOX"): FolderKey
+    {
+        $mailAccountId = $mailAccountId ??  $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
         return new FolderKey(
-            $mailAccountId ? $mailAccountId :  $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
+            $mailAccountId,
             $id
         );
-
     }
 
     /**
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $id
      * @return MessageKey
      */
-    protected function createMessageKey($mailAccountId = null, $mailFolderId = "INBOX", $id) {
+    protected function createMessageKey($mailAccountId, $mailFolderId, $id): MessageKey
+    {
+
+        $mailAccountId = $mailAccountId ?? null;
+        $mailFolderId = $mailFolderId ?? "INBOX";
 
         return new MessageKey(
-            $mailAccountId ? $mailAccountId :  $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
+            $mailAccountId ?? $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org"),
             $mailFolderId,
             $id
         );
-
     }
 
 
     /**
      * Helper function for creating the client Mock.
-     * @return mixed
+     * @return MockObject
      */
-    protected function getMailClientMock() {
-        return $this->getMockBuilder("Conjoon\Mail\Client\MailClient")
-                    ->setMethods([
-                        "getMessageItemList", "getMessageItem", "getListMessageItem", "getMessageItemDraft", "getMessageBody",
-                        "getUnreadMessageCount", "getTotalMessageCount", "getMailFolderList",
-                        "getFileAttachmentList", "setFlags", "createMessageBodyDraft",
-                        "updateMessageDraft", "updateMessageBodyDraft", "sendMessageDraft", "moveMessage", "deleteMessage"])
-                    ->disableOriginalConstructor()
-                    ->getMock();
+    protected function getMailClientMock(): MockObject
+    {
+        return $this->getMockBuilder(MailClient::class)
+            ->onlyMethods([
+                "getMessageItemList",
+                "getMessageItem",
+                "getMessageItemDraft",
+                "getMessageBody",
+                "getUnreadMessageCount",
+                "getTotalMessageCount",
+                "getMailFolderList",
+                "getFileAttachmentList",
+                "setFlags",
+                "createMessageBodyDraft",
+                "updateMessageDraft",
+                "updateMessageBodyDraft",
+                "sendMessageDraft",
+                "moveMessage",
+                "deleteMessage"
+            ])
+            ->addMethods([
+                "getListMessageItem",
+                ])
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
 
     /**
      * Helper function for creating the service.
+     * @param null $messageItemFieldsProcessor
+     * @param null $readableMessagePartContentProcessor
+     * @param null $writableMessagePartContentProcessor
+     * @param null $previewTextProcessor
+     *
      * @return DefaultMessageItemService
+     * @noinspection PhpParamsInspection
      */
-    protected function createService($messageItemFieldsProcessor = null,
-                                     $readableMessagePartContentProcessor = null,
-                                     $writableMessagePartContentProcessor = null,
-                                     $previewTextProcessor = null) {
+    protected function createService(
+        $messageItemFieldsProcessor = null,
+        $readableMessagePartContentProcessor = null,
+        $writableMessagePartContentProcessor = null,
+        $previewTextProcessor = null
+    ): DefaultMessageItemService {
         return new DefaultMessageItemService(
             $this->getMailClientMock(),
-            $messageItemFieldsProcessor ? $messageItemFieldsProcessor : $this->getMessageItemFieldsProcessor(),
-            $readableMessagePartContentProcessor ? $readableMessagePartContentProcessor : $this->getReadableMessagePartContentProcessor(),
-            $writableMessagePartContentProcessor ? $writableMessagePartContentProcessor : $this->getWritableMessagePartContentProcessor(),
-            $previewTextProcessor ? $previewTextProcessor : $this->getPreviewTextProcessor()
+            $messageItemFieldsProcessor ?? $this->getMessageItemFieldsProcessor(),
+            $readableMessagePartContentProcessor ?? $this->getReadableMessagePartContentProcessor(),
+            $writableMessagePartContentProcessor ?? $this->getWritableMessagePartContentProcessor(),
+            $previewTextProcessor ?? $this->getPreviewTextProcessor()
         );
     }
 
@@ -921,14 +1039,21 @@ class DefaultMessageItemServiceTest extends TestCase {
     /**
      * @return ReadableMessagePartContentProcessor
      */
-    protected function getReadableMessagePartContentProcessor() :ReadableMessagePartContentProcessor{
-        return new class(
+    protected function getReadableMessagePartContentProcessor(): ReadableMessagePartContentProcessor
+    {
+        return new class (
             new CharsetConverter(),
-            new DefaultPlainReadableStrategy,
-            new PurifiedHtmlStrategy
+            new DefaultPlainReadableStrategy(),
+            new PurifiedHtmlStrategy()
         ) extends ReadableMessagePartContentProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
-                $messagePart->setContents("READ" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
+            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+            {
+                $messagePart->setContents(
+                    "READ" .
+                    $messagePart->getMimeType() .
+                    $messagePart->getContents(),
+                    "ISO-8859-1"
+                );
                 return $messagePart;
             }
         };
@@ -937,14 +1062,21 @@ class DefaultMessageItemServiceTest extends TestCase {
     /**
      * @return WritableMessagePartContentProcessor
      */
-    protected function getWritableMessagePartContentProcessor() :WritableMessagePartContentProcessor{
-        return new class(
+    protected function getWritableMessagePartContentProcessor(): WritableMessagePartContentProcessor
+    {
+        return new class (
             new CharsetConverter(),
-            new DefaultPlainWritableStrategy,
-            new DefaultHtmlWritableStrategy
+            new DefaultPlainWritableStrategy(),
+            new DefaultHtmlWritableStrategy()
         ) extends WritableMessagePartContentProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
-                $messagePart->setContents("WRITTEN" . $messagePart->getMimeType() . $messagePart->getContents(), "ISO-8859-1");
+            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+            {
+                $messagePart->setContents(
+                    "WRITTEN" .
+                    $messagePart->getMimeType() .
+                    $messagePart->getContents(),
+                    "ISO-8859-1"
+                );
                 return $messagePart;
             }
         };
@@ -954,10 +1086,12 @@ class DefaultMessageItemServiceTest extends TestCase {
     /**
      * @return PreviewTextProcessor
      */
-    protected function getPreviewTextProcessor() :PreviewTextProcessor{
+    protected function getPreviewTextProcessor(): PreviewTextProcessor
+    {
         return new class implements PreviewTextProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8") :MessagePart{
-                $messagePart->setContents("preview", "ISO-8859-1");
+            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+            {
+                $messagePart->setContents("previewContents", "ISO-8859-1");
                 return $messagePart;
             }
         };
@@ -967,9 +1101,11 @@ class DefaultMessageItemServiceTest extends TestCase {
     /**
      * @return MessageItemFieldsProcessor
      */
-    protected function getMessageItemFieldsProcessor() :MessageItemFieldsProcessor{
+    protected function getMessageItemFieldsProcessor(): MessageItemFieldsProcessor
+    {
         return new class implements MessageItemFieldsProcessor {
-            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8") :AbstractMessageItem{
+            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem
+            {
                 $messageItem->setSubject("MessageItemFieldsProcessor");
                 return $messageItem;
             }
@@ -982,14 +1118,16 @@ class DefaultMessageItemServiceTest extends TestCase {
      *
      * @param $mailAccountId
      * @param $mailFolderId
+     * @param null $messageItemId
+     * @param bool $isDraft
      * @return MessageItem|MessageItemDraft
-     * @throws Exception
+     * @noinspection SpellCheckingInspection
      */
-    protected function buildTestMessageItem($mailAccountId, $mailFolderId, $messageItemId = null, $isDraft = false) {
-        $items = [];
+    protected function buildTestMessageItem($mailAccountId, $mailFolderId, $messageItemId = null, bool $isDraft = false)
+    {
 
         if ($messageItemId == null) {
-            throw new \RuntimeExeption("Unexpected value for messageItemId.");
+            throw new RuntimeException("Unexpected value for messageItemId.");
         }
 
         $messageKey = new MessageKey($mailAccountId, $mailFolderId, $messageItemId);
@@ -999,25 +1137,23 @@ class DefaultMessageItemServiceTest extends TestCase {
             "to" => new MailAddressList(),
             "size" => 100,
             "subject" => "subject",
-            "date" => new \DateTime(),
-            "answered" =>false,
-            "draft" =>false,
+            "date" => new DateTime(),
+            "answered" => false,
+            "draft" => false,
             "flagged" => false,
             "recent" => false
         ];
 
         if ($isDraft === false) {
-            $data["seen"]           = false;
+            $data["seen"] = false;
             $data["hasAttachments"] = false;
             return new MessageItem($messageKey, $data);
         } else {
-            $data["cc"]      = MailAddressList::fromJsonString(json_encode([["address" => "test@cc"]]));
-            $data["bcc"]     = MailAddressList::fromJsonString(json_encode([["address" => "test@bcc"]]));
-            $data["replyTo"] = MailAddress::fromJsonString(json_encode(["address" => "test@replyTo"]));
+            $data["cc"] = MailAddressList::fromString(json_encode([["address" => "test@cc"]]));
+            $data["bcc"] = MailAddressList::fromString(json_encode([["address" => "test@bcc"]]));
+            $data["replyTo"] = MailAddress::fromString(json_encode(["address" => "test@replyTo"]));
             return new MessageItemDraft($messageKey, $data);
         }
-
-
     }
 
 
@@ -1026,9 +1162,18 @@ class DefaultMessageItemServiceTest extends TestCase {
      * @param $mailAccountId
      * @param $mailFolderId
      * @param $messageItemId
-     * @return array
+     * @param string $plain
+     * @param string $html
+     *
+     * @return MessageBody
      */
-    protected function buildTestMessageBody($mailAccountId, $mailFolderId, $messageItemId, $plain = "", $html = "") {
+    protected function buildTestMessageBody(
+        $mailAccountId,
+        $mailFolderId,
+        $messageItemId,
+        string $plain = "",
+        string $html = ""
+    ): MessageBody {
 
         $messageKey = new MessageKey($mailAccountId, $mailFolderId, $messageItemId);
 
@@ -1043,7 +1188,5 @@ class DefaultMessageItemServiceTest extends TestCase {
         }
 
         return $mb;
-
     }
-
 }

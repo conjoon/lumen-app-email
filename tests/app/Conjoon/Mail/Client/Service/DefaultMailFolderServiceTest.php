@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,16 +25,22 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Service\DefaultMailFolderService,
-    Conjoon\Mail\Client\Service\MailFolderService,
-    Conjoon\Mail\Client\Folder\MailFolderChildList,
-    Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder,
-    Conjoon\Mail\Client\MailClient;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Service;
 
-class DefaultMailFolderServiceTest extends TestCase {
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Mail\Client\Folder\Tree\MailFolderTreeBuilder;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Service\DefaultMailFolderService;
+use Conjoon\Mail\Client\Service\MailFolderService;
+use Mockery;
+use Tests\TestCase;
+use Tests\TestTrait;
 
+class DefaultMailFolderServiceTest extends TestCase
+{
     use TestTrait;
 
 
@@ -43,7 +50,8 @@ class DefaultMailFolderServiceTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $service = $this->createService();
         $this->assertInstanceOf(MailFolderService::class, $service);
@@ -58,8 +66,10 @@ class DefaultMailFolderServiceTest extends TestCase {
      *
      * @runInSeparateProcess
      * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
      */
-    public function testGetMailFolderChildList() {
+    public function testGetMailFolderChildList()
+    {
 
         $mailAccount = $this->getTestMailAccount("dev");
 
@@ -68,9 +78,9 @@ class DefaultMailFolderServiceTest extends TestCase {
         $mailFolderList = new MailFolderList();
 
         $service->getMailClient()
-            ->shouldReceive("getMailFolderList")
-            ->with($mailAccount)
-            ->andReturn($mailFolderList);
+                ->shouldReceive("getMailFolderList")
+                ->with($mailAccount)
+                ->andReturn($mailFolderList);
 
 
         $resultList = new MailFolderChildList();
@@ -91,7 +101,8 @@ class DefaultMailFolderServiceTest extends TestCase {
      * Helper function for creating the service.
      * @return DefaultMailFolderService
      */
-    protected function createService() {
+    protected function createService(): DefaultMailFolderService
+    {
         return new DefaultMailFolderService(
             $this->getMailClientMock(),
             $this->getMailFolderTreeBuilderMock()
@@ -103,10 +114,10 @@ class DefaultMailFolderServiceTest extends TestCase {
      * Helper function for creating the client Mock.
      * @return mixed
      */
-    protected function getMailClientMock() {
+    protected function getMailClientMock()
+    {
 
-        return \Mockery::mock("overload:".MailClient::class);
-
+        return Mockery::mock("overload:" . MailClient::class);
     }
 
 
@@ -114,10 +125,9 @@ class DefaultMailFolderServiceTest extends TestCase {
      * Helper function for creating the client Mock.
      * @return mixed
      */
-    protected function getMailFolderTreeBuilderMock() {
+    protected function getMailFolderTreeBuilderMock()
+    {
 
-        return \Mockery::mock("overload:" . MailFolderTreeBuilder::class);
-
+        return Mockery::mock("overload:" . MailFolderTreeBuilder::class);
     }
-
 }

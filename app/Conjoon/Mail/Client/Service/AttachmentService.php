@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,21 +24,22 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\MailClient,
-    Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
-
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\MailClient;
 
 /**
  * Interface AttachmentService
  *
  * @package Conjoon\Mail\Client\Service
  */
-interface AttachmentService {
+interface AttachmentService
+{
 
 
     /**
@@ -47,7 +49,7 @@ interface AttachmentService {
      *
      * @return FileAttachmentItemList
      */
-    public function getFileAttachmentItemList(MessageKey $key) :FileAttachmentItemList;
+    public function getFileAttachmentItemList(MessageKey $key): FileAttachmentItemList;
 
 
     /**
@@ -55,7 +57,5 @@ interface AttachmentService {
      *
      * @return MailClient
      */
-    public function getMailClient() :MailClient;
-
-
+    public function getMailClient(): MailClient;
 }
