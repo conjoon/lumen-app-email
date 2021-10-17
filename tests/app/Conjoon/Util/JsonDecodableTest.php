@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,29 +24,50 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Request;
+namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodable;
+use Tests\TestCase;
 
-/**
- * Interface provides contract for processing an associative array containing
- * plain data to a Jsonable entity
- *
- * @package Conjoon\Mail\Client\Message\Request
- */
-interface JsonTransformer  {
+class JsonDecodableTest extends TestCase
+{
 
+// ---------------------
+//    Tests
+// ---------------------
 
     /**
-     * Processes the data which is assumed to be an associative array and
-     * creates a Jsonable out of it.
-     *
-     * @param array $data
-     *
-     * @return MessageItemDraft
+     * Tests constructor
      */
-    public function transform(array $data) : Jsonable;
+    public function testInterface()
+    {
+        $c = new class implements JsonDecodable {
 
+            public static function fromString(string $value): Jsonable
+            {
+                $t = new class implements Jsonable {
+                    public function toJson(): array
+                    {
+                        return[];
+                    }
+                };
+                return new $t();
+            }
+
+            public static function fromArray(array $arr): Jsonable
+            {
+                $t = new class implements Jsonable {
+                    public function toJson(): array
+                    {
+                        return[];
+                    }
+                };
+                return new $t();
+            }
+        };
+
+        $this->assertInstanceOf(JsonDecodable::class, $c);
+    }
 }

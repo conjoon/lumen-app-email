@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,21 +25,27 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Request\JsonTransformerException;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Util;
+
+use Conjoon\Util\JsonDecodeException;
+use RuntimeException;
+use Tests\TestCase;
 
 /**
- * Class JsonTransformerExceptionTest
- *
+ * Class DataExceptionTest
+ * @package Tests\Conjoon\Mail\Client\Data
  */
-class JsonTransformerExceptionTest extends TestCase {
+class JsonDecodeExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
-        $exception = new JsonTransformerException();
+        $exception = new JsonDecodeException();
 
-        $this->assertInstanceOf(\RuntimeException::class, $exception);
+        $this->assertInstanceOf(RuntimeException::class, $exception);
     }
-
-
 }

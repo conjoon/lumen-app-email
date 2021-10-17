@@ -33,7 +33,7 @@ namespace Conjoon\Util;
  * Interface JsonDecodable
  * @package Conjoon\Util
  */
-interface JsonDecodable extends Jsonable
+interface JsonDecodable
 {
 
 
@@ -43,7 +43,23 @@ interface JsonDecodable extends Jsonable
      *
      * @param string $value
      *
-     * @return Jsonable returns null if the passed string could not be json-decoded
+     * @return Jsonable
+     *
+     * @throws JsonDecodeException
      */
-    public static function fromJsonString(string $value): ?Jsonable;
+    public static function fromString(string $value): Jsonable;
+
+
+    /**
+     * Returns a Jsonable object (this) that was created from the array that
+     * was passed, representing this.
+     *
+     * @param array $arr
+     *
+     * @return Jsonable
+     *
+     * @throws JsonDecodeException
+     */
+    public static function fromArray(array $arr): Jsonable;
+
 }

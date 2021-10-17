@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,18 +24,20 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Request;
+namespace Conjoon\Util;
 
+use RuntimeException;
 
 /**
- * Class JsonTransformerException
+ * Class JsonDecodeException
  *
- * @package  Conjoon\Mail\Client\Request
+ * @package  Conjoon\Util
  */
-class JsonTransformerException extends \RuntimeException {
-
+class JsonDecodeException extends RuntimeException
+{
 
 
 }
