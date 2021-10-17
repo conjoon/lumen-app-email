@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,37 +24,38 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data\CompoundKey;
 
-use Conjoon\Util\Jsonable,
-    Conjoon\Mail\Client\Data\MailAccount;
-
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Util\Jsonable;
 
 /**
  * Class MessageKey models base class for compound keys for identifying (IMAP) Messages.
  *
  * Each key subclassing CompoundKey has a mailAccountId that represents the id of a specified
- * MailAcocunt, as well as an "id" field that represents the unique key with which the entity
+ * MailAccount, as well as an "id" field that represents the unique key with which the entity
  * using the CompoundKey can be identified.
  *
  *
  * @package Conjoon\Mail\Client\Data\CompoundKey
  */
-abstract class CompoundKey implements Jsonable  {
+abstract class CompoundKey implements Jsonable
+{
 
 
     /**
      * @var string
      */
-    protected $id;
+    protected string $id;
 
 
     /**
      * @var string
      */
-    protected $mailAccountId;
+    protected string $mailAccountId;
 
 
     /**
@@ -62,7 +64,8 @@ abstract class CompoundKey implements Jsonable  {
      * @param string|MailAccount $mailAccountId
      * @param string $id
      */
-    public function __construct($mailAccountId, string $id) {
+    public function __construct($mailAccountId, string $id)
+    {
         if ($mailAccountId instanceof MailAccount) {
             $mailAccountId = $mailAccountId->getId();
         }
@@ -74,7 +77,8 @@ abstract class CompoundKey implements Jsonable  {
     /**
      * @return string
      */
-    public function getMailAccountId() :string {
+    public function getMailAccountId(): string
+    {
         return $this->mailAccountId;
     }
 
@@ -82,7 +86,8 @@ abstract class CompoundKey implements Jsonable  {
     /**
      * @return string
      */
-    public function getId() :string {
+    public function getId(): string
+    {
         return $this->id;
     }
 
@@ -92,11 +97,11 @@ abstract class CompoundKey implements Jsonable  {
      *
      * @return array
      */
-    public function toJson() :array {
+    public function toJson(): array
+    {
         return [
-            'id'            => $this->getId(),
+            'id' => $this->getId(),
             'mailAccountId' => $this->getMailAccountId()
         ];
     }
-
 }

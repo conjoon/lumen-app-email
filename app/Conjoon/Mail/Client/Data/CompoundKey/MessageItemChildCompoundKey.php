@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,10 +24,12 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Data\CompoundKey;
 
+use InvalidArgumentException;
 
 /**
  * Class MessageItemChildCompoundKey models a class for compound keys for entities belonging
@@ -34,13 +37,14 @@ namespace Conjoon\Mail\Client\Data\CompoundKey;
  *
  * @package Conjoon\Mail\Client\Data\CompoundKey
  */
-abstract class MessageItemChildCompoundKey extends MessageKey {
+abstract class MessageItemChildCompoundKey extends MessageKey
+{
 
 
     /**
      * @var string
      */
-    protected $parentMessageItemId;
+    protected string $parentMessageItemId;
 
 
     /**
@@ -48,20 +52,24 @@ abstract class MessageItemChildCompoundKey extends MessageKey {
      *
      * @param string|MessageKey $mailAccountId
      * @param string $mailFolderId
-     * @param string $parentMessageItemId
-     * @param string $id
+     * @param string|null $parentMessageItemId
+     * @param string|null $id
      *
-     * @throws \InvalidArgumentException if $mailAccountId is not a FolderKey and $id is null
      */
-    public function __construct($mailAccountId, string $mailFolderId, string $parentMessageItemId = null, string $id = null) {
+    public function __construct(
+        $mailAccountId,
+        string $mailFolderId,
+        string $parentMessageItemId = null,
+        string $id = null
+    ) {
 
         if ($mailAccountId instanceof MessageKey) {
-            $id                  = $mailFolderId;
+            $id = $mailFolderId;
             $parentMessageItemId = $mailAccountId->getId();
-            $mailFolderId        = $mailAccountId->getMailFolderId();
-            $mailAccountId       = $mailAccountId->getMailAccountId();
-        } else if ($id === null || $parentMessageItemId === null) {
-            throw new \InvalidArgumentException("\"id\" and \"parentMessageItemId\" must not be null.");
+            $mailFolderId = $mailAccountId->getMailFolderId();
+            $mailAccountId = $mailAccountId->getMailAccountId();
+        } elseif ($id === null || $parentMessageItemId === null) {
+            throw new InvalidArgumentException("\"id\" and \"parentMessageItemId\" must not be null.");
         }
 
         parent::__construct($mailAccountId, $mailFolderId, $id);
@@ -73,7 +81,8 @@ abstract class MessageItemChildCompoundKey extends MessageKey {
     /**
      * @return string
      */
-    public function getParentMessageItemId() :string {
+    public function getParentMessageItemId(): string
+    {
         return $this->parentMessageItemId;
     }
 
@@ -83,11 +92,11 @@ abstract class MessageItemChildCompoundKey extends MessageKey {
      *
      * @return array
      */
-    public function toJson() :array {
+    public function toJson(): array
+    {
         $json = parent::toJson();
         $json["parentMessageItemId"] = $this->getParentMessageItemId();
 
         return $json;
     }
-
 }

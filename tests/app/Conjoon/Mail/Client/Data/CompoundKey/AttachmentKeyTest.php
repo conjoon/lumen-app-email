@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,18 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageItemChildCompoundKey,
-    Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageItemChildCompoundKey;
+use Tests\TestCase;
+
+/**
+ * Class AttachmentKeyTest
+ * @package Tests\Conjoon\Mail\Client\Data\CompoundKey
+ */
 class AttachmentKeyTest extends TestCase
 {
 
@@ -38,7 +47,8 @@ class AttachmentKeyTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
@@ -55,12 +65,20 @@ class AttachmentKeyTest extends TestCase
 // ---------------------
 
     /**
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param null $parentMessageItemId
+     * @param null $id
      * @return AttachmentKey
      */
-    protected function createAttachmentKey($mailAccountId, $mailFolderId, $parentMessageItemId = null, $id = null) :AttachmentKey {
+    protected function createAttachmentKey(
+        $mailAccountId,
+        $mailFolderId,
+        $parentMessageItemId = null,
+        $id = null
+    ): AttachmentKey {
+
         // Create a new instance from the Abstract Class
         return new AttachmentKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
     }
-
-
 }

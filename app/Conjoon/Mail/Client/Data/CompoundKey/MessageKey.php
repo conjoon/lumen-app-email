@@ -64,7 +64,7 @@ class MessageKey extends CompoundKey
     /**
      * @var string
      */
-    protected $mailFolderId;
+    protected string $mailFolderId;
 
 
     /**

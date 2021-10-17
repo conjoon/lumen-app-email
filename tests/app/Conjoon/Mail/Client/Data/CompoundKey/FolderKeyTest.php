@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,11 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Data\CompoundKey\CompoundKey,
-    Conjoon\Mail\Client\Data\MailAccount;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 
+use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Tests\TestCase;
+
+/**
+ * Class FolderKeyTest
+ * @package Tests\Conjoon\Mail\Client\Data\CompoundKey
+ */
 class FolderKeyTest extends TestCase
 {
 
@@ -39,7 +48,8 @@ class FolderKeyTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailAccountId = "dev";
         $id = "INBOX";
@@ -55,7 +65,4 @@ class FolderKeyTest extends TestCase
         $key = new FolderKey($mailAccount, $id);
         $this->assertSame($mailAccount->getId(), $key->getMailAccountId());
     }
-
-
-
 }

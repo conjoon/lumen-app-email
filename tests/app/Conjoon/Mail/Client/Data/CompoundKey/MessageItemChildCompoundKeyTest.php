@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,10 +25,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageItemChildCompoundKey,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+declare(strict_types=1);
 
+namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 
+use Conjoon\Mail\Client\Data\CompoundKey\MessageItemChildCompoundKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Tests\TestCase;
+use InvalidArgumentException;
+
+/**
+ * Class MessageItemChildCompoundKeyTest
+ * @package Tests\Conjoon\Mail\Client\Data\CompoundKey
+ */
 class MessageItemChildCompoundKeyTest extends TestCase
 {
 
@@ -38,7 +48,8 @@ class MessageItemChildCompoundKeyTest extends TestCase
     /**
      * Test class
      */
-    public function testClass() {
+    public function testClass()
+    {
 
         $mailAccountId = "dev";
         $mailFolderId = "INBOX";
@@ -85,19 +96,22 @@ class MessageItemChildCompoundKeyTest extends TestCase
     /**
      * Test Constructor with omitted id
      */
-    public function testConstructorWithOmittedId() {
+    public function testConstructorWithOmittedId()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->createMessageItemChildCompoundKey("dev", "INBOX", "1");
     }
+
 
     /**
      * Test Constructor with omitted parentMessageItemId
      */
-    public function testConstructorWithOmittedParentMessageItemId() {
+    public function testConstructorWithOmittedParentMessageItemId()
+    {
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->createMessageItemChildCompoundKey("dev", "INBOX",  null, "2");
+        $this->expectException(InvalidArgumentException::class);
+        $this->createMessageItemChildCompoundKey("dev", "INBOX", null, "2");
     }
 
 // ---------------------
@@ -106,14 +120,27 @@ class MessageItemChildCompoundKeyTest extends TestCase
 
 
     /**
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param null $parentMessageItemId
+     * @param null $id
      * @return MessageItemChildCompoundKey
      */
-    protected function createMessageItemChildCompoundKey($mailAccountId, $mailFolderId, $parentMessageItemId = null, $id = null) :MessageItemChildCompoundKey {
+    protected function createMessageItemChildCompoundKey(
+        $mailAccountId,
+        $mailFolderId,
+        $parentMessageItemId = null,
+        $id = null
+    ): MessageItemChildCompoundKey {
+
         // Create a new instance from the Abstract Class
-        return new class($mailAccountId, $mailFolderId, $parentMessageItemId, $id) extends MessageItemChildCompoundKey {
+        return new class (
+            $mailAccountId,
+            $mailFolderId,
+            $parentMessageItemId,
+            $id
+        ) extends MessageItemChildCompoundKey {
 
         };
     }
-
-
 }

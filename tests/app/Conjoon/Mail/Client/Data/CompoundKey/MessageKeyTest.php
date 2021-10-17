@@ -25,15 +25,21 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 
 use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Data\MailAccount;
-use Tests\TestCase;
 use InvalidArgumentException;
+use Tests\TestCase;
 
+/**
+ * Class MessageKeyTest
+ * @package Tests\Conjoon\Mail\Client\Data\CompoundKey
+ */
 class MessageKeyTest extends TestCase
 {
 
