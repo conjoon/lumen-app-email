@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,15 +24,19 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
-use Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Request\JsonTransformerException,
-    Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodeException;
+use DateTime;
+use Exception;
 
 /**
  * Class DefaultMessageItemDraftJsonTransformer
@@ -44,27 +49,47 @@ use Conjoon\Mail\Client\Data\MailAddress,
  *
  * @package Conjoon\Mail\Client\Message\Request\Transformer
  */
-class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTransformer {
+class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTransformer
+{
+
+    /**
+     * @inheritdoc
+     * @param string $value
+     * @return MessageItemDraft|Jsonable
+     *
+     * @throws Exception
+     * @see fromArray
+     */
+    public static function fromString(string $value): MessageItemDraft
+    {
+        $value = json_decode($value, true);
+
+        if (!$value) {
+            throw new JsonDecodeException("cannot decode from string");
+        }
+        return self::fromArray($value);
+    }
 
 
     /**
      * @inheritdoc
+     * @throws Exception
      */
-    public function transform(array $data) : MessageItemDraft {
+    public static function fromArray(array $arr): MessageItemDraft
+    {
 
-        if (!isset($data["mailAccountId"]) || !isset($data["mailFolderId"]) || !isset($data["id"])) {
-            throw new JsonTransformerException(
+        if (!isset($arr["mailAccountId"]) || !isset($arr["mailFolderId"]) || !isset($arr["id"])) {
+            throw new JsonDecodeException(
                 "Missing compound key information. " .
                 "Fields \"mailAccountId\", \"mailFolderId\", and \"id\" must be set."
             );
         }
 
         // consider Modifiable and do not pass to constructor
-        $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
-        $draft      = new MessageItemDraft($messageKey);
+        $messageKey = new MessageKey($arr["mailAccountId"], $arr["mailFolderId"], $arr["id"]);
+        $draft = new MessageItemDraft($messageKey);
 
-        foreach($data as $field => $value) {
-
+        foreach ($arr as $field => $value) {
             if (in_array($field, ["mailAccountId", "mailFolderId", "id"])) {
                 continue;
             }
@@ -72,22 +97,29 @@ class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTran
             $setter = "set" . ucfirst($field);
 
             switch ($field) {
-
                 case "from":
                 case "replyTo":
-                    $add = MailAddress::fromJsonString($value);
+                    try {
+                        $add = MailAddress::fromString($value);
+                    } catch (JsonDecodeException $e) {
+                        $add = null;
+                    }
                     $draft->{$setter}($add);
                     break;
 
                 case "to":
                 case "cc":
                 case "bcc":
-                    $add = MailAddressList::fromJsonString($value);
+                    try {
+                        $add = MailAddressList::fromString($value);
+                    } catch (JsonDecodeException $e) {
+                        $add = null;
+                    }
                     $draft->{$setter}($add);
                     break;
 
                 case "date":
-                    $draft->{$setter}(new \DateTime("@" . $data["date"]));
+                    $draft->{$setter}(new DateTime("@" . $arr["date"]));
                     break;
 
                 default:
@@ -97,10 +129,9 @@ class DefaultMessageItemDraftJsonTransformer implements MessageItemDraftJsonTran
         }
 
         if (!$draft->getDate()) {
-            $draft->setDate(new \DateTime());
+            $draft->setDate(new DateTime());
         }
 
         return $draft;
     }
-
 }

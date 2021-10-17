@@ -1,4 +1,5 @@
- <?php
+<?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,39 +25,52 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Request\JsonTransformer,
-    Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer,
-    Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Request\JsonTransformerException,
-    Conjoon\Mail\Client\Message\MessageBodyDraft;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Mail\Client\Request\Message\Transformer;
+
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
+use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\Util\JsonDecodable;
+use Tests\TestCase;
+
+/**
+ * Class DefaultMessageBodyDraftJsonFromArrayerTest
+ * @package Tests\Conjoon\Mail\Client\Request\Message\FromArrayer
+ */
+class DefaultMessageBodyDraftJsonTransformerTest extends TestCase
+{
 
 
-class DefaultMessageBodyDraftJsonTransformerTest extends TestCase {
-
-
-    public function testClass() {
+    /**
+     * Test inheritance
+     */
+    public function testClass()
+    {
 
         $writer = new DefaultMessageBodyDraftJsonTransformer();
         $this->assertInstanceOf(MessageBodyDraftJsonTransformer::class, $writer);
-        $this->assertInstanceOf(JsonTransformer::class, $writer);
+        $this->assertInstanceOf(JsonDecodable::class, $writer);
     }
 
-
-    public function testTransform() {
+    /**
+     * Test from Array
+     */
+    public function testFromArray()
+    {
 
         $writer = new DefaultMessageBodyDraftJsonTransformer();
 
         $data = [
             "mailAccountId" => "a",
-            "mailFolderId"  => "b",
-            "id"            => "c",
-            "textHtml"      => "foo",
-            "textPlain"     => "bar"
+            "mailFolderId" => "b",
+            "id" => "c",
+            "textHtml" => "foo",
+            "textPlain" => "bar"
         ];
 
-        $draft = $writer->transform($data);
+        $draft = $writer::fromArray($data);
 
         $this->assertInstanceOf(MessageBodyDraft::class, $draft);
 
@@ -71,20 +85,23 @@ class DefaultMessageBodyDraftJsonTransformerTest extends TestCase {
 
         $this->assertSame("text/plain", $draft->getTextPlain()->getMimeType());
         $this->assertSame("text/html", $draft->getTextHtml()->getMimeType());
-
     }
 
 
-    public function testTransform_noKey() {
+    /**
+     * Test fromArray no message key
+     */
+    public function testFromArrayNoKey()
+    {
 
         $writer = new DefaultMessageBodyDraftJsonTransformer();
 
         $data = [
-            "textHtml"      => "foo",
-            "textPlain"     => "bar"
+            "textHtml" => "foo",
+            "textPlain" => "bar"
         ];
 
-        $draft = $writer->transform($data);
+        $draft = $writer::fromArray($data);
 
         $this->assertInstanceOf(MessageBodyDraft::class, $draft);
 
@@ -94,22 +111,25 @@ class DefaultMessageBodyDraftJsonTransformerTest extends TestCase {
     }
 
 
-    public function testTransform_allDataMissing() {
+    /**
+     * Test from Array no data
+     */
+    public function testFromArrayAllDataMissing()
+    {
 
         $writer = new DefaultMessageBodyDraftJsonTransformer();
 
         $data = [
             "mailAccountId" => "a",
-            "mailFolderId"  => "b",
-            "id"            => "c"
+            "mailFolderId" => "b",
+            "id" => "c"
         ];
 
-        $draft = $writer->transform($data);
+        $draft = $writer::fromArray($data);
 
         $this->assertInstanceOf(MessageBodyDraft::class, $draft);
 
         $this->assertNull($draft->getTextHtml());
         $this->assertNull($draft->getTextPlain());
     }
-
 }

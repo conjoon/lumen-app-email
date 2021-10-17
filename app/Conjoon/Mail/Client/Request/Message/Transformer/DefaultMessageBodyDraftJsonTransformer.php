@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,42 +24,67 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
-use Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Util\Jsonable;
+use Conjoon\Util\JsonDecodeException;
+use Exception;
 
 /**
  * Class DefaultMessageBodyDraftJsonTransformer
  *
  * @package Conjoon\Mail\Client\Message\Request\Transformer
  */
-class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTransformer {
+class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTransformer
+{
+
+
+    /**
+     * @inheritdoc
+     * @param string $value
+     * @return MessageBodyDraft|Jsonable
+     *
+     * @throws Exception
+     * @see fromArray
+     */
+    public static function fromString(string $value): MessageBodyDraft
+    {
+        $value = json_decode($value, true);
+
+        if (!$value) {
+            throw new JsonDecodeException("cannot decode from string");
+        }
+        return self::fromArray($value);
+    }
 
 
     /**
      * @inheritdoc
      */
-    public function transform(array $data) : MessageBodyDraft {
+    public static function fromArray(array $arr): MessageBodyDraft
+    {
 
         $textHtml = null;
         $textPlain = null;
 
-        if (isset($data["textPlain"])) {
-            $textPlain = new MessagePart($data["textPlain"], "UTF-8", "text/plain");
+        if (isset($arr["textPlain"])) {
+            $textPlain = new MessagePart($arr["textPlain"], "UTF-8", "text/plain");
         }
 
-        if (isset($data["textHtml"])) {
-            $textHtml = new MessagePart($data["textHtml"], "UTF-8", "text/html");
+        if (isset($arr["textHtml"])) {
+            $textHtml = new MessagePart($arr["textHtml"], "UTF-8", "text/html");
         }
 
         $messageKey = null;
 
-        if (isset($data["mailAccountId"]) && isset($data["mailFolderId"]) && isset($data["id"])) {
-            $messageKey = new MessageKey($data["mailAccountId"], $data["mailFolderId"], $data["id"]);
+        if (isset($arr["mailAccountId"]) && isset($arr["mailFolderId"]) && isset($arr["id"])) {
+            $messageKey = new MessageKey($arr["mailAccountId"], $arr["mailFolderId"], $arr["id"]);
         }
 
         $messageBodyDraft = new MessageBodyDraft($messageKey);
@@ -67,5 +93,6 @@ class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTran
 
         return $messageBodyDraft;
     }
+
 
 }

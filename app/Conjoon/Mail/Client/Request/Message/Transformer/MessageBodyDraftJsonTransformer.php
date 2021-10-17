@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,30 +24,30 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Request\Message\Transformer;
 
-use Conjoon\Mail\Client\Request\JsonTransformer,
-    Conjoon\Mail\Client\Request\JsonTransformerException,
-    Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Util\JsonDecodable;
 
 /**
- * Interface provides contract for processing an associative array containing
- * plain data to a MessageBodyDraft.
+ * Interface provides contract for processing data to a MessageBodyDraft.
  *
  * @package Conjoon\Mail\Client\Request\Message\Transformer
  */
-interface MessageBodyDraftJsonTransformer extends JsonTransformer {
+interface MessageBodyDraftJsonTransformer extends JsonDecodable
+{
 
     /**
-     * Returns a MessageBodyDraft that was created from the data found in $data.
-     * If id, mailAccountId and mailFolderId are available, a MessageKey will be set for
-     * the MessageBodyDraft.
-     *
-     * @param array $data
-     * @return MessageBodyDraft
+     * @inheritdoc
      */
-    public function transform(array $data) : MessageBodyDraft;
+    public static function fromString(string $value): MessageBodyDraft;
 
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromArray(array $arr): MessageBodyDraft;
 }
