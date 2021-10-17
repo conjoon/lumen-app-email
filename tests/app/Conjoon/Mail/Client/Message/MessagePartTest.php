@@ -25,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Message\MessagePart;

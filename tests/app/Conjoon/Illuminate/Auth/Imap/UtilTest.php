@@ -25,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\Conjoon\Illuminate\Auth\Imap;
 
 use Conjoon\Illuminate\Auth\Imap\Util;
