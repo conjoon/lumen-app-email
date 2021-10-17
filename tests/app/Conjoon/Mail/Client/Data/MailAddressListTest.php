@@ -35,6 +35,7 @@ use Conjoon\Util\AbstractList;
 use Conjoon\Util\Copyable;
 use Conjoon\Util\Jsonable;
 use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\JsonDecodeException;
 use Tests\TestCase;
 
 /**
@@ -87,7 +88,7 @@ class MailAddressListTest extends TestCase
     /**
      * fromJsonString
      */
-    public function testFromJsonString()
+    public function testFromString()
     {
 
         $mailAddressList = new MailAddressList();
@@ -95,17 +96,34 @@ class MailAddressListTest extends TestCase
         $mailAddressList[] = new MailAddress("name2@address.testcomdomaindev", "name2");
 
         $jsonString = json_encode($mailAddressList->toJson());
-        $this->assertEquals($mailAddressList, MailAddressList::fromJsonString($jsonString));
-
-        $jsonString = json_encode([]);
-        $this->assertNull(MailAddressList::fromJsonString($jsonString));
-
-        $jsonString = "{json:1)";
-        $this->assertNull(MailAddressList::fromJsonString($jsonString));
+        $this->assertEquals($mailAddressList, MailAddressList::fromString($jsonString));
 
         $jsonString = "[{\"name\" : \"foo\"}]";
-        $this->assertNull(MailAddressList::fromJsonString($jsonString));
+        $this->assertEmpty(MailAddressList::fromString($jsonString));
     }
+
+
+    /**
+     * expect JsonDecodeException
+     */
+    public function testFromStringWithException()
+    {
+        $this->expectException(JsonDecodeException::class);
+        $jsonString = json_encode([]);
+        MailAddressList::fromString($jsonString);
+    }
+
+
+    /**
+     * expect JsonDecodeException
+     */
+    public function testFromStringWithExceptionInvalid()
+    {
+        $this->expectException(JsonDecodeException::class);
+        $jsonString = "{json:1)";
+        MailAddressList::fromString($jsonString);
+    }
+
 
     /**
      * toString

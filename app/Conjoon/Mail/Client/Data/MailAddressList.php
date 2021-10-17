@@ -33,6 +33,7 @@ use Conjoon\Util\AbstractList;
 use Conjoon\Util\Copyable;
 use Conjoon\Util\Jsonable;
 use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\JsonDecodeException;
 use Conjoon\Util\Stringable;
 
 /**
@@ -51,7 +52,7 @@ use Conjoon\Util\Stringable;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddressList extends AbstractList implements JsonDecodable, Stringable, Copyable
+class MailAddressList extends AbstractList implements JsonDecodable, Stringable, Copyable, Jsonable
 {
 
 
@@ -84,19 +85,40 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
     /**
      * @inheritdoc
      */
-    public static function fromJsonString(string $value): ?Jsonable
+    public static function fromArray(array $arr): Jsonable
+    {
+
+        $val = json_encode($arr);
+
+        if (!$val) {
+            throw new JsonDecodeException("could not decode the array");
+        }
+
+        return self::fromString($val);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromString(string $value): Jsonable
     {
 
         $val = json_decode($value, true);
 
         if (!$val) {
-            return null;
+            throw new JsonDecodeException("could not decode the string");
         }
 
         $list = new self();
 
         foreach ($val as $entry) {
-            $address = MailAddress::fromJsonString(json_encode($entry));
+            $address = null;
+            try {
+                $address = MailAddress::fromArray($entry);
+            } catch (JsonDecodeException $e) {
+                // intentionally left empty
+            }
 
             if (!$address) {
                 continue;
@@ -105,9 +127,6 @@ class MailAddressList extends AbstractList implements JsonDecodable, Stringable,
             $list[] = $address;
         }
 
-        if (count($list) === 0) {
-            return null;
-        }
         return $list;
     }
 

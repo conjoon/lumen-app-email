@@ -32,7 +32,9 @@ namespace Conjoon\Mail\Client\Data;
 use Conjoon\Util\Copyable;
 use Conjoon\Util\Jsonable;
 use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\JsonDecodeException;
 use Conjoon\Util\Stringable;
+use InvalidArgumentException;
 
 /**
  * Class MailAddress models a Mail Address, containing a "name" and an "address".
@@ -55,7 +57,7 @@ use Conjoon\Util\Stringable;
  *
  * @package Conjoon\Mail\Client\Data
  */
-class MailAddress implements Stringable, JsonDecodable, Copyable
+class MailAddress implements Stringable, JsonDecodable, Copyable, Jsonable
 {
 
 
@@ -78,6 +80,9 @@ class MailAddress implements Stringable, JsonDecodable, Copyable
      */
     public function __construct(string $address, string $name)
     {
+        if (!$address) {
+            throw new InvalidArgumentException("\"address\" must be set for a MailAddress");
+        }
         $this->address = $address;
         $this->name = $name;
     }
@@ -121,19 +126,38 @@ class MailAddress implements Stringable, JsonDecodable, Copyable
     /**
      * @inheritdoc
      */
-    public static function fromJsonString(string $value): ?Jsonable
+    public static function fromArray(array $arr): Jsonable
+    {
+
+        $val = json_encode($arr);
+
+        if (!$val) {
+            throw new JsonDecodeException("could not decode the array");
+        }
+
+        return self::fromString($val);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function fromString(string $value): Jsonable
     {
 
         $val = json_decode($value, true);
 
         if (!$val || !isset($val["address"])) {
-            return null;
+            throw new JsonDecodeException("could not decode the string");
         }
 
         $address = $val["address"];
         $name = $val["name"] ?? $val["address"];
 
-        return new self($address, $name);
+        try {
+            return new self($address, $name);
+        } catch (InvalidArgumentException $e) {
+            throw new JsonDecodeException("cannot create MailAddress", 0, $e);
+        }
     }
 
 

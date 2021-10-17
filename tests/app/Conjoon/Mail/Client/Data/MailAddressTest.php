@@ -33,7 +33,9 @@ use Conjoon\Mail\Client\Data\MailAddress;
 use Conjoon\Util\Copyable;
 use Conjoon\Util\Jsonable;
 use Conjoon\Util\JsonDecodable;
+use Conjoon\Util\JsonDecodeException;
 use Conjoon\Util\Stringable;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 /**
@@ -47,6 +49,7 @@ class MailAddressTest extends TestCase
 // ---------------------
 //    Tests
 // ---------------------
+
     /**
      * Test class
      */
@@ -69,6 +72,29 @@ class MailAddressTest extends TestCase
 
 
     /**
+     * Test InvalidArgumentException
+     *
+     */
+    public function testInvalidArgumentException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new MailAddress("", "name");
+    }
+
+    /**
+     * Test InvalidArgumentException caused by decoding
+     *
+     */
+    public function testJsonDecodeExceptionFromCaughtInConstructor()
+    {
+        $this->expectException(JsonDecodeException::class);
+        $this->expectExceptionMessageMatches("/(cannot)/");
+        $jsonString = json_encode(["address" => "", "name" => "name"]);
+        MailAddress::fromString($jsonString);
+    }
+
+
+    /**
      * toString()
      */
     public function testToString()
@@ -84,7 +110,7 @@ class MailAddressTest extends TestCase
     /**
      * toString()
      */
-    public function testFromJsonString()
+    public function testFromString()
     {
 
         $name = "Peter Parker";
@@ -92,20 +118,37 @@ class MailAddressTest extends TestCase
         $mailAddress = new MailAddress($address, $name);
 
         $jsonString = json_encode($mailAddress->toJson());
-        $this->assertEquals($mailAddress, MailAddress::fromJsonString($jsonString));
-
-        $jsonString = "foo/:bar{";
-        $this->assertNull(MailAddress::fromJsonString($jsonString));
-
-        $jsonString = json_encode(["name" => "foo"]);
-        $this->assertNull(MailAddress::fromJsonString($jsonString));
+        $this->assertEquals($mailAddress, MailAddress::fromString($jsonString));
 
         $jsonString = json_encode(["address" => "foo"]);
-        $address = MailAddress::fromJsonString($jsonString);
+        $address = MailAddress::fromString($jsonString);
 
         $this->assertSame("foo", $address->getName());
         $this->assertSame("foo", $address->getAddress());
     }
+
+
+    /**
+     * expect JsonDecodeException invalid string
+     */
+    public function testFomStringWithExceptionInvalidString()
+    {
+        $this->expectException(JsonDecodeException::class);
+        $jsonString = "foo/:bar{";
+        MailAddress::fromString($jsonString);
+    }
+
+
+    /**
+     * expect JsonDecodeException address missing
+     */
+    public function testFromStringWithExceptionAddressMissing()
+    {
+        $this->expectException(JsonDecodeException::class);
+        $jsonString = json_encode(["name" => "foo"]);
+        MailAddress::fromString($jsonString);
+    }
+
 
     /**
      * copy()
