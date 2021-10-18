@@ -25,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\App\Http\V0\Middleware;
 
 use App\Http\V0\Middleware\Authenticate;
@@ -34,6 +36,10 @@ use Illuminate\Http\Request;
 use Tests\TestCase;
 use Tests\TestTrait;
 
+/**
+ * Class AuthenticateTest
+ * @package Tests\App\Http\V0\Middleware
+ */
 class AuthenticateTest extends TestCase
 {
     use TestTrait;
@@ -46,33 +52,33 @@ class AuthenticateTest extends TestCase
     public function testHandle()
     {
         $authStub = $this->getMockBuilder(AuthManager::class)
-                     ->disableOriginalConstructor()
-                     ->getMock();
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $stubbedStub = new class {
 
-            public static bool $ISGUEST = true;
+            public static bool $isGuest = true;
 
             public function guest(): bool
             {
-                return self::$ISGUEST;
+                return self::$isGuest;
             }
         };
 
         $authStub->method("guard")
-                 ->willReturn($stubbedStub);
+            ->willReturn($stubbedStub);
 
         $authenticate = new Authenticate($authStub);
 
         // test for is guest
-        $stubbedStub::$ISGUEST = true;
+        $stubbedStub::$isGuest = true;
         $response = $authenticate->handle(new Request(), function () {
         });
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame($response->getStatusCode(), 401);
 
         // test for authenticated
-        $stubbedStub::$ISGUEST = false;
+        $stubbedStub::$isGuest = false;
         $newRequest = new Request();
         $called = false;
         $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
@@ -89,6 +95,7 @@ class AuthenticateTest extends TestCase
      * match the request mailAccountId
      *
      * @return void
+     * @noinspection PhpMissingFieldTypeInspection
      */
     public function testHandleAccountCompare()
     {
@@ -106,12 +113,12 @@ class AuthenticateTest extends TestCase
         $user = $this->getTestUserStub();
 
         $authStub->method("guard")
-                 ->willReturn($stubbedStub);
+            ->willReturn($stubbedStub);
 
         // we just need the test user here in the __call to
         // guard->user()
         $authStub->method("__call")
-                 ->willReturn($user);
+            ->willReturn($user);
 
         $authenticate = new Authenticate($authStub);
 
@@ -122,7 +129,7 @@ class AuthenticateTest extends TestCase
                 public function parameter($param): ?string
                 {
                     if ($param === "mailAccountId") {
-                        return "TESTFAIL";
+                        return "testFail";
                     }
                     return null;
                 }
@@ -146,10 +153,11 @@ class AuthenticateTest extends TestCase
                 {
                     $this->user = $user;
                 }
-                public function parameter($param)
+
+                public function parameter($param): ?string
                 {
                     if ($param === "mailAccountId") {
-                        return $this->user->getMailAccount("someid")->getId();
+                        return $this->user->getMailAccount("someId")->getId();
                     }
                     return null;
                 }
