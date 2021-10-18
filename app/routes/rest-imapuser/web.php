@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -40,21 +41,18 @@ $versions = config("app.api.versions");
 $latest = config("app.api.latest");
 
 foreach ($versions as $version) {
-
     $app->router->group([
-        'namespace'  => "App\Http\\" . ucfirst($version) . "\Controllers",
-        'prefix'     => "rest-imapuser/api/" . $version
+        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
+        'prefix' => "rest-imapuser/api/" . $version
     ], function () use ($router, $version) {
         require base_path("routes/rest-imapuser/api_" . $version . ".php");
     });
-
 }
 
 // config for latest
 $router->group([
-    'namespace'  => "App\Http\\" . ucfirst($latest) . "\Controllers",
-    'prefix'     => "rest-imapuser/api"
+    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
+    'prefix' => "rest-imapuser/api"
 ], function () use ($router, $latest) {
     require base_path("routes/rest-imapuser/api_" . $latest . ".php");
 });
-

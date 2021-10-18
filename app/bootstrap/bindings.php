@@ -25,13 +25,15 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 use App\Console\Kernel as ConsoleKernel;
 use App\Exceptions\Handler;
-use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -60,7 +62,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
-$hordeBodyComposer   = new HordeBodyComposer();
+$hordeBodyComposer = new HordeBodyComposer();
 $hordeHeaderComposer = new HordeHeaderComposer();
 
 $getMailClient = function (MailAccount $account) use (&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {

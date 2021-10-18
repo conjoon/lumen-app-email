@@ -96,7 +96,7 @@ class MailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing folderType
      */
-    public function testConstructor_exceptionFolderType()
+    public function testConstructorExceptionFolderType()
     {
 
         $this->expectException(InvalidArgumentException::class);
@@ -114,7 +114,7 @@ class MailFolderTest extends TestCase
     /**
      * Test for exception if invalid folder type gets submitted to setFolderType
      */
-    public function testSetFolderType_exception()
+    public function testSetFolderTypeException()
     {
         $this->expectException(InvalidArgumentException::class);
 
