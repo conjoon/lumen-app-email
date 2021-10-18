@@ -25,8 +25,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-declare(strict_types=1);
-
 namespace Tests\App\Http\V0\Controllers;
 
 use App\Http\V0\Controllers\MessageItemController;
@@ -50,13 +48,14 @@ use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransfor
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
+use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 use Tests\TestTrait;
 
 /**
- * Tests for MessageItemController.
- *
+ * Class MessageItemControllerTest
+ * @package Tests\App\Http\V0\Controllers
  */
 class MessageItemControllerTest extends TestCase
 {
@@ -75,11 +74,11 @@ class MessageItemControllerTest extends TestCase
     public function testIndexSuccess()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $unreadCmp = 5;
-        $totalCmp  = 100;
+        $totalCmp = 100;
 
         $folderKey = new FolderKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
@@ -108,9 +107,14 @@ class MessageItemControllerTest extends TestCase
         );
 
         $serviceStub->expects($this->once())
-                   ->method("getMessageItemList")
-                   ->with($folderKey, $options)
-                   ->willReturn($messageItemList);
+            ->method("getMessageItemList")
+            ->with($folderKey, $options)
+            ->willReturn($messageItemList);
+
+        $serviceStub->expects($this->once())
+            ->method("getMessageItemList")
+            ->with($folderKey, $options)
+            ->willReturn($messageItemList);
 
         $serviceStub->expects($this->once())
             ->method("getUnreadMessageCount")
@@ -135,16 +139,15 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "total"   => $totalCmp,
-            "meta"    => [
+            "total" => $totalCmp,
+            "meta" => [
                 "cn_unreadCount" => $unreadCmp,
                 "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
                 "mailFolderId" => "INBOX"
             ],
-            "data"    => $messageItemList->toJson()
-          ]);
+            "data" => $messageItemList->toJson()
+        ]);
     }
-
 
 
     /**
@@ -156,8 +159,8 @@ class MessageItemControllerTest extends TestCase
     public function testGetMessageBodySuccess()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -179,7 +182,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => $messageBody->toJson()
+            "data" => $messageBody->toJson()
         ]);
     }
 
@@ -193,8 +196,8 @@ class MessageItemControllerTest extends TestCase
     public function testGetMessageItemSuccess()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -216,7 +219,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => $messageItem->toJson()
+            "data" => $messageItem->toJson()
         ]);
     }
 
@@ -230,8 +233,8 @@ class MessageItemControllerTest extends TestCase
     public function testGetMessageItemDraftSuccess()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -253,7 +256,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => true,
-            "data"    => $messageItemDraft->toJson()
+            "data" => $messageItemDraft->toJson()
         ]);
     }
 
@@ -267,11 +270,11 @@ class MessageItemControllerTest extends TestCase
     public function testGetMessageItemBadRequest()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $serviceStub->expects($this->never())
-                    ->method("getMessageItem");
+            ->method("getMessageItem");
 
 
         $this->actingAs($this->getTestUserStub())
@@ -284,7 +287,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonEquals([
             "success" => false,
-            "msg"    => "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
+            "msg" => "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
         ]);
     }
 
@@ -298,8 +301,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemBadRequestMissingFlag()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $serviceStub->expects($this->never())
             ->method("setFlags");
@@ -315,7 +318,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "Invalid request payload."
+            "msg" => "Invalid request payload."
         ]);
     }
 
@@ -329,8 +332,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemBadRequestMissingTarget()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $serviceStub->expects($this->never())
             ->method("setFlags");
@@ -345,7 +348,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
+            "msg" => "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
         ]);
     }
 
@@ -359,8 +362,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemFlag()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -383,7 +386,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => array_merge($messageKey->toJson(), [
+            "data" => array_merge($messageKey->toJson(), [
                 "seen" => true
             ])
         ]);
@@ -399,8 +402,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemFlagAndMove()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $toFolderId = "ut";
         $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
@@ -437,7 +440,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => $listMessageItem->toJson()
+            "data" => $listMessageItem->toJson()
         ]);
     }
 
@@ -451,8 +454,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemMoveSameFolderId()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $toFolderId = "ut";
 
@@ -482,7 +485,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => false,
-            "msg"     => "Cannot move message since it already belongs to this folder."
+            "msg" => "Cannot move message since it already belongs to this folder."
         ]);
     }
 
@@ -496,12 +499,12 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemMoveNoFlag()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
-        $toFolderId    = "TRASH";
-        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
-        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $toFolderId = "TRASH";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
         $newMessageKey = new MessageKey("dev_sys_conjoon_org", $toFolderId, "5");
 
 
@@ -532,7 +535,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => $listMessageItem->toJson()
+            "data" => $listMessageItem->toJson()
         ]);
     }
 
@@ -546,12 +549,12 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemMoveFail()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
-        $toFolderId    = "TRASH";
-        $folderKey     = new FolderKey("dev_sys_conjoon_org", $toFolderId);
-        $messageKey    = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
+        $toFolderId = "TRASH";
+        $folderKey = new FolderKey("dev_sys_conjoon_org", $toFolderId);
+        $messageKey = new MessageKey("dev_sys_conjoon_org", "INBOX", "123");
 
         $serviceStub->expects($this->never())
             ->method("setFlags");
@@ -577,7 +580,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => false,
-            "msg"     => "Could not move the message."
+            "msg" => "Could not move the message."
         ]);
     }
 
@@ -591,8 +594,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemAllFlags()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -616,8 +619,8 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => array_merge($messageKey->toJson(), [
-                "seen"    => true,
+            "data" => array_merge($messageKey->toJson(), [
+                "seen" => true,
                 "flagged" => false
             ])
         ]);
@@ -633,8 +636,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageItemServiceFail()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
 
@@ -657,7 +660,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => false,
-            "data"    => array_merge($messageKey->toJson(), [
+            "data" => array_merge($messageKey->toJson(), [
                 "flagged" => false
             ])
         ]);
@@ -673,36 +676,26 @@ class MessageItemControllerTest extends TestCase
     public function testPostMessageBody()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-        $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml   = "HTML";
-        $textPlain  = "PLAIN";
+        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml = "HTML";
+        $textPlain = "PLAIN";
 
-        $data        = ["textHtml" => $textHtml, "textPlain" => $textPlain];
+        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
         $requestData = array_merge($data, ["target" => "MessageBodyDraft"]);
 
         $messageBody = new MessageBodyDraft();
         $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
         $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
 
+        $transformer->returnDraftForData($data, $messageBody);
+
         $serviceStub->expects($this->once())
             ->method("createMessageBodyDraft")
-            ->with(
-                $this->callback(
-                    function ($recFolderKey) use ($folderKey) {
-                        $this->assertEquals($folderKey->toJson(), $recFolderKey->toJson());
-                        return true;
-                    }
-                ),
-                $this->callback(
-                    function ($recMessageBody) use ($messageBody) {
-                        $this->assertEquals($messageBody->toJson(), $recMessageBody->toJson());
-                        return true;
-                    }
-                )
-            )
+            ->with($folderKey, $messageBody)
             ->will($this->returnCallback(function ($folderKey, $messageBody) use ($messageKey) {
                 return $messageBody->setMessageKey($messageKey);
             }));
@@ -717,7 +710,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => array_merge($messageKey->toJson(), $messageBody->toJson())
+            "data" => array_merge($messageKey->toJson(), $messageBody->toJson())
         ]);
     }
 
@@ -731,8 +724,8 @@ class MessageItemControllerTest extends TestCase
     public function testPostMessageBodyNoMessageBody()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $serviceStub->expects($this->never())
             ->method("createMessageBodyDraft");
@@ -750,7 +743,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "\"target\" must be specified with \"MessageBodyDraft\"."
+            "msg" => "\"target\" must be specified with \"MessageBodyDraft\"."
         ]);
     }
 
@@ -763,32 +756,24 @@ class MessageItemControllerTest extends TestCase
     public function testPostMessageBodyNotCreated()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
 
-        $folderKey  = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml   = "HTML";
-        $textPlain  = "PLAIN";
+        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml = "HTML";
+        $textPlain = "PLAIN";
+
+        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
 
         $messageBody = new MessageBodyDraft();
         $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
         $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
 
+        $transformer->returnDraftForData($data, $messageBody);
+
         $serviceStub->expects($this->once())
             ->method("createMessageBodyDraft")
-            ->with(
-                $this->callback(
-                    function ($recFolderKey) use ($folderKey) {
-                        $this->assertEquals($folderKey->toJson(), $recFolderKey->toJson());
-                        return true;
-                    }
-                ),
-                $this->callback(
-                    function ($recMessageBody) use ($messageBody) {
-                        $this->assertEquals($messageBody->toJson(), $recMessageBody->toJson());
-                        return true;
-                    }
-                )
-            )
+            ->with($folderKey, $messageBody)
             ->willReturn(null);
 
         $this->actingAs($this->getTestUserStub())
@@ -806,7 +791,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg"    => "Creating the MessageBody failed."
+            "msg" => "Creating the MessageBody failed."
         ]);
     }
 
@@ -843,7 +828,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageDraftNotCreated()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initBodyTransformerStub();
+        $transformer = $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
@@ -851,38 +837,33 @@ class MessageItemControllerTest extends TestCase
             "311"
         );
 
-        $to = [["address" => "dev@conjoon.org"]];
-        $data =  array_merge($messageKey->toJson(), [
+        $transformDraft = new MessageItemDraft($messageKey);
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
             "subject" => "Hello World!",
-            "to"      => $to
-        ]);
+            "to" => $to
+        ];
+
+        $transformer->returnDraftForData($data, $transformDraft);
 
         $serviceStub->expects($this->once())
             ->method("updateMessageDraft")
-            ->with(
-                $this->callback(
-                    function ($recTransformDraft) {
-                        $this->assertInstanceOf(MessageItemDraft::class, $recTransformDraft);
-                        return true;
-                    }
-                )
-            )
+            ->with($transformDraft)
             ->willReturn(null);
 
-         $response = $this->actingAs($this->getTestUserStub())
+        $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                $this->getImapEndpoint(
-                    "$this->messageItemsUrl?target=MessageDraft",
-                    "v0"
-                ),
-                $data
+                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
+                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
             );
+
 
         $response->assertResponseOk();
 
         $response->seeJsonEquals([
             "success" => false,
-            "msg"     => "Updating the MessageDraft failed."
+            "msg" => "Updating the MessageDraft failed."
         ]);
     }
 
@@ -895,7 +876,8 @@ class MessageItemControllerTest extends TestCase
     public function testPutMessageBodyDraftNotCreated()
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
@@ -903,29 +885,30 @@ class MessageItemControllerTest extends TestCase
             "311"
         );
 
+        $transformDraft = new MessageBodyDraft($messageKey);
+
+        $data = [
+            "textPlain" => "Hello World!"
+        ];
+
+        $transformer->returnDraftForData($data, $transformDraft);
+
         $serviceStub->expects($this->once())
             ->method("updateMessageBodyDraft")
-            ->with(
-                $this->callback(
-                    function ($recMessageBody) {
-                        $this->assertInstanceOf(MessageBodyDraft::class, $recMessageBody);
-                        return true;
-                    }
-                )
-            )
+            ->with($transformDraft)
             ->willReturn(null);
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                $this->getImapEndpoint($this->messageItemsUrl, "v0"),
-                array_merge($messageKey->toJson(), ["target" => "MessageBodyDraft", "textPlain" => "Hello World!"])
+                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
+                ["target" => "MessageBodyDraft", "textPlain" => "Hello World!"]//,
             );
 
         $response->assertResponseOk();
 
         $response->seeJsonEquals([
             "success" => false,
-            "msg"     => "Updating the MessageBodyDraft failed."
+            "msg" => "Updating the MessageBodyDraft failed."
         ]);
     }
 
@@ -938,20 +921,33 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageBodyDraftData()
     {
-        $serviceStub     = $this->initServiceStub();
-        $this->initItemTransformerStub();
+        $serviceStub = $this->initServiceStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
 
-
+        $messageKey = new MessageKey(
+            $this->getTestMailAccount("dev_sys_conjoon_org"),
+            "INBOX",
+            "311"
+        );
         $newMessageKey = new MessageKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
             "INBOX",
             "abc"
         );
 
+        $data = [
+            "textHtml" => "Hello World!"
+        ];
+
+        $transformDraft = new MessageBodyDraft($messageKey);
         $messageBodyDraft = new MessageBodyDraft($newMessageKey);
+
+        $transformer->returnDraftForData($data, $transformDraft);
 
         $serviceStub->expects($this->once())
             ->method("updateMessageBodyDraft")
+            ->with($transformDraft)
             ->willReturn($messageBodyDraft);
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -964,7 +960,7 @@ class MessageItemControllerTest extends TestCase
 
         $response->seeJsonEquals([
             "success" => true,
-            "data"    => $messageBodyDraft->toJson()
+            "data" => $messageBodyDraft->toJson()
         ]);
     }
 
@@ -1013,7 +1009,7 @@ class MessageItemControllerTest extends TestCase
                 $this->assertResponseStatus(400);
                 $response->seeJsonEquals([
                     "success" => $expected,
-                    "msg"     => "Sending the message failed."
+                    "msg" => "Sending the message failed."
                 ]);
             }
         };
@@ -1068,8 +1064,8 @@ class MessageItemControllerTest extends TestCase
     protected function deleteMessageItemTest($type)
     {
         $serviceStub = $this->initServiceStub();
-        $this->initItemTransformerStub();
-        $this->initBodyTransformerStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         if ($type === "missing") {
             $serviceStub->expects($this->never())
@@ -1093,7 +1089,7 @@ class MessageItemControllerTest extends TestCase
 
             $this->seeJsonContains([
                 "success" => false,
-                "msg"    => "\"target\" must be specified with \"MessageItem\"."
+                "msg" => "\"target\" must be specified with \"MessageItem\"."
             ]);
         } else {
             $this->assertResponseStatus($type === false ? 500 : 200);
@@ -1112,6 +1108,8 @@ class MessageItemControllerTest extends TestCase
     protected function runMessageDraftPutTest($origin)
     {
         $serviceStub = $this->initServiceStub();
+        $transformer = $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
 
         $messageKey = new MessageKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
@@ -1124,11 +1122,11 @@ class MessageItemControllerTest extends TestCase
             "abc"
         );
 
-        $to = ["address" => "dev@conjoon.org"];
-        $data = array_merge([
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
             "subject" => "Hello World!",
-            "to"      => [$to]
-        ], $messageKey->toJson());
+            "to" => $to
+        ];
 
         if ($origin === true) {
             $data = array_merge($data, [
@@ -1138,19 +1136,14 @@ class MessageItemControllerTest extends TestCase
             ]);
         }
 
+        $transformDraft = new MessageItemDraft($messageKey);
         $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
+
+        $transformer->returnDraftForData($data, $transformDraft);
 
         $serviceStub->expects($this->once())
             ->method("updateMessageDraft")
-            ->with(
-                $this->callback(
-                    function ($recTransformDraft) use ($messageItemDraft) {
-                        // soft check
-                        $this->assertInstanceOf(MessageItemDraft::class, $recTransformDraft);
-                        return true;
-                    }
-                )
-            )
+            ->with($transformDraft)
             ->willReturn($messageItemDraft);
 
         $response = $this->actingAs($this->getTestUserStub())
@@ -1165,56 +1158,140 @@ class MessageItemControllerTest extends TestCase
 
         $response->assertResponseOk();
 
-        $set = ["subject", "to", "id", "mailAccountId", "mailFolderId"];
+        $set = ["subject", "to"];
 
         if ($origin === true) {
             $set = array_merge($set, ["messageId", "inReplyTo", "references", "xCnDraftInfo"]);
         }
 
         $response->seeJsonEquals([
-            "success" => true,
-            "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), $set)
+           "success" => true,
+           "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), $set)
         ]);
     }
 
 
     /**
-     * @return DefaultMessageItemDraftJsonTransformer|MockObject
+     * Will return an anonymous class since staticExpects is deprecated.
+     * Allows for specifying the object to return in fromArray
+     * Registers the anonymous class with the MessageItemController.
+     *
+     * @return DefaultMessageItemDraftJsonTransformer
      */
-    protected function initItemTransformerStub()
+    protected function initMessageItemDraftJsonTransformer()
     {
+        $transformer = new class extends DefaultMessageItemDraftJsonTransformer {
 
-        $jsonStub = $this->getMockBuilder(DefaultMessageItemDraftJsonTransformer::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+            /**
+             * @var MessageItemDraft
+             */
+            protected static MessageItemDraft $draft;
+
+            /**
+             * @var int
+             */
+            protected static int $callCounts = 0;
+
+            /**
+             * @var array
+             */
+            protected static array $expectedData;
+
+            /**
+             * @param array $data
+             * @param MessageItemDraft $draft
+             */
+            public function returnDraftForData(array $data, MessageItemDraft $draft)
+            {
+                self::$expectedData = $data;
+                self::$draft = $draft;
+            }
+
+            /**
+             * @param array $arr
+             * @return MessageItemDraft|null
+             */
+            public static function fromArray(array $arr): MessageItemDraft
+            {
+                ksort($arr);
+                ksort(self::$expectedData);
+
+                if ($arr === self::$expectedData) {
+                    return self::$draft;
+                }
+                throw new Exception("data does not match passed argument");
+            }
+        };
 
         $this->app->when(MessageItemController::class)
             ->needs(MessageItemDraftJsonTransformer::class)
-            ->give(function () use ($jsonStub) {
-                return $jsonStub;
+            ->give(function () use ($transformer) {
+                return $transformer;
             });
 
-        return $jsonStub;
+        return $transformer;
     }
 
 
     /**
-     * @return DefaultMessageBodyDraftJsonTransformer|MockObject
+     * Will return an anonymous class since staticExpects is deprecated.
+     * Allows for specifying the object to return in fromArray.
+     * Registers the anonymous class with the MessageItemController.
+     *
+     * @return DefaultMessageBodyDraftJsonTransformer
      */
-    protected function initBodyTransformerStub()
+    protected function initMessageBodyDraftJsonTransformer()
     {
+        $transformer = new class extends DefaultMessageBodyDraftJsonTransformer {
 
-        $jsonStub = $this->getMockBuilder(DefaultMessageBodyDraftJsonTransformer::class)
-            ->disableOriginalConstructor()
-            ->getMock();
+            /**
+             * @var MessageBodyDraft
+             */
+            protected static MessageBodyDraft $draft;
+
+            /**
+             * @var int
+             */
+            protected static int $callCounts = 0;
+
+            /**
+             * @var array
+             */
+            protected static array $expectedData;
+
+            /**
+             * @param array $data
+             * @param MessageBodyDraft $draft
+             */
+            public function returnDraftForData(array $data, MessageBodyDraft $draft)
+            {
+                self::$expectedData = $data;
+                self::$draft = $draft;
+            }
+
+            /**
+             * @param array $arr
+             * @return MessageBodyDraft|null
+             */
+            public static function fromArray(array $arr): MessageBodyDraft
+            {
+                ksort($arr);
+                ksort(self::$expectedData);
+
+                if ($arr === self::$expectedData) {
+                    return self::$draft;
+                }
+                throw new Exception("data does not match passed argument");
+            }
+        };
 
         $this->app->when(MessageItemController::class)
             ->needs(MessageBodyDraftJsonTransformer::class)
-            ->give(function () use ($jsonStub) {
-                return $jsonStub;
+            ->give(function () use ($transformer) {
+                return $transformer;
             });
 
-        return $jsonStub;
+        return $transformer;
     }
 
 
