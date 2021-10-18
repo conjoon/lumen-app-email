@@ -57,6 +57,10 @@ class CharsetConverter implements Converter
      */
     public function convert(string $text, string $fromCharset = "", string $targetCharset = "UTF-8"): string
     {
+        if ($text === "") {
+            return $text;
+        }
+
         // try to replace those curved quotes with their correct entities!
         // see http://en.wikipedia.org/wiki/Quotation_mark_glyphs
         // [quote]
@@ -73,28 +77,31 @@ class CharsetConverter implements Converter
             $conv = iconv($fromCharset, $targetCharset, $text);
             // first off, check if the charset is windows-1250 if  encoding fails
             // broaden to windows-1252 then
-            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == "windows-1250") {
+            if (
+                ($conv === false || $conv === "" || $this->lastIconvError) &&
+                strtolower($fromCharset) == "windows-1250"
+            ) {
                 $this->lastIconvError = false;
                 $conv = iconv("windows-1252", $targetCharset, $text);
             }
             // check if the charset is us-ascii and broaden to windows-1252
             // if encoding attempt fails
-            if (($conv === false || $this->lastIconvError) && strtolower($fromCharset) == "us-ascii") {
+            if (($conv === false || $conv === "" || $this->lastIconvError) && strtolower($fromCharset) == "us-ascii") {
                 $this->lastIconvError = false;
                 $conv = iconv("windows-1252", $targetCharset, $text);
             }
             // fallback! if we have mb-extension installed, we'll try to detect the encoding, if
             // first try with iconv didn't work
-            if (($conv === false || $this->lastIconvError) && function_exists("mb_detect_encoding")) {
+            if (($conv === false || $conv === "" || $this->lastIconvError) && function_exists("mb_detect_encoding")) {
                 $this->lastIconvError = false;
                 $peekEncoding = mb_detect_encoding($text, implode(",", $this->getEncodingList()), true);
                 $conv = iconv($peekEncoding, $targetCharset, $text);
             }
-            if ($conv === false || $this->lastIconvError) {
+            if ($conv === false || $conv === "" || $this->lastIconvError) {
                 $this->lastIconvError = false;
                 $conv = iconv($fromCharset, $targetCharset . "//TRANSLIT", $text);
             }
-            if ($conv === false || $this->lastIconvError) {
+            if ($conv === false || $conv === "" || $this->lastIconvError) {
                 $this->lastIconvError = false;
                 $conv = iconv($fromCharset, $targetCharset . "//IGNORE", $text);
             }
@@ -163,6 +170,7 @@ class CharsetConverter implements Converter
     protected function getEncodingList(): array
     {
         return [
+            "UTF-8",
             "UCS-4",
             "UCS-4BE",
             "UCS-4LE",
@@ -175,7 +183,6 @@ class CharsetConverter implements Converter
             "UTF-16",
             "UTF-16BE",
             "UTF-16LE",
-            "UTF-8",
             "UTF-7",
             "UTF7-IMAP",
             "ASCII",

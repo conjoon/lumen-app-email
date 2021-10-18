@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   php-tests:
@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 15
     env:
       COMPOSER_NO_INTERACTION: 1
+      CI_ENV: github
 
     strategy:
       matrix:
