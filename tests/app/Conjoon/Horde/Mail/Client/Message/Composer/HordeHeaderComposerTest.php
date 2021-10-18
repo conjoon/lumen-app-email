@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,28 +25,38 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer,
-    Conjoon\Mail\Client\Message\Composer\HeaderComposer,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAddressList;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Horder\Mail\Client\Message\Composer;
+
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\Message\Composer\HeaderComposer;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use DateTime;
+use Horde_Mime_Exception;
+use Tests\TestCase;
 
 
 /**
  * Class HordeHeaderComposerTest
- *
+ * @package Tests\Conjoon\Horder\Mail\Client\Message\Composer
  */
-class HordeHeaderComposerTest extends TestCase {
+class HordeHeaderComposerTest extends TestCase
+{
 
 
-    public function testClass() {
+    public function testClass()
+    {
 
         $strategy = new HordeHeaderComposer();
         $this->assertInstanceOf(HeaderComposer::class, $strategy);
     }
 
-    public function testSortHeaderFields() {
+    public function testSortHeaderFields()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -53,11 +64,14 @@ class HordeHeaderComposerTest extends TestCase {
             ["date", "subject", "cc", "references", "foo", "bar"],
             $composer->sortHeaderFields(["foo", "bar", "cc", "date", "subject", "references"])
         );
-
     }
 
 
-    public function testWrite_1() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testWrite1()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -65,7 +79,7 @@ class HordeHeaderComposerTest extends TestCase {
         $messageItemDraft->setSubject("Test");
         $msgText = ["Subject: foobar\nMessage-ID: foo"];
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            // The "Date:"-Header gets compared individually, see below
             "Subject: Test",
             "Message-ID: foo",
             "User-Agent: php-conjoon",
@@ -77,11 +91,26 @@ class HordeHeaderComposerTest extends TestCase {
 
         $composedResult = $composer->compose($msgText, $messageItemDraft);
 
-        $this->assertEquals($result, explode("\n", $composedResult));
+        $composedLines = explode("\n", $composedResult);
+
+        // extract the Date Part here and create a new Date Object.
+        // we are not mocking DateTime or provide mockable getters
+        // for now
+        $composedDate = array_shift($composedLines);
+        $composedDateParts = explode(" ", $composedDate);
+        array_shift($composedDateParts);
+        $expectedDateParts = explode(" ", (new DateTime())->format("r"));
+        $this->assertEquals($composedDateParts, $expectedDateParts);
+
+        $this->assertEquals($result, $composedLines);
     }
 
 
-    public function testWrite_2() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testWrite2()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -95,11 +124,11 @@ class HordeHeaderComposerTest extends TestCase {
         $messageItemDraft->setInReplyTo("messageidstr1");
         $messageItemDraft->setReferences("messageidstr2");
         $messageItemDraft->setFrom($this->createAddress("from"));
-        $messageItemDraft->setDate(new \DateTime());
+        $messageItemDraft->setDate(new DateTime());
 
         $msgText = ["Subject: foobar\nMessage-Id: foobar"];
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Subject: Test",
             "From: " . $this->createAddress("from")->toString(),
             "Reply-To: " . $this->createAddress("replyTo")->toString(),
@@ -121,8 +150,10 @@ class HordeHeaderComposerTest extends TestCase {
     /**
      * Makes sure header fields are not removed if target fields are not
      * explicitely defined.
+     * @throws Horde_Mime_Exception
      */
-    public function testFieldsAreNotRemoved() {
+    public function testFieldsAreNotRemoved()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -138,7 +169,7 @@ class HordeHeaderComposerTest extends TestCase {
             "Message-ID: snafu"
         ];
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Subject: foobar",
             "From: a",
             "Reply-To: b",
@@ -157,27 +188,28 @@ class HordeHeaderComposerTest extends TestCase {
 
 
         $this->assertEquals($result, $composed);
-
     }
 
     /**
      * Makes sure everything works as expected if header address fields are null
+     * @throws Horde_Mime_Exception
      */
-    public function testNullAddress() {
+    public function testNullAddress()
+    {
 
         $composer = new HordeHeaderComposer();
 
         $messageItemDraft = new MessageItemDraft(new MessageKey("a", "b", "c"));
 
 
-        $messageItemDraft->setFrom(null);
-        $messageItemDraft->setReplyTo(null);
-        $messageItemDraft->setCc(null);
-        $messageItemDraft->setBcc(null);
-        $messageItemDraft->setTo(null);
+        $messageItemDraft->setFrom();
+        $messageItemDraft->setReplyTo();
+        $messageItemDraft->setCc();
+        $messageItemDraft->setBcc();
+        $messageItemDraft->setTo();
 
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Message-ID: foo",
             "User-Agent: php-conjoon",
             "",
@@ -191,7 +223,11 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
-    public function testStringable() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testStringable()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -200,7 +236,7 @@ class HordeHeaderComposerTest extends TestCase {
         $messageItemDraft->setSeen(true);
 
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Message-ID: bar",
             "User-Agent: php-conjoon",
             "",
@@ -211,7 +247,11 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
-    public function testMessageId() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testMessageId()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -222,7 +262,7 @@ class HordeHeaderComposerTest extends TestCase {
         $composed = $composer->compose("", $messageItemDraft);
 
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Message-ID: " . $messageItemDraft->getMessageId(),
             "User-Agent: php-conjoon",
             "",
@@ -233,7 +273,11 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
-    public function testXCnDraftInfo() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testXCnDraftInfo()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -243,7 +287,7 @@ class HordeHeaderComposerTest extends TestCase {
         $composed = $composer->compose("", $messageItemDraft);
 
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Message-ID: " . $messageItemDraft->getMessageId(),
             "User-Agent: php-conjoon",
             "X-Cn-Draft-Info: somestring",
@@ -255,7 +299,11 @@ class HordeHeaderComposerTest extends TestCase {
     }
 
 
-    public function testWrite_emptyStrings() {
+    /**
+     * @throws Horde_Mime_Exception
+     */
+    public function testWriteEmptyStrings()
+    {
 
         $composer = new HordeHeaderComposer();
 
@@ -266,7 +314,7 @@ class HordeHeaderComposerTest extends TestCase {
 
         $msgText = ["Subject: foobar\nMessage-Id: foobar\nReferences: Id"];
         $result  = [
-            "Date: " . (new \DateTime())->format("r"),
+            "Date: " . (new DateTime())->format("r"),
             "Subject: Test",
             "Message-ID: foobar",
             "User-Agent: php-conjoon",
@@ -285,10 +333,10 @@ class HordeHeaderComposerTest extends TestCase {
     /**
      * @param $type
      *
-     * @return mixed
+     * @return MailAddress|MailAddressList
      */
-    protected function createAddress($type) {
-
+    protected function createAddress($type)
+    {
         $mailAddresses = [
             new MailAddress($type . "1@" . strtolower($type) . ".com", $type . "1"),
             new MailAddress($type . "2@" . strtolower($type) . ".com", $type . "2"),
@@ -296,11 +344,9 @@ class HordeHeaderComposerTest extends TestCase {
         ];
 
         switch ($type) {
-
             case "to":
             case "cc":
             case "bcc":
-
                 $list = new MailAddressList();
                 foreach ($mailAddresses as $add) {
                     $list[] = $add;
@@ -309,12 +355,8 @@ class HordeHeaderComposerTest extends TestCase {
 
             case "from":
             case "replyTo":
+            default:
                 return $mailAddresses[0];
-
         }
-
-
     }
-
-
 }

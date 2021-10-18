@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,22 +25,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Mail\Client\Message\Composer\BodyComposer,
-    Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\MessagePart;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Horder\Mail\Client\Message\Composer;
+
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
+use Conjoon\Mail\Client\Message\Composer\BodyComposer;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessagePart;
+use Tests\TestCase;
 
 /**
  * Class HordeBodyComposerTest
- *
+ * @package Tests\Conjoon\Horder\Mail\Client\Message\Composer
  */
-class HordeBodyComposerTest extends TestCase {
+class HordeBodyComposerTest extends TestCase
+{
 
 
     /**
      * Test instance.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
         $composer = $this->createComposer();
         $this->assertInstanceOf(BodyComposer::class, $composer);
     }
@@ -47,8 +55,10 @@ class HordeBodyComposerTest extends TestCase {
 
     /**
      *
+     * @noinspection SpellCheckingInspection
      */
-    public function testTransform() {
+    public function testTransform()
+    {
 
         $messageBodyDraft = new MessageBodyDraft();
         $htmlPart = new MessagePart("foo", "UTF-8", "text/html");
@@ -95,16 +105,15 @@ class HordeBodyComposerTest extends TestCase {
         foreach ($result as $idx => $line) {
             if (in_array($idx, [0, 5, 9, 13])) {
                 $this->assertNotSame($default[$idx], $line);
-                $this->assertContains($txt[$idx], $line);
-                $caught++;
+                $this->assertStringContainsString($txt[$idx], $line);
             } else {
                 $this->assertSame($txt[$idx], $line);
-                $caught++;
             }
+
+            $caught++;
         }
 
         $this->assertSame($caught, 14);
-
     }
 
 // +--------------------------
@@ -112,9 +121,10 @@ class HordeBodyComposerTest extends TestCase {
 // +--------------------------
 
     /**
-     * @return HordeMessageBodyDraftToTextTransformer
+     * @return HordeBodyComposer
      */
-    protected function createComposer() :HordeBodyComposer {
+    protected function createComposer(): HordeBodyComposer
+    {
 
         return new HordeBodyComposer();
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,43 +24,52 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Horde\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Message\Composer\HeaderComposer,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Util\Stringable;
+use Conjoon\Mail\Client\Message\Composer\HeaderComposer;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Util\Stringable;
+use DateTime;
+use Horde_Mime_Exception;
+use Horde_Mime_Headers;
+use Horde_Mime_Headers_MessageId;
+use Horde_Mime_Part;
 
 /**
  * Class HordeHeaderComposer
  *
  * @package Conjoon\Horde\Mail\Client\Message\Composer
  */
-class HordeHeaderComposer implements HeaderComposer {
+class HordeHeaderComposer implements HeaderComposer
+{
 
 
     /**
      * @inheritdoc
+     * @throws Horde_Mime_Exception
      */
-    public function compose(string $target, MessageItemDraft $source = null) :string {
+    public function compose(string $target, MessageItemDraft $source = null): string
+    {
 
-        $part    = \Horde_Mime_Part::parseMessage($target);
-        $headers = \Horde_Mime_Headers::parseHeaders($target);
+        $part = Horde_Mime_Part::parseMessage($target);
+        $headers = Horde_Mime_Headers::parseHeaders($target);
 
         $normalizedHeaders = [
             "xCnDraftInfo" => "X-Cn-Draft-Info",
-            "replyTo"      => "Reply-To",
-            "inReplyTo"    => "In-Reply-To",
-            "userAgent"    => "User-Agent",
-            "messageId"    => "Message-ID"
+            "replyTo" => "Reply-To",
+            "inReplyTo" => "In-Reply-To",
+            "userAgent" => "User-Agent",
+            "messageId" => "Message-ID"
         ];
         $cnHeaders = array_flip($normalizedHeaders);
 
         // write a default header-array with all the header values
         // from the original message headers into an array with
         // key / value pairs that a MessageItemDraft understands
-        $headerData    = [];
+        $headerData = [];
         $tmpHeaderData = $headers->toArray();
         foreach ($tmpHeaderData as $key => $value) {
             if (isset($cnHeaders[$key])) {
@@ -79,7 +89,7 @@ class HordeHeaderComposer implements HeaderComposer {
 
 
         if (!$source || !$source->getDate()) {
-            $date = new \DateTime();
+            $date = new DateTime();
             $headerData["date"] = $date->format("r");
         }
 
@@ -87,16 +97,13 @@ class HordeHeaderComposer implements HeaderComposer {
         // get all values from source and override the data in
         // $headerData with these values
         if ($source) {
-
             $modified = $source->getModifiedFields();
 
             foreach ($modified as $field) {
-
                 if (!MessageItemDraft::isHeaderField($field)) {
                     continue;
                 }
                 switch ($field) {
-
                     case "date":
                         $headerData["date"] = $source->getDate()->format("r");
                         break;
@@ -104,13 +111,13 @@ class HordeHeaderComposer implements HeaderComposer {
                     case "replyTo":
                         $retrieved = $source->getReplyTo();
                         if ($retrieved) {
-                            $headerData["replyTo"] =  $retrieved->toString();
+                            $headerData["replyTo"] = $retrieved->toString();
                         }
                         break;
 
 
                     default:
-                        $getter      = "get" . ucfirst($field);
+                        $getter = "get" . ucfirst($field);
                         $retrieved = $source->{$getter}();
 
                         if ($retrieved instanceof Stringable) {
@@ -125,8 +132,10 @@ class HordeHeaderComposer implements HeaderComposer {
         }
 
         // if our X-CN-DRAFT-INFO header field is not set, we will set it here
-        if ($source && (!$headers->getHeader("X-Cn-Draft-Info") &&
-            $source->getXCnDraftInfo())) {
+        if (
+            $source && (!$headers->getHeader("X-Cn-Draft-Info") &&
+                $source->getXCnDraftInfo())
+        ) {
             $headerData["xCnDraftInfo"] = $source->getXCnDraftInfo();
         }
 
@@ -134,7 +143,7 @@ class HordeHeaderComposer implements HeaderComposer {
         // apply it to the draft, if available
         $messageId = strval($headers->getHeader("Message-ID"));
         if (!$messageId) {
-            $messageId = strval(\Horde_Mime_Headers_MessageId::create("cn"));
+            $messageId = strval(Horde_Mime_Headers_MessageId::create("cn"));
         }
         $headerData["messageId"] = $messageId;
         if ($source) {
@@ -145,12 +154,9 @@ class HordeHeaderComposer implements HeaderComposer {
         // and write the contents back in
         $orderedHeaders = $this->sortHeaderFields(array_keys($headerData));
         foreach ($orderedHeaders as $headerField) {
-
             $value = $headerData[$headerField];
 
-            $finalField = isset($normalizedHeaders[$headerField])
-                          ? $normalizedHeaders[$headerField]
-                          : ucfirst($headerField);
+            $finalField = $normalizedHeaders[$headerField] ?? ucfirst($headerField);
 
             $headers->removeHeader($finalField);
             if ($value !== null && $value !== "") {
@@ -193,7 +199,8 @@ class HordeHeaderComposer implements HeaderComposer {
      * @param array $fields
      * @return array
      */
-    public function sortHeaderFields(array $fields) :array {
+    public function sortHeaderFields(array $fields): array
+    {
 
         $order = [
             "date",
@@ -217,5 +224,4 @@ class HordeHeaderComposer implements HeaderComposer {
 
         return array_merge($intersect, $diff);
     }
-
 }

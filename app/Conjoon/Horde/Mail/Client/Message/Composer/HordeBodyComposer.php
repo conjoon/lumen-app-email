@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -23,58 +24,57 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 declare(strict_types=1);
 
 namespace Conjoon\Horde\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\Composer\BodyComposer;
+use Conjoon\Mail\Client\Message\Composer\BodyComposer;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Horde_Mime_Headers;
+use Horde_Mime_Part;
 
 /**
  * Class HordeBodyComposer
  *
  * @package Conjoon\Horde\Mail\Client\Message\Composer
  */
-class HordeBodyComposer implements BodyComposer {
+class HordeBodyComposer implements BodyComposer
+{
 
 
     /**
      * @inheritdoc
      */
-    public function compose(string $target, MessageBodyDraft $messageBodyDraft) :string {
+    public function compose(string $target, MessageBodyDraft $messageBodyDraft): string
+    {
 
-
-        $headers = \Horde_Mime_Headers::parseHeaders($target);
+        $headers = Horde_Mime_Headers::parseHeaders($target);
 
         $plain = $messageBodyDraft->getTextPlain();
-        $html  = $messageBodyDraft->getTextHtml();
+        $html = $messageBodyDraft->getTextHtml();
 
-        $basepart = new \Horde_Mime_Part();
-        $basepart->setType('multipart/alternative');
-        $basepart->isBasePart(true);
+        $basePart = new Horde_Mime_Part();
+        $basePart->setType('multipart/alternative');
+        $basePart->isBasePart(true);
 
-        $htmlBody = new \Horde_Mime_Part();
+        $htmlBody = new Horde_Mime_Part();
         $htmlBody->setType('text/html');
         $htmlBody->setCharset($html->getCharset());
         $htmlBody->setContents($html->getContents());
 
-        $plainBody = new \Horde_Mime_Part();
+        $plainBody = new Horde_Mime_Part();
         $plainBody->setType('text/plain');
         $plainBody->setCharset($plain->getCharset());
         $plainBody->setContents($plain->getContents());
 
-        $basepart[] = $htmlBody;
-        $basepart[] = $plainBody;
+        $basePart[] = $htmlBody;
+        $basePart[] = $plainBody;
 
-        $headers = $basepart->addMimeHeaders(["headers" => $headers]);
+        $headers = $basePart->addMimeHeaders(["headers" => $headers]);
 
-        $txt = trim($headers->toString()) .
-               "\n\n" .
-               trim($basepart->toString());
-
-        return $txt;
-
+        return trim($headers->toString()) .
+            "\n\n" .
+            trim($basePart->toString());
     }
-
-
 }
