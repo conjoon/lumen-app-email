@@ -38,7 +38,7 @@ use TypeError;
  * Class AbstractList.
  * Type-safe approach for maintaining lists holding element of a specific data type.
  *
- * 
+ *
  * @package Conjoon\Util
  */
 abstract class AbstractList implements ArrayAccess, Iterator, Countable

@@ -26,6 +26,10 @@
  */
 -->
 <ruleset name="php-ms-imapuser coding standards">
+    <description>The coding standard (PSR-12) for conjoon/php-ms-imapuser.</description>
+
+    <file>app/</file>
+    <file>lib/</file>
 
     <rule ref="PSR12" />
 </ruleset>

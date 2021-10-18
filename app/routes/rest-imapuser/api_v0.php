@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -33,4 +36,3 @@
 */
 
 $router->post('auth', 'UserController@authenticate');
-

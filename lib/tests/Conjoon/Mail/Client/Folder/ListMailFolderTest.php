@@ -92,7 +92,7 @@ class ListMailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing delimiter
      */
-    public function testConstructor_exceptionDelimiter()
+    public function testConstructorExceptionDelimiter()
     {
 
         $this->expectException(InvalidArgumentException::class);

@@ -61,5 +61,4 @@ interface JsonDecodable
      * @throws JsonDecodeException
      */
     public static function fromArray(array $arr): Jsonable;
-
 }

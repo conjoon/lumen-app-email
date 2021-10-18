@@ -39,7 +39,6 @@ use DateTime;
 use Horde_Mime_Exception;
 use Tests\TestCase;
 
-
 /**
  * Class HordeHeaderComposerTest
  * @package Tests\Conjoon\Horder\Mail\Client\Message\Composer

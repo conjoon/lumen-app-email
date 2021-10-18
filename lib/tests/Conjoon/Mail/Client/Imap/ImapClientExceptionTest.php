@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -47,6 +48,4 @@ class ImapClientExceptionTest extends TestCase
 
         $this->assertInstanceOf(MailClientException::class, $exception);
     }
-
-
 }

@@ -75,7 +75,7 @@ class AbstractMailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing unreadCount
      */
-    public function testConstructor_exceptionUnreadCount()
+    public function testConstructorExceptionUnreadCount()
     {
 
         $this->expectException(InvalidArgumentException::class);
@@ -94,7 +94,7 @@ class AbstractMailFolderTest extends TestCase
     /**
      * Tests constructor with exception for missing name
      */
-    public function testConstructor_exceptionName()
+    public function testConstructorExceptionName()
     {
 
         $this->expectException(InvalidArgumentException::class);
