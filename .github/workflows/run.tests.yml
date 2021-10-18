@@ -30,13 +30,11 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: none
           tools: composer:v1
+        env:
+          CI_ENV: github
 
       - name: Install dependencies
         run: composer install --no-progress
-
-      - name: define variables
-        env:
-          CI_ENV: github
 
       - name: Execute Unit Tests
         run: ./vendor/bin/phpunit --do-not-cache-result
