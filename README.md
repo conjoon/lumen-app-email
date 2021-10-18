@@ -1,4 +1,4 @@
-# conjoon/php-ms-imapuser
+# conjoon/php-ms-imapuser ![MIT](https://img.shields.io/github/license/conjoon/php-ms-imapuser)
 
 Implements **[rest-imap](https://github.com/conjoon/rest-api-description)** and **[rest-imapuser](https://github.com/conjoon/rest-api-description)**.
 

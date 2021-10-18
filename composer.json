@@ -26,15 +26,15 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
-            "Conjoon\\": "app/"
+            "App\\": "lib/src/",
+            "Conjoon\\": "lib/src/Conjoon"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\App\\": "tests/app/",
-            "Tests\\Conjoon\\": "tests/app/Conjoon/",
-            "Tests\\": "tests"
+            "Tests\\App\\": "lib/tests/",
+            "Tests\\Conjoon\\": "lib/tests/Conjoon/",
+            "Tests\\": "lib/tests"
         }
     },
     "config": {

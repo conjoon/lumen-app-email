@@ -49,7 +49,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      */
     public function createApplication(): Application
     {
-        return require __DIR__ . "/../bootstrap/app.php";
+        return require __DIR__ . "/../../app/bootstrap/app.php";
     }
 
 

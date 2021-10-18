@@ -25,7 +25,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use App\Providers\ImapAuthServiceProvider;
 use Fruitcake\Cors\CorsServiceProvider;

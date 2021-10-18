@@ -26,7 +26,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Conjoon\Mail\Client\Imap\Util;
+namespace Tests\Conjoon\Mail\Client\Imap;
 
 use Conjoon\Mail\Client\Imap\ImapClientException;
 use Conjoon\Mail\Client\MailClientException;
