@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,50 +25,76 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use Conjoon\Horde\Mail\Client\Imap\HordeClient,
-    Conjoon\Mail\Client\Data\MailAddress,
-    Conjoon\Mail\Client\Data\MailAccount,
-    Conjoon\Mail\Client\Data\MailAddressList,
-    Conjoon\Mail\Client\Data\CompoundKey\MessageKey,
-    Conjoon\Mail\Client\Data\CompoundKey\FolderKey,
-    Conjoon\Mail\Client\Imap\ImapClientException,
-    Conjoon\Mail\Client\Message\MessageBody,
-    Conjoon\Mail\Client\Message\MessageBodyDraft,
-    Conjoon\Mail\Client\Message\MessageItem,
-    Conjoon\Mail\Client\Message\MessageItemDraft,
-    Conjoon\Mail\Client\Message\MessagePart,
-    Conjoon\Mail\Client\Message\MessageItemList,
-    Conjoon\Mail\Client\Message\ListMessageItem,
-    Conjoon\Mail\Client\Folder\MailFolderList,
-    Conjoon\Mail\Client\Message\Flag\FlagList,
-    Conjoon\Mail\Client\Message\Flag\SeenFlag,
-    Conjoon\Mail\Client\Message\Flag\FlaggedFlag,
-    Conjoon\Mail\Client\Message\Composer\BodyComposer,
-    Conjoon\Mail\Client\Message\Composer\HeaderComposer;
+declare(strict_types=1);
+
+namespace Tests\Conjoon\Horde\Mail\Client\Imap;
+
+use Conjoon\Horde\Mail\Client\Imap\HordeClient;
+use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\Folder\MailFolderList;
+use Conjoon\Mail\Client\Imap\ImapClientException;
+use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Message\Composer\BodyComposer;
+use Conjoon\Mail\Client\Message\Composer\HeaderComposer;
+use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
+use Conjoon\Mail\Client\Message\Flag\FlagList;
+use Conjoon\Mail\Client\Message\Flag\SeenFlag;
+use Conjoon\Mail\Client\Message\ListMessageItem;
+use Conjoon\Mail\Client\Message\MessageBody;
+use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Message\MessageItem;
+use Conjoon\Mail\Client\Message\MessageItemDraft;
+use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Message\MessagePart;
+use DateTime;
+use Exception;
+use Horde_Imap_Client;
+use Horde_Imap_Client_Data_Fetch;
+use Horde_Imap_Client_Fetch_Results;
+use Horde_Imap_Client_Ids;
+use Horde_Imap_Client_Search_Query;
+use Horde_Imap_Client_Socket;
+use Horde_Mail_Transport;
+use Horde_Mime_Headers;
+use Horde_Mime_Headers_Element;
+use Horde_Mime_Headers_Element_Single;
+use Horde_Mime_Mail;
+use Horde_Mime_Part;
+use Mockery;
+use RuntimeException;
+use Tests\TestCase;
+use Tests\TestTrait;
 
 
 /**
  * Class HordeClientTest
+ * @package Tests\Conjoon\Horde\Mail\Client\Imap
  */
-class HordeClientTest extends TestCase {
-
+class HordeClientTest extends TestCase
+{
     use TestTrait;
 
 
     /**
      * Tests constructor and base class.
      */
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $client = $this->createClient();
-        $this->assertInstanceOf(\Conjoon\Mail\Client\MailClient::class, $client);
+        $this->assertInstanceOf(MailClient::class, $client);
     }
 
 
     /**
      * Tests getMailAccount()
      */
-    public function testGetMailAccount() {
+    public function testGetMailAccount()
+    {
 
         $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
         $client = $this->createClient($mailAccount);
@@ -98,7 +125,7 @@ class HordeClientTest extends TestCase {
     /**
      * Tests connect() with exception
      */
-    public function testConnect_exception()
+    public function testConnectException()
     {
 
         $this->expectException(ImapClientException::class);
@@ -120,7 +147,7 @@ class HordeClientTest extends TestCase {
 
         $someKey = new FolderKey($mailAccount->getId(), "bar");
         $socket = $client->connect($someKey);
-        $this->assertInstanceOf(\Horde_Imap_Client_Socket::class, $socket);
+        $this->assertInstanceOf(Horde_Imap_Client_Socket::class, $socket);
 
         $someKey2 = new FolderKey($mailAccount->getId(), "bar");
         $socket2 = $client->connect($someKey2);
@@ -130,7 +157,6 @@ class HordeClientTest extends TestCase {
         $socket3 = $client->connect($mailAccount->getId());
 
         $this->assertSame($socket, $socket3);
-
     }
 
 
@@ -138,21 +164,23 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageItemList_exception() {
+    public function testGetMessageItemListException()
+    {
 
         $this->expectException(ImapClientException::class);
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("query")
-            ->andThrow(new \Exception("This exception should be caught properly by the test"));
+            ->andThrow(new Exception("This exception should be caught properly by the test"));
 
         $client = $this->createClient();
         $client->getMessageItemList(
             $this->createFolderKey(
                 $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org")->getId(),
-            "INBOX"
-            ), ["start" => 0, "limit" => 25], function(){}
+                "INBOX"
+            ),
+            ["start" => 0, "limit" => 25]
         );
     }
 
@@ -163,24 +191,25 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageItemList() {
+    public function testGetMessageItemList()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $imapStub->shouldReceive("search")->with("INBOX", \Mockery::any(), [
-            "sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]
-        ])->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
+        $imapStub->shouldReceive("search")->with("INBOX", Mockery::any(), [
+            "sort" => [Horde_Imap_Client::SORT_REVERSE, Horde_Imap_Client::SORT_DATE]
+        ])->andReturn(["match" => new Horde_Imap_Client_Ids([111, 222, 333])]);
 
         $messageIds = [111 => "foo", 222 => "bar"];
         $references = [111 => "reffoo", 222 => "refbar"];
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
 
-        $fetchResults[111] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[111] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[111]->setUid(111);
-        $fetchResults[222] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[222] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[222]->setUid(222);
 
         $fetchResults[111]->setEnvelope([
@@ -193,8 +222,9 @@ class HordeClientTest extends TestCase {
         $fetchResults[222]->setHeaders("References", "References: " . $references[222]);
 
         $imapStub->shouldReceive("fetch")->with(
-            "INBOX", \Mockery::any(),
-            \Mockery::type("array")
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
         )->andReturn(
             $fetchResults
         );
@@ -223,13 +253,16 @@ class HordeClientTest extends TestCase {
         $this->assertSame("111", $messageItemList[0]->getMessageKey()->getId());
         $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
         $this->assertEquals(
-            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
+            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"],
+            $messageItemList[0]->getFrom()->toJson()
         );
         $this->assertEquals(
-            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
+            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]],
+            $messageItemList[0]->getTo()->toJson()
         );
         $this->assertEquals(
-            [], $messageItemList[1]->getTo()->toJson()
+            [],
+            $messageItemList[1]->getTo()->toJson()
         );
 
         $this->assertSame($messageIds[111], $messageItemList[0]->getMessageId());
@@ -237,7 +270,6 @@ class HordeClientTest extends TestCase {
 
         $this->assertSame($references[111], $messageItemList[0]->getReferences());
         $this->assertSame($references[222], $messageItemList[1]->getReferences());
-
     }
 
 
@@ -247,24 +279,25 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageItemList_widthIdSpecified() {
+    public function testGetMessageItemListWidthIdSpecified()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("search")->with(
             "INBOX",
-            \Mockery::on(function ($searchQuery) {
-                return $searchQuery instanceof \Horde_Imap_Client_Search_Query &&
-                       $searchQuery->__toString() === "UID 34";
+            Mockery::on(function ($searchQuery) {
+                return $searchQuery instanceof Horde_Imap_Client_Search_Query &&
+                    $searchQuery->__toString() === "UID 34";
             }),
-            ["sort" => [\Horde_Imap_Client::SORT_REVERSE, \Horde_Imap_Client::SORT_DATE]]
-        )->andReturn(["match" => new \Horde_Imap_Client_Ids([34])]);
+            ["sort" => [Horde_Imap_Client::SORT_REVERSE, Horde_Imap_Client::SORT_DATE]]
+        )->andReturn(["match" => new Horde_Imap_Client_Ids([34])]);
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
 
-        $fetchResults[34] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults[34] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[34]->setUid(34);
 
         $fetchResults[34]->setEnvelope(["from" => "dev@conjoon.org", "to" => "devrec@conjoon.org"]);
@@ -273,8 +306,9 @@ class HordeClientTest extends TestCase {
 
 
         $imapStub->shouldReceive("fetch")->with(
-            "INBOX", \Mockery::any(),
-            \Mockery::type("array")
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
         )->andReturn(
             $fetchResults
         );
@@ -301,10 +335,12 @@ class HordeClientTest extends TestCase {
         $this->assertSame("34", $messageItemList[0]->getMessageKey()->getId());
         $this->assertSame("INBOX", $messageItemList[0]->getMessageKey()->getMailFolderId());
         $this->assertEquals(
-            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"], $messageItemList[0]->getFrom()->toJson()
+            ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"],
+            $messageItemList[0]->getFrom()->toJson()
         );
         $this->assertEquals(
-            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]], $messageItemList[0]->getTo()->toJson()
+            [["name" => "devrec@conjoon.org", "address" => "devrec@conjoon.org"]],
+            $messageItemList[0]->getTo()->toJson()
         );
 
         $this->assertSame("<foo>", $messageItemList[0]->getReferences());
@@ -316,28 +352,31 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageItem() {
+    public function testGetMessageItem()
+    {
 
 
         $client = $this->createClient();
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[16]->setUid("16");
         $fetchResults[16]->setSize("1600");
 
 
-        $attach = new \Horde_Mime_Part;
+        $attach = new Horde_Mime_Part();
         $attach->setDisposition("attachment");
         $fetchResults[16]->setStructure($attach);
 
 
         $imapStub->shouldReceive("fetch")->with(
-            "INBOX", \Mockery::any(), \Mockery::type("array")
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
         )->andReturn($fetchResults);
 
 
@@ -355,23 +394,24 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageItemDraft() {
+    public function testGetMessageItemDraft()
+    {
 
 
         $client = $this->createClient();
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[16]->setUid("16");
 
-        $cc   = new MailAddressList;
+        $cc = new MailAddressList();
         $cc[] = new MailAddress("test@dot", "test@dot");
 
-        $bcc   = new MailAddressList;
+        $bcc = new MailAddressList();
         $bcc[] = new MailAddress("test2@dot", "test2@dot");
 
         $replyTo = new MailAddress("test@replyto", "test@replyto");
@@ -379,14 +419,16 @@ class HordeClientTest extends TestCase {
         $messageId = "kjgjkggjkkgjkgj";
 
         $fetchResults[16]->setEnvelope([
-            "cc"          => $cc[0]->getAddress(),
-            "bcc"         => $bcc[0]->getAddress(),
-            "reply-to"    => $replyTo->getAddress(),
-            "message-id"  => $messageId
+            "cc" => $cc[0]->getAddress(),
+            "bcc" => $bcc[0]->getAddress(),
+            "reply-to" => $replyTo->getAddress(),
+            "message-id" => $messageId
         ]);
 
         $imapStub->shouldReceive("fetch")->with(
-            "INBOX", \Mockery::any(), \Mockery::type("array")
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
         )->andReturn($fetchResults);
 
         $item = $client->getMessageItemDraft($this->createMessageKey($account->getId(), "INBOX", "16"));
@@ -396,7 +438,6 @@ class HordeClientTest extends TestCase {
         $this->assertEquals($bcc, $item->getBcc());
         $this->assertEquals($replyTo, $item->getReplyTo());
         $this->assertSame($messageId, $item->getMessageId());
-
     }
 
 
@@ -405,20 +446,23 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMessageBody() {
+    public function testGetMessageBody()
+    {
 
         $client = $this->createClient();
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $fetchResults = new \Horde_Imap_Client_Fetch_Results();
-        $fetchResults[16] = new \Horde_Imap_Client_Data_Fetch();
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
+        $fetchResults[16] = new Horde_Imap_Client_Data_Fetch();
         $fetchResults[16]->setUid("16");
 
         $imapStub->shouldReceive("fetch")->with(
-            "INBOX", \Mockery::any(), \Mockery::type("array")
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
         )->andReturn($fetchResults);
 
         $key = $this->createMessageKey($account->getId(), "INBOX", "16");
@@ -435,13 +479,14 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetTotalMessageCount() {
+    public function testGetTotalMessageCount()
+    {
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $imapStub->shouldReceive("search")->with("INBOX", \Mockery::any(), [])
-                 ->andReturn(["match" => new \Horde_Imap_Client_Ids([111, 222, 333])]);
+        $imapStub->shouldReceive("search")->with("INBOX", Mockery::any(), [])
+            ->andReturn(["match" => new Horde_Imap_Client_Ids([111, 222, 333])]);
 
         $client = $this->createClient();
 
@@ -456,13 +501,14 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetTotalUnreadCount() {
+    public function testGetTotalUnreadCount()
+    {
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
-        $imapStub->shouldReceive("status")->with("INBOX", \Horde_Imap_Client::STATUS_UNSEEN)
-                 ->andReturn(["unseen" => 2]);
+        $imapStub->shouldReceive("status")->with("INBOX", Horde_Imap_Client::STATUS_UNSEEN)
+            ->andReturn(["unseen" => 2]);
 
         $client = $this->createClient();
 
@@ -477,15 +523,16 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetMailFolderList() {
+    public function testGetMailFolderList()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("listMailboxes")->with(
             "*",
-            \Horde_Imap_Client::MBOX_ALL,
+            Horde_Imap_Client::MBOX_ALL,
             ["attributes" => true]
         )->andReturn([
             "INBOX" => ["delimiter" => ".", "attributes" => []],
@@ -494,12 +541,12 @@ class HordeClientTest extends TestCase {
 
         $imapStub->shouldReceive("status")->with(
             "INBOX",
-            \Horde_Imap_Client::STATUS_UNSEEN
+            Horde_Imap_Client::STATUS_UNSEEN
         )->andReturn(["unseen" => 30]);
 
         $imapStub->shouldNotReceive("status")->with(
             "INBOX.Folder",
-            \Horde_Imap_Client::STATUS_UNSEEN
+            Horde_Imap_Client::STATUS_UNSEEN
         );
 
 
@@ -529,23 +576,43 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testGetFileAttachmentList() {
+    public function testGetFileAttachmentList()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $messageItemId = "123";
 
         $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
 
-        $fetchResults = unserialize("O:31:"Horde_Imap_Client_Fetch_Results":3:{s:5:"_data";a:1:{i:155117;O:28:"Horde_Imap_Client_Data_Fetch":1:{s:5:"_data";a:3:{i:14;i:103958;i:13;i:155117;i:1;C:15:"Horde_Mime_Part":1372:{a:10:{i:0;i:2;i:1;N;i:2;s:1:" ";i:3;N;i:4;C:18:"Horde_Mime_Headers":490:{a:3:{i:0;i:3;i:1;a:2:{s:19:"Content-Disposition";C:50:"Horde_Mime_Headers_ContentParam_ContentDisposition":96:{a:3:{s:7:"_params";a:0:{}s:5:"_name";s:19:"Content-Disposition";s:7:"_values";a:1:{i:0;s:0:"";}}}s:12:"Content-Type";C:43:"Horde_Mime_Headers_ContentParam_ContentType":191:{a:3:{s:7:"_params";a:2:{s:7:"charset";s:8:"us-ascii";s:8:"boundary";s:34:"=_0ee451bb88ceef8dab403daf6c4b30cb";}s:5:"_name";s:12:"Content-Type";s:7:"_values";a:1:{i:0;s:15:"multipart/mixed";}}}}i:2;s:1:" ";}}i:5;a:0:{}i:6;s:1:"0";i:7;a:1:{i:0;C:15:"Horde_Mime_Part":717:{a:10:{i:0;i:2;i:1;s:5:"60918";i:2;s:1:" ";i:3;N;i:4;C:18:"Horde_Mime_Headers":575:{a:3:{i:0;i:3;i:1;a:2:{s:19:"Content-Disposition";C:50:"Horde_Mime_Headers_ContentParam_ContentDisposition":188:{a:3:{s:7:"_params";a:2:{s:4:"size";s:5:"60918";s:8:"filename";s:35:"Image Pasted at 2019-9-30 14-57.png";}s:5:"_name";s:19:"Content-Disposition";s:7:"_values";a:1:{i:0;s:10:"attachment";}}}s:12:"Content-Type";C:43:"Horde_Mime_Headers_ContentParam_ContentType":183:{a:3:{s:7:"_params";a:2:{s:7:"charset";s:8:"us-ascii";s:4:"name";s:35:"Image Pasted at 2019-9-30 14-57.png";}s:5:"_name";s:12:"Content-Type";s:7:"_values";a:1:{i:0;s:10:"image/jpeg";}}}}i:2;s:1:" ";}}i:5;a:0:{}i:6;s:1:"1";i:7;a:0:{}i:8;i:0;i:9;s:6:"base64";}}}i:8;i:0;i:9;s:6:"binary";}}}}}s:8:"_keyType";i:2;s:8:"_obClass";s:28:"Horde_Imap_Client_Data_Fetch";}");
-
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $fetchResults = unserialize(
+            "O:31:\"Horde_Imap_Client_Fetch_Results\":3:{s:5:\"_data\";a:1:{i:155117;" .
+            "O:28:\"Horde_Imap_Client_Data_Fetch\":1:{s:5:\"_data\";a:3:{i:14;i:103958;i:13;i:155117;i:1;C:15:" .
+            "\"Horde_Mime_Part\":1372:{a:10:{i:0;i:2;i:1;N;i:2;s:1:\" \";i:3;N;i:4;C:18:\"Horde_Mime_Headers\":" .
+            "490:{a:3:{i:0;i:3;i:1;a:2:{s:19:\"Content-Disposition\";C:50:\"" .
+            "Horde_Mime_Headers_ContentParam_ContentDisposition\":96:{a:3:{s:7:\"_params\";a:0:{}s:5:\"_name\";s:" .
+            "19:\"Content-Disposition\";s:7:\"_values\";a:1:{i:0;s:0:\"\";}}}s:12:\"Content-Type\";C:43:\"" .
+            "Horde_Mime_Headers_ContentParam_ContentType\":191:{a:3:{s:7:\"_params\";a:2:{s:7:\"charset\";s:8:" .
+            "\"us-ascii\";s:8:\"boundary\";s:34:\"=_0ee451bb88ceef8dab403daf6c4b30cb\";}s:5:\"_name\";s:12:\"" .
+            "Content-Type\";s:7:\"_values\";a:1:{i:0;s:15:\"multipart/mixed\";}}}}i:2;s:1:\" \";}}i:5;a:0:{}i:6;s:" .
+            "1:\"0\";i:7;a:1:{i:0;C:15:\"Horde_Mime_Part\":717:{a:10:{i:0;i:2;i:1;s:5:\"60918\";i:2;s:1:\" \";i:3;N;" .
+            "i:4;C:18:\"Horde_Mime_Headers\":575:{a:3:{i:0;i:3;i:1;a:2:{s:19:\"Content-Disposition\";C:50:\"Horde_" .
+            "Mime_Headers_ContentParam_ContentDisposition\":188:{a:3:{s:7:\"_params\";a:2:{s:4:\"size\";s:5:\"60918\"" .
+            ";s:8:\"filename\";s:35:\"Image Pasted at 2019-9-30 14-57.png\";}s:5:\"_name\";s:19:\"Content-" .
+            "Disposition\";s:7:\"_values\";a:1:{i:0;s:10:\"attachment\";}}}s:12:\"Content-Type\";C:43:\"" .
+            "Horde_Mime_Headers_ContentParam_ContentType\":183:{a:3:{s:7:\"_params\";a:2:{s:7:\"charset\";s:8:" .
+            "\"us-ascii\";s:4:\"name\";s:35:\"Image Pasted at 2019-9-30 14-57.png\";}s:5:\"_name\";s:12:\"" .
+            "Content-Type\";s:7:\"_values\";a:1:{i:0;s:10:\"image/jpeg\";}}}}i:2;s:1:\" \";}}i:5;a:0:{}i:6;s:1:\"1" .
+            "\";i:7;a:0:{}i:8;i:0;i:9;s:6:\"base64\";}}}i:8;i:0;i:9;s:6:\"binary\";}}}}}s:8:\"_keyType\";" .
+            "i:2;s:8:\"_obClass\";s:28:\"Horde_Imap_Client_Data_Fetch\";}"
+        );
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("fetch")->with(
             $mailFolderId,
-            \Mockery::any(),
-            \Mockery::any()
+            Mockery::any(),
+            Mockery::any()
         )->andReturn($fetchResults);
 
         $client = $this->createClient();
@@ -556,7 +623,7 @@ class HordeClientTest extends TestCase {
 
         $fileAttachment = $fileAttachmentList[0];
 
-        $this->assertSame("image/jpeg",                          $fileAttachment->getType());
+        $this->assertSame("image/jpeg", $fileAttachment->getType());
         $this->assertSame("Image Pasted at 2019-9-30 14-57.png", $fileAttachment->getText());
     }
 
@@ -567,18 +634,20 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSetFlags() {
+    public function testSetFlags()
+    {
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $messageItemId = "123";
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
 
         $imapStub->shouldReceive("store")->with(
-            $mailFolderId, [
-                "ids"    => new \Horde_Imap_Client_Ids([$messageItemId]),
-                "add"    => ["\\Seen"],
+            $mailFolderId,
+            [
+                "ids" => new Horde_Imap_Client_Ids([$messageItemId]),
+                "add" => ["\\Seen"],
                 "remove" => ["\\Flagged"]
             ]
         )->andReturn(true);
@@ -602,18 +671,19 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBodyDraft_hasMessageKey() {
+    public function testCreateMessageBodyDraftHasMessageKey()
+    {
 
         $this->expectException(ImapClientException::class);
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $folderKey = new FolderKey($account, $mailFolderId);
         $client = $this->createClient();
         $client->createMessageBodyDraft(
-            $folderKey, new MessageBodyDraft(new MessageKey("a", "b", "c"))
+            $folderKey,
+            new MessageBodyDraft(new MessageKey("a", "b", "c"))
         );
-
     }
 
 
@@ -623,10 +693,11 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBodyDraft() {
+    public function testCreateMessageBodyDraft()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $folderKey = new FolderKey($account, $mailFolderId);
         $messageItemId = "989786";
 
@@ -636,16 +707,18 @@ class HordeClientTest extends TestCase {
         $messageBodyDraft->setTextHtml($htmlPart);
         $messageBodyDraft->setTextPlain($plainPart);
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("append")->with(
-            $folderKey->getId(), [["data" => "__HEADER__\n\nFULL_TXT_MSG"]]
-        )->andReturn(new \Horde_Imap_Client_Ids([$messageItemId]));
+            $folderKey->getId(),
+            [["data" => "__HEADER__\n\nFULL_TXT_MSG"]]
+        )->andReturn(new Horde_Imap_Client_Ids([$messageItemId]));
 
         $imapStub->shouldReceive("store")->with(
-            $mailFolderId, [
-                "ids"    => new \Horde_Imap_Client_Ids([$messageItemId]),
-                "add"    => ["\\Draft"]
+            $mailFolderId,
+            [
+                "ids" => new Horde_Imap_Client_Ids([$messageItemId]),
+                "add" => ["\\Draft"]
             ]
         );
 
@@ -666,13 +739,13 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testCreateMessageBodyDraft_hasNoMessageKey() {
+    public function testCreateMessageBodyDraftHasNoMessageKey()
+    {
 
         $this->expectException(ImapClientException::class);
 
         $client = $this->createClient();
         $client->updateMessageBodyDraft(new MessageBodyDraft());
-
     }
 
 
@@ -682,12 +755,13 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testUpdateMessageBodyDraft() {
+    public function testUpdateMessageBodyDraft()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $messageItemId = "989786";
-        $createdId     = "u";
+        $createdId = "4643473743";
         $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
 
         $messageBodyDraft = new MessageBodyDraft($messageKey);
@@ -696,33 +770,40 @@ class HordeClientTest extends TestCase {
         $messageBodyDraft->setTextHtml($htmlPart);
         $messageBodyDraft->setTextPlain($plainPart);
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $imapStub->shouldReceive("append")->with(
-            $messageKey->getMailFolderId(), [["data" => "__HEADER__\n\nFETCHED\n\nFULL_TXT_MSG"]]
-        )->andReturn(new \Horde_Imap_Client_Ids([$createdId]));
+            $messageKey->getMailFolderId(),
+            [["data" => "__HEADER__\n\nFETCHED\n\nFULL_TXT_MSG"]]
+        )->andReturn(new Horde_Imap_Client_Ids([$createdId]));
 
 
         $imapStub->shouldReceive("store")->with(
-            $mailFolderId, [
-                "ids"    => new \Horde_Imap_Client_Ids([$createdId]),
-                "add"    => ["\\Draft"]
+            $mailFolderId,
+            [
+                "ids" => new Horde_Imap_Client_Ids([$createdId]),
+                "add" => ["\\Draft"]
             ]
         );
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageItemId);
 
         $fetchResult = [];
-        $fetchResult[$messageKey->getId()] = new class() {
-            public function getFullMsg($bool) {
+        $fetchResult[$messageKey->getId()] = new class () {
+            /**
+             * @return string
+             * @noinspection PhpUnused
+             */
+            public function getFullMsg(): string
+            {
                 return "FETCHED";
             }
         };
         $imapStub->shouldReceive("fetch")
             ->with(
                 $messageKey->getMailFolderId(),
-                \Mockery::any(),
+                Mockery::any(),
                 ["ids" => $rangeList]
             )
             ->andReturn($fetchResult);
@@ -750,10 +831,11 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testUpdateMessageDraft() {
+    public function testUpdateMessageDraft()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $messageItemId = "989786";
         $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
         $resultMessageKey = new MessageKey($account, $mailFolderId, "abcd");
@@ -776,33 +858,38 @@ class HordeClientTest extends TestCase {
             "to" => $to,
             "cc" => $cc,
             "bcc" => $bcc,
-            "date" => new \DateTime("@1234566"),
+            "date" => new DateTime("@1234566"),
             "replyTo" => new MailAddress("test@foobar.com", "test")
         ]);
 
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
 
-        $resultList = new \Horde_Imap_Client_Ids();
+        $resultList = new Horde_Imap_Client_Ids();
         $resultList->add($resultMessageKey->getId());
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $fetchResult = [];
-        $fetchResult[$messageKey->getId()] = new class() {
-            public function getFullMsg($bool) {
+        $fetchResult[$messageKey->getId()] = new class () {
+            /**
+             * @return string
+             * @noinspection PhpUnused
+             */
+            public function getFullMsg(): string
+            {
                 return "BODY";
             }
         };
 
         $imapStub->shouldReceive("fetch")
-                  ->with(
-                      $messageKey->getMailFolderId(),
-                      \Mockery::any(),
-                      ["ids" => $rangeList]
-                      )
-                  ->andReturn($fetchResult);
+            ->with(
+                $messageKey->getMailFolderId(),
+                Mockery::any(),
+                ["ids" => $rangeList]
+            )
+            ->andReturn($fetchResult);
 
         $fullMsg = "__HEADER__\n\nBODY";
 
@@ -817,16 +904,16 @@ class HordeClientTest extends TestCase {
             ->with(
                 $messageKey->getMailFolderId(),
                 ["ids" => $resultList,
-                 "add" => ["\Draft"]
+                    "add" => ["\Draft"]
                 ]
             );
 
 
         $imapStub->shouldReceive("expunge")
-                 ->with(
-                     $messageKey->getMailFolderId(),
-                     ["delete" => true, "ids" => $rangeList, "list" => true]
-                 )->andReturn([]);
+            ->with(
+                $messageKey->getMailFolderId(),
+                ["delete" => true, "ids" => $rangeList, "list" => true]
+            )->andReturn([]);
 
         $client = $this->createClient();
 
@@ -847,7 +934,7 @@ class HordeClientTest extends TestCase {
     /**
      * Tests getMailer() with exception
      */
-    public function testGetMailer_exception()
+    public function testGetMailerException()
     {
 
         $this->expectException(ImapClientException::class);
@@ -869,7 +956,7 @@ class HordeClientTest extends TestCase {
 
         $someAccount = new MailAccount(["id" => $mailAccount->getId()]);
         $mailer = $client->getMailer($someAccount);
-        $this->assertInstanceOf(\Horde_Mail_Transport::class, $mailer);
+        $this->assertInstanceOf(Horde_Mail_Transport::class, $mailer);
 
         $someAccount2 = new MailAccount(["id" => $mailAccount->getId()]);
         $mailer2 = $client->getMailer($someAccount2);
@@ -879,7 +966,6 @@ class HordeClientTest extends TestCase {
         $mailer3 = $client->getMailer($someAccount);
 
         $this->assertSame($mailer, $mailer3);
-
     }
 
 
@@ -889,28 +975,43 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_noDraft() {
+    public function testSendMessageDraftNoDraft()
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "DRAFTS";
+        $mailFolderId = "DRAFTS";
         $messageItemId = "989786";
         $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
 
         $client = $this->createClient();
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $fetchResult = [];
-        $fetchResult[$messageKey->getId()] = new class() {
-            public function __construct() {
+        $fetchResult[$messageKey->getId()] = new class () {
+            /**
+             *  constructor.
+             */
+            public function __construct()
+            {
             }
 
-            public function getFullMsg() {
+            /**
+             *
+             * @noinspection PhpUnused
+             */
+            public function getFullMsg()
+            {
             }
-            public function getFlags() {
+
+            /**
+             * @return array
+             */
+            public function getFlags(): array
+            {
                 return [];
             }
         };
@@ -919,14 +1020,13 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("fetch")
             ->with(
                 $messageKey->getMailFolderId(),
-                \Mockery::any(),
+                Mockery::any(),
                 ["ids" => $rangeList]
             )
             ->andReturn($fetchResult);
 
         $this->expectException(ImapClientException::class);
         $client->sendMessageDraft($messageKey);
-
     }
 
 
@@ -936,7 +1036,7 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_regular()
+    public function testSendMessageDraftRegular()
     {
         $this->sendMessageDraftTest();
     }
@@ -948,7 +1048,7 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_noDraftInfo()
+    public function testSendMessageDraftNoDraftInfo()
     {
         $this->sendMessageDraftTest("NO_DRAFTINFO");
     }
@@ -960,7 +1060,7 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_draftInfoInvalid()
+    public function testSendMessageDraftDraftInfoInvalid()
     {
         $this->sendMessageDraftTest("DRAFTINFO_INVALID");
     }
@@ -972,7 +1072,7 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_draftInfoNoJson()
+    public function testSendMessageDraftDraftInfoNoJson()
     {
         $this->sendMessageDraftTest("DRAFTINFO_NOJSON");
     }
@@ -984,7 +1084,7 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testSendMessageDraft_invalidMailAccount()
+    public function testSendMessageDraftInvalidMailAccount()
     {
         $this->sendMessageDraftTest("INVALID_MAILACCOUNT");
     }
@@ -996,8 +1096,9 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testMoveMessage() {
-        $this->assertSame($this->funcForTestMove(""), "");
+    public function testMoveMessage()
+    {
+        $this->assertSame($this->funcForTestMove(), "");
     }
 
 
@@ -1007,7 +1108,8 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testMoveMessage_exception() {
+    public function testMoveMessageException()
+    {
         $this->assertSame($this->funcForTestMove("exception"), "exception");
     }
 
@@ -1018,7 +1120,8 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testMoveMessage_noarray() {
+    public function testMoveMessageNoarray()
+    {
         $this->assertSame($this->funcForTestMove("noarray"), "noarray");
     }
 
@@ -1029,19 +1132,19 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testMoveMessage_differerentMailAccountId() {
+    public function testMoveMessageDiffererentMailAccountId()
+    {
 
 
         $client = $this->createClient();
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId     = "DRAFTS";
-        $messageItemId    = "989786";
-        $toMailFolderId   = "SENT";
-        $newMessageItemId = "abcde";
+        $mailFolderId = "DRAFTS";
+        $messageItemId = "989786";
+        $toMailFolderId = "SENT";
 
-        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
-        $folderKey      = new FolderKey("zut", $toMailFolderId);
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey = new FolderKey("zut", $toMailFolderId);
 
         $this->expectException(ImapClientException::class);
         $client->moveMessage($messageKey, $folderKey);
@@ -1054,23 +1157,23 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testMoveMessage_sameMailFolderIds() {
+    public function testMoveMessageSameMailFolderIds()
+    {
 
 
         $client = $this->createClient();
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId     = "DRAFTS";
-        $messageItemId    = "989786";
-        $toMailFolderId   = $mailFolderId;
+        $mailFolderId = "DRAFTS";
+        $messageItemId = "989786";
+        $toMailFolderId = $mailFolderId;
 
-        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
-        $folderKey      = new FolderKey($account, $toMailFolderId);
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey = new FolderKey($account, $toMailFolderId);
 
         $res = $client->moveMessage($messageKey, $folderKey);
 
         $this->assertSame($res, $messageKey);
-
     }
 
 
@@ -1080,7 +1183,8 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_okay() {
+    public function testDeleteMessageOkay()
+    {
         $this->deleteMessageTest(true);
     }
 
@@ -1091,7 +1195,8 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_failed() {
+    public function testDeleteMessageFailed()
+    {
         $this->deleteMessageTest(false);
     }
 
@@ -1102,7 +1207,8 @@ class HordeClientTest extends TestCase {
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function testDeleteMessage_exception() {
+    public function testDeleteMessageException()
+    {
         $this->deleteMessageTest("exception");
     }
 
@@ -1116,28 +1222,29 @@ class HordeClientTest extends TestCase {
      *
      * @param mixed $testType true, false or "exception"
      */
-    protected function deleteMessageTest($testType) {
+    protected function deleteMessageTest($testType)
+    {
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId  = "INBOX";
+        $mailFolderId = "INBOX";
         $messageItemId = "989786";
         $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
 
         $returnValue = $testType === true ? ["someunrelatedvar"] : [];
 
         $op = $imapStub->shouldReceive("expunge")
-                ->with(
-                    $mailFolderId,
-                    ["delete" => true, "ids" => $rangeList, "list" => true]
-                );
+            ->with(
+                $mailFolderId,
+                ["delete" => true, "ids" => $rangeList, "list" => true]
+            );
 
         if ($testType === "exception") {
-            $op->andThrow(new \Exception());
+            $op->andThrow(new Exception());
         } else {
             $op->andReturn($returnValue);
         }
@@ -1158,7 +1265,7 @@ class HordeClientTest extends TestCase {
             $this->assertTrue(false);
         }
 
-        $resultValue = $testType === true ? true : false;
+        $resultValue = $testType === true;
 
         $this->assertSame($resultValue, $res);
     }
@@ -1175,10 +1282,22 @@ class HordeClientTest extends TestCase {
      * "INVALID_MAILACCOUNT" -> X-CN-DRAFT-INFO contained invalid mail account id
      *
      */
-    protected function sendMessageDraftTest($testType = "") {
+    protected function sendMessageDraftTest(string $testType = "")
+    {
 
-        if (!in_array($testType, ["", "NO_DRAFTINFO", "DRAFTINFO_INVALID", "INVALID_MAILACCOUNT", "DRAFTINFO_NOJSON"])) {
-            throw new \RuntimeException("Unexpected invalid test configuration.");
+        if (
+            !in_array(
+                $testType,
+                [
+                "",
+                "NO_DRAFTINFO",
+                "DRAFTINFO_INVALID",
+                "INVALID_MAILACCOUNT",
+                "DRAFTINFO_NOJSON"
+                ]
+            )
+        ) {
+            throw new RuntimeException("Unexpected invalid test configuration.");
         }
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
@@ -1188,33 +1307,54 @@ class HordeClientTest extends TestCase {
 
         $client = $this->createClient();
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
 
-        $imapStub = \Mockery::mock("overload:" . \Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
         $mailer = $client->getMailer($account);
-        $mimePartStub = \Mockery::mock("overload:" . \Horde_Mime_Part::class);
-        $mimeHeadersStub = \Mockery::mock("overload:" . \Horde_Mime_Headers::class);
-        $mimeMailStub = \Mockery::mock("overload:" . \Horde_Mime_Mail::class);
+        $mimePartStub = Mockery::mock("overload:" . Horde_Mime_Part::class);
+        $mimeHeadersStub = Mockery::mock("overload:" . Horde_Mime_Headers::class);
+        $mimeMailStub = Mockery::mock("overload:" . Horde_Mime_Mail::class);
 
 
-        $headerElement = \Mockery::mock("overload:" . \Horde_Mime_Headers_Element::class);
+        $headerElement = Mockery::mock("overload:" . Horde_Mime_Headers_Element::class);
 
-        $headers     = new  $mimeHeadersStub;
-        $basePart    = null;
-        $rawMsg      = "RAWMESSAGE";
+        $headers = new  $mimeHeadersStub();
+        $basePart = null;
+        $rawMsg = "RAWMESSAGE";
         $fetchResult = [];
-        $fetchResult[$messageKey->getId()] = new class($rawMsg) {
+        $fetchResult[$messageKey->getId()] = new class ($rawMsg) {
 
-            public function __construct($rawMsg) {
+            /**
+             * @var string
+             */
+            protected string $rawMsg;
+
+            /**
+             *  constructor.
+             * @param $rawMsg
+             */
+            public function __construct($rawMsg)
+            {
                 $this->rawMsg = $rawMsg;
             }
 
-            public function getFullMsg($bool) {
+            /**
+             * @return string
+             *
+             * @noinspection PhpUnused
+             */
+            public function getFullMsg(): string
+            {
                 return $this->rawMsg;
             }
-            public function getFlags() {
-                return [\Horde_Imap_Client::FLAG_DRAFT];
+
+            /**
+             * @return array
+             */
+            public function getFlags(): array
+            {
+                return [Horde_Imap_Client::FLAG_DRAFT];
             }
         };
 
@@ -1222,7 +1362,7 @@ class HordeClientTest extends TestCase {
         $imapStub->shouldReceive("fetch")
             ->with(
                 $messageKey->getMailFolderId(),
-                \Mockery::any(),
+                Mockery::any(),
                 ["ids" => $rangeList]
             )
             ->andReturn($fetchResult);
@@ -1265,12 +1405,11 @@ class HordeClientTest extends TestCase {
             $headers->shouldReceive("getHeader")
                 ->with("X-CN-DRAFT-INFO")
                 ->andReturn(null);
-
         } else {
             $headers->shouldReceive("getHeader")
                 ->with("X-CN-DRAFT-INFO")
                 ->andReturn(
-                    new \Horde_Mime_Headers_Element_Single(
+                    new Horde_Mime_Headers_Element_Single(
                         "X-CN-DRAFT-INFO",
                         $value
                     )
@@ -1286,12 +1425,12 @@ class HordeClientTest extends TestCase {
             $imapStub->shouldNotReceive("store");
         } else {
             $imapStub->shouldReceive("store")->with(
-                "foo", [
-                    "ids"    => new \Horde_Imap_Client_Ids(["bar"]),
-                    "add"    => ["\\Answered"]
+                "foo",
+                [
+                    "ids" => new Horde_Imap_Client_Ids(["bar"]),
+                    "add" => ["\\Answered"]
                 ]
             )->andReturn(true);
-
         }
 
 
@@ -1306,25 +1445,26 @@ class HordeClientTest extends TestCase {
     /**
      * helper for moveMessage tests
      */
-    protected function funcForTestMove($type = "") {
+    protected function funcForTestMove($type = "")
+    {
 
 
         $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
-        $mailFolderId     = "DRAFTS";
-        $messageItemId    = "989786";
-        $toMailFolderId   = "SENT";
-        $newMessageItemId = 24;
+        $mailFolderId = "DRAFTS";
+        $messageItemId = "989786";
+        $toMailFolderId = "SENT";
+        $newMessageItemId = "24";
 
-        $messageKey     = new MessageKey($account, $mailFolderId, $messageItemId);
-        $folderKey      = new FolderKey($account, $toMailFolderId);
-        $cmpMessageKey  = new MessageKey($account, $toMailFolderId, $newMessageItemId);
+        $messageKey = new MessageKey($account, $mailFolderId, $messageItemId);
+        $folderKey = new FolderKey($account, $toMailFolderId);
+        $cmpMessageKey = new MessageKey($account, $toMailFolderId, $newMessageItemId);
 
         $client = $this->createClient();
 
-        $rangeList = new \Horde_Imap_Client_Ids();
+        $rangeList = new Horde_Imap_Client_Ids();
         $rangeList->add($messageKey->getId());
 
-        $imapStub = \Mockery::mock("overload:".\Horde_Imap_Client_Socket::class);
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
         $proc = $imapStub->shouldReceive("copy")
             ->with(
                 $mailFolderId,
@@ -1334,12 +1474,12 @@ class HordeClientTest extends TestCase {
 
         if ($type === "exception") {
             $this->expectException(ImapClientException::class);
-            $proc->andThrow(new \Exception("foo"));
+            $proc->andThrow(new Exception("foo"));
             $client->moveMessage($messageKey, $folderKey);
-        } else if ($type === "noarray") {
+        } elseif ($type === "noarray") {
             $proc->andReturn(false);
             $this->expectException(ImapClientException::class);
-            $res = $client->moveMessage($messageKey, $folderKey);
+            $client->moveMessage($messageKey, $folderKey);
         } else {
             $proc->andReturn([$messageItemId => $newMessageItemId]);
             $res = $client->moveMessage($messageKey, $folderKey);
@@ -1355,9 +1495,9 @@ class HordeClientTest extends TestCase {
      * @param $id
      * @return FolderKey
      */
-    protected function createFolderKey($mid, $id) {
+    protected function createFolderKey($mid, $id): FolderKey
+    {
         return new FolderKey($mid, $id);
-
     }
 
 
@@ -1367,7 +1507,8 @@ class HordeClientTest extends TestCase {
      * @param $id
      * @return MessageKey
      */
-    protected function createMessageKey($mid, $fid, $id) {
+    protected function createMessageKey($mid, $fid, $id): MessageKey
+    {
         return new MessageKey($mid, $fid, $id);
     }
 
@@ -1375,40 +1516,44 @@ class HordeClientTest extends TestCase {
     /**
      * @return BodyComposer
      */
-    protected function createBodyComposer() :BodyComposer {
+    protected function createBodyComposer(): BodyComposer
+    {
 
-        return new class() implements BodyComposer {
+        return new class () implements BodyComposer {
 
-            public function compose(string $target, MessageBodyDraft $draft) :string {
+            public function compose(string $target, MessageBodyDraft $messageBodyDraft): string
+            {
                 return trim($target) . "\n\n" . "FULL_TXT_MSG";
             }
-
         };
-
     }
 
     /**
      * @return HeaderComposer
      */
-    protected function createHeaderComposer() :HeaderComposer {
+    protected function createHeaderComposer(): HeaderComposer
+    {
 
-        return new class() implements HeaderComposer {
+        return new class () implements HeaderComposer {
 
-            public function compose(string $target, MessageItemDraft $draft = null) :string {
+            public function compose(string $target, MessageItemDraft $source = null): string
+            {
                 return "__HEADER__" . "\n\n" . trim($target);
             }
-
         };
-
     }
 
 
     /**
      * Creates an instance of HordeClient.
      *
-     * @return HordeCient
+     * @param null $mailAccount
+     * @param null $bodyComposer
+     * @param null $headerComposer
+     * @return HordeClient
      */
-    protected function createClient($mailAccount = null, $bodyComposer = null, $headerComposer = null) :HordeClient {
+    protected function createClient($mailAccount = null, $bodyComposer = null, $headerComposer = null): HordeClient
+    {
 
         if (!$mailAccount) {
             $mailAccount = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
