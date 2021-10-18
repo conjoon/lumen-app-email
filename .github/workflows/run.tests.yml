@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 15
     env:
       COMPOSER_NO_INTERACTION: 1
+      CI_ENV: github
 
     strategy:
       matrix:
@@ -30,8 +31,6 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: none
           tools: composer:v1
-        env:
-          CI_ENV: github
 
       - name: Install dependencies
         run: composer install --no-progress
