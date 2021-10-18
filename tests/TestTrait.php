@@ -36,9 +36,8 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Trait for having access to authenticated User-stub in tests.
- *
  * Trait TestTrait
+ * @package Tests
  */
 trait TestTrait
 {
@@ -100,7 +99,7 @@ trait TestTrait
     public function getTestMailAccount($accountId): ?MailAccount
     {
 
-        if ($accountId === "TESTFAIL") {
+        if ($accountId === "testFail") {
             return null;
         }
 
@@ -110,15 +109,15 @@ trait TestTrait
             "from"            => ["name" => "John Smith", "address" => "dev@conjoon.org"],
             "replyTo"         => ["name" => "John Smith", "address" => "dev@conjoon.org"],
             "inbox_type"      => "IMAP",
-            "inbox_address"   => "sfsffs.ffssf.sffs",
+            "inbox_address"   => "server.inbox.com",
             "inbox_port"      => 993,
-            "inbox_user"      => "inboxuser",
-            "inbox_password"  => "inboxpassword",
+            "inbox_user"      => "inboxUser",
+            "inbox_password"  => "inboxPassword",
             "inbox_ssl"       => true,
-            "outbox_address"  => "sfsffs.ffssf.sffs",
+            "outbox_address"  => "server.outbox.com",
             "outbox_port"     => 993,
-            "outbox_user"     => "outboxuser",
-            "outbox_password" => "outboxpassword",
+            "outbox_user"     => "outboxUser",
+            "outbox_password" => "outboxPassword",
             "outbox_ssl"      => true
         ]);
     }

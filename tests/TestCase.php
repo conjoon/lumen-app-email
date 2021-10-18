@@ -35,6 +35,10 @@ use Laravel\Lumen\Application;
 use RuntimeException;
 use Illuminate\Http\Response;
 
+/**
+ * Class TestCase
+ * @package Tests
+ */
 abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 {
 

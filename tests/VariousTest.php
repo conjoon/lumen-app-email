@@ -60,8 +60,7 @@ use ReflectionException;
 
 /**
  * Class VariousTest
- *
- * Various tests that check for functionality mainly set up during the bootstrapping-process.
+ * @package Tests
  *
  * @method getMockBuilder(string $string)
  * @method callback(Closure $param)
