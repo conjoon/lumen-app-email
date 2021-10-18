@@ -1,4 +1,5 @@
-# conjoon/php-ms-imapuser ![MIT](https://img.shields.io/github/license/conjoon/php-ms-imapuser)
+# conjoon/php-ms-imapuser ![MIT](https://img.shields.io/github/license/conjoon/php-ms-imapuser) ![Tests](https://github.com/conjoon/php-ms-imapuser/actions/workflows/run.tests.yml/badge.svg)
+
 
 Implements **[rest-imap](https://github.com/conjoon/rest-api-description)** and **[rest-imapuser](https://github.com/conjoon/rest-api-description)**.
 

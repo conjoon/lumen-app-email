@@ -16,10 +16,9 @@ jobs:
     strategy:
       matrix:
         php: [7.4]
-        lumen: [latest]
         dependency-version: [prefer-stable]
 
-    name: P${{ matrix.php }} - L${{ matrix.lumen }} - ${{ matrix.dependency-version }}
+    name: P${{ matrix.php }}
 
     steps:
       - name: Checkout code
@@ -33,10 +32,10 @@ jobs:
           tools: composer:v1
 
       - name: Install dependencies
-        run: composer install
+        run: composer install --no-progress
 
       - name: Execute Unit Tests
-        run: vendor/bin/phpunit
+        run: ./vendor/bin/phpunit --do-not-cache-result
 
-      - name: Check PSR-12 Codestyle
+      - name: Check Project Coding Standards
         run: vendor/bin/phpcs

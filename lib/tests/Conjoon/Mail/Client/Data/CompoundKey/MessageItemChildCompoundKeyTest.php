@@ -76,7 +76,14 @@ class MessageItemChildCompoundKeyTest extends TestCase
         $mailFolderId = "INBOX2";
         $parentMessageItemId = "893";
         $id = "1234";
-        $key = $this->createMessageItemChildCompoundKey(new MessageKey($mailAccountId, $mailFolderId, $parentMessageItemId), $id);
+        $key = $this->createMessageItemChildCompoundKey(
+            new MessageKey(
+                $mailAccountId,
+                $mailFolderId,
+                $parentMessageItemId
+            ),
+            $id
+        );
 
         $this->assertInstanceOf(MessageKey::class, $key);
         $this->assertSame($mailAccountId, $key->getMailAccountId());

@@ -93,6 +93,4 @@ class DefaultMessageBodyDraftJsonTransformer implements MessageBodyDraftJsonTran
 
         return $messageBodyDraft;
     }
-
-
 }

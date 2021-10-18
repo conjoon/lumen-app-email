@@ -69,7 +69,6 @@ use RuntimeException;
 use Tests\TestCase;
 use Tests\TestTrait;
 
-
 /**
  * Class HordeClientTest
  * @package Tests\Conjoon\Horde\Mail\Client\Imap

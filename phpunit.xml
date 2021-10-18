@@ -36,7 +36,7 @@
   </coverage>
   <testsuites>
     <testsuite name="Application Test Suite">
-      <directory suffix="Test.php">./tests</directory>
+      <directory suffix="Test.php">./lib/tests</directory>
     </testsuite>
   </testsuites>
   <php>

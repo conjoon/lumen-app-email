@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -24,6 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 /*
 |--------------------------------------------------------------------------
 | Application Routes
@@ -38,11 +41,10 @@ $versions = config("app.api.versions");
 $latest = config("app.api.latest");
 
 foreach ($versions as $version) {
-
     $router->group([
         "middleware" => "auth_" . ucfirst($version),
-        'namespace'  => "App\Http\\" . ucfirst($version) . "\Controllers",
-        'prefix'     => "rest-imap/api/" . $version
+        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
+        'prefix' => "rest-imap/api/" . $version
     ], function () use ($router, $version) {
 
         require base_path("routes/rest-imap/api_" . $version . ".php");
@@ -52,8 +54,8 @@ foreach ($versions as $version) {
 // config for latest
 $router->group([
     "middleware" => "auth_" . ucfirst($latest),
-    'namespace'  => "App\Http\\" . ucfirst($latest) . "\Controllers",
-    'prefix'     => "rest-imap/api"
+    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
+    'prefix' => "rest-imap/api"
 ], function () use ($router, $latest) {
     require base_path("routes/rest-imap/api_" . $latest . ".php");
 });

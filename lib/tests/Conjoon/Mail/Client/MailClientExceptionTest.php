@@ -1,4 +1,5 @@
 <?php
+
 /**
  * conjoon
  * php-ms-imapuser
@@ -36,15 +37,15 @@ use Tests\TestCase;
  * Class MailClientExceptionTest
  * @package Tests\Conjoon\Mail\Client
  */
-class MailClientExceptionTest extends TestCase {
+class MailClientExceptionTest extends TestCase
+{
 
 
-    public function testInstance() {
+    public function testInstance()
+    {
 
         $exception = new MailClientException();
 
         $this->assertInstanceOf(RuntimeException::class, $exception);
     }
-
-
 }
