@@ -68,6 +68,7 @@ use TypeError;
  * @method getTo()
  * @method getDate()
  * @method getSeen()
+ * @method setSeen(bool $true)
  * @method getAnswered()
  * @method getDraft()
  * @method getFlagged()
