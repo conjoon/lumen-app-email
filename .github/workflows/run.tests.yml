@@ -1,0 +1,42 @@
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSER_NO_INTERACTION: 1
+
+    strategy:
+      matrix:
+        php: [8.0, 7.4]
+        lumen: [latest]
+        dependency-version: [prefer-stable]
+
+    name: P${{ matrix.php }} - L${{ matrix.lumen }} - ${{ matrix.dependency-version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v1
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Execute Unit Tests
+        run: vendor/bin/phpunit
+
+      - name: Check PSR-12 Codestyle
+        run: vendor/bin/phpcs
