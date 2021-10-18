@@ -31,6 +31,7 @@ namespace Tests;
 
 use App\Exceptions\Handler;
 use Exception;
+use Illuminate\Support\Facades\Config;
 use Laravel\Lumen\Application;
 use RuntimeException;
 use Illuminate\Http\Response;
@@ -49,7 +50,9 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
      */
     public function createApplication(): Application
     {
-        return require __DIR__ . "/../../app/bootstrap/app.php";
+        $app = require __DIR__ . "/../../app/bootstrap/app.php";
+        Config::set("imapserver", require __DIR__ . "/config/imapserver.php");
+        return $app;
     }
 
 
