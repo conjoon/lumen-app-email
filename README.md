@@ -1,4 +1,4 @@
-# conjoon/php-ms-imapuser
+# conjoon/php-ms-imapuser ![MIT](https://img.shields.io/github/license/conjoon/php-ms-imapuser)
 
 Implements **[rest-imap](https://github.com/conjoon/rest-api-description)** and **[rest-imapuser](https://github.com/conjoon/rest-api-description)**.
 
@@ -16,6 +16,18 @@ $ ddev start
 will expose the API to https://php-ms-imapuser.ddev.site. Please refer to the `ddev`-configuration if you need to adjust
 settings according to your environment.
 
+#### Installing the Backend 
+Navigate to the container's install directory. Then connect to the container via
+```shell
+$ ddev ssh
+```
+then run
+```shell
+$ composer i
+```
+This will install all required package dependencies.
+
+
 ## Available Rest API
 * **rest-imap** 
   <br>For the list of IMAP commands this microservice provides, please refer to the OpenApi-documentation of `rest-imap`,
@@ -26,6 +38,11 @@ settings according to your environment.
   hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description).
 
 ## Required configurations
+
+#### .env
+The root directory of the project contains a [dotenv-configuration](https://github.com/vlucas/phpdotenv) file (`.env.example`).
+Settings may be adjusted on your own to match your desired configuration for the environment the
+microservice runs in. Copy and rename this file to `.env` and configure away!
 
 #### 1. Allowed IMAP servers
 In order for users to authenticate against IMAP servers, `php-ms-imapuser` provides 
