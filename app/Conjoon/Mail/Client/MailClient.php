@@ -65,69 +65,68 @@ interface MailClient
     /**
      * Returns the specified MessageItem for the submitted arguments.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      *
      * @return MessageItem|null The MessageItem or null if none found.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItem(MessageKey $key): ?MessageItem;
+    public function getMessageItem(MessageKey $messageKey): ?MessageItem;
 
 
     /**
      * Deletes the specified MessageItem permanently.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      *
      * @return bool true if deleting the message was successful, otherwise false.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function deleteMessage(MessageKey $key): bool;
+    public function deleteMessage(MessageKey $messageKey): bool;
 
 
     /**
      * Returns the specified MessageItemDraft for the submitted arguments.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      *
      * @return MessageItemDraft|null The MessageItemDraft or null if none found.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemDraft(MessageKey $key): ?MessageItemDraft;
+    public function getMessageItemDraft(MessageKey $messageKey): ?MessageItemDraft;
 
 
     /**
      * Tries to send the specified MessageItemDraft found under $key.
      *
-     * @param MessageKey $key
-     *
+     * @param MessageKey $messageKey
      * @return bool true if sending was successful, otherwise false.
      *
      * @throws MailClientException if any exception occurs, or if the message found
      * is not a Draft-Message.
      */
-    public function sendMessageDraft(MessageKey $key): bool;
+    public function sendMessageDraft(MessageKey $messageKey): bool;
 
 
     /**
      * Returns the specified MessageBody for the submitted arguments.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      *
      * @return MessageBody The MessageBody or null if none found.
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageBody(MessageKey $key): ?MessageBody;
+    public function getMessageBody(MessageKey $messageKey): ?MessageBody;
 
 
     /**
      * Appends a new Message to the specified Folder with the data found in MessageBodyDraft.
      * Will mark the newly created Message as a draft.
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      * @param MessageBodyDraft $messageBodyDraft
      *
      * @return MessageBodyDraft the created MessageBodyDraft
@@ -135,7 +134,7 @@ interface MailClient
      * @throws MailClientException if any exception occurs, or of the MessageBodyDraft already has
      * a MessageKey
      */
-    public function createMessageBodyDraft(FolderKey $key, MessageBodyDraft $messageBodyDraft): MessageBodyDraft;
+    public function createMessageBodyDraft(FolderKey $folderKey, MessageBodyDraft $messageBodyDraft): MessageBodyDraft;
 
 
     /**
@@ -167,7 +166,7 @@ interface MailClient
     /**
      * Returns the specified MessageList for the submitted arguments.
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      * @param array|null $options An additional set of options for querying the MessageList, such
      * as sort-direction, start/limit values and the ids of the messageItems to return.
      *
@@ -175,57 +174,57 @@ interface MailClient
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(FolderKey $key, array $options = null): MessageItemList;
+    public function getMessageItemList(FolderKey $folderKey, array $options = null): MessageItemList;
 
 
     /**
      * Returns the total number of messages in the specified $mailFolderId for the specified $account;
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      *
      * @return int
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getTotalMessageCount(FolderKey $key): int;
+    public function getTotalMessageCount(FolderKey $folderKey): int;
 
 
     /**
      * Returns the total number of UNREAD messages in the specified $mailFolderId for the specified $account;
      *
-     * @param FolderKey $key
+     * @param FolderKey $folderKey
      *
      * @return int
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getUnreadMessageCount(FolderKey $key): int;
+    public function getUnreadMessageCount(FolderKey $folderKey): int;
 
 
     /**
      * Returns the FileAttachments in an FileAttachmentList for the specified message.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      *
      * @return FileAttachmentList
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getFileAttachmentList(MessageKey $key): FileAttachmentList;
+    public function getFileAttachmentList(MessageKey $messageKey): FileAttachmentList;
 
 
     /**
      * Sets the flags specified in FlagList for the message represented by MessageKey.
      * Existing flags will not be removed if they do not appear in the $flagList.
      *
-     * @param MessageKey $key
+     * @param MessageKey $messageKey
      * @param FlagList $flagList
      *
      * @return bool if the operation succeeded, otherwise false
      *
      * @throws MailClientException if any exception occurs
      */
-    public function setFlags(MessageKey $key, FlagList $flagList): bool;
+    public function setFlags(MessageKey $messageKey, FlagList $flagList): bool;
 
 
     /**
