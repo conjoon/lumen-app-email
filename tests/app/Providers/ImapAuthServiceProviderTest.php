@@ -25,16 +25,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Tests\App\Providers;
 
 use App\Providers\ImapAuthServiceProvider;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUser;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\Foundation\Application;
 use Mockery;
+use Mockery\MockInterface;
 use ReflectionClass;
 use ReflectionException;
 use Tests\TestCase;
@@ -54,6 +55,7 @@ class ImapAuthServiceProviderTest extends TestCase
     public function testRegister()
     {
         $app = $this->createAppMock();
+        /** @noinspection PhpParamsInspection */
         $provider = new ImapAuthServiceProvider($app);
 
         $app['auth'] = Mockery::mock($app['auth']);
@@ -109,6 +111,7 @@ class ImapAuthServiceProviderTest extends TestCase
                 $this->assertSame("api", $api);
                 $this->assertIsCallable($callback);
 
+                /** @noinspection PhpUndefinedMethodInspection */
                 $this->assertSame($imapUser, $callback(
                     new Request(),
                     $app->make(ImapUserProvider::class)
@@ -125,24 +128,25 @@ class ImapAuthServiceProviderTest extends TestCase
      * Should delegate call to UserProvider's retrieveByCredentials
      *
      * @throws ReflectionException
-     * @throws BindingResolutionException
      */
     public function testGetImapUserCallRetrieveByCredentials()
     {
         $app = $this->createAppMock();
 
+        /** @noinspection PhpParamsInspection */
         $authProvider = new ImapAuthServiceProvider($app);
 
         $request = Mockery::mock(new Request());
         $request->shouldReceive("getUser")
-            ->andReturn("someuser");
+            ->andReturn("someUser");
         $request->shouldReceive("getPassword")
-            ->andReturn("somepassword");
+            ->andReturn("somePassword");
 
+        /** @noinspection PhpUndefinedMethodInspection */
         $userProvider = Mockery::mock($app->make(ImapUserProvider::class));
 
         $userProvider->shouldReceive("retrieveByCredentials")
-                     ->withArgs([["username" => "someuser", "password" => "somepassword"]])
+                     ->withArgs([["username" => "someUser", "password" => "somePassword"]])
                      ->andReturn(
                          $this->getMockBuilder(ImapUser::class)
                               ->disableOriginalConstructor()
@@ -160,9 +164,9 @@ class ImapAuthServiceProviderTest extends TestCase
     /**
      * Mocks the application by returning a specific ImapUserProvider-configuration.
      *
-     * @return Application|Mockery\LegacyMockInterface|Mockery\MockInterface
+     * @return MockInterface
      */
-    protected function createAppMock(): Application
+    protected function createAppMock(): MockInterface
     {
         $app = Mockery::mock($this->app);
 
