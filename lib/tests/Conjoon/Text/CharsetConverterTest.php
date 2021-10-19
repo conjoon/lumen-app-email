@@ -62,10 +62,8 @@ class CharsetConverterTest extends TestCase
 
         $this->assertSame($text, $decoder->convert($text, "ISO-8859-1", "UTF8"));
 
-        if (env("CI_ENV") !== "github") {
-            $text = "€";
-            $this->assertSame("EUR", $decoder->convert($text, "UTF-8", "ISO-8859-1"));
-        }
+        $text = "€";
+        $this->assertSame("EUR", $decoder->convert($text, "UTF-8", "ISO-8859-1"));
 
         $text = "€";
         $this->assertSame($text, $decoder->convert($text, "UTF-8"));
