@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     env:
       COMPOSER_NO_INTERACTION: 1
-      CI_ENV: github
+      LC_ALL: en_US.UTF-8
 
     strategy:
       matrix:
