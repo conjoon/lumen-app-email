@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -169,12 +169,16 @@ interface MailClient
      * @param FolderKey $folderKey
      * @param array|null $options An additional set of options for querying the MessageList, such
      * as sort-direction, start/limit values and the ids of the messageItems to return.
+     * Options may include an "attributes" configuration specifying the attributes of a message
+     * that should be queried and returned, wheres the keys of this array are the attributes, and the
+     * values are further configuration options this client may implement. Clients need to return a
+     * set of attributes if no attributes are defined.
      *
      * @return MessageItemList
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options = null): MessageItemList;
+    public function getMessageItemList(FolderKey $folderKey, array $options = []): MessageItemList;
 
 
     /**
@@ -240,4 +244,21 @@ interface MailClient
      * not the same, or if any other error occurs
      */
     public function moveMessage(MessageKey $messageKey, FolderKey $folderKey): MessageKey;
+
+
+    /**
+     * Returns an array with the attribute-names the client supports.
+     *
+     * @return array
+     */
+    public function getSupportedAttributes(): array;
+
+
+    /**
+     * Returns an array with the attributes the client guarantees to query if no attributes
+     * where specified for methods that require them.
+     *
+     * @return array
+     */
+    public function getDefaultAttributes(): array;
 }

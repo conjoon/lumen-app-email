@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -54,6 +54,7 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use DateTime;
 use Exception;
 use Horde_Imap_Client;
 use Horde_Imap_Client_Exception;
@@ -257,7 +258,7 @@ class HordeClient implements MailClient
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options = null): MessageItemList
+    public function getMessageItemList(FolderKey $folderKey, array $options = []): MessageItemList
     {
 
         try {
@@ -265,11 +266,14 @@ class HordeClient implements MailClient
 
             $results = $this->queryItems($client, $folderKey, $options);
             $fetchedItems = $this->fetchMessageItems($client, $results["match"], $folderKey->getId(), $options);
+
+            $options["attributes"] = $options["attributes"] ?? $this->getDefAttr();
+
             return $this->buildMessageItems(
                 $client,
                 $folderKey,
                 $fetchedItems,
-                $options && isset($options["preview"]) && $options["preview"] === true
+                $options
             );
         } catch (Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
@@ -326,13 +330,15 @@ class HordeClient implements MailClient
                 $mailFolderId,
                 []
             );
+
              $ret = $this->buildMessageItem(
                  $client,
                  new FolderKey($messageKey->getMailAccountId(), $mailFolderId),
                  $fetchedItems[0],
-                 ["hasAttachments", "size"]
+                 ["attributes" => $this->getDefAttr(["hasAttachments" => true, "size" => true])]
              );
-             return new MessageItem($ret["messageKey"], $ret["data"]);
+
+             return new MessageItem($ret["messageKey"], array_filter($ret["data"], fn ($item) => $item !== null));
         } catch (Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }
@@ -386,10 +392,13 @@ class HordeClient implements MailClient
                 $client,
                 new FolderKey($messageKey->getMailAccountId(), $mailFolderId),
                 $fetchedItems[0],
-                ["cc", "bcc", "replyTo"]
+                ["attributes" => $this->getDefAttr(["cc" => true, "bcc" => true, "replyTo" => true])]
             );
 
-            return new MessageItemDraft($ret["messageKey"], $ret["data"]);
+            return new MessageItemDraft(
+                $ret["messageKey"],
+                array_filter($ret["data"], fn ($item) => $item !== null)
+            );
         } catch (Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }
@@ -422,7 +431,9 @@ class HordeClient implements MailClient
 
             $messageStructure = $serverItem->getStructure();
 
-            $d = $this->getContents($client, $messageStructure, $messageKey, ["plain", "html"]);
+            $d = $this->getContents($client, $messageStructure, $messageKey, [
+                "attributes" => ["plain" => [], "html" => []]
+            ]);
 
             $body = new MessageBody($messageKey);
 
@@ -989,7 +1000,13 @@ class HordeClient implements MailClient
      * @param Horde_Imap_Client_Socket $client
      * @param FolderKey $key
      * @param $item
-     * @param array $options Additional field options to retrieve, such as "cc", "bcc", "replyTo"
+     * @param array $options An array with a key "attributes" that specifies the attributes to query.
+     * The keys are the attributes that should be considered, the values are configuration options for the queries
+     * of the fields.
+     *
+     * @example
+     *    $this->buildMessageItem($client, $key, $item, ["attributes" => ["size" => [], "hasAttachments" => true]]);
+     *
      *
      * @return array an array indexed with "messageKey" and "data" which should both be used to create
      * concrete instances of MessageItem/MessageItemDraft
@@ -1019,7 +1036,7 @@ class HordeClient implements MailClient
      * @param Horde_Imap_Client_Socket $client
      * @param FolderKey $key
      * @param array $items
-     * @param bool $preview true to return the list with message part as previewLoad preview text
+     * @param array $options
      *
      * @return MessageItemList
      *
@@ -1030,38 +1047,30 @@ class HordeClient implements MailClient
         Horde_Imap_Client_Socket $client,
         FolderKey $key,
         array $items,
-        bool $preview = true
+        array $options
     ): MessageItemList {
 
         $messageItems = new MessageItemList();
 
-        $options = ["hasAttachments", "size"];
-
-        if ($preview) {
-            $options[] = "plain";
-            $options[] = "html";
-        }
 
         foreach ($items as $item) {
             $result = $this->getItemStructure($client, $item, $key, $options);
             $data = $result["data"];
 
-            $d = $result["options"];
+            $contentData = $result["contentData"];
 
             $messageItem = null;
-
-            $contentKey = "plain";
-
             $messagePart = null;
 
-            if (isset($d["plain"]) || isset($d["html"])) {
-                if (!$d['plain']['content'] && $d['html']['content']) {
+            $contentKey = "plain";
+            if (isset($contentData["plain"]) || isset($contentData["html"])) {
+                if (!$contentData['plain']['content'] && $contentData['html']['content']) {
                     $contentKey = "html";
                 }
 
                 $messagePart = new MessagePart(
-                    $d[$contentKey]['content'],
-                    $d[$contentKey]['charset'],
+                    $contentData[$contentKey]['content'],
+                    $contentData[$contentKey]['charset'],
                     $contentKey === "plain" ? "text/plain" : "text/html"
                 );
             }
@@ -1073,7 +1082,6 @@ class HordeClient implements MailClient
                 $data,
                 $messagePart
             );
-
 
             $messageItems[] = $messageItem;
         }
@@ -1089,7 +1097,19 @@ class HordeClient implements MailClient
      * @param Horde_Imap_Client_Socket $client
      * @param $item
      * @param FolderKey $key
-     * @param array $options
+     * @param array $options An array providing "attributes" which is an associative array where the keys
+     * are the attributes that should be queried, and their values additional configuration options for the
+     * query itself.
+     *
+     * @example
+     *  $this->getItemStructure(
+     *     $client,
+     *     $item,
+     *     $key,
+     *     ["attributes" => [
+     *          "from" => [], "to" => true, "plain" => ["length" => 200]
+     *      ]]); // returns "from", "to" and "plain" with a length of 100 characters
+     *
      *
      * @return array data with the item structure, options holding additional requested data (passed via $options)
      * and messageKey holding the generated MessageKey for the item.
@@ -1103,47 +1123,58 @@ class HordeClient implements MailClient
         array $options = []
     ): array {
 
-        $envelope = $item->getEnvelope();
-        $flags = $item->getFlags();
+        $wants = function ($key) use ($options) {
+            return $this->getAttr($key, $options["attributes"] ?? []);
+        };
 
-        $from = $this->getAddress($envelope, "from");
-        $tos = $this->getAddress($envelope, "to");
+        $envelope = $item->getEnvelope();
+        $flags    = $item->getFlags();
 
         $messageKey = new MessageKey($key->getMailAccountId(), $key->getId(), (string)$item->getUid());
 
-        $data = [
-            "from" => $from,
-            "to" => $tos,
-            "subject" => $envelope->subject,
-            "date" => $envelope->date,
-            "seen" => in_array(Horde_Imap_Client::FLAG_SEEN, $flags),
-            "answered" => in_array(Horde_Imap_Client::FLAG_ANSWERED, $flags),
-            "draft" => in_array(Horde_Imap_Client::FLAG_DRAFT, $flags),
-            "flagged" => in_array(Horde_Imap_Client::FLAG_FLAGGED, $flags),
-            "recent" => in_array(Horde_Imap_Client::FLAG_RECENT, $flags),
-            "charset" => $this->getCharsetFromContentTypeHeaderValue($item->getHeaders("ContentType")),
-            "references" => $this->getMessageIdStringFromReferencesHeaderValue($item->getHeaders("References")),
-            "messageId" => $envelope->message_id
-        ];
+        $data = [];
 
-        $messageStructure = $item->getStructure();
-        $d = $this->getContents($client, $messageStructure, $messageKey, $options);
+        $wants("from")    && $data["from"]    = $this->getAddress($envelope, "from");
+        $wants("to")      && $data["to"]      = $this->getAddress($envelope, "to");
+        $wants("cc")      && $data["cc"]      = $this->getAddress($envelope, "cc");
+        $wants("bcc")     && $data["bcc"]     = $this->getAddress($envelope, "bcc");
+        $wants("replyTo") && $data["replyTo"] = $this->getAddress($envelope, "replyTo");
 
-        if (in_array("hasAttachments", $options)) {
-            $data["hasAttachments"] = $d["hasAttachments"];
+        $wants("seen")     && $data["seen"]     = in_array(Horde_Imap_Client::FLAG_SEEN, $flags);
+        $wants("answered") && $data["answered"] = in_array(Horde_Imap_Client::FLAG_ANSWERED, $flags);
+        $wants("draft")    && $data["draft"]    = in_array(Horde_Imap_Client::FLAG_DRAFT, $flags);
+        $wants("flagged")  && $data["flagged"]  = in_array(Horde_Imap_Client::FLAG_FLAGGED, $flags);
+        $wants("recent")   && $data["recent"]   = in_array(Horde_Imap_Client::FLAG_RECENT, $flags);
+
+
+        $wants("subject") && $data["subject"] = $envelope->subject;
+        $wants("date")    && $data["date"]    = $envelope->date ?? new DateTime("1970-01-01 +0000");
+
+        $wants("messageId") && $data["messageId"] = $envelope->message_id;
+        $wants("size")      && $data["size"]      = $item->getSize();
+
+        $wants("charset") && $data["charset"] = $this->getCharsetFromContentTypeHeaderValue(
+            $item->getHeaders("ContentType")
+        );
+        $wants("references") && $data["references"] = $this->getMessageIdStringFromReferencesHeaderValue(
+            $item->getHeaders("References")
+        );
+
+
+        $contentData = [];
+        if ($wants("hasAttachments") || $wants("plain") || $wants("html")) {
+            $messageStructure = $item->getStructure();
+            $contentData      = $this->getContents($client, $messageStructure, $messageKey, $options);
+
+            if ($wants("hasAttachments") && array_key_exists("hasAttachments", $contentData)) {
+                $data["hasAttachments"] = $contentData["hasAttachments"];
+            }
         }
 
-        in_array("size", $options) && $data["size"] = $item->getSize();
-
-        // add addresses if required by $options
-        in_array("cc", $options) && $data["cc"] = $this->getAddress($envelope, "cc");
-        in_array("bcc", $options) && $data["bcc"] = $this->getAddress($envelope, "bcc");
-        in_array("replyTo", $options) && $data["replyTo"] = $this->getAddress($envelope, "replyTo");
-
         return [
-            "data" => $data,
-            "options" => $d,
-            "messageKey" => $messageKey
+            "data"        => $data,
+            "contentData" => $contentData,
+            "messageKey"  => $messageKey
         ];
     }
 
@@ -1158,15 +1189,20 @@ class HordeClient implements MailClient
      * - start (integer) The start position from where to return the results
      * - limit (integer) The number of items to return.
      * - ids (array) an array of message ids to consider and exclusively include in the return array
+     * - attributes (array) an assoc array of attributes that should be queried. Ignored by this method.
+     *
+     * @example
+     *      $this->queryItems($client, $key, [
+     *          "sort" => [["property" => "date", "direction" => "DESC"]]
+     *      ]);
+     *
      *
      * @return array
      * @throws Horde_Imap_Client_Exception
      */
     protected function queryItems(Horde_Imap_Client_Socket $client, FolderKey $key, array $options = null): array
     {
-
         $searchOptions = [];
-
         if ($options !== null) {
             $sort = $options["sort"] ?? [["property" => "date", "direction" => "DESC"]];
             $sort = $sort[0];
@@ -1198,6 +1234,7 @@ class HordeClient implements MailClient
             $searchOptions = ["sort" => $sortInfo];
         }
 
+
         $searchQuery = new Horde_Imap_Client_Search_Query();
         if (isset($options["ids"]) && is_array($options["ids"])) {
             $searchQuery->ids(new Horde_Imap_Client_Ids($options["ids"]));
@@ -1210,12 +1247,25 @@ class HordeClient implements MailClient
 
     /**
      * Returns contents of the mail. Possible return keys are based on the passed
-     * $options "html" (string), "plain" (string) and/or "hasAttachments" (bool)
+     * $options "attributes": "html" (string), "plain" (string) and/or "hasAttachments" (bool)
      *
      * @param Horde_Imap_Client_Socket $client
      * @param $messageStructure
      * @param MessageKey $key
-     * @param array $options
+     * @param array $options = array (
+     *      "attributes" => [] // an array of attributes this method should consider. Possible
+     *                         // keys are html, plain, hasAttachments. The values are configuration
+     *                        // objects this method should considered.
+     *                        // Both "html" and "plain" allow for specifying a "length"-option
+     *                        // that tells this method to only return the specified number
+     *                        // of characters for this message part.
+     * );
+     *
+     * @example
+     *   $this->getContents($client, $messageStructure, $key, [
+     *      "attributes" => ["html" => [], "plain" => [$length => 200]]
+     *   ]); // returns full html, but only first 200 characters of plain.
+     *
      *
      * @return array
      *
@@ -1228,11 +1278,12 @@ class HordeClient implements MailClient
         array $options
     ): array {
 
+        $attributes = $options["attributes"] ?? [];
 
         $ret = [];
-        $findHtml = in_array("html", $options);
-        $findPlain = in_array("plain", $options);
-        $findAttachments = in_array("hasAttachments", $options);
+        $findHtml        = $this->getAttr("html", $attributes);
+        $findPlain       = $this->getAttr("plain", $attributes);
+        $findAttachments = $this->getAttr("hasAttachments", $attributes);
 
         $typeMap = $messageStructure->contentTypeMap();
         $bodyQuery = new Horde_Imap_Client_Fetch_Query();
@@ -1254,13 +1305,21 @@ class HordeClient implements MailClient
         }
 
         foreach ($typeMap as $part => $type) {
+            $length = null;
             if (
                 ($type === "text/html" && $findHtml) ||
                 ($type === "text/plain" && $findPlain)
             ) {
-                $bodyQuery->bodyPart($part, [
-                    'peek' => true
-                ]);
+                $conf = ["peek" => true];
+
+                $type === "text/html" && isset($findHtml["length"]) && ($length = $findHtml["length"]);
+                $type === "text/plain" && $findPlain["length"] && ($length = $findPlain["length"]);
+
+                if ($length) {
+                    $conf["length"] = $length;
+                }
+
+                $bodyQuery->bodyPart($part, $conf);
             }
         }
 
@@ -1411,5 +1470,100 @@ class HordeClient implements MailClient
                 }
                 return $mailAddressList;
         }
+    }
+
+    /**
+     * Returns a list of default attributes to return with a MessageItem.
+     *
+     * @return string[]
+     */
+    protected function getDefAttr($additional = []): array
+    {
+
+        $def = $this->getDefaultAttributes();
+        $ret = [];
+        foreach ($def as $attr) {
+            $ret[$attr] = true; // true or array
+        }
+
+        foreach ($additional as $key => $fieldConf) {
+            $chk = $this->getAttr($key, $additional);
+            $chk && $ret[$key] = $chk;// true or array
+        }
+
+        return $ret;
+    }
+
+
+    /**
+     * @return string[]
+     */
+    public function getSupportedAttributes(): array
+    {
+        return [
+            "hasAttachments",
+            "size",
+            "plain", // \ __Preview
+            "html",  // /   Text
+            "cc",
+            "bcc",
+            "replyTo",
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId"
+        ];
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function getDefaultAttributes(): array
+    {
+        return [
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId"
+        ];
+    }
+
+
+    /**
+     * Returns the target's value at "$key" if the value is truthy, otherwise
+     * null or $default (if !null) is returned.
+     *
+     * @param $key
+     * @param $target
+     * @param null $default
+     * @return mixed|null
+     * @noinspection PhpSameParameterValueInspection
+     */
+    private function getAttr($key, $target, $default = null)
+    {
+        $valid = array_key_exists($key, $target) && ($target[$key] === true || is_array($target[$key]));
+
+        if ($valid && empty($target[$key])) {
+            $target[$key] = true;
+        }
+
+        return $valid ? $target[$key] : $default;
     }
 }
