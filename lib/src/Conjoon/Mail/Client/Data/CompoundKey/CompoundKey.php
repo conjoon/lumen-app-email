@@ -31,6 +31,7 @@ namespace Conjoon\Mail\Client\Data\CompoundKey;
 
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Util\Jsonable;
+use Conjoon\Util\Stringable;
 
 /**
  * Class MessageKey models base class for compound keys for identifying (IMAP) Messages.
@@ -42,7 +43,7 @@ use Conjoon\Util\Jsonable;
  *
  * @package Conjoon\Mail\Client\Data\CompoundKey
  */
-abstract class CompoundKey implements Jsonable
+abstract class CompoundKey implements Jsonable, Stringable
 {
 
 
@@ -103,5 +104,14 @@ abstract class CompoundKey implements Jsonable
             'id' => $this->getId(),
             'mailAccountId' => $this->getMailAccountId()
         ];
+    }
+
+
+    /**
+     * @return string
+     */
+    public function toString(): string
+    {
+        return json_encode($this->toJson());
     }
 }

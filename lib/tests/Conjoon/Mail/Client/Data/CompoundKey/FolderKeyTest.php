@@ -32,6 +32,7 @@ namespace Tests\Conjoon\Mail\Client\Data\CompoundKey;
 use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Util\Stringable;
 use Tests\TestCase;
 
 /**
@@ -56,10 +57,13 @@ class FolderKeyTest extends TestCase
         $key = new FolderKey($mailAccountId, $id);
 
         $this->assertInstanceOf(CompoundKey::class, $key);
+        $this->assertInstanceOf(Stringable::class, $key);
         $this->assertSame($mailAccountId, $key->getMailAccountId());
         $this->assertSame($id, $key->getId());
 
         $this->assertEquals(["mailAccountId" => $mailAccountId, "id" => $id], $key->toJson());
+
+        $this->assertSame(json_encode($key->toJson()), $key->toString());
 
         $mailAccount = new MailAccount(["id" => "dev"]);
         $key = new FolderKey($mailAccount, $id);
