@@ -85,14 +85,16 @@ class DefaultPreviewTextProcessorTest extends TestCase
 
         $processor = $this->createProcessor();
 
-        $textPlain = new MessagePart(str_repeat("A", 300), "UTF-8", "text/plain");
-        $textHtml = new MessagePart("<b>" . str_repeat("B", 300) . "</b>", "UTF-8", "text/html");
+        $length = 300;
+
+        $textPlain = new MessagePart(str_repeat("A", $length), "UTF-8", "text/plain");
+        $textHtml = new MessagePart("<b>" . str_repeat("B", $length) . "</b>", "UTF-8", "text/html");
 
         $processedTextPlain = $processor->process($textPlain);
-        $this->assertSame("CALLED" . str_repeat("A", 194), $processedTextPlain->getContents());
+        $this->assertSame("CALLED" . str_repeat("A", $length), $processedTextPlain->getContents());
 
         $processedTextHtml = $processor->process($textHtml);
-        $this->assertSame("CALLED" . str_repeat("B", 194), $processedTextHtml->getContents());
+        $this->assertSame("CALLED" . str_repeat("B", $length), $processedTextHtml->getContents());
 
         $this->assertSame($textPlain, $processedTextPlain);
         $this->assertSame($textHtml, $processedTextHtml);

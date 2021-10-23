@@ -82,12 +82,7 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor
 
         $messagePart->setContents(
             htmlentities(
-                mb_substr(
-                    strip_tags(trim($messagePart->getContents())),
-                    0,
-                    200,
-                    $toCharset
-                )
+                strip_tags(trim($messagePart->getContents()))
             ),
             $toCharset
         );
