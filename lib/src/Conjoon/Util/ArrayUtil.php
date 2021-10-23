@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace Conjoon\Util;
 
+use InvalidArgumentException;
+
 /**
  * Class ArrayUtil
  *
@@ -56,5 +58,48 @@ class ArrayUtil
     public static function intersect(array $data, array $keys): array
     {
         return array_intersect_key($data, array_flip($keys));
+    }
+
+
+    /**
+     * Returns a merged assoc array.
+     * Keys that exist in $source and $target will not get overwritten.
+     *
+     * @param array $target
+     * @param array $source
+     * @return array
+     * @example
+     *   $target = [
+     *     "foo" => "bar", "bar" => "snafu", "0_3" => 4
+     *  ];
+     *  $source = ["foo" => "nono!", "anotherBar" => "yap"];
+     *
+     *  ArrayUtil::assign($target, $source));
+     *             // returns ["foo" => "bar",
+     *             //          "bar" => "snafu",
+     *             //          "anotherBar" => "yap",
+     *             //          "0_3" => 4
+     *             //         ]
+     *
+     * @throws InvalidArgumentException if $target or $source contain numeric keys
+     */
+    public static function mergeIf(array $target, array $source): array
+    {
+        $chk = function ($value, $key) {
+            if (is_int($key)) {
+                throw new InvalidArgumentException("argument must not contain numeric keys");
+            }
+        };
+
+        array_walk($source, $chk);
+        array_walk($target, $chk);
+
+        $new = array_merge([], $target);
+        foreach ($source as $key => $item) {
+            if (!array_key_exists($key, $new)) {
+                $new[$key] = $item;
+            }
+        }
+        return $new;
     }
 }
