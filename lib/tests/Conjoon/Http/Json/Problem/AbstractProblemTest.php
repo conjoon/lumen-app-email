@@ -36,7 +36,7 @@ use Tests\TestCase;
 
 /**
  * Class AbstractProblemTest
- * @package Tests\Conjoon\Http\Json\AbstractProblem
+ * @package Tests\Conjoon\Http\Json\Problem
  */
 class AbstractProblemTest extends TestCase
 {

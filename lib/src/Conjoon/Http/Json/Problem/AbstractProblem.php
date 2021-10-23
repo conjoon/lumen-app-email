@@ -39,7 +39,7 @@ use Conjoon\Util\Jsonable;
  *
  *
  * Class AbstractProblem
- * @package Conjoon\Http\Api\AbstractProblem
+ * @package Conjoon\Http\Api\Problem
  *
  * @method getStatus()
  * @method getTitle()

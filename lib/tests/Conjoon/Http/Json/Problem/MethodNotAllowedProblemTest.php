@@ -36,7 +36,7 @@ use Tests\TestCase;
 
 /**
  * Class MethodNotAllowedProblemTest
- * @package Tests\Conjoon\Http\Json\AbstractProblem
+ * @package Tests\Conjoon\Http\Json\Problem
  */
 class MethodNotAllowedProblemTest extends TestCase
 {
