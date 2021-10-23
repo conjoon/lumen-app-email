@@ -38,8 +38,8 @@ use Conjoon\Util\Jsonable;
  * @see https://datatracker.ietf.org/doc/html/rfc7807
  *
  *
- * Class Problem
- * @package Conjoon\Http\Api\Problem
+ * Class AbstractProblem
+ * @package Conjoon\Http\Api\AbstractProblem
  *
  * @method getStatus()
  * @method getTitle()
@@ -47,7 +47,7 @@ use Conjoon\Util\Jsonable;
  * @method getType()
  * @method getInstance()
  */
-abstract class Problem implements Jsonable
+abstract class AbstractProblem implements Jsonable
 {
     /**
      * "status" (number) - The HTTP status code ([RFC7231], Section 6)
@@ -99,7 +99,7 @@ abstract class Problem implements Jsonable
 
 
     /**
-     * Problem constructor.
+     * AbstractProblem constructor.
      *
      * @param string|null $title
      * @param string|null $detail

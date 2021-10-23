@@ -30,13 +30,13 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Http\Json\Problem;
 
 use Conjoon\Http\Json\Problem\BadRequestProblem;
-use Conjoon\Http\Json\Problem\Problem;
+use Conjoon\Http\Json\Problem\AbstractProblem;
 use Conjoon\Http\Status\StatusCodes as Status;
 use Tests\TestCase;
 
 /**
  * Class BadRequestProblemTest
- * @package Tests\Conjoon\Http\Json\Problem
+ * @package Tests\Conjoon\Http\Json\AbstractProblem
  */
 class BadRequestProblemTest extends TestCase
 {
@@ -48,7 +48,7 @@ class BadRequestProblemTest extends TestCase
     {
         $problem = new BadRequestProblem();
 
-        $this->assertInstanceOf(Problem::class, $problem);
+        $this->assertInstanceOf(AbstractProblem::class, $problem);
 
         $this->assertSame(400, $problem->getStatus());
         $this->assertSame(Status::HTTP_STATUS[Status::HTTP_400], $problem->getTitle());

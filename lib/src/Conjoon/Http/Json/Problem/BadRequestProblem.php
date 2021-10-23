@@ -33,9 +33,9 @@ use Conjoon\Http\Status\StatusCodes as Status;
 
 /**
  * Class BadRequestProblem
- * @package Conjoon\Http\Json\Problem
+ * @package Conjoon\Http\Json\AbstractProblem
  */
-final class BadRequestProblem extends Problem
+final class BadRequestProblem extends AbstractProblem
 {
 
     /**

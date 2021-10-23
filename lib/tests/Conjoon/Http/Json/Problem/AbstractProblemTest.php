@@ -30,15 +30,15 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Http\Json\Problem;
 
 use BadMethodCallException;
-use Conjoon\Http\Json\Problem\Problem;
+use Conjoon\Http\Json\Problem\AbstractProblem;
 use Conjoon\Util\Jsonable;
 use Tests\TestCase;
 
 /**
- * Class ProblemTest
- * @package Tests\Conjoon\Http\Json\Problem
+ * Class AbstractProblemTest
+ * @package Tests\Conjoon\Http\Json\AbstractProblem
  */
-class ProblemTest extends TestCase
+class AbstractProblemTest extends TestCase
 {
 
     /**
@@ -46,7 +46,7 @@ class ProblemTest extends TestCase
      */
     public function testInstance()
     {
-        $problem = $this->getMockForAbstractClass(Problem::class);
+        $problem = $this->getMockForAbstractClass(AbstractProblem::class);
 
         $this->assertInstanceOf(Jsonable::class, $problem);
 
@@ -57,7 +57,7 @@ class ProblemTest extends TestCase
         $this->assertSame("", $problem->getInstance());
 
         $problem = $this->getMockForAbstractClass(
-            Problem::class,
+            AbstractProblem::class,
             ["title", "detail", "instance", "type"]
         );
 
@@ -84,7 +84,7 @@ class ProblemTest extends TestCase
     {
         $this->expectException(BadMethodCallException::class);
 
-        $problem = $this->getMockForAbstractClass(Problem::class);
+        $problem = $this->getMockForAbstractClass(AbstractProblem::class);
         $problem->foo();
     }
 }

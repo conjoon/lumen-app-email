@@ -30,13 +30,13 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Http\Json\Problem;
 
 use Conjoon\Http\Json\Problem\MethodNotAllowedProblem;
-use Conjoon\Http\Json\Problem\Problem;
+use Conjoon\Http\Json\Problem\AbstractProblem;
 use Conjoon\Http\Status\StatusCodes as Status;
 use Tests\TestCase;
 
 /**
  * Class MethodNotAllowedProblemTest
- * @package Tests\Conjoon\Http\Json\Problem
+ * @package Tests\Conjoon\Http\Json\AbstractProblem
  */
 class MethodNotAllowedProblemTest extends TestCase
 {
@@ -48,7 +48,7 @@ class MethodNotAllowedProblemTest extends TestCase
     {
         $problem = new MethodNotAllowedProblem();
 
-        $this->assertInstanceOf(Problem::class, $problem);
+        $this->assertInstanceOf(AbstractProblem::class, $problem);
 
         $this->assertSame(405, $problem->getStatus());
         $this->assertSame(Status::HTTP_STATUS[Status::HTTP_405], $problem->getTitle());
