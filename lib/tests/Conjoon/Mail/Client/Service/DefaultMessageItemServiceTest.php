@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -112,43 +112,82 @@ class DefaultMessageItemServiceTest extends TestCase
      */
     public function testGetMessageItemList()
     {
-
-        $service = $this->createService();
-
-        $clientStub = $service->getMailClient();
-
         $mailFolderId = "INBOX";
         $folderKey = $this->createFolderKey(null, $mailFolderId);
 
-        $options = ["start" => 0, "limit" => 2];
-        $texts = ["foo1", "foo2", "foo3"];
-        $i = 0;
-        $messageItemListMock = new MessageItemList();
-        $messageItemListMock[] = new ListMessageItem(
-            $this->createMessageKey(null, $mailFolderId, "1"),
-            null,
-            new MessagePart($texts[$i++], "UTF-8", "text/html")
-        );
-        $messageItemListMock[] = new ListMessageItem(
-            $this->createMessageKey(null, $mailFolderId, "2"),
-            null,
-            new MessagePart($texts[$i++], "UTF-8", "text/plain")
-        );
-        $messageItemListMock[] = new ListMessageItem(
-            $this->createMessageKey(null, $mailFolderId, "3"),
-            null,
-            new MessagePart($texts[$i++], "UTF-8", "text/html")
-        );
+        $buildList = function ($options) use ($mailFolderId) {
 
-        $clientStub->method("getMessageItemList")
-            ->with($folderKey, $options)
-            ->willReturn($messageItemListMock);
+            $start = $options["start"];
+            $limit = $options["limit"];
+            $messageItemList = new MessageItemList();
 
-        $results = $service->getMessageItemList($folderKey, $options);
-        $i = 0;
-        foreach ($results as $resultItem) {
-            $this->assertInstanceOf(ListMessageItem::Class, $resultItem);
-            $this->assertSame($texts[$i++], $resultItem->getMessagePart()->getContents());
+            $attributes = $options["attributes"] ?? [];
+            $html  = $attributes["html"] ?? false;
+            $plain = $attributes["html"] ?? false;
+            $generatedTexts = [];
+
+            for ($i = 0; $i < $limit; $i++) {
+                $text = null;
+                $texts  = [
+                    "text/html"  => $this->generateRandomString(is_array($html) ? $html["length"] : null),
+                    "text/plain" => $this->generateRandomString(is_array($plain) ? $plain["length"] : null)
+                ];
+
+
+                $types = ["text/html", "text/plain"];
+
+                $contentType = $html && $plain ? $types[$i % 2] : ($html ? $types[0] : ($plain ? $types[1] : null));
+                if ($contentType) {
+                    $text = $texts[$contentType];
+                }
+
+                $generatedTexts[] = $text ? [$contentType => $text] : [];
+                $id = "" . ($i + 1);
+                $messageItemList[] = new ListMessageItem(
+                    $this->createMessageKey(null, $mailFolderId, $id),
+                    null,
+                    $text ? new MessagePart($text, "UTF-8", $contentType) : null
+                );
+            }
+
+            return [
+                "texts" => $generatedTexts,
+                "lists" => $messageItemList
+            ];
+        };
+
+        $input = [
+            ["start" => 0, "limit" => 2, "attributes" => ["html" => true, "plain" => true]],
+            ["start" => 0, "limit" => 2, "attributes" => ["html" => false, "plain" => false]],
+            ["start" => 0, "limit" => 2, "attributes" => ["html" => ["length" => 4], "plain" => ["length"  => 20]]]
+        ];
+
+        foreach ($input as $options) {
+            $service = $this->createService();
+            // we can work with consecutive calls, but for this test, re-creating the client
+            // works as well
+            $clientStub = $service->getMailClient();
+
+            list("texts" => $generatedTexts, "lists" => $messageItemList) = $buildList($options);
+
+            $clientStub->method("getMessageItemList")
+                ->with($folderKey, $options)
+                ->willReturn($messageItemList);
+
+            $results = $service->getMessageItemList($folderKey, $options);
+            $i = 0;
+            foreach ($results as $resultItem) {
+                $this->assertInstanceOf(ListMessageItem::Class, $resultItem);
+                $text = !empty($generatedTexts[$i])
+                        ? $generatedTexts[$i][$resultItem->getMessagePart()->getMimeType()]
+                        : null;
+
+                $this->assertSame(
+                    $text,
+                    $resultItem->getMessagePart() ? $resultItem->getMessagePart()->getContents() : null
+                );
+                $i++;
+            }
         }
     }
 
@@ -1000,7 +1039,9 @@ class DefaultMessageItemServiceTest extends TestCase
                 "updateMessageBodyDraft",
                 "sendMessageDraft",
                 "moveMessage",
-                "deleteMessage"
+                "deleteMessage",
+                "getSupportedAttributes",
+                "getDefaultAttributes"
             ])
             ->addMethods([
                 "getListMessageItem",
@@ -1091,7 +1132,10 @@ class DefaultMessageItemServiceTest extends TestCase
         return new class implements PreviewTextProcessor {
             public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
             {
-                $messagePart->setContents("previewContents", "ISO-8859-1");
+                $messagePart->setContents(
+                    $messagePart->getContents(),
+                    "ISO-8859-1"
+                );
                 return $messagePart;
             }
         };
@@ -1188,5 +1232,17 @@ class DefaultMessageItemServiceTest extends TestCase
         }
 
         return $mb;
+    }
+
+
+    protected function generateRandomString($length = null): string
+    {
+        $chars = "0123456789#abcdefghilkmnopqrstuvwxyz";
+        $random = [];
+
+        for ($i = 0; $i < ($length ?? 400); $i++) {
+            $random[] = $chars[rand(0, strlen($chars) - 1)];
+        }
+        return implode("", $random);
     }
 }

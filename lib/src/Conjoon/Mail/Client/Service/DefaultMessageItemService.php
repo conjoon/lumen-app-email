@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -168,7 +168,7 @@ class DefaultMessageItemService implements MessageItemService
 
         foreach ($messageItemList as $listMessageItem) {
             $this->charsetConvertHeaderFields($listMessageItem);
-            if (array_key_exists("preview", $options) && $options["preview"] === true) {
+            if ($listMessageItem->getMessagePart()) {
                 $this->processTextForPreview($listMessageItem->getMessagePart());
             }
         }
