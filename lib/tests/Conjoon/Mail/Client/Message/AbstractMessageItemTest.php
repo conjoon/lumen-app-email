@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -171,38 +171,27 @@ class AbstractMessageItemTest extends TestCase
      */
     public function testToJson()
     {
-        $item = $this->getItemConfig();
+        $key = $this->createMessageKey();
+        $item = array_merge(
+            $key->toJson(),
+            $this->getItemConfig(true)
+        );
+        unset($item["charset"]);
+        unset($item["inReplyTo"]);
+        ksort($item);
 
-        $messageItem = $this->createMessageItem(null, $item);
-
-        $keys = array_keys($item);
-
+        $messageItem = $this->createMessageItem($key, $this->getItemConfig());
         $json = $messageItem->toJson();
 
-        foreach ($keys as $key) {
-            if ($key === "from" || $key === "to") {
-                $this->assertEquals($item[$key]->toJson(), $json[$key]);
-            } elseif ($key == "date") {
-                $this->assertEquals($item[$key]->format("Y-m-d H:i:s O"), $json[$key]);
-            } elseif ($key == "charset" || $key == "inReplyTo") {
-                $this->assertArrayNotHasKey($key, $json);
-            } else {
-                $this->assertSame($item[$key], $json[$key]);
-            }
-        }
-
-        $this->assertSame($json["id"], $messageItem->getMessageKey()->getId());
-        $this->assertSame($json["mailFolderId"], $messageItem->getMessageKey()->getMailFolderId());
-        $this->assertSame($json["mailAccountId"], $messageItem->getMessageKey()->getMailAccountId());
-
+        $this->assertSame($item, $json);
 
         $messageItem = $this->createMessageItem();
 
         $json = $messageItem->toJson();
 
-        $this->assertSame("1970-01-01 00:00:00 +0000", $json["date"]);
-        $this->assertSame([], $json["to"]);
-        $this->assertSame([], $json["from"]);
+        $this->assertArrayNotHasKey("data", $json);
+        $this->assertArrayNotHasKey("to", $json);
+        $this->assertArrayNotHasKey("from", $json);
     }
 
 
@@ -429,14 +418,14 @@ class AbstractMessageItemTest extends TestCase
     /**
      * Returns an MessageItem as array.
      */
-    protected function getItemConfig(): array
+    protected function getItemConfig($asJson = false): array
     {
 
         return [
-            "from" => $this->createFrom(),
-            "to" => $this->createTo(),
+            "from" => $asJson ? $this->createFrom()->toJson() : $this->createFrom(),
+            "to" => $asJson ? $this->createTo()->toJson() : $this->createTo(),
             "subject" => "SUBJECT",
-            "date" => new DateTime(),
+            "date" => $asJson ? (new DateTime())->format("Y-m-d H:i:s O") : new DateTime(),
             "seen" => false,
             "answered" => true,
             "draft" => false,

@@ -113,13 +113,15 @@ class MessageItemTest extends TestCase
 
         $json = $item->toJson();
 
+        $expected = array_merge($messageKey->toJson(), $this->getItemConfig());
+        unset($expected["charset"]);
 
-        $subset = array_merge($messageKey->toJson(), $this->getItemConfig());
-        unset($subset["charset"]);
+        ksort($expected);
 
-        foreach ($subset as $entry => $value) {
-            $this->assertSame($value, $json[$entry]);
-        }
+        $this->assertSame(
+            $expected,
+            $json
+        );
     }
 
 // ---------------------
