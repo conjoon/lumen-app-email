@@ -156,6 +156,6 @@ abstract class Problem implements Jsonable
             "type" => $this->type
         ];
 
-        return array_filter($data, fn ($v) => $v !== "");
+        return array_filter($data, fn ($v) => !empty($v));
     }
 }

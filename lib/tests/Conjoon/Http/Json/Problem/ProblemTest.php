@@ -66,6 +66,13 @@ class ProblemTest extends TestCase
         $this->assertSame("detail", $problem->getDetail());
         $this->assertSame("type", $problem->getType());
         $this->assertSame("instance", $problem->getInstance());
+
+        $this->assertEquals([
+            "title" => "title",
+            "detail" => "detail",
+            "type" => "type",
+            "instance" => "instance"
+        ], $problem->toJson());
     }
 
 
