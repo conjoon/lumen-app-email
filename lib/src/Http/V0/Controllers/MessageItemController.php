@@ -29,6 +29,13 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
+use App\Http\V0\Request\MessageItem\Get\IndexRequest;
+use App\Http\V0\Request\MessageItem\Get\IndexRequestQueryTranslator;
+use App\Http\V0\Request\MessageItem\Get\IndexValidator;
+use Conjoon\Http\Api\Problem\ProblemFactory;
+use Conjoon\Http\InvalidRequestParameterException;
+use Conjoon\Http\Status\StatusCodes;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -42,6 +49,7 @@ use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use InvalidArgumentException;
 
 /**
  * Class MessageItemController
@@ -66,6 +74,11 @@ class MessageItemController extends Controller
      */
     protected MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer;
 
+    /**
+     * @type IndexValidator
+     */
+    protected IndexValidator $indexValidator;
+
 
     /**
      * MessageItemController constructor.
@@ -73,6 +86,7 @@ class MessageItemController extends Controller
      * @param MessageItemService $messageItemService
      * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
      * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
+     * @param IndexValidator $indexValidator
      */
     public function __construct(
         MessageItemService $messageItemService,
@@ -91,66 +105,38 @@ class MessageItemController extends Controller
      * authenticated for the specified $mailAccountId and the specified $mailFolderId.
      *
      * @param Request $request
+     * @param IndexValidator $validator
      * @param string $mailAccountId
      * @param string $mailFolderId
      *
      * @return JsonResponse
      */
-    public function index(Request $request, string $mailAccountId, string $mailFolderId): JsonResponse
-    {
+    public function index(
+        Request $request,
+        IndexRequestQueryTranslator $translator,
+        string $mailAccountId,
+        string $mailFolderId
+    ): JsonResponse {
 
         $user = Auth::user();
 
-        $messageItemService = $this->messageItemService;
+        $options = $translator->translateQueryParameters($request)->toJson();
+
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        $mailAccount        = $user->getMailAccount($mailAccountId);
+        $mailAccount = $user->getMailAccount($mailAccountId);
+        $folderKey   = new FolderKey($mailAccount, urldecode($mailFolderId));
 
-        $sort = $request->input("sort");
-        if ($sort) {
-            $sort = json_decode($sort, true);
-        } else {
-            $sort = [["property" => "date", "direction" => "DESC"]];
-        }
-
-        $start = (int)$request->input("start");
-        $limit = (int)$request->input("limit");
-
-        $mailFolderId = urldecode($mailFolderId);
-
-        $folderKey = new FolderKey($mailAccount, $mailFolderId);
-
-
-        $excludeFields = $request->input("excludeFields") ? explode(",", $request->input("excludeFields")) : [];
-        $messageItemIds = $request->input("messageItemIds") ? explode(",", $request->input("messageItemIds")) : null;
-
-        if ($messageItemIds !== null) {
-            $options = [
-                "ids" => $messageItemIds,
-                "sort"  => $sort,
-                "preview" => !in_array("previewText", $excludeFields, true)
-            ];
-        } else {
-            $options = [
-                "start" => $start,
-                "limit" => $limit,
-                "sort"  => $sort,
-                "preview" => !in_array("previewText", $excludeFields, true)
-            ];
-        }
-
-
-        $data = $messageItemService->getMessageItemList($folderKey, $options);
-        $json = $data->toJson();
+        $messageItemService = $this->messageItemService;
 
         return response()->json([
             "success" => true,
             "meta" => [
                  "cn_unreadCount" => $messageItemService->getUnreadMessageCount($folderKey),
-                 "mailFolderId"  =>  $mailFolderId,
+                 "mailFolderId"  =>  $folderKey->getId(),
                  "mailAccountId" =>  $mailAccount->getId()
             ],
             "total" => $messageItemService->getTotalMessageCount($folderKey),
-            "data" => $json
+            "data" => $messageItemService->getMessageItemList($folderKey, $options)->toJson()
         ]);
     }
 
