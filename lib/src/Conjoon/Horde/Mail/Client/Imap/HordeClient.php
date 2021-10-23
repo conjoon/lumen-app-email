@@ -1032,6 +1032,8 @@ class HordeClient implements MailClient
 
     /**
      * Transform the passed list of $items to an instance of MessageItemList.
+     * If both html/plain attributes where requested, it will always try to use
+     * text/plain for the MessagePart, then fall back to text/html if required.
      *
      * @param Horde_Imap_Client_Socket $client
      * @param FolderKey $key
