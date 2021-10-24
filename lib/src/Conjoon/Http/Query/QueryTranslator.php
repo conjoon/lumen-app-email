@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace Conjoon\Http\Query;
 
 use Conjoon\Core\ParameterBag;
-use \Conjoon\Core\ResourceQuery;
+use Conjoon\Core\ResourceQuery;
 
 /**
  * Abstract class providing API for translating parameters of an
