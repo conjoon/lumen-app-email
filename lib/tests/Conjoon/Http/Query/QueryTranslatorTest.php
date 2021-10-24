@@ -32,7 +32,7 @@ namespace Tests\Conjoon\Http\Query;
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidQueryParameterException;
 use Conjoon\Http\Query\QueryTranslator;
-use Conjoon\Http\Query\ResourceQuery;
+use Conjoon\Core\ResourceQuery;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
