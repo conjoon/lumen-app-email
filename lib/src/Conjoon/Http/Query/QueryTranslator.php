@@ -30,9 +30,11 @@ declare(strict_types=1);
 namespace Conjoon\Http\Query;
 
 use Conjoon\Core\ParameterBag;
+use \Conjoon\Core\ResourceQuery;
 
 /**
- * Abstract class providing API for translating query parameters into a ResourceQuery
+ * Abstract class providing API for translating parameters of an
+ * arbitrary origin into a ResourceQuery.
  *
  * Class QueryTranslator
  * @package Conjoon\Http
@@ -72,6 +74,8 @@ abstract class QueryTranslator
      *
      * @param $parameterResource
      * @return array
+     *
+     * @throws InvalidParameterResourceException
      */
     abstract protected function extractParameters($parameterResource): array;
 
