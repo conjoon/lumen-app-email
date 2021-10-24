@@ -47,8 +47,10 @@ class StatusCodesTest extends TestCase
 
         $this->assertSame(400, StatusCodes::HTTP_400);
         $this->assertSame(405, StatusCodes::HTTP_405);
+        $this->assertSame(500, StatusCodes::HTTP_500);
 
         $this->assertIsString(StatusCodes::HTTP_STATUS[400]);
         $this->assertIsString(StatusCodes::HTTP_STATUS[405]);
+        $this->assertIsString(StatusCodes::HTTP_STATUS[500]);
     }
 }

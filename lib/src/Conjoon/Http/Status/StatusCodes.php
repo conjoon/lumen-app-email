@@ -46,12 +46,17 @@ class StatusCodes
      */
     public const HTTP_405 = 405;
 
+    /**
+     * @var int
+     */
+    public const HTTP_500 = 500;
 
     /**
      * @var array
      */
     public const HTTP_STATUS = [
         400 => "Bad Request",
-        405 => "Method not allowed"
+        405 => "Method not allowed",
+        500 => "Internal Server Error"
     ];
 }
