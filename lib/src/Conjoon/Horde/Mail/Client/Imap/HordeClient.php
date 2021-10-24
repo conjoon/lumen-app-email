@@ -434,7 +434,7 @@ class HordeClient implements MailClient
             $messageStructure = $serverItem->getStructure();
 
             $d = $this->getContents($client, $messageStructure, $messageKey, [
-                "attributes" => ["plain" => [], "html" => []]
+                "attributes" => ["plain" => true, "html" => true]
             ]);
 
             $body = new MessageBody($messageKey);
@@ -1071,15 +1071,16 @@ class HordeClient implements MailClient
             $this->getAttr("plain", $attributes) && $contentKeys[] = "plain";
             $this->getAttr("html", $attributes) && $contentKeys[] = "html";
 
+
             // plain first
             foreach ($contentKeys as $contentKey) {
-                $contentData = $contentData[$contentKey] ?? null;
-                if (!$contentData || !$contentData["content"]) {
+                $content = $contentData[$contentKey] ?? null;
+                if (!$content || !trim($content["content"])) {
                     continue;
                 }
                 $messagePart = new MessagePart(
-                    $contentData['content'],
-                    $contentData['charset'],
+                    $content['content'],
+                    $content['charset'],
                     $contentKey === "plain" ? "text/plain" : "text/html"
                 );
                 // exit here if we have processed plain, as we rely on this attribute for
