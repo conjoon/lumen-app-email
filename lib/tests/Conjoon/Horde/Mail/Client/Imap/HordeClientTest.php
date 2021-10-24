@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Tests\Conjoon\Horde\Mail\Client\Imap;
 
+use Conjoon\Core\ParameterBag;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -50,6 +51,7 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use DateTime;
 use Exception;
 use Horde_Imap_Client;
@@ -139,7 +141,8 @@ class HordeClientTest extends TestCase
             "recent",
             "charset",
             "references",
-            "messageId"
+            "messageId",
+            "plain"
         ], $client->getDefaultAttributes());
     }
 
@@ -309,7 +312,7 @@ class HordeClientTest extends TestCase
                 $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org")->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 25]
+            new MessageItemListResourceQuery(new ParameterBag(["start" => 0, "limit" => 25]))
         );
     }
 
@@ -365,7 +368,7 @@ class HordeClientTest extends TestCase
                 $account->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 2]
+            new MessageItemListResourceQuery(new ParameterBag(["start" => 0, "limit" => 2]))
         );
 
 
@@ -448,7 +451,9 @@ class HordeClientTest extends TestCase
                 $account->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 1, "attributes" => ["from" => true, "references" => true]]
+            new MessageItemListResourceQuery(new ParameterBag(
+                ["start" => 0, "limit" => 1, "attributes" => ["from" => true, "references" => true]]
+            ))
         );
 
         $this->assertEquals([
@@ -508,7 +513,9 @@ class HordeClientTest extends TestCase
                 $account->getId(),
                 "INBOX"
             ),
-            ["ids" => [34]]
+            new MessageItemListResourceQuery(new ParameterBag(
+                ["ids" => [34]]
+            ))
         );
 
 

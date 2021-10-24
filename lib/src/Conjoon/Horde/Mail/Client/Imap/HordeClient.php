@@ -54,6 +54,7 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use DateTime;
 use Exception;
 use Horde_Imap_Client;
@@ -258,8 +259,9 @@ class HordeClient implements MailClient
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options = []): MessageItemList
+    public function getMessageItemList(FolderKey $folderKey, MessageItemListResourceQuery $query): MessageItemList
     {
+        $options = $query->toJson();
 
         try {
             $client = $this->connect($folderKey);
@@ -1054,6 +1056,7 @@ class HordeClient implements MailClient
 
         $messageItems = new MessageItemList();
 
+        $attributes = $options["attributes"] ?? [];
 
         foreach ($items as $item) {
             $result = $this->getItemStructure($client, $item, $key, $options);
@@ -1064,17 +1067,26 @@ class HordeClient implements MailClient
             $messageItem = null;
             $messagePart = null;
 
-            $contentKey = "plain";
-            if (isset($contentData["plain"]) || isset($contentData["html"])) {
-                if (!$contentData['plain']['content'] && $contentData['html']['content']) {
-                    $contentKey = "html";
-                }
+            $contentKeys = [];
+            $this->getAttr("plain", $attributes) && $contentKeys[] = "plain";
+            $this->getAttr("html", $attributes) && $contentKeys[] = "html";
 
+            // plain first
+            foreach ($contentKeys as $contentKey) {
+                $contentData = $contentData[$contentKey] ?? null;
+                if (!$contentData || !$contentData["content"]) {
+                    continue;
+                }
                 $messagePart = new MessagePart(
-                    $contentData[$contentKey]['content'],
-                    $contentData[$contentKey]['charset'],
+                    $contentData['content'],
+                    $contentData['charset'],
                     $contentKey === "plain" ? "text/plain" : "text/html"
                 );
+                // exit here if we have processed plain, as we rely on this attribute for
+                // ListMessageItems
+                if ($contentKey === "plain") {
+                    break;
+                }
             }
 
             $messageKey = $result["messageKey"];
@@ -1155,7 +1167,8 @@ class HordeClient implements MailClient
         $wants("messageId") && $data["messageId"] = $envelope->message_id;
         $wants("size")      && $data["size"]      = $item->getSize();
 
-        $wants("charset") && $data["charset"] = $this->getCharsetFromContentTypeHeaderValue(
+        ($wants("charset") || $wants("subject")) &&
+        $data["charset"] = $this->getCharsetFromContentTypeHeaderValue(
             $item->getHeaders("ContentType")
         );
         $wants("references") && $data["references"] = $this->getMessageIdStringFromReferencesHeaderValue(
@@ -1315,7 +1328,7 @@ class HordeClient implements MailClient
                 $conf = ["peek" => true];
 
                 $type === "text/html" && isset($findHtml["length"]) && ($length = $findHtml["length"]);
-                $type === "text/plain" && $findPlain["length"] && ($length = $findPlain["length"]);
+                $type === "text/plain" && isset($findPlain["length"]) && ($length = $findPlain["length"]);
 
                 if ($length) {
                     $conf["length"] = $length;
@@ -1479,12 +1492,15 @@ class HordeClient implements MailClient
      *
      * @return string[]
      */
-    protected function getDefAttr($additional = []): array
+    protected function getDefAttr($additional = [], $exclude = []): array
     {
 
         $def = $this->getDefaultAttributes();
         $ret = [];
         foreach ($def as $attr) {
+            if (in_array($attr, $exclude)) {
+                continue;
+            }
             $ret[$attr] = true; // true or array
         }
 
@@ -1543,7 +1559,8 @@ class HordeClient implements MailClient
             "recent",
             "charset",
             "references",
-            "messageId"
+            "messageId",
+            "plain"
         ];
     }
 
