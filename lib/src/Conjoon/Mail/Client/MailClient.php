@@ -40,6 +40,7 @@ use Conjoon\Mail\Client\Message\MessageBodyDraft;
 use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 
 /**
  * Interface MailClient
@@ -167,18 +168,18 @@ interface MailClient
      * Returns the specified MessageList for the submitted arguments.
      *
      * @param FolderKey $folderKey
-     * @param array|null $options An additional set of options for querying the MessageList, such
-     * as sort-direction, start/limit values and the ids of the messageItems to return.
+     * @param MessageItemListResourceQuery $query An additional set of options for querying the
+     * MessageList, such as sort-direction, start/limit values and the ids of the messageItems to return.
      * Options may include an "attributes" configuration specifying the attributes of a message
      * that should be queried and returned, wheres the keys of this array are the attributes, and the
      * values are further configuration options this client may implement. Clients need to return a
-     * set of attributes if no attributes are defined.
+     * set of attributes if no attributes are defined. See #getDefaultAttributes
      *
      * @return MessageItemList
      *
      * @throws MailClientException if any exception occurs
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options = []): MessageItemList;
+    public function getMessageItemList(FolderKey $folderKey, MessageItemListResourceQuery $query): MessageItemList;
 
 
     /**
