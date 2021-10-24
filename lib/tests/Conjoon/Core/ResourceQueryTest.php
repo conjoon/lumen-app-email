@@ -27,18 +27,18 @@
 
 declare(strict_types=1);
 
-namespace Tests\Conjoon\Http\Query;
+namespace Tests\Conjoon\Core;
 
 use Conjoon\Core\ParameterBag;
 use BadMethodCallException;
-use Conjoon\Http\Query\ResourceQuery;
+use Conjoon\Core\ResourceQuery;
 use Conjoon\Util\Jsonable;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 /**
  * Class ResourceQueryTest
- * @package Tests\Conjoon\Http\Query
+ * @package Tests\Conjoon\Core
  */
 class ResourceQueryTest extends TestCase
 {

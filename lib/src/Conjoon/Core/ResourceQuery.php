@@ -27,23 +27,25 @@
 
 declare(strict_types=1);
 
-namespace Conjoon\Http\Query;
+namespace Conjoon\Core;
 
-use Conjoon\Core\ParameterBag;
 use BadMethodCallException;
 use Conjoon\Util\Jsonable;
 
 /**
  * A ResourceQuery provides an interface for a validated and certified collection
  * of parameters that can safely be used in the low level API.
- * The query parameters available with Requests sent by the client should be translated
- * by the QueryTranslator, which then validates the parameters and returns a Resource
- * Query for further use.
- * A resource query  wraps a ParameterBag and delegates all method calls involving getters
- * to the Parameter Bag using __call, including querying the properties using __get.
+ * The origin of the parameters is arbitrary, as long as they are available as an
+ * associative array, providing key-/value pairs.
+ * Any query parameters that need validation and translation should be translated by
+ * a QueryTranslator which encapsulates the logic for validation and translation.
+ * It then returns an instance of this class that guarantees the validity, mutually exclusivity
+ * and key-/value-pair-correctness of the wrapped ParameterBag.
+ * This ResourceQuery delegates all method calls involving getters to the ParameterBag
+ * using __call, including querying the properties using __get.
  *
  * Class ResourceQuery
- * @package Conjoon\Http\Query
+ * @package Conjoon\Core
  */
 abstract class ResourceQuery implements Jsonable
 {
