@@ -38,7 +38,7 @@ use Tests\TestCase;
 
 /**
  * Class ResourceQueryTest
- * @package Tests\Conjoon\Http\Query\ResourceQuery
+ * @package Tests\Conjoon\Http\Query
  */
 class ResourceQueryTest extends TestCase
 {
