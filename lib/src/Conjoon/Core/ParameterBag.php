@@ -54,7 +54,7 @@ use Conjoon\Util\Jsonable;
  * @method int|null getInt()
  * @method int|null getBool()
  */
-final class ParameterBag implements Jsonable
+class ParameterBag implements Jsonable
 {
 
     /**
