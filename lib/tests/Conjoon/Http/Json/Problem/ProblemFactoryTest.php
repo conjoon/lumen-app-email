@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Tests\Conjoon\Http\Json\Problem;
 
+use Conjoon\Http\Json\Problem\InternalServerErrorProblem;
 use Conjoon\Http\Json\Problem\Problem;
 use Conjoon\Http\Json\Problem\BadRequestProblem;
 use Conjoon\Http\Json\Problem\MethodNotAllowedProblem;
@@ -57,6 +58,11 @@ class ProblemFactoryTest extends TestCase
         $this->assertSame("title", $problem->getTitle());
         $this->assertSame("detail", $problem->getDetail());
 
+        $problem = ProblemFactory::make(500, "title", "detail");
+        $this->assertInstanceOf(InternalServerErrorProblem::class, $problem);
+        $this->assertSame("title", $problem->getTitle());
+        $this->assertSame("detail", $problem->getDetail());
+
         $problem = ProblemFactory::make(123, "title", "detail");
         $this->assertInstanceOf(Problem::class, $problem);
         $this->assertSame("title", $problem->getTitle());
@@ -68,7 +74,7 @@ class ProblemFactoryTest extends TestCase
      */
     public function testMakeJson()
     {
-        $statuses = [400, 405, 123442];
+        $statuses = [400, 405, 500, 123442];
 
         foreach ($statuses as $status) {
             $problem = ProblemFactory::makeJson($status, "title", "detail");
@@ -82,7 +88,5 @@ class ProblemFactoryTest extends TestCase
                 $problem[1]
             );
         }
-
-
     }
 }

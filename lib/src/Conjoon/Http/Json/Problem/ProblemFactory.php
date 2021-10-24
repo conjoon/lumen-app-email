@@ -78,9 +78,11 @@ class ProblemFactory
             case Status::HTTP_400:
                 return new BadRequestProblem($title, $detail);
 
-
             case Status::HTTP_405:
                 return new MethodNotAllowedProblem($title, $detail);
+
+            case Status::HTTP_500:
+                return new InternalServerErrorProblem($title, $detail);
         }
 
         return new Problem($status, $title, $detail);
