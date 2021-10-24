@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Tests\Conjoon\Mail\Client\Service;
 
+use Conjoon\Core\ParameterBag;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Data\MailAddress;
@@ -47,6 +48,7 @@ use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
 use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
 use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
@@ -163,6 +165,7 @@ class DefaultMessageItemServiceTest extends TestCase
         ];
 
         foreach ($input as $options) {
+            $query = new MessageItemListResourceQuery(new ParameterBag($options));
             $service = $this->createService();
             // we can work with consecutive calls, but for this test, re-creating the client
             // works as well
@@ -171,10 +174,10 @@ class DefaultMessageItemServiceTest extends TestCase
             list("texts" => $generatedTexts, "lists" => $messageItemList) = $buildList($options);
 
             $clientStub->method("getMessageItemList")
-                ->with($folderKey, $options)
+                ->with($folderKey, $query)
                 ->willReturn($messageItemList);
 
-            $results = $service->getMessageItemList($folderKey, $options);
+            $results = $service->getMessageItemList($folderKey, $query);
             $i = 0;
             foreach ($results as $resultItem) {
                 $this->assertInstanceOf(ListMessageItem::Class, $resultItem);
@@ -850,7 +853,15 @@ class DefaultMessageItemServiceTest extends TestCase
         );
 
         $clientStub->method("getMessageItemList")
-            ->with($folderKey, ["ids" => [$messageKey->getId()]])
+            ->with(
+                $folderKey,
+                $this->callback(
+                    function ($query) use ($messageKey) {
+                        $this->assertSame(["ids" => [$messageKey->getId()]], $query->toJson());
+                        return true;
+                    }
+                )
+            )
             ->willReturn($messageItemListMock);
 
         $result = $service->getListMessageItem($messageKey);

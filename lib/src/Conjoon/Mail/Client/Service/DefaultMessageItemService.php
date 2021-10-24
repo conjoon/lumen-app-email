@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
+use Conjoon\Core\ParameterBag;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\MailClient;
@@ -45,6 +46,7 @@ use Conjoon\Mail\Client\Message\MessagePart;
 use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 
 /**
@@ -158,12 +160,11 @@ class DefaultMessageItemService implements MessageItemService
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options): MessageItemList
+    public function getMessageItemList(FolderKey $folderKey, MessageItemListResourceQuery $query): MessageItemList
     {
-
         $messageItemList = $this->mailClient->getMessageItemList(
             $folderKey,
-            $options
+            $query
         );
 
         foreach ($messageItemList as $listMessageItem) {
@@ -210,12 +211,11 @@ class DefaultMessageItemService implements MessageItemService
      */
     public function getListMessageItem(MessageKey $messageKey): ListMessageItem
     {
-
-        $folderKey = $messageKey->getFolderKey();
-
-        $messageItemList = $this->mailClient->getMessageItemList(
-            $folderKey,
-            ["ids" => [$messageKey->getId()]]
+        $messageItemList = $this->getMessageItemList(
+            $messageKey->getFolderKey(),
+            new MessageItemListResourceQuery(new ParameterBag([
+                "ids" => [$messageKey->getId()]
+            ]))
         );
 
         return $messageItemList[0];
