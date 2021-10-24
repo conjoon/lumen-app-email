@@ -27,16 +27,26 @@
 
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Resource\Query;
+namespace Tests\Conjoon\Mail\Client\Query;
 
-use Conjoon\Http\Query\ResourceQuery;
+use Conjoon\Core\ParameterBag;
+use Conjoon\Core\ResourceQuery;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
+use Tests\TestCase;
 
 /**
- * Class MessageItemListResourceQuery
- * @package Conjoon\Mail\Client\Ressource\Query
+ * Class MessageItemListResourceQueryTest
+ * @package Tests\Conjoon\Mail\Client\Query
  */
-class MessageItemListResourceQuery extends ResourceQuery
+class MessageItemListResourceQueryTest extends TestCase
 {
 
-
+    /**
+     * test class
+     */
+    public function testClass()
+    {
+        $inst = new MessageItemListResourceQuery(new ParameterBag([]));
+        $this->assertInstanceOf(ResourceQuery::class, $inst);
+    }
 }
