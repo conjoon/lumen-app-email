@@ -303,7 +303,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         foreach ($queries as $query) {
             $source = new ParameterBag($query["input"]);
             $result = $translateParametersReflection->invokeArgs($translator, [
-
+                $source
             ]);
 
             $json = $result->toJson();
