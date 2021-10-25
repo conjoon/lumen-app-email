@@ -102,6 +102,11 @@ class DefaultPreviewTextProcessorTest extends TestCase
         $textHtml = new MessagePart(" A > B", "UTF-8", "text/html");
         $processedTextHtml = $processor->process($textHtml);
         $this->assertSame("CALLED A &gt; B", $processedTextHtml->getContents());
+
+        $textPlain = new MessagePart(str_repeat("A", $length), "UTF-8", "text/plain");
+        $processedTextPlain = $processor->process($textPlain, "UTF-8", ["length" => 10]);
+        $def = "CALLED";
+        $this->assertSame("CALLED" . str_repeat("A", 10 - strlen($def)), $processedTextPlain->getContents());
     }
 
 // +--------------------------
@@ -120,9 +125,12 @@ class DefaultPreviewTextProcessorTest extends TestCase
             $this->createHtmlReadableStrategy()
         ) extends ReadableMessagePartContentProcessor {
 
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
-            {
-                $messagePart = parent::process($messagePart, $toCharset);
+            public function process(
+                MessagePart $messagePart,
+                string $toCharset = "UTF-8",
+                ?array $opts = null
+            ): MessagePart {
+                $messagePart = parent::process($messagePart, $toCharset, $opts);
 
                 $messagePart->setContents(" CALLED" . $messagePart->getContents(), $toCharset);
 

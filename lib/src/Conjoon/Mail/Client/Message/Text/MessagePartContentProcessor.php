@@ -45,10 +45,11 @@ interface MessagePartContentProcessor
      *
      * @param MessagePart $messagePart
      * @param string $toCharset
+     * @param array|null $opts an arbitrary set of options the Processor should consider
      *
      * @return MessagePart
      *
      * @throws ProcessorException
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart;
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8", ?array $opts = null): MessagePart;
 }
