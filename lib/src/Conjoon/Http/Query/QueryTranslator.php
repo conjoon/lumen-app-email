@@ -58,13 +58,13 @@ abstract class QueryTranslator
      * The ParameterBag returned does not reference the same ParameterBag
      * that was passed as an argument.
      *
-     * @param ParameterBag $parameters
+     * @param ParameterBag $source
      *
      * @return ResourceQuery
      *
      * @throws InvalidQueryException
      */
-    abstract protected function translateParameters(ParameterBag $parameters): ResourceQuery;
+    abstract protected function translateParameters(ParameterBag $source): ResourceQuery;
 
 
     /**
