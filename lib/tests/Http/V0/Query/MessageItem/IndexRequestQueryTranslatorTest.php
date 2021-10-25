@@ -65,7 +65,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-         $getExpectedParametersReflection = $reflection->getMethod("getExpectedParameters");
+        $getExpectedParametersReflection = $reflection->getMethod("getExpectedParameters");
         $getExpectedParametersReflection->setAccessible(true);
 
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
