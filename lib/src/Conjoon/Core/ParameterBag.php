@@ -50,9 +50,9 @@ use Conjoon\Util\Jsonable;
  * Class ParameterBag
  * @package Conjoon\Core
  *
- * @method string|null getString()
- * @method int|null getInt()
- * @method int|null getBool()
+ * @method string|null getString(string)
+ * @method int|null getInt(string)
+ * @method int|null getBool(string)
  */
 class ParameterBag implements Jsonable
 {
