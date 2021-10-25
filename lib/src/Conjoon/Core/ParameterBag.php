@@ -60,7 +60,7 @@ class ParameterBag implements Jsonable
     /**
      * @var array
      */
-    private array $data = [];
+    private array $data;
 
 
     /**
@@ -91,7 +91,6 @@ class ParameterBag implements Jsonable
             $type = strtolower(substr($method, 3));
 
             if (in_array($type, ["int", "string", "bool"])) {
-
                 if (!$this->has($property)) {
                     return null;
                 }
@@ -136,12 +135,23 @@ class ParameterBag implements Jsonable
 
 
     /**
+     * Unsets the property.
+     *
+     * @param $key
+     */
+    public function __unset($key)
+    {
+        unset($this->data[$key]);
+    }
+
+
+    /**
      * Returns true if the property exists in this ParameterBag, otherwise false.
      *
      * @param $key
      * @return bool
      */
-    public function has($key)
+    public function has($key): bool
     {
         return array_key_exists($key, $this->data);
     }
@@ -167,5 +177,4 @@ class ParameterBag implements Jsonable
     {
         return json_decode(json_encode($this->data), true);
     }
-
 }

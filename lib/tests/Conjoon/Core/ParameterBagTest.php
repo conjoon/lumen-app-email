@@ -84,7 +84,13 @@ class ParameterBagTest extends TestCase
             "bar" => "snafu",
             "someKey" => "1"
         ], $bag->toJson());
+
+
+        $this->assertSame("bar", $bag->foo);
+        unset($bag->foo);
+        $this->assertNull($bag->foo);
     }
+
 
     /**
      * No method available
