@@ -30,10 +30,7 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Controllers;
 
 use App\Http\V0\Controllers\MessageItemController;
-use App\Http\V0\Request\MessageItem\Get\IndexRequest;
-use App\Http\V0\Request\MessageItem\Get\IndexRequestQueryTranslator;
-use App\Http\V0\Request\MessageItem\Get\IndexValidator;
-use Conjoon\Core\ParameterBag;
+use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Message\Flag\DraftFlag;
@@ -55,6 +52,7 @@ use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Exception;
+use Illuminate\Http\Request;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -91,14 +89,14 @@ class MessageItemControllerTest extends TestCase
             "INBOX"
         );
 
-        $options = $this->getIndexRequestQueryTranslator()->translate(new ParameterBag([
-            "start" => 0,
-            "limit" => 25,
-            "sort" => [
-                json_encode(["property" => "date", "direction" => "DESC"])
+        $query = (new IndexRequestQueryTranslator())->translate(new Request(
+            ["start" => 0,
+                "limit" => 25,
+                "sort" => [
+                    ["property" => "date", "direction" => "DESC"]
+                ]
             ]
-        ]))->toJson();
-
+        ));
 
         $messageItemList = new MessageItemList();
         $messageItemList[] = new ListMessageItem(
@@ -114,12 +112,15 @@ class MessageItemControllerTest extends TestCase
 
         $serviceStub->expects($this->once())
             ->method("getMessageItemList")
-            ->with($folderKey, $options)
-            ->willReturn($messageItemList);
-
-        $serviceStub->expects($this->once())
-            ->method("getMessageItemList")
-            ->with($folderKey, $options)
+            ->with(
+                $folderKey,
+                $this->callback(
+                    function ($rq) use ($query) {
+                        $this->assertEquals($query->toJson(), $rq->toJson());
+                        return true;
+                    }
+                )
+            )
             ->willReturn($messageItemList);
 
         $serviceStub->expects($this->once())
@@ -139,11 +140,15 @@ class MessageItemControllerTest extends TestCase
         );
         $client = $this->actingAs($this->getTestUserStub());
 
-        $response = $client->call("GET", $endpoint, ["start" => 0, "limit" => 25]);
+        $response = $client->call(
+            "GET",
+            $endpoint,
+            ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]]
+        );
 
 
         $this->assertSame($response->status(), 200);
-/*
+
         $this->seeJsonEquals([
             "success" => true,
             "total" => $totalCmp,
@@ -153,7 +158,7 @@ class MessageItemControllerTest extends TestCase
                 "mailFolderId" => "INBOX"
             ],
             "data" => $messageItemList->toJson()
-        ]);*/
+        ]);
     }
 
 

@@ -29,13 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use App\Http\V0\Request\MessageItem\Get\IndexRequest;
-use App\Http\V0\Request\MessageItem\Get\IndexRequestQueryTranslator;
-use App\Http\V0\Request\MessageItem\Get\IndexValidator;
-use Conjoon\Http\Api\Problem\ProblemFactory;
-use Conjoon\Http\InvalidRequestParameterException;
-use Conjoon\Http\Status\StatusCodes;
-use Exception;
+use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Illuminate\Support\Facades\Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -49,7 +43,6 @@ use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use InvalidArgumentException;
 
 /**
  * Class MessageItemController
@@ -75,18 +68,11 @@ class MessageItemController extends Controller
     protected MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer;
 
     /**
-     * @type IndexValidator
-     */
-    protected IndexValidator $indexValidator;
-
-
-    /**
      * MessageItemController constructor.
      *
      * @param MessageItemService $messageItemService
      * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
      * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
-     * @param IndexValidator $indexValidator
      */
     public function __construct(
         MessageItemService $messageItemService,
@@ -105,7 +91,7 @@ class MessageItemController extends Controller
      * authenticated for the specified $mailAccountId and the specified $mailFolderId.
      *
      * @param Request $request
-     * @param IndexValidator $validator
+     * @param IndexRequestQueryTranslator $translator
      * @param string $mailAccountId
      * @param string $mailFolderId
      *
@@ -120,7 +106,7 @@ class MessageItemController extends Controller
 
         $user = Auth::user();
 
-        $options = $translator->translateQueryParameters($request)->toJson();
+        $resourceQuery = $translator->translate($request);
 
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount = $user->getMailAccount($mailAccountId);
@@ -136,7 +122,7 @@ class MessageItemController extends Controller
                  "mailAccountId" =>  $mailAccount->getId()
             ],
             "total" => $messageItemService->getTotalMessageCount($folderKey),
-            "data" => $messageItemService->getMessageItemList($folderKey, $options)->toJson()
+            "data" => $messageItemService->getMessageItemList($folderKey, $resourceQuery)->toJson()
         ]);
     }
 
