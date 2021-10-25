@@ -55,6 +55,7 @@ use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
 use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
+use Conjoon\Util\ArrayUtil;
 use DateTime;
 use Exception;
 use Horde_Imap_Client;
@@ -1071,6 +1072,11 @@ class HordeClient implements MailClient
             $this->getAttr("plain", $attributes) && $contentKeys[] = "plain";
             $this->getAttr("html", $attributes) && $contentKeys[] = "html";
 
+            // if precedence is set for html, reverse this. Else, let plain
+            // process first
+            if (ArrayUtil::unchain("html.precedence", $attributes, false)) {
+                $contentKeys = array_reverse($contentKeys);
+            }
 
             // plain first
             foreach ($contentKeys as $contentKey) {
@@ -1083,11 +1089,8 @@ class HordeClient implements MailClient
                     $content['charset'],
                     $contentKey === "plain" ? "text/plain" : "text/html"
                 );
-                // exit here if we have processed plain, as we rely on this attribute for
-                // ListMessageItems
-                if ($contentKey === "plain") {
-                    break;
-                }
+                // if we have a MessagePart for the preview, we can exit
+                break;
             }
 
             $messageKey = $result["messageKey"];
@@ -1320,22 +1323,25 @@ class HordeClient implements MailClient
             return $ret;
         }
 
+        $getBodyPart = function ($part, $bodyQuery, $clientConf) {
+            $length = $clientConf["length"] ?? null;
+            $trimApi = $clientConf["trimApi"] ?? null;
+
+            $conf = ["peek" => true];
+
+            if ($length && !$trimApi) {
+                $conf["length"] = $length;
+            }
+            $bodyQuery->bodyPart($part, $conf);
+        };
+
         foreach ($typeMap as $part => $type) {
-            $length = null;
-            if (
-                ($type === "text/html" && $findHtml) ||
-                ($type === "text/plain" && $findPlain)
-            ) {
-                $conf = ["peek" => true];
+            if ($type === "text/html" && $findHtml) {
+                $getBodyPart($part, $bodyQuery, $findHtml);
+            }
 
-                $type === "text/html" && isset($findHtml["length"]) && ($length = $findHtml["length"]);
-                $type === "text/plain" && isset($findPlain["length"]) && ($length = $findPlain["length"]);
-
-                if ($length) {
-                    $conf["length"] = $length;
-                }
-
-                $bodyQuery->bodyPart($part, $conf);
+            if ($type === "text/plain" && $findPlain) {
+                $getBodyPart($part, $bodyQuery, $findPlain);
             }
         }
 
@@ -1578,12 +1584,15 @@ class HordeClient implements MailClient
      */
     private function getAttr($key, $target, $default = null)
     {
-        $valid = array_key_exists($key, $target) && ($target[$key] === true || is_array($target[$key]));
+        if (array_key_exists($key, $target)) {
+            $val = $target[$key];
+            if (is_array($val) && empty($val)) {
+                $val = true;
+            }
 
-        if ($valid && empty($target[$key])) {
-            $target[$key] = true;
+            return $val ?: $default;
         }
 
-        return $valid ? $target[$key] : $default;
+        return $default;
     }
 }
