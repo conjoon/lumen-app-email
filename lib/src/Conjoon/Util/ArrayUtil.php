@@ -102,4 +102,52 @@ class ArrayUtil
         }
         return $new;
     }
+
+
+    /**
+     * String replacement for optional chaining operator.
+     *
+     * @param string $chain
+     * @param array $target
+     * @param null $default
+     *
+     * @example
+     *
+     *    $source = [
+     *        "foo" => ["bar" => 34]
+     *    ];
+     *    ArrayUtil::unchain("foo.bar", $source); // 34
+     *
+     *    $source = [
+     *        "foo" => ["snafu" => ["bar" => 34]]
+     *    ];
+     *    ArrayUtil::unchain("foo.bar", $source); // null
+     *
+     *    $source = [
+     *        "foo" => ["snafu" => ["bar" => 34]]
+     *    ];
+     *    ArrayUtil::unchain("foo.bar", $source, true); // true
+     *
+     *
+     *
+     * @return mixed|null
+     */
+    public static function unchain(string $chain, array $target, $default = null)
+    {
+        if (!is_array($target)) {
+            return $default;
+        }
+
+        $parts = explode(".", $chain);
+
+        while (is_array($target) && count($parts)) {
+            $target = $target[array_shift($parts)] ?? null;
+        }
+
+        if (!$target) {
+            return $default;
+        }
+
+        return $target;
+    }
 }

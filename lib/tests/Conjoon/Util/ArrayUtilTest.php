@@ -121,4 +121,26 @@ class ArrayUtilTest extends TestCase
             ArrayUtil::mergeIf($target, $data)
         );
     }
+
+
+    /**
+     * Tests unchain()
+     */
+    public function testUnchain()
+    {
+
+        $target = [
+            "foo" => ["bar" => 34]
+        ];
+
+        $this->assertSame(34, ArrayUtil::unchain("foo.bar", $target));
+
+        $target = [
+            "foo" => ["bar" => ["snafu" => 2]]
+        ];
+
+        $this->assertSame(2, ArrayUtil::unchain("foo.bar.snafu", $target));
+
+        $this->assertNull(ArrayUtil::unchain("foo.no.snafu", $target));
+    }
 }
