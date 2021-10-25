@@ -48,6 +48,7 @@ use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
 use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Util\ArrayUtil;
 
 /**
  * Class DefaultMessageItemService.
@@ -170,7 +171,7 @@ class DefaultMessageItemService implements MessageItemService
         foreach ($messageItemList as $listMessageItem) {
             $this->charsetConvertHeaderFields($listMessageItem);
             if ($listMessageItem->getMessagePart()) {
-                $this->processTextForPreview($listMessageItem->getMessagePart());
+                $this->processTextForPreview($listMessageItem->getMessagePart(), $query);
             }
         }
 
@@ -462,16 +463,28 @@ class DefaultMessageItemService implements MessageItemService
 
     /**
      * Processes the specified MessagePart and returns its contents properly converted to UTF-8
-     * and stripped of all HTML-tags  as a 200 character long previewText.
+     * and stripped of all HTML-tags.
+     * Length property will be extracted from the $query, if available.
      *
      * @param MessagePart $messagePart
-     *
+     * @param MessageItemListResourceQuery $query
      * @return MessagePart
      *
      * @see PreviewTextProcessor::process
      */
-    protected function processTextForPreview(MessagePart $messagePart): MessagePart
+    protected function processTextForPreview(MessagePart $messagePart, MessageItemListResourceQuery $query): MessagePart
     {
-        return $this->getPreviewTextProcessor()->process($messagePart);
+        $path = $messagePart->getMimeType() === "text/plain" ? "plain" : "html";
+
+        $opts    = [];
+        $attr    = $query->attributes ?? [];
+        $length  = ArrayUtil::unchain("$path.length", $attr);
+        $trimApi = ArrayUtil::unchain("$path.trimApi", $attr);
+
+        if ($trimApi && $length) {
+            $opts["length"] = $length;
+        }
+
+        return $this->getPreviewTextProcessor()->process($messagePart, "UTF-8", $opts);
     }
 }

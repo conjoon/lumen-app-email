@@ -61,6 +61,8 @@ use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 use Conjoon\Text\CharsetConverter;
 use DateTime;
 use PHPUnit\Framework\MockObject\MockObject;
+use ReflectionClass;
+use ReflectionException;
 use RuntimeException;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -77,6 +79,7 @@ class DefaultMessageItemServiceTest extends TestCase
 // ------------------
 //     Tests
 // ------------------
+
     /**
      * Tests constructor.
      *
@@ -907,6 +910,74 @@ class DefaultMessageItemServiceTest extends TestCase
     }
 
 
+    /**
+     *
+     * @throws ReflectionException
+     */
+    public function testProcessTextForPreview()
+    {
+        $rP = $this->getReadableMessagePartContentProcessor();
+        $wP = $this->getWritableMessagePartContentProcessor();
+        $miP = $this->getMessageItemFieldsProcessor();
+
+
+        $pP = $this->getMockBuilder(PreviewTextProcessor::class)
+                ->disableOriginalConstructor()
+                ->onlyMethods(["process"])->getMock();
+
+        $service = $this->createService($miP, $rP, $wP, $pP);
+
+        $reflection = new ReflectionClass($service);
+
+        $method = $reflection->getMethod("processTextForPreview");
+        $method->setAccessible(true);
+
+        $plainMessagePart = new MessagePart("foo", "UTF-8", "text/plain");
+        $htmlMessagePart = new MessagePart("foo", "UTF-8", "text/html");
+
+        $input = [[
+            $plainMessagePart,
+            new MessageItemListResourceQuery(
+                new ParameterBag(["attributes" => ["plain" => ["trimApi" => true, "length" => 20]]])
+            )
+        ], [
+            $htmlMessagePart,
+            new MessageItemListResourceQuery(
+                new ParameterBag(["attributes" => ["html" => ["trimApi" => true, "length" => 1]]])
+            )
+        ], [
+            $htmlMessagePart,
+            new MessageItemListResourceQuery(
+                new ParameterBag(["attributes" => ["plain" => ["trimApi" => true, "length" => 1]]])
+            )
+        ]];
+
+        $expectedArgs = [[
+            $plainMessagePart,
+            "UTF-8",
+            ["length" => 20]
+        ], [
+            $htmlMessagePart,
+            "UTF-8",
+            ["length" => 1]
+        ], [
+            $htmlMessagePart,
+            "UTF-8",
+            []
+        ]];
+
+        $pP->expects($this->exactly(count($input)))
+            ->method("process")
+            ->withConsecutive(
+                ...$expectedArgs
+            );
+
+        foreach ($input as $args) {
+            $method->invokeArgs($service, $args);
+        }
+    }
+
+
 // ------------------
 //     Test Helper
 // ------------------
@@ -1098,8 +1169,11 @@ class DefaultMessageItemServiceTest extends TestCase
             new DefaultPlainReadableStrategy(),
             new PurifiedHtmlStrategy()
         ) extends ReadableMessagePartContentProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
-            {
+            public function process(
+                MessagePart $messagePart,
+                string $toCharset = "UTF-8",
+                ?array $opts = null
+            ): MessagePart {
                 $messagePart->setContents(
                     "READ" .
                     $messagePart->getMimeType() .
@@ -1121,8 +1195,11 @@ class DefaultMessageItemServiceTest extends TestCase
             new DefaultPlainWritableStrategy(),
             new DefaultHtmlWritableStrategy()
         ) extends WritableMessagePartContentProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
-            {
+            public function process(
+                MessagePart $messagePart,
+                string $toCharset = "UTF-8",
+                ?array $opts = null
+            ): MessagePart {
                 $messagePart->setContents(
                     "WRITTEN" .
                     $messagePart->getMimeType() .
@@ -1141,8 +1218,11 @@ class DefaultMessageItemServiceTest extends TestCase
     protected function getPreviewTextProcessor(): PreviewTextProcessor
     {
         return new class implements PreviewTextProcessor {
-            public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
-            {
+            public function process(
+                MessagePart $messagePart,
+                string $toCharset = "UTF-8",
+                ?array $opts = null
+            ): MessagePart {
                 $messagePart->setContents(
                     $messagePart->getContents(),
                     "ISO-8859-1"
@@ -1159,8 +1239,11 @@ class DefaultMessageItemServiceTest extends TestCase
     protected function getMessageItemFieldsProcessor(): MessageItemFieldsProcessor
     {
         return new class implements MessageItemFieldsProcessor {
-            public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem
-            {
+            public function process(
+                AbstractMessageItem $messageItem,
+                string $toCharset = "UTF-8",
+                ?array $opts = null
+            ): AbstractMessageItem {
                 $messageItem->setSubject("MessageItemFieldsProcessor");
                 return $messageItem;
             }
