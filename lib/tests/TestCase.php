@@ -69,13 +69,17 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
     public function getServicePrefix(string $type, string $version): string
     {
 
+        $mapping = [
+            "imap" => config("app.api.service.email"),
+            "imapuser"  => config("app.api.service.auth")
+        ];
+
         $type = strtolower($type);
         if (!in_array($type, ["imap", "imapuser"])) {
             throw new RuntimeException("\"$type\" is not valid");
         }
         return implode("", [
-            "rest-",
-            $type,
+            $mapping[$type] .
             "/api",
             ($version === "latest") ? "" : "/" . $version
         ]);
@@ -99,7 +103,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 
 
     /**
-     * Returns the relative path to the rest-imap endpoint.
+     * Returns the relative path to the rest-api-email endpoint.
      *
      * @param string $endpoint
      * @param string $version

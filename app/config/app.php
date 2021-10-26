@@ -28,10 +28,7 @@
 declare(strict_types=1);
 
 /**
- * - api.versions lists all available versions this service can server
- * - api.latest allows for specifying the latest stable version this
- * api serves. This is also the value that will be used if no api-version
- * is submitted in the request-url.
+ * @return array
  */
 return [
 
@@ -46,6 +43,10 @@ return [
 |
 */
 "api" => [
+    "service" => [
+        "email" => "rest-api-email",
+        "auth"  => "rest-imapuser"
+    ],
     "versions" => ["v0"],
     "latest" => "v0"
 ],

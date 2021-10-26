@@ -31,31 +31,39 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-|
-|API Versioning groups, loading specific route configurations based on the prefix.
-|
+| The following routes represent the rest-api-email API V0.
+| https://github.com/conjoon/rest-api-description
 */
 
-$router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+$router->post('SendMessage', 'MessageItemController@sendMessageDraft');
 
-foreach ($versions as $version) {
-    $router->group([
-        "middleware" => "auth_" . ucfirst($version),
-        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
-        'prefix' => "rest-imap/api/" . $version
-    ], function () use ($router, $version) {
+$router->get('MailAccounts', 'MailAccountController@index');
 
-        require base_path("routes/rest-imap/api_" . $version . ".php");
-    });
-}
+$router->get('MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
 
-// config for latest
-$router->group([
-    "middleware" => "auth_" . ucfirst($latest),
-    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-    'prefix' => "rest-imap/api"
-], function () use ($router, $latest) {
-    require base_path("routes/rest-imap/api_" . $latest . ".php");
-});
+// {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
+// webserver option is set to "on"
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
+    'MessageItemController@index'
+);
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
+    'MessageItemController@post'
+);
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@get'
+);
+$router->put(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@put'
+);
+$router->delete(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@delete'
+);
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
+    'AttachmentController@index'
+);
