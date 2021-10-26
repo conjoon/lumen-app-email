@@ -34,8 +34,9 @@ use Fruitcake\Cors\CorsServiceProvider;
 use Fruitcake\Cors\HandleCors;
 use Laravel\Lumen\Bootstrap\LoadEnvironmentVariables;
 
+
 (new LoadEnvironmentVariables(
-    dirname(__DIR__)
+    dirname(__DIR__, 2)
 ))->bootstrap();
 
 /*
@@ -57,7 +58,6 @@ $app->withFacades();
 
 $app->configure('app');
 $app->configure('imapserver');
-
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings

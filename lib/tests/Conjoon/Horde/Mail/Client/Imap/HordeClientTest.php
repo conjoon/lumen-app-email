@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Tests\Conjoon\Horde\Mail\Client\Imap;
 
+use Conjoon\Core\ParameterBag;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -50,6 +51,7 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use DateTime;
 use Exception;
 use Horde_Imap_Client;
@@ -65,6 +67,8 @@ use Horde_Mime_Headers_Element_Single;
 use Horde_Mime_Mail;
 use Horde_Mime_Part;
 use Mockery;
+use ReflectionClass;
+use ReflectionException;
 use RuntimeException;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -86,6 +90,135 @@ class HordeClientTest extends TestCase
 
         $client = $this->createClient();
         $this->assertInstanceOf(MailClient::class, $client);
+    }
+
+
+    /**
+     * getSupportedAttributes()
+     */
+    public function testGetSupportedAttributes()
+    {
+        $client = $this->createClient();
+        $this->assertEquals([
+            "hasAttachments",
+            "size",
+            "plain", // \ __Preview
+            "html",  // /   Text
+            "cc",
+            "bcc",
+            "replyTo",
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId"
+        ], $client->getSupportedAttributes());
+    }
+
+
+    /**
+     * getDefaultAttributes()
+     */
+    public function testGetDefaultAttributes()
+    {
+        $client = $this->createClient();
+        $this->assertEquals([
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId",
+            "plain"
+        ], $client->getDefaultAttributes());
+    }
+
+
+    /**
+     * getAttr()
+     * @throws ReflectionException
+     */
+    public function testGetAttr()
+    {
+        $client = $this->createClient();
+
+        $reflection = new ReflectionClass($client);
+        $property = $reflection->getMethod("getAttr");
+        $property->setAccessible(true);
+
+        $this->assertEquals(
+            true,
+            $property->invokeArgs($client, ["foo", ["foo" => true]])
+        );
+
+        $this->assertEquals(
+            true,
+            $property->invokeArgs($client, ["foo", ["foo" => []], "snafu"])
+        );
+
+        $this->assertEquals(
+            null,
+            $property->invokeArgs($client, ["foo", ["bar" => true]])
+        );
+
+        $this->assertEquals(
+            null,
+            $property->invokeArgs($client, ["foo", ["foo" => false]])
+        );
+
+        $this->assertEquals(
+            "default",
+            $property->invokeArgs($client, ["foo", ["foo" => false], "default"])
+        );
+    }
+
+
+    /**
+     * getDefAttr()
+     * @throws ReflectionException
+     */
+    public function testGetDefAttr()
+    {
+        $client = $this->createClient();
+
+        $defs = array_map(fn ($item) => true, array_flip($client->getDefaultAttributes()));
+
+        $reflection = new ReflectionClass($client);
+        $property = $reflection->getMethod("getDefAttr");
+        $property->setAccessible(true);
+
+        $this->assertEquals(
+            $defs,
+            $property->invokeArgs($client, [])
+        );
+
+        $this->assertEquals(
+            array_merge($defs, ["foo" => true]),
+            $property->invokeArgs($client, [["foo" => []]])
+        );
+
+        $this->assertEquals(
+            array_merge($defs, ["foo" => ["length" => 3]]),
+            $property->invokeArgs($client, [["foo" => ["length" => 3]]])
+        );
+
+        $this->assertEquals(
+            $defs,
+            $property->invokeArgs($client, [["foo" => false]])
+        );
     }
 
 
@@ -179,7 +312,7 @@ class HordeClientTest extends TestCase
                 $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org")->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 25]
+            new MessageItemListResourceQuery(new ParameterBag(["start" => 0, "limit" => 25]))
         );
     }
 
@@ -235,7 +368,7 @@ class HordeClientTest extends TestCase
                 $account->getId(),
                 "INBOX"
             ),
-            ["start" => 0, "limit" => 2]
+            new MessageItemListResourceQuery(new ParameterBag(["start" => 0, "limit" => 2]))
         );
 
 
@@ -269,6 +402,67 @@ class HordeClientTest extends TestCase
 
         $this->assertSame($references[111], $messageItemList[0]->getReferences());
         $this->assertSame($references[222], $messageItemList[1]->getReferences());
+    }
+
+
+    /**
+     * Multiple Message Item Test with attributes specified
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testGetMessageItemListWithSpecifiedAttributes()
+    {
+
+        $account = $this->getTestUserStub()->getMailAccount("dev_sys_conjoon_org");
+
+        $imapStub = Mockery::mock("overload:" . Horde_Imap_Client_Socket::class);
+
+        $imapStub->shouldReceive("search")->with("INBOX", Mockery::any(), [
+            "sort" => [Horde_Imap_Client::SORT_REVERSE, Horde_Imap_Client::SORT_DATE]
+        ])->andReturn(["match" => new Horde_Imap_Client_Ids([111])]);
+
+        $messageIds = [111 => "foo"];
+        $references = [111 => "reffoo"];
+
+        $fetchResults = new Horde_Imap_Client_Fetch_Results();
+
+        $fetchResults[111] = new Horde_Imap_Client_Data_Fetch();
+        $fetchResults[111]->setUid(111);
+
+        $fetchResults[111]->setEnvelope([
+            "from" => "dev@conjoon.org", "to" => "devrec@conjoon.org", "message-id" => $messageIds[111]
+        ]);
+        $fetchResults[111]->setHeaders("ContentType", "Content-Type=text/html;charset=UTF-8");
+        $fetchResults[111]->setHeaders("References", "References: " . $references[111]);
+
+        $imapStub->shouldReceive("fetch")->with(
+            "INBOX",
+            Mockery::any(),
+            Mockery::type("array")
+        )->andReturn(
+            $fetchResults
+        );
+
+        $client = $this->createClient();
+
+        $messageItemList = $client->getMessageItemList(
+            $this->createFolderKey(
+                $account->getId(),
+                "INBOX"
+            ),
+            new MessageItemListResourceQuery(new ParameterBag(
+                ["start" => 0, "limit" => 1, "attributes" => ["from" => true, "references" => true]]
+            ))
+        );
+
+        $this->assertEquals([
+            "id" => $messageItemList[0]->getMessageKey()->getId(),
+            "mailFolderId" => $messageItemList[0]->getMessageKey()->getMailFolderId(),
+            "mailAccountId" => $messageItemList[0]->getMessageKey()->getMailAccountId(),
+            "references" => $references[111],
+            "from" => ["name" => "dev@conjoon.org", "address" => "dev@conjoon.org"]
+        ], $messageItemList[0]->toJson());
     }
 
 
@@ -319,7 +513,9 @@ class HordeClientTest extends TestCase
                 $account->getId(),
                 "INBOX"
             ),
-            ["ids" => [34]]
+            new MessageItemListResourceQuery(new ParameterBag(
+                ["ids" => [34]]
+            ))
         );
 
 

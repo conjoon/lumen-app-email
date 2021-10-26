@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -135,6 +135,7 @@ class MessageItemDraftTest extends TestCase
             }
 
             try {
+                /** @noinspection PhpParamsInspection */
                 $this->createMessageItem($item);
             } catch (TypeError $e) {
                 if (in_array($e->getMessage(), $caught)) {
@@ -191,9 +192,9 @@ class MessageItemDraftTest extends TestCase
         $messageItem = $this->createMessageItem();
         $json = $messageItem->toJson();
 
-        $this->assertSame([], $json["replyTo"]);
-        $this->assertSame([], $json["cc"]);
-        $this->assertSame([], $json["bcc"]);
+        $this->assertArrayNotHasKey("replyTo", $json);
+        $this->assertArrayNotHasKey("cc", $json);
+        $this->assertArrayNotHasKey("bcc", $json);
     }
 
 
@@ -241,11 +242,11 @@ class MessageItemDraftTest extends TestCase
 
         $json = $messageItem->toJson();
 
-        $this->assertSame([], $json["from"]);
-        $this->assertSame([], $json["replyTo"]);
-        $this->assertSame([], $json["to"]);
-        $this->assertSame([], $json["cc"]);
-        $this->assertSame([], $json["bcc"]);
+        $this->assertArrayNotHasKey("from", $json);
+        $this->assertArrayNotHasKey("replyTo", $json);
+        $this->assertArrayNotHasKey("to", $json);
+        $this->assertArrayNotHasKey("cc", $json);
+        $this->assertArrayNotHasKey("bcc", $json);
 
         $modified = $messageItem->getModifiedFields();
         $this->assertTrue(in_array("from", $modified));

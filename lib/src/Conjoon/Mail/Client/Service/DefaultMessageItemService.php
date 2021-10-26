@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-cn_imapuser
- * Copyright (C) 2019-2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
+ * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-cn_imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client\Service;
 
+use Conjoon\Core\ParameterBag;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\MailClient;
@@ -45,7 +46,9 @@ use Conjoon\Mail\Client\Message\MessagePart;
 use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Util\ArrayUtil;
 
 /**
  * Class DefaultMessageItemService.
@@ -158,18 +161,17 @@ class DefaultMessageItemService implements MessageItemService
     /**
      * @inheritdoc
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options): MessageItemList
+    public function getMessageItemList(FolderKey $folderKey, MessageItemListResourceQuery $query): MessageItemList
     {
-
         $messageItemList = $this->mailClient->getMessageItemList(
             $folderKey,
-            $options
+            $query
         );
 
         foreach ($messageItemList as $listMessageItem) {
             $this->charsetConvertHeaderFields($listMessageItem);
-            if (array_key_exists("preview", $options) && $options["preview"] === true) {
-                $this->processTextForPreview($listMessageItem->getMessagePart());
+            if ($listMessageItem->getMessagePart()) {
+                $this->processTextForPreview($listMessageItem->getMessagePart(), $query);
             }
         }
 
@@ -210,12 +212,11 @@ class DefaultMessageItemService implements MessageItemService
      */
     public function getListMessageItem(MessageKey $messageKey): ListMessageItem
     {
-
-        $folderKey = $messageKey->getFolderKey();
-
-        $messageItemList = $this->mailClient->getMessageItemList(
-            $folderKey,
-            ["ids" => [$messageKey->getId()]]
+        $messageItemList = $this->getMessageItemList(
+            $messageKey->getFolderKey(),
+            new MessageItemListResourceQuery(new ParameterBag([
+                "ids" => [$messageKey->getId()]
+            ]))
         );
 
         return $messageItemList[0];
@@ -462,16 +463,28 @@ class DefaultMessageItemService implements MessageItemService
 
     /**
      * Processes the specified MessagePart and returns its contents properly converted to UTF-8
-     * and stripped of all HTML-tags  as a 200 character long previewText.
+     * and stripped of all HTML-tags.
+     * Length property will be extracted from the $query, if available.
      *
      * @param MessagePart $messagePart
-     *
+     * @param MessageItemListResourceQuery $query
      * @return MessagePart
      *
      * @see PreviewTextProcessor::process
      */
-    protected function processTextForPreview(MessagePart $messagePart): MessagePart
+    protected function processTextForPreview(MessagePart $messagePart, MessageItemListResourceQuery $query): MessagePart
     {
-        return $this->getPreviewTextProcessor()->process($messagePart);
+        $path = $messagePart->getMimeType() === "text/plain" ? "plain" : "html";
+
+        $opts    = [];
+        $attr    = $query->attributes ?? [];
+        $length  = ArrayUtil::unchain("$path.length", $attr);
+        $trimApi = ArrayUtil::unchain("$path.trimApi", $attr);
+
+        if ($trimApi && $length) {
+            $opts["length"] = $length;
+        }
+
+        return $this->getPreviewTextProcessor()->process($messagePart, "UTF-8", $opts);
     }
 }

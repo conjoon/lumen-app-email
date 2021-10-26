@@ -42,6 +42,7 @@ use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\Text\MessageItemFieldsProcessor;
 use Conjoon\Mail\Client\Message\Text\PreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 
 /**
@@ -60,13 +61,12 @@ interface MessageItemService
      * specified MailAccount and the MailFolder.
      *
      * @param FolderKey $folderKey
-     * @param array $options An array with the following query options:
-     *  - start (integer) The position from where the items should be returned
-     *  - limit (integer) The number of items to return
+     * @param MessageItemListResourceQuery $query The resource query for the
+     * MessageItemLi
      *
      * @return MessageItemList
      */
-    public function getMessageItemList(FolderKey $folderKey, array $options): MessageItemList;
+    public function getMessageItemList(FolderKey $folderKey, MessageItemListResourceQuery $query): MessageItemList;
 
 
     /**

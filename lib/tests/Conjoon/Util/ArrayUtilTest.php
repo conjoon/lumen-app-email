@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Util;
 
 use Conjoon\Util\ArrayUtil;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 /**
@@ -74,5 +75,72 @@ class ArrayUtilTest extends TestCase
         $keys = ["foo", "bar"];
 
         $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::intersect($data, $keys));
+    }
+
+
+    /**
+     * Tests mergeIf()
+     */
+    public function testMergeIfExceptionTarget()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $target = ["foo" => "bar", 1 => "snafu", "3i" => 4];
+        $data   = ["foo" => "snafu", "foobar" => "foo", "3i" => "6"];
+        ArrayUtil::mergeIf($target, $data);
+    }
+
+
+    /**
+     * Tests mergeIf()
+     */
+    public function testMergeIfExceptionData()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $target = ["foo" => "bar", "ds" => "snafu", "3i" => 4];
+        $data   = ["foo" => "snafu", "foobar" => "foo", "3" => "6"];
+        ArrayUtil::mergeIf($target, $data);
+    }
+
+
+    /**
+     * Tests mergeIf()
+     */
+    public function testMergeIf()
+    {
+
+        $target = [
+            "foo" => "bar", "bar" => "snafu", "3i" => 4
+        ];
+
+        $data = [
+            "foo" => "snafu", "foobar" => "foo", "3i" => "6"
+        ];
+
+        $this->assertEquals(
+            ["foo" => "bar", "bar" => "snafu", "3i" => 4, "foobar" => "foo"],
+            ArrayUtil::mergeIf($target, $data)
+        );
+    }
+
+
+    /**
+     * Tests unchain()
+     */
+    public function testUnchain()
+    {
+
+        $target = [
+            "foo" => ["bar" => 34]
+        ];
+
+        $this->assertSame(34, ArrayUtil::unchain("foo.bar", $target));
+
+        $target = [
+            "foo" => ["bar" => ["snafu" => 2]]
+        ];
+
+        $this->assertSame(2, ArrayUtil::unchain("foo.bar.snafu", $target));
+
+        $this->assertNull(ArrayUtil::unchain("foo.no.snafu", $target));
     }
 }

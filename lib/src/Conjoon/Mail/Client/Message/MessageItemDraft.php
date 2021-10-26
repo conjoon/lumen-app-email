@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,7 +35,7 @@ use Conjoon\Mail\Client\Data\MailAddressList;
 use Conjoon\Mail\Client\MailClientException;
 
 /**
- * Class MessageItemDraft models envelope informations of a Message Draft.
+ * Class MessageItemDraft models envelope information of a Message Draft.
  * A MessageDraft that was stored and exists physically provides also a MessageKey.
  *
  * @package Conjoon\Mail\Client\Message
@@ -209,11 +209,12 @@ class MessageItemDraft extends AbstractMessageItem
      */
     public function toJson(): array
     {
-
-        return array_merge(parent::toJson(), [
-            'cc' => $this->getCc() ? $this->getCc()->toJson() : [],
-            'bcc' => $this->getBcc() ? $this->getBcc()->toJson() : [],
-            'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : []
+        $data = array_merge(parent::toJson(), [
+            'cc' => $this->getCc() ? $this->getCc()->toJson() : null,
+            'bcc' => $this->getBcc() ? $this->getBcc()->toJson() : null,
+            'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : null
         ]);
+
+        return $this->buildJson($data);
     }
 }

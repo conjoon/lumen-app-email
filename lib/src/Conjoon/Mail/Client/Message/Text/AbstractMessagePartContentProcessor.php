@@ -83,7 +83,7 @@ abstract class AbstractMessagePartContentProcessor implements MessagePartContent
      *
      * @inheritdoc
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8", ?array $opts = null): MessagePart
     {
 
         $mimeType = $messagePart->getMimeType();

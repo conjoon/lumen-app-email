@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -45,7 +45,7 @@ use DateTime;
 use TypeError;
 
 /**
- * Class MessageItem models simplified envelope informations for a Mail Message.
+ * Class MessageItem models simplified envelope information for a Mail Message.
  *
  * @example
  *
@@ -416,21 +416,41 @@ abstract class AbstractMessageItem implements Jsonable, Modifiable
      */
     public function toJson(): array
     {
-
         $mk = $this->getMessageKey();
 
-        return array_merge($mk->toJson(), [
-            'from' => $this->getFrom() ? $this->getFrom()->toJson() : [],
-            'to' => $this->getTo() ? $this->getTo()->toJson() : [],
+        $data = array_merge($mk->toJson(), [
+            'from' => $this->getFrom() ? $this->getFrom()->toJson() : null,
+            'to' => $this->getTo() ? $this->getTo()->toJson() : null,
             'subject' => $this->getSubject(),
-            'date' => ($this->getDate() ? $this->getDate() : new DateTime("1970-01-01 +0000"))->format("Y-m-d H:i:s O"),
+            'date' => $this->getDate() ? $this->getDate()->format("Y-m-d H:i:s O") : null,
             'seen' => $this->getSeen(),
             'answered' => $this->getAnswered(),
             'draft' => $this->getDraft(),
             'flagged' => $this->getFlagged(),
             'recent' => $this->getRecent(),
             'messageId' => $this->getMessageId(),
-            'references' => $this->getReferences()
+            'references' => $this->getReferences(),
         ]);
+
+        return $this->buildJson($data);
+    }
+
+
+    /**
+     * Helper Method to assemble json arrays.
+     *
+     * @param array $thisData
+     * @return array
+     */
+    protected function buildJson(array $thisData): array
+    {
+        $thisData = array_filter(
+            $thisData,
+            fn ($item) => $item !== null
+        );
+
+        ksort($thisData);
+
+        return $thisData;
     }
 }

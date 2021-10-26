@@ -103,16 +103,12 @@ class ListMessageItem extends MessageItem
      */
     public function toJson(): array
     {
-
-        $fields = [];
+        $data = parent::toJson();
 
         if ($this->getMessagePart()) {
-            $fields["previewText"] = $this->getMessagePart() ? $this->getMessagePart()->getContents() : "";
+            $data["previewText"] = $this->getMessagePart()->getContents();
         }
 
-        return array_merge(
-            parent::toJson(),
-            $fields
-        );
+        return $this->buildJson($data);
     }
 }

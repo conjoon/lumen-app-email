@@ -33,6 +33,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Util\Stringable;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -55,6 +56,7 @@ class MessageKeyTest extends TestCase
         $key = new MessageKey($mailAccountId, $mailFolderId, $id);
 
         $this->assertInstanceOf(CompoundKey::class, $key);
+        $this->assertInstanceOf(Stringable::class, $key);
         $this->assertSame($mailAccountId, $key->getMailAccountId());
         $this->assertSame($mailFolderId, $key->getMailFolderId());
         $this->assertSame($id, $key->getId());
@@ -65,6 +67,8 @@ class MessageKeyTest extends TestCase
             "mailFolderId" => $mailFolderId,
             "id" => $id
         ], $key->toJson());
+
+        $this->assertSame(json_encode($key->toJson()), $key->toString());
 
         $mailAccount = new MailAccount(["id" => "dev"]);
         $key = new MessageKey($mailAccount, $mailFolderId, $id);

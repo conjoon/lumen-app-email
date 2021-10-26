@@ -70,6 +70,7 @@ class MessageItemChildCompoundKeyTest extends TestCase
             "id" => $id
         ], $key->toJson());
 
+        $this->assertSame(json_encode($key->toJson()), $key->toString());
 
         // w/ MessageKey
         $mailAccountId = "dev1";
