@@ -31,8 +31,7 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| The following routes represent the rest-imapuser API V0
-| https://github.com/conjoon/rest-api-description
+| The following routes represent the rest-imapuser API
 */
 
 $router->post('auth', 'UserController@authenticate');

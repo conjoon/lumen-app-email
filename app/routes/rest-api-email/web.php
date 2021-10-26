@@ -31,39 +31,31 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 | Application Routes
 |--------------------------------------------------------------------------
-| The following routes represent the rest-imap API V0.
-| https://github.com/conjoon/rest-api-description
+|
+|API Versioning groups, loading specific route configurations based on the prefix.
+|
 */
 
-$router->post('SendMessage', 'MessageItemController@sendMessageDraft');
+$router = $app->router;
+$versions = config("app.api.versions");
+$latest = config("app.api.latest");
 
-$router->get('MailAccounts', 'MailAccountController@index');
+foreach ($versions as $version) {
+    $router->group([
+        "middleware" => "auth_" . ucfirst($version),
+        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
+        'prefix' => "rest-api-email/api/" . $version
+    ], function () use ($router, $version) {
 
-$router->get('MailAccounts/{mailAccountId}/MailFolders', 'MailFolderController@index');
+        require base_path("routes/rest-api-email/api_" . $version . ".php");
+    });
+}
 
-// {mailFolderId:.*} allows for %2F (forward slash) in route when querying MessageItems if AllowEncodedSlashes
-// webserver option is set to "on"
-$router->get(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-    'MessageItemController@index'
-);
-$router->post(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
-    'MessageItemController@post'
-);
-$router->get(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@get'
-);
-$router->put(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@put'
-);
-$router->delete(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@delete'
-);
-$router->get(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
-    'AttachmentController@index'
-);
+// config for latest
+$router->group([
+    "middleware" => "auth_" . ucfirst($latest),
+    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
+    'prefix' => "rest-api-email/api"
+], function () use ($router, $latest) {
+    require base_path("routes/rest-api-email/api_" . $latest . ".php");
+});
