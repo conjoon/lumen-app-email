@@ -62,13 +62,15 @@ class DefaultMessageItemFieldsProcessor implements MessageItemFieldsProcessor
     public function process(AbstractMessageItem $messageItem, string $toCharset = "UTF-8"): AbstractMessageItem
     {
         // Item needs charset information
-        $messageItem->setSubject(
-            $this->converter->convert(
-                $messageItem->getSubject(),
-                $messageItem->getCharset(),
-                $toCharset
-            )
-        );
+        if ($messageItem->getSubject()) {
+            $messageItem->setSubject(
+                $this->converter->convert(
+                    $messageItem->getSubject(),
+                    $messageItem->getCharset(),
+                    $toCharset
+                )
+            );
+        }
 
         $messageItem->setCharset($toCharset);
 

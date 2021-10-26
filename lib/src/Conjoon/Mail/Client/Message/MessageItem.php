@@ -83,15 +83,16 @@ class MessageItem extends AbstractMessageItem
 
     /**
      * Returns an array representing this MessageItem.
-     *
+     * Only the data will be returned where the values are not null.
      * @return array
      */
     public function toJson(): array
     {
+        $data = array_merge([
+            'hasAttachments' => $this->getHasAttachments(),
+            'size' => $this->getSize()
+        ], parent::toJson());
 
-        return array_merge(parent::toJson(), [
-            'size' => $this->getSize(),
-            'hasAttachments' => $this->getHasAttachments()
-        ]);
+        return $this->buildJson($data);
     }
 }

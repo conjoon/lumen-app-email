@@ -57,6 +57,8 @@ class AttachmentKeyTest extends TestCase
         $key = $this->createAttachmentKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
 
         $this->assertInstanceOf(MessageItemChildCompoundKey::class, $key);
+
+        $this->assertSame(json_encode($key->toJson()), $key->toString());
     }
 
 

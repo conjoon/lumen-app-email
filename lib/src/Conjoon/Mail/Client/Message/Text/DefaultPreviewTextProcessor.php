@@ -75,22 +75,26 @@ class DefaultPreviewTextProcessor implements PreviewTextProcessor
      *
      * @inheritdoc
      */
-    public function process(MessagePart $messagePart, string $toCharset = "UTF-8"): MessagePart
+    public function process(MessagePart $messagePart, string $toCharset = "UTF-8", ?array $opts = null): MessagePart
     {
-
         $messagePart = $this->processor->process($messagePart, $toCharset);
 
-        $messagePart->setContents(
-            htmlentities(
+        $length = $opts["length"] ?? false;
+
+        if ($length) {
+            $txt =  htmlentities(
                 mb_substr(
                     strip_tags(trim($messagePart->getContents())),
                     0,
-                    200,
+                    $length,
                     $toCharset
                 )
-            ),
-            $toCharset
-        );
+            );
+        } else {
+            $txt = htmlentities(strip_tags(trim($messagePart->getContents())));
+        }
+
+        $messagePart->setContents($txt, $toCharset);
 
         return $messagePart;
     }

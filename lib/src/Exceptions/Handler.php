@@ -27,9 +27,12 @@
 
 namespace App\Exceptions;
 
+use Conjoon\Http\Api\Problem\ProblemFactory;
+use Conjoon\Http\Status\StatusCodes;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -75,8 +78,13 @@ class Handler extends ExceptionHandler
      *
      * @return Response
      */
-    public function render($request, Exception $e): Response
+    public function render($request, Exception $e)
     {
+        if ($e instanceof \Conjoon\Http\HttpException) {
+            return response()->json(
+                ...ProblemFactory::makeJson($e->getCode(), null, $e->getMessage())
+            );
+        }
         return parent::render($request, $e);
     }
 }
