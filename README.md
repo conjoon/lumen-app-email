@@ -1,7 +1,7 @@
 # conjoon/php-ms-imapuser ![MIT](https://img.shields.io/github/license/conjoon/php-ms-imapuser) ![Tests](https://github.com/conjoon/php-ms-imapuser/actions/workflows/run.tests.yml/badge.svg)
 
 
-Implements **[rest-imap](https://github.com/conjoon/rest-api-description)** and **[rest-imapuser](https://github.com/conjoon/rest-api-description)**.
+Implements **[rest-api-email](https://github.com/conjoon/rest-api-description)**.
 
 ## About
 
@@ -30,13 +30,11 @@ This will install all required package dependencies.
 
 
 ## Available Rest API
-* **rest-imap** 
-  <br>For the list of IMAP commands this microservice provides, please refer to the OpenApi-documentation of `rest-imap`,
+* **rest-api-email** 
+  <br>For the list of endpoints this microservice provides, please refer to the OpenApi-documentation of `rest-api-email`,
   hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description).
 * **rest-imapuser**
-  <br>Authenticating a user against a single IMAP account
-  is specified in the OpenApi-documentation of `rest-imapuser`,
-  hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description).
+  <br>Authenticating a user against a single IMAP account.
 
 ## Required configurations
 

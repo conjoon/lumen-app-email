@@ -34,5 +34,5 @@ declare(strict_types=1);
 | Entry point for the APIs this server supports.
 */
 
-require base_path('routes/rest-imap/web.php');
+require base_path('routes/rest-api-email/web.php');
 require base_path('routes/rest-imapuser/web.php');
