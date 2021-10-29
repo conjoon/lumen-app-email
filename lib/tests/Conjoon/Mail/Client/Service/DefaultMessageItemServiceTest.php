@@ -950,6 +950,11 @@ class DefaultMessageItemServiceTest extends TestCase
             new MessageItemListResourceQuery(
                 new ParameterBag(["attributes" => ["plain" => ["trimApi" => true, "length" => 1]]])
             )
+        ], [
+            $plainMessagePart,
+            new MessageItemListResourceQuery(
+                new ParameterBag(["attributes" => ["plain" => ["length" => 100]]])
+            )
         ]];
 
         $expectedArgs = [[
@@ -962,6 +967,10 @@ class DefaultMessageItemServiceTest extends TestCase
             ["length" => 1]
         ], [
             $htmlMessagePart,
+            "UTF-8",
+            []
+        ], [
+            $plainMessagePart,
             "UTF-8",
             []
         ]];

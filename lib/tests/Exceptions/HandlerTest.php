@@ -31,8 +31,6 @@ namespace Tests\Exceptions;
 
 use App\Exceptions\Handler;
 use Conjoon\Http\Exception\BadRequestException;
-use Conjoon\Http\Exception\InternalServerErrorException;
-use Conjoon\Http\Exception\HttpException;
 use Conjoon\Http\Json\Problem\ProblemFactory;
 use Illuminate\Http\Request;
 use Tests\TestCase;
