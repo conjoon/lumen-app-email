@@ -77,8 +77,15 @@ class ListMessageItemTest extends TestCase
 
         $this->assertSame($previewText, $messageItem->getMessagePart()->getContents());
 
-        $messageItem->getMessagePart()->setContents("snafu", "UTF-8");
+        $mp = $messageItem->getMessagePart();
+
+        $mp->setContents("snafu", "UTF-8");
         $this->assertSame("snafu", $messageItem->getMessagePart()->getContents());
+
+        $this->assertSame($messageItem, $messageItem->setMessagePart(null));
+        $this->assertNull($messageItem->getMessagePart());
+        $this->assertSame($messageItem, $messageItem->setMessagePart($mp));
+        $this->assertSame($mp, $messageItem->getMessagePart());
 
         $arr = $messageItem->toJson();
         $this->assertSame("YO!", $arr["subject"]);

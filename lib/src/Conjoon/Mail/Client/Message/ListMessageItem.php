@@ -94,6 +94,18 @@ class ListMessageItem extends MessageItem
         return $this->messagePart;
     }
 
+    /**
+     * Sets the MessagePart set for this ListMessageItem.
+     *
+     * @return ListMessageItem
+     */
+    public function setMessagePart(?MessagePart $messagePart): ?ListMessageItem
+    {
+        $this->messagePart = $messagePart;
+        return $this;
+    }
+
+
 // --------------------------------
 //  Jsonable interface
 // --------------------------------
