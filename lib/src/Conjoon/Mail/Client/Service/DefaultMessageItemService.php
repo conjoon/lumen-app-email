@@ -170,9 +170,8 @@ class DefaultMessageItemService implements MessageItemService
 
         foreach ($messageItemList as $listMessageItem) {
             $this->charsetConvertHeaderFields($listMessageItem);
-            if ($listMessageItem->getMessagePart()) {
-                $this->processTextForPreview($listMessageItem->getMessagePart(), $query);
-            }
+            $processedPart = $this->processTextForPreview($listMessageItem->getMessagePart(), $query);
+            $listMessageItem->setMessagePart($processedPart);
         }
 
         return $messageItemList;
@@ -466,14 +465,30 @@ class DefaultMessageItemService implements MessageItemService
      * and stripped of all HTML-tags.
      * Length property will be extracted from the $query, if available.
      *
-     * @param MessagePart $messagePart
+     * @param ?MessagePart $messagePart
      * @param MessageItemListResourceQuery $query
      * @return MessagePart
      *
      * @see PreviewTextProcessor::process
      */
-    protected function processTextForPreview(MessagePart $messagePart, MessageItemListResourceQuery $query): MessagePart
-    {
+    protected function processTextForPreview(
+        ?MessagePart $messagePart,
+        MessageItemListResourceQuery $query
+    ): ?MessagePart {
+        $attr = $query->attributes ?? [];
+
+        if (!isset($attr["html"]) && !isset($attr["plain"])) {
+            return null;
+        }
+
+        if (!$messagePart) {
+            $messagePart = new MessagePart(
+                "",
+                "UTF-8",
+                isset($attr["plain"]) ? "text/plain" : "text/html"
+            );
+        }
+
         $path = $messagePart->getMimeType() === "text/plain" ? "plain" : "html";
 
         $opts    = [];

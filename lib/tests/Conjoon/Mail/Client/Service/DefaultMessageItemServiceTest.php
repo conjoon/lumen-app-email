@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Mail\Client\Service;
 
 use Conjoon\Core\ParameterBag;
+use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Data\MailAddress;
@@ -197,6 +198,64 @@ class DefaultMessageItemServiceTest extends TestCase
         }
     }
 
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testGetMessageItemListCalls()
+    {
+        $folderKey = new FolderKey("dev", "INBOX");
+        $messageKey = new MessageKey("dev", "INBOX", "123");
+        $messageKey2 = new MessageKey("dev", "INBOX", "1234");
+        $query = new MessageItemListResourceQuery(new ParameterBag(["attributes" => ["plain" => true]]));
+
+        $messagePart = new MessagePart("", "", "");
+        $messagePartDef = new MessagePart("", "", "");
+
+        $messageItemList = new MessageItemList();
+        $messageItemList[] = new ListMessageItem($messageKey);
+        $messageItemList[] = new ListMessageItem($messageKey2, null, $messagePartDef);
+
+        $serviceMock = $this->getMockBuilder(DefaultMessageItemService::class)
+                     ->disableOriginalConstructor()
+                     ->onlyMethods([
+                         "charsetConvertHeaderFields",
+                         "processTextForPreview"
+                     ])
+                     ->getMock();
+
+        $mailClientMock = $this->getMockBuilder(HordeClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(["getMessageItemList"])
+            ->getMock();
+
+        $serviceMock->expects($this->exactly(2))
+                    ->method("charsetConvertHeaderFields")
+                    ->withConsecutive([$messageItemList[0]], [$messageItemList[1]]);
+
+        $serviceMock->expects($this->exactly(2))
+                    ->method("processTextForPreview")
+                    ->withConsecutive([null], [$messagePartDef])
+                    ->willReturn($messagePart, $messagePartDef);
+
+        $mailClientMock->expects($this->once())
+                       ->method("getMessageItemList")
+                       ->with($folderKey, $query)
+                       ->willReturn($messageItemList);
+
+        $reflection = new ReflectionClass($serviceMock);
+        $mailClientProperty = $reflection->getProperty("mailClient");
+        $mailClientProperty->setAccessible(true);
+        $mailClientProperty->setValue($serviceMock, $mailClientMock);
+
+        $this->assertSame(
+            $messageItemList,
+            $serviceMock->getMessageItemList($folderKey, $query)
+        );
+
+        $this->assertSame($messagePart, $messageItemList[0]->getMessagePart());
+        $this->assertSame($messagePartDef, $messageItemList[1]->getMessagePart());
+    }
 
     /**
      * Single MessageItem Test
@@ -932,10 +991,16 @@ class DefaultMessageItemServiceTest extends TestCase
         $method = $reflection->getMethod("processTextForPreview");
         $method->setAccessible(true);
 
+        $plainMessagePartEmpty = new MessagePart("", "UTF-8", "text/plain");
         $plainMessagePart = new MessagePart("foo", "UTF-8", "text/plain");
         $htmlMessagePart = new MessagePart("foo", "UTF-8", "text/html");
 
         $input = [[
+            null,
+            new MessageItemListResourceQuery(
+                new ParameterBag(["attributes" => ["plain" => ["trimApi" => true, "length" => 20]]])
+            )
+        ], [
             $plainMessagePart,
             new MessageItemListResourceQuery(
                 new ParameterBag(["attributes" => ["plain" => ["trimApi" => true, "length" => 20]]])
@@ -958,6 +1023,10 @@ class DefaultMessageItemServiceTest extends TestCase
         ]];
 
         $expectedArgs = [[
+            $plainMessagePartEmpty,
+            "UTF-8",
+            ["length" => 20]
+        ], [
             $plainMessagePart,
             "UTF-8",
             ["length" => 20]
@@ -975,6 +1044,10 @@ class DefaultMessageItemServiceTest extends TestCase
             []
         ]];
 
+        $this->assertNull($method->invokeArgs($service, [null, new MessageItemListResourceQuery(
+            new ParameterBag(["attributes" => []])
+        )]));
+
         $pP->expects($this->exactly(count($input)))
             ->method("process")
             ->withConsecutive(
@@ -982,7 +1055,7 @@ class DefaultMessageItemServiceTest extends TestCase
             );
 
         foreach ($input as $args) {
-            $method->invokeArgs($service, $args);
+            $this->assertNotNull($method->invokeArgs($service, $args));
         }
     }
 
