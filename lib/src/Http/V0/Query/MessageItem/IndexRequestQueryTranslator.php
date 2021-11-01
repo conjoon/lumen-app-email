@@ -61,6 +61,15 @@ class IndexRequestQueryTranslator extends QueryTranslator
              $this->getDefaultAttributes()
          );
 
+        if ($bag->getString("filter")) {
+            $bag->filter = json_decode($bag->filter);
+            if (!$bag->filter) {
+                throw new InvalidQueryException(
+                    "parameter \"filter\" must be JSON decodable"
+                );
+            }
+        }
+
         if (!$bag->getString("ids")) {
             if (!$bag->getInt("limit")) {
                 throw new InvalidQueryException(
@@ -218,7 +227,8 @@ class IndexRequestQueryTranslator extends QueryTranslator
             "start",
             "sort",
             "attributes",
-            "options"
+            "options",
+            "filter"
         ];
     }
 

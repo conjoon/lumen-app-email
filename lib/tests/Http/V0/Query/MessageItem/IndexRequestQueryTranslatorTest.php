@@ -76,7 +76,8 @@ class IndexRequestQueryTranslatorTest extends TestCase
             "start",
             "sort",
             "attributes",
-            "options"
+            "options",
+            "filter"
         ], $expected);
     }
 
@@ -297,6 +298,22 @@ class IndexRequestQueryTranslatorTest extends TestCase
                         "plain" => $this->getDefaultAttributes()["plain"]
                     ]
                 ]
+            ],
+            [
+                "input" => [
+                    "filter" => json_encode([["property" => "id", "value" => 2, "operator" => "="]]),
+                    "attributes" => "recent",
+                    "limit" => -1
+                ],
+                "output" => [
+                    "filter" => [["property" => "id", "value" => 2, "operator" => "="]],
+                    "sort" => $this->getDefaultSort(),
+                    "start" => 0,
+                    "limit" => -1,
+                     "attributes" => [
+                        "recent" => true
+                    ]
+                ]
             ]
         ];
 
@@ -335,6 +352,24 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->invokeArgs($translator, [
             new ParameterBag(["limit" => 1, "attributes" => "id"])
         ])->toJson();
+    }
+
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testExceptionFilterNotDecodable()
+    {
+        $this->expectExceptionMessageMatches("/must be JSON decodable/");
+        $translator = new IndexRequestQueryTranslator();
+        $reflection = new ReflectionClass($translator);
+
+        $translateParametersReflection = $reflection->getMethod("translateParameters");
+        $translateParametersReflection->setAccessible(true);
+
+        $translateParametersReflection->invokeArgs($translator, [
+            new ParameterBag(["limit" => 1, "filter" => "id"])
+        ]);
     }
 
 
