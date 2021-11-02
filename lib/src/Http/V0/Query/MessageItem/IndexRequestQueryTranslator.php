@@ -116,9 +116,22 @@ class IndexRequestQueryTranslator extends QueryTranslator
     {
 
         $result = [];
+
+        // merge config from previewText into $parsed
+        $previewText = $parsed["previewText"] ?? [];
+        if (isset($previewText["html"]) || isset($previewText["plain"])) {
+            $parsed = array_merge($parsed, $previewText);
+            unset($parsed["previewText"]);
+
+            if (in_array("previewText", $target)) {
+                isset($parsed["html"]) && ($target[] = "html");
+                isset($parsed["plain"]) && ($target[] = "plain");
+                $target = array_filter($target, fn ($item) => $item !== "previewText");
+            }
+        }
+
         foreach ($target as $attributeName) {
-            $result[$attributeName] = $parsed[$attributeName] ??
-                ($default[$attributeName] ?? true);
+            $result[$attributeName] = $parsed[$attributeName] ?? ($default[$attributeName] ?? true);
         }
 
         if (isset($result["previewText"])) {
@@ -151,6 +164,7 @@ class IndexRequestQueryTranslator extends QueryTranslator
         if (!$options) {
             return [];
         }
+
         return json_decode($options, true);
     }
 

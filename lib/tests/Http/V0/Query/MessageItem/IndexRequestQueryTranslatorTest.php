@@ -314,6 +314,35 @@ class IndexRequestQueryTranslatorTest extends TestCase
                         "recent" => true
                     ]
                 ]
+            ],
+            [
+                "input" => [
+                    "ids" => 18601,
+                    "attributes" => "previewText",
+                    "target" => "messageItem",
+                    "options" => json_encode(
+                        ["previewText" => [
+                            "plain" => [
+                                "length" => 200,
+                                "precedence" => true
+                            ],
+                            "html" => [
+                                "length" => 200
+                            ]
+                        ]]
+                    ),
+                    "limit" => -1
+                ],
+                "output" => [
+                    "ids" => ["18601"],
+                    "target" => "messageItem",
+                    "attributes" => [
+                        "html" => ["length" => 200],
+                        "plain" => ["length" => 200, "precedence" => true]
+                    ],
+                    "sort" => $this->getDefaultSort(),
+                    "limit" => -1
+                ]
             ]
         ];
 
