@@ -477,7 +477,7 @@ class DefaultMessageItemService implements MessageItemService
     ): ?MessagePart {
         $attr = $query->attributes ?? [];
 
-        if (!isset($attr["html"]) && !isset($attr["plain"])) {
+        if (!$messagePart && empty($attr["html"]) && empty($attr["plain"])) {
             return null;
         }
 
