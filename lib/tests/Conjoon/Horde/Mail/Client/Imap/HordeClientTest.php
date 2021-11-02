@@ -1438,6 +1438,7 @@ class HordeClientTest extends TestCase
      */
     public function testQueryItems()
     {
+        $options = ["filter" => [[]]];
 
         $key = new FolderKey("dev", "INBOX");
 
@@ -1457,19 +1458,20 @@ class HordeClientTest extends TestCase
                ->with(
                    $key->getId(),
                    $search,
-                   []
+                   $this->anything()
                )
                ->willReturn([]);
 
         $client->expects($this->once())
                ->method("getSearchQueryFromFilter")
+               ->with($options["filter"])
                ->willReturn($search);
 
         $reflection = new ReflectionClass(HordeClient::class);
         $queryItems = $reflection->getMethod("queryItems");
         $queryItems->setAccessible(true);
 
-        $queryItems->invokeArgs($client, [$socket, $key]);
+        $queryItems->invokeArgs($client, [$socket, $key, $options]);
     }
 
 // -------------------------------

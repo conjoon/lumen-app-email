@@ -1254,7 +1254,7 @@ class HordeClient implements MailClient
         }
 
 
-        $searchQuery = $this->getSearchQueryFromFilter($options->filter ?? []);
+        $searchQuery = $this->getSearchQueryFromFilter($options["filter"] ?? []);
 
 
         if (isset($options["ids"]) && is_array($options["ids"])) {
