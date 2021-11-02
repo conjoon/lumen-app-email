@@ -65,10 +65,11 @@ trait FilterTrait
     public function getSearchQueryFromFilter(array $clientFilter): Horde_Imap_Client_Search_Query
     {
         $searchQuery = new Horde_Imap_Client_Search_Query();
-        $clientSearches = [];
 
         // check if we have filter here
         if (!empty($clientFilter)) {
+            $clientSearches = [];
+
             foreach ($clientFilter as $filter) {
                 if ($filter["property"] === "id" && $filter["operator"] === ">=") {
                     $filterId = $filter["value"] . ":*" ;
@@ -82,12 +83,9 @@ trait FilterTrait
                     $clientSearches[] = $recentQuery;
                 }
             }
-        }
-        //if (count($clientSearches) > 1) {
+
             $searchQuery->orSearch($clientSearches);
-      //  } elseif (count($clientSearches) === 1) {
-       //     $searchQuery = $clientSearches[0];
-        //}
+        }
 
         return $searchQuery;
     }
