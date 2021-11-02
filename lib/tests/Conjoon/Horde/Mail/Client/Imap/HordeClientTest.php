@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -72,6 +72,7 @@ use ReflectionException;
 use RuntimeException;
 use Tests\TestCase;
 use Tests\TestTrait;
+use Conjoon\Horde\Mail\Client\Imap\FilterTrait;
 
 /**
  * Class HordeClientTest
@@ -85,8 +86,11 @@ class HordeClientTest extends TestCase
     /**
      * Tests constructor and base class.
      */
-    public function testInstance()
+    public function testClass()
     {
+        $uses = class_uses(HordeClient::class);
+        $this->assertContains(FilterTrait::class, $uses);
+
 
         $client = $this->createClient();
         $this->assertInstanceOf(MailClient::class, $client);
@@ -1405,6 +1409,67 @@ class HordeClientTest extends TestCase
     public function testDeleteMessageException()
     {
         $this->deleteMessageTest("exception");
+    }
+
+
+    /**
+     * test getTextContent
+     * @throws ReflectionException
+     */
+    public function testGetTextContentReturnsDefaultNoMessageData()
+    {
+        $client = $this->getMockBuilder(HordeClient::class)
+                       ->disableOriginalConstructor()
+                       ->getMock();
+
+        $reflection = new ReflectionClass($client);
+        $getTextContent = $reflection->getMethod("getTextContent");
+        $getTextContent->setAccessible(true);
+
+        $this->assertEquals(
+            ["content" => "", "charset" => ""],
+            $getTextContent->invokeArgs($client, ["value", "value", null, "value"])
+        );
+    }
+
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testQueryItems()
+    {
+
+        $key = new FolderKey("dev", "INBOX");
+
+        $search = new Horde_Imap_Client_Search_Query();
+
+        $socket = $this->getMockBuilder(Horde_Imap_Client_Socket::class)
+                        ->disableOriginalConstructor()
+                        ->onlyMethods(["search"])
+                        ->getMock();
+
+        $client = $this->getMockBuilder(HordeClient::class)
+                       ->disableOriginalConstructor()
+                       ->getMock();
+
+        $socket->expects($this->once())
+               ->method("search")
+               ->with(
+                   $key->getId(),
+                   $search,
+                   []
+               )
+               ->willReturn([]);
+
+        $client->expects($this->once())
+               ->method("getSearchQueryFromFilter")
+               ->willReturn($search);
+
+        $reflection = new ReflectionClass(HordeClient::class);
+        $queryItems = $reflection->getMethod("queryItems");
+        $queryItems->setAccessible(true);
+
+        $queryItems->invokeArgs($client, [$socket, $key]);
     }
 
 // -------------------------------

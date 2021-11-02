@@ -62,7 +62,6 @@ use Horde_Imap_Client;
 use Horde_Imap_Client_Exception;
 use Horde_Imap_Client_Fetch_Query;
 use Horde_Imap_Client_Ids;
-use Horde_Imap_Client_Search_Query;
 use Horde_Imap_Client_Socket;
 use Horde_Mail_Transport;
 use Horde_Mail_Transport_Smtphorde;
@@ -79,6 +78,7 @@ use Horde_Mime_Part;
  */
 class HordeClient implements MailClient
 {
+    use FilterTrait;
 
     /**
      * @var MailAccount
@@ -1074,7 +1074,7 @@ class HordeClient implements MailClient
 
             // if precedence is set for html, reverse this. Else, let plain
             // process first
-            if (ArrayUtil::unchain("html.precedence", $attributes, false)) {
+            if (ArrayUtil::unchain("html.precedence", $attributes, false) === true) {
                 $contentKeys = array_reverse($contentKeys);
             }
 
@@ -1254,7 +1254,9 @@ class HordeClient implements MailClient
         }
 
 
-        $searchQuery = new Horde_Imap_Client_Search_Query();
+        $searchQuery = $this->getSearchQueryFromFilter($options->filter ?? []);
+
+
         if (isset($options["ids"]) && is_array($options["ids"])) {
             $searchQuery->ids(new Horde_Imap_Client_Ids($options["ids"]));
         }
@@ -1376,6 +1378,10 @@ class HordeClient implements MailClient
      */
     protected function getTextContent($type, $messageStructure, $messageData, $typeMap): array
     {
+
+        if (!$messageData) {
+            return ["content" => "", "charset" => ""];
+        }
 
         $partId = $messageStructure->findBody($type);
 
