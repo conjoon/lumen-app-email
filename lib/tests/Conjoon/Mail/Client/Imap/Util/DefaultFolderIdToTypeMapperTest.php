@@ -42,7 +42,6 @@ use Tests\TestCase;
 class DefaultFolderIdToTypeMapperTest extends TestCase
 {
 
-
     /**
      * Tests constructor and base class.
      */
@@ -61,6 +60,10 @@ class DefaultFolderIdToTypeMapperTest extends TestCase
     {
 
         $mapper = $this->createMapper();
+
+        $this->assertSame(MailFolder::TYPE_DRAFT, $mapper->getFolderType(
+            $this->createListMailFolder("Entwürfe", "/")
+        ));
 
         $this->assertSame(
             $mapper->getFolderType(
@@ -88,7 +91,7 @@ class DefaultFolderIdToTypeMapperTest extends TestCase
         );
         $this->assertSame(
             $mapper->getFolderType(
-                $this->createListMailFolder("INBOX/SomeFolder/Deep/Drafts", "/")
+                $this->createListMailFolder("INBOX/Somefolder/Deep/Drafts", "/")
             ),
             MailFolder::TYPE_FOLDER
         );
@@ -148,18 +151,16 @@ class DefaultFolderIdToTypeMapperTest extends TestCase
      * @param string $delimiter
      * @return ListMailFolder
      */
-    public function createListMailFolder(string $id, string $delimiter): ListMailFolder
+    public function createListMailFolder($id, $delimiter): ListMailFolder
     {
 
         $parts = explode($id, $delimiter);
 
         return new ListMailFolder(
             new FolderKey("dev", $id),
-            [
-                "name" => array_pop($parts),
-                "delimiter" => $delimiter,
-                "unreadCount" => 0
-            ]
+            ["name"        => array_pop($parts),
+                "delimiter"   => $delimiter,
+                "unreadCount" => 0]
         );
     }
 
