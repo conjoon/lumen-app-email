@@ -73,6 +73,7 @@ use RuntimeException;
 use Tests\TestCase;
 use Tests\TestTrait;
 use Conjoon\Horde\Mail\Client\Imap\FilterTrait;
+use Conjoon\Horde\Mail\Client\Imap\AttributeTrait;
 
 /**
  * Class HordeClientTest
@@ -90,140 +91,13 @@ class HordeClientTest extends TestCase
     {
         $uses = class_uses(HordeClient::class);
         $this->assertContains(FilterTrait::class, $uses);
+        $this->assertContains(AttributeTrait::class, $uses);
 
 
         $client = $this->createClient();
         $this->assertInstanceOf(MailClient::class, $client);
     }
 
-
-    /**
-     * getSupportedAttributes()
-     */
-    public function testGetSupportedAttributes()
-    {
-        $client = $this->createClient();
-        $this->assertEquals([
-            "hasAttachments",
-            "size",
-            "plain", // \ __Preview
-            "html",  // /   Text
-            "cc",
-            "bcc",
-            "replyTo",
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId"
-        ], $client->getSupportedAttributes());
-    }
-
-
-    /**
-     * getDefaultAttributes()
-     */
-    public function testGetDefaultAttributes()
-    {
-        $client = $this->createClient();
-        $this->assertEquals([
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "plain"
-        ], $client->getDefaultAttributes());
-    }
-
-
-    /**
-     * getAttr()
-     * @throws ReflectionException
-     */
-    public function testGetAttr()
-    {
-        $client = $this->createClient();
-
-        $reflection = new ReflectionClass($client);
-        $property = $reflection->getMethod("getAttr");
-        $property->setAccessible(true);
-
-        $this->assertEquals(
-            true,
-            $property->invokeArgs($client, ["foo", ["foo" => true]])
-        );
-
-        $this->assertEquals(
-            true,
-            $property->invokeArgs($client, ["foo", ["foo" => []], "snafu"])
-        );
-
-        $this->assertEquals(
-            null,
-            $property->invokeArgs($client, ["foo", ["bar" => true]])
-        );
-
-        $this->assertEquals(
-            null,
-            $property->invokeArgs($client, ["foo", ["foo" => false]])
-        );
-
-        $this->assertEquals(
-            "default",
-            $property->invokeArgs($client, ["foo", ["foo" => false], "default"])
-        );
-    }
-
-
-    /**
-     * getDefAttr()
-     * @throws ReflectionException
-     */
-    public function testGetDefAttr()
-    {
-        $client = $this->createClient();
-
-        $defs = array_map(fn ($item) => true, array_flip($client->getDefaultAttributes()));
-
-        $reflection = new ReflectionClass($client);
-        $property = $reflection->getMethod("getDefAttr");
-        $property->setAccessible(true);
-
-        $this->assertEquals(
-            $defs,
-            $property->invokeArgs($client, [])
-        );
-
-        $this->assertEquals(
-            array_merge($defs, ["foo" => true]),
-            $property->invokeArgs($client, [["foo" => []]])
-        );
-
-        $this->assertEquals(
-            array_merge($defs, ["foo" => ["length" => 3]]),
-            $property->invokeArgs($client, [["foo" => ["length" => 3]]])
-        );
-
-        $this->assertEquals(
-            $defs,
-            $property->invokeArgs($client, [["foo" => false]])
-        );
-    }
 
 
     /**

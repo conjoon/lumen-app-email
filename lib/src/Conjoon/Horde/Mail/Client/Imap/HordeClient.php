@@ -79,6 +79,7 @@ use Horde_Mime_Part;
 class HordeClient implements MailClient
 {
     use FilterTrait;
+    use AttributeTrait;
 
     /**
      * @var MailAccount
@@ -1498,107 +1499,5 @@ class HordeClient implements MailClient
                 }
                 return $mailAddressList;
         }
-    }
-
-    /**
-     * Returns a list of default attributes to return with a MessageItem.
-     *
-     * @return string[]
-     */
-    protected function getDefAttr($additional = [], $exclude = []): array
-    {
-
-        $def = $this->getDefaultAttributes();
-        $ret = [];
-        foreach ($def as $attr) {
-            if (in_array($attr, $exclude)) {
-                continue;
-            }
-            $ret[$attr] = true; // true or array
-        }
-
-        foreach ($additional as $key => $fieldConf) {
-            $chk = $this->getAttr($key, $additional);
-            $chk && $ret[$key] = $chk;// true or array
-        }
-
-        return $ret;
-    }
-
-
-    /**
-     * @return string[]
-     */
-    public function getSupportedAttributes(): array
-    {
-        return [
-            "hasAttachments",
-            "size",
-            "plain", // \ __Preview
-            "html",  // /   Text
-            "cc",
-            "bcc",
-            "replyTo",
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId"
-        ];
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    public function getDefaultAttributes(): array
-    {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "plain"
-        ];
-    }
-
-
-    /**
-     * Returns the target's value at "$key" if the value is truthy, otherwise
-     * null or $default (if !null) is returned.
-     *
-     * @param $key
-     * @param $target
-     * @param null $default
-     * @return mixed|null
-     * @noinspection PhpSameParameterValueInspection
-     */
-    private function getAttr($key, $target, $default = null)
-    {
-        if (array_key_exists($key, $target)) {
-            $val = $target[$key];
-            if (is_array($val) && empty($val)) {
-                $val = true;
-            }
-
-            return $val ?: $default;
-        }
-
-        return $default;
     }
 }

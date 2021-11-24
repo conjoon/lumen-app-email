@@ -267,6 +267,8 @@ class IndexRequestQueryTranslator extends QueryTranslator
             "charset" => true,
             "references" => true,
             "messageId" => true,
+            "size" => true,
+            "hasAttachments" => true,
             "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
             "plain" => ["length" => 200, "trimApi" => true]
         ];
@@ -306,7 +308,9 @@ class IndexRequestQueryTranslator extends QueryTranslator
             "charset",
             "references",
             "messageId",
-            "previewText"
+            "previewText",
+            "size",
+            "hasAttachments"
         ];
     }
 }
