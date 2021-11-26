@@ -474,19 +474,18 @@ class HordeClient implements MailClient
 
             $uid = new Horde_Imap_Client_Ids($messageItemId);
 
-            $list = $client->fetch($mailFolderId, $query, array(
+            $serverItem = $client->fetch($mailFolderId, $query, array(
                 'ids' => $uid
-            ));
-
-            $serverItem = $list->first();
+            ))->first();
 
             $messageStructure = $serverItem->getStructure();
             $bodyQuery = new Horde_Imap_Client_Fetch_Query();
 
-            foreach ($messageStructure as $typePart => $part) {
-                if ($part->isAttachment()) {
+            $partMap = $messageStructure->contentTypeMap();
+            foreach ($partMap as $typePart => $part) {
+                if ($messageStructure->getPart($typePart)->isAttachment()) {
                     $bodyQuery->bodyPart($typePart, array(
-                        'peek' => true
+                       "peek" => true
                     ));
                 }
             }
@@ -501,16 +500,16 @@ class HordeClient implements MailClient
 
             if ($messageData) {
                 $id = 0;
-                foreach ($messageStructure as $typePart => $part) {
+                foreach ($partMap as $typePart => $part) {
                     $stream = $messageData->getBodyPart($typePart, true);
+                    $partData = $messageStructure->getPart($typePart);
+                    $partData->setContents($stream, array('usestream' => true));
 
-                    $part->setContents($stream, array('usestream' => true));
-
-                    if (!!$part->getName($typePart)) {
-                        $filename = $part->getName($typePart);
+                    if (!!$partData->getName($typePart)) {
+                        $filename = $partData->getName($typePart);
                         $attachmentList[] = $this->buildAttachment(
                             $messageKey,
-                            $part,
+                            $partData,
                             $filename,
                             (string)++$id
                         );
