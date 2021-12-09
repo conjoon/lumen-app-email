@@ -31,6 +31,7 @@ namespace Conjoon\Mail\Client\Attachment;
 
 use BadMethodCallException;
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\Jsonable;
 use InvalidArgumentException;
 
 /**
@@ -42,7 +43,7 @@ use InvalidArgumentException;
  * @method string getText()
  * @method int getSize()
  */
-abstract class AbstractAttachment
+abstract class AbstractAttachment implements Jsonable
 {
 
     /**
@@ -148,5 +149,21 @@ abstract class AbstractAttachment
     public function setSize(int $size)
     {
         $this->size = $size;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function toJson(): array
+    {
+        return array_merge(
+            $this->attachmentKey->toJson(),
+            [
+            "text" => $this->getText(),
+            "type" => $this->getType(),
+            "size" => $this->getSize()
+            ]
+        );
     }
 }

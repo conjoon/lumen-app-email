@@ -30,7 +30,6 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Attachment;
 
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
-use Conjoon\Util\Jsonable;
 use InvalidArgumentException;
 
 /**
@@ -42,7 +41,7 @@ use InvalidArgumentException;
  * @method string getPreviewImgSrc()
  * @method string getDownloadUrl()
  */
-class FileAttachmentItem extends AbstractAttachment implements Jsonable
+class FileAttachmentItem extends AbstractAttachment
 {
 
     /**
@@ -96,10 +95,7 @@ class FileAttachmentItem extends AbstractAttachment implements Jsonable
     public function toJson(): array
     {
 
-        return array_merge($this->getAttachmentKey()->toJson(), [
-            "type" => $this->getType(),
-            "text" => $this->getText(),
-            "size" => $this->getSize(),
+        return array_merge(parent::toJson(), [
             "downloadUrl" => $this->getDownloadUrl(),
             "previewImgSrc" => $this->getPreviewImgSrc()
         ]);

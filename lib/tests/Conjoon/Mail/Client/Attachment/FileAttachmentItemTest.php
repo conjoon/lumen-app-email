@@ -129,4 +129,34 @@ class FileAttachmentItemTest extends TestCase
             ]
         );
     }
+
+
+    /**
+     * Tests toJson()
+     */
+    public function testToJson()
+    {
+        $attachment = new FileAttachmentItem(
+            new AttachmentKey("dev", "INBOX", "123", "1"),
+            [
+                "type" => "1",
+                "text" => "2",
+                "size" => 3,
+                "downloadUrl" => "url",
+                "previewImgSrc" => "source"
+            ]
+        );
+
+        $this->assertEquals([
+            "mailFolderId" => "INBOX",
+            "mailAccountId" => "dev",
+            "parentMessageItemId" =>  "123",
+            "id" => "1",
+            "type" => "1",
+            "text" => "2",
+            "size" => 3,
+            "downloadUrl" => "url",
+            "previewImgSrc" => "source"
+        ], $attachment->toJson());
+    }
 }

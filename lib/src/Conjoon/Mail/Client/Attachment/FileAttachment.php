@@ -81,4 +81,16 @@ class FileAttachment extends AbstractAttachment
 
         parent::__construct($attachmentKey, $data);
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function toJson(): array
+    {
+        return array_merge(parent::toJson(), [
+            "content" => $this->getContent(),
+            "encoding" => $this->getEncoding()
+        ]);
+    }
 }
