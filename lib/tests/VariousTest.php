@@ -135,6 +135,10 @@ class VariousTest extends TestCase
                     $messageItemsEndpoint . "/{messageItemId}/Attachments",
                     $version
                 ),
+                "POST/" . $this->getImapEndpoint(
+                    $messageItemsEndpoint . "/{messageItemId}/Attachments",
+                    $version
+                ),
                 "POST/" . $this->getImapEndpoint("SendMessage", $version)
             ];
 

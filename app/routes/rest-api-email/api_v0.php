@@ -67,3 +67,7 @@ $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
     'AttachmentController@index'
 );
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
+    'AttachmentController@post'
+);
