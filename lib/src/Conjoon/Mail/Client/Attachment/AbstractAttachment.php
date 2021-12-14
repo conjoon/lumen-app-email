@@ -47,9 +47,9 @@ abstract class AbstractAttachment implements Jsonable
 {
 
     /**
-     * @var AttachmentKey
+     * @var AttachmentKey|null
      */
-    protected AttachmentKey $attachmentKey;
+    protected ?AttachmentKey $attachmentKey;
 
     /**
      * @var string
@@ -70,12 +70,13 @@ abstract class AbstractAttachment implements Jsonable
     /**
      * Attachment constructor.
      *
-     * @param AttachmentKey $attachmentKey
+     * @param AttachmentKey|null $attachmentKey The $attachmentKey of the attachment. Inheriting classes
+     * must decide if the key is required.
      * @param array|null $data
      *
      * @throws InvalidArgumentException if text, type or size in $data is missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data)
+    public function __construct(?AttachmentKey $attachmentKey, array $data)
     {
 
         $this->attachmentKey = $attachmentKey;
@@ -108,7 +109,7 @@ abstract class AbstractAttachment implements Jsonable
      *
      * @return AttachmentKey
      */
-    public function getAttachmentKey(): AttachmentKey
+    public function getAttachmentKey(): ?AttachmentKey
     {
         return $this->attachmentKey;
     }
@@ -158,7 +159,7 @@ abstract class AbstractAttachment implements Jsonable
     public function toJson(): array
     {
         return array_merge(
-            $this->attachmentKey->toJson(),
+            $this->attachmentKey ? $this->attachmentKey->toJson() : [],
             [
             "text" => $this->getText(),
             "type" => $this->getType(),

@@ -30,10 +30,22 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Attachment;
 
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\ArrayUtil;
 use InvalidArgumentException;
 
 /**
  * FileAttachment models a file email message attachment.
+ * A FileAttachment may or may not have an attachment key that identifies it.
+ * If the AttachmentKey is missing, it is assumed that the FileAttachment is in draft-state, i.e.
+ * getting created for an owning message.
+ * Setting the AttachmentKey for the FileAttachment later on will create a copy of the original FileAttachment
+ * and return it.
+ *
+ * @example
+ *   $attachment = new FileAttachment(new AttachmentKey("dev", "INBOX", "1234", "1"));
+ *
+ *   $keyedAttachment = $attachment->setAttachmentKey(new AttachmentKey("x", "y", "z", "2"));
+ *   $keyedAttachment !== $attachment; // true
  *
  * @package Conjoon\Mail\Client\Attachment
  *
@@ -55,16 +67,26 @@ class FileAttachment extends AbstractAttachment
 
     /**
      * Attachment constructor.
+     * Expects at least one parameter that is either an AttachmentKey or an array with the
+     * default data for the attachment.
      *
-     * @param AttachmentKey $attachmentKey
+     * @param AttachmentKey|array|null $attachmentKey
      * @param array|null $data
      *
-     * @throws InvalidArgumentException if content or encoding  in $data is missing
+     * @throws InvalidArgumentException if $attachmentKey and $data are both missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data)
+    public function __construct($attachmentKey, array $data = [])
     {
+        if (!$attachmentKey && !$data) {
+            throw new InvalidArgumentException("both \"attachmentKey\" and \"data\" must not be missing");
+        }
 
-        $this->attachmentKey = $attachmentKey;
+        if ($attachmentKey instanceof AttachmentKey) {
+            $this->attachmentKey = $attachmentKey;
+        } elseif (is_array($attachmentKey)) {
+            $data = $attachmentKey;
+        }
+
 
         $missing = "";
         if (!isset($data["content"])) {
@@ -79,7 +101,24 @@ class FileAttachment extends AbstractAttachment
             );
         }
 
-        parent::__construct($attachmentKey, $data);
+        parent::__construct(is_array($attachmentKey) ? null :  $attachmentKey, $data);
+    }
+
+
+    /**
+     * Sets the AttachmentKey for this Attachment and returns a new instance with the
+     * existing data copied.
+     *
+     * @param AttachmentKey $attachmentKey
+     *
+     * @return FileAttachment
+     */
+    public function setAttachmentKey(AttachmentKey $attachmentKey): FileAttachment
+    {
+        return new self(
+            $attachmentKey,
+            ArrayUtil::intersect($this->toJson(), ["content", "encoding", "text", "size", "type"])
+        );
     }
 
 

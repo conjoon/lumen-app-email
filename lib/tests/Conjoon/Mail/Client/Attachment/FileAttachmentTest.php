@@ -32,6 +32,7 @@ namespace Tests\Conjoon\Mail\Client\Attachment;
 use Conjoon\Mail\Client\Attachment\AbstractAttachment;
 use Conjoon\Mail\Client\Attachment\FileAttachment;
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\ArrayUtil;
 use InvalidArgumentException;
 use Tests\TestCase;
 
@@ -144,5 +145,61 @@ class FileAttachmentTest extends TestCase
             "content" => "CONTENT",
             "encoding" => "raw"
         ], $attachment->toJson());
+    }
+
+
+    /**
+     * Tests constructor with variable count of arguments
+     */
+    public function testConstructorNoAttachmentKey()
+    {
+        $attachment = new FileAttachment([
+                "type" => "1",
+                "text" => "2",
+                "size" => 3,
+                "content" => "CONTENT",
+                "encoding" => "raw"
+            ]);
+
+        $this->assertNull($attachment->getAttachmentKey());
+
+        $this->assertEquals([
+            "type" => "1",
+            "text" => "2",
+            "size" => 3,
+            "content" => "CONTENT",
+            "encoding" => "raw"
+        ], $attachment->toJson());
+    }
+
+
+    /**
+     * Tests constructor with variable count of arguments
+     */
+    public function testSetAttachmentKey()
+    {
+        $data = [
+            "type" => "1",
+            "text" => "2",
+            "size" => 3,
+            "content" => "CONTENT",
+            "encoding" => "raw"
+        ];
+        $attachmentKey = new AttachmentKey("1", "2", "3", "4");
+
+        $attachment = new FileAttachment($data);
+        $attachmentCopy = $attachment->setAttachmentKey($attachmentKey);
+        $this->assertNotSame($attachmentCopy, $attachment);
+        $this->assertSame($attachmentCopy->getAttachmentKey(), $attachmentKey);
+        $this->assertEquals(ArrayUtil::intersect($attachmentCopy->toJson(), array_keys($data)), $data);
+
+
+        $attachment = new FileAttachment($attachmentKey, $data);
+        $attachmentCopy = $attachment->setAttachmentKey(
+            new AttachmentKey("dev", "INBOX", "3", "4")
+        );
+        $this->assertNotSame($attachmentCopy, $attachment);
+        $this->assertNotSame($attachmentKey, $attachmentCopy->getAttachmentKey());
+        $this->assertEquals(ArrayUtil::intersect($attachmentCopy->toJson(), array_keys($data)), $data);
     }
 }

@@ -130,6 +130,25 @@ class AbstractAttachmentTest extends TestCase
         );
     }
 
+    /**
+     * Tests constructor no AttachmentKey
+     */
+    public function testConstructorNoAttachmentKey()
+    {
+        $attachment = $this->createAbstractAttachment(
+            null,
+            [
+                "type" => "image/jpg",
+                "text" => "text",
+                "size" => 200
+            ]
+        );
+
+        $this->assertSame("image/jpg", $attachment->getType());
+        $this->assertSame("text", $attachment->getText());
+        $this->assertSame(200, $attachment->getSize());
+    }
+
 
 
 // ---------------------
@@ -146,7 +165,7 @@ class AbstractAttachmentTest extends TestCase
         // Create a new instance from the Abstract Class
         return new class ($key, $data) extends AbstractAttachment {
 
-            public function toJson() : array
+            public function toJson(): array
             {
                 return [];
             }
