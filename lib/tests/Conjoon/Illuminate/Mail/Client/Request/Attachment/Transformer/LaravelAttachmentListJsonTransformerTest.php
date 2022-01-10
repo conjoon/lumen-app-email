@@ -82,15 +82,15 @@ class LaravelAttachmentListJsonTransformerTest extends TestCase
         $result = [[
             "text" => $files[0]["text"],
             "type" => "text/plain",
-            "encoding" => "ASCII",
-            "size" => filesize($testFiles[0]),
-            "content" => file_get_contents($testFiles[0])
+            "encoding" => "base64",
+            "size" => mb_strlen(base64_encode(file_get_contents($testFiles[0])), "8bit"),
+            "content" => base64_encode(file_get_contents($testFiles[0]))
         ], [
             "text" => $files[1]["text"],
             "type" => "image/png",
-            "encoding" => "",
-            "size" => filesize($testFiles[1]),
-            "content" => file_get_contents($testFiles[1])
+            "encoding" => "base64",
+            "size" => mb_strlen(base64_encode(file_get_contents($testFiles[1])), "8bit"),
+            "content" => base64_encode(file_get_contents($testFiles[1]))
         ]];
 
         $fileList = $transformer::fromArray($files);

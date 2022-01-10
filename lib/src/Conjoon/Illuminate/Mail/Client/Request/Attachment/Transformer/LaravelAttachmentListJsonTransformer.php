@@ -54,12 +54,12 @@ class LaravelAttachmentListJsonTransformer implements AttachmentListJsonTransfor
     /**
      *
      * @param array[] $arr A numeric array with the following key value pairs:
-     *  string text Arbitrary text to use as a description for the file, e.g. thge file name
-     *  string type The mime type of the file
-     *  string mailAccountId The id of the MailAccount of the owning message
-     *  string mailFolderId The id of the mailFolder of the owning message
-     *  string parentMessageItemId The id of the owining message
-     *  Illuminate\Http\UploadedFile blob The data of the FileInput as sent by the client
+     *  - string $text Arbitrary text to use as a description for the file, e.g. the file name
+     *  - string $type The mime type of the file
+     *  - string $mailAccountId The id of the MailAccount of the owning message
+     *  - string $mailFolderId The id of the mailFolder of the owning message
+     *  - string $parentMessageItemId The id of the owining message
+     *  - Illuminate\Http\UploadedFile $blob The data of the FileInput as sent by the client
      *
      * @inheritdoc
      */
@@ -68,15 +68,14 @@ class LaravelAttachmentListJsonTransformer implements AttachmentListJsonTransfor
         $list = new FileAttachmentList();
 
         foreach ($arr as $file) {
-             $uploadedFile = $file["blob"];
+            $uploadedFile = $file["blob"];
 
             $transfer = ["text" => $file["text"]];
             $transfer["type"] = $uploadedFile->getMimeType();
-            $transfer["size"] = $uploadedFile->getSize();
-            $transfer["content"] = $uploadedFile->get();
+            $transfer["content"] = base64_encode($uploadedFile->get());
+            $transfer["size"] = mb_strlen($transfer["content"], "8bit");
             // encoding is usually only of interest when sending the file back to the client.
-            $encoding = mb_detect_encoding($transfer["content"]);
-            $transfer["encoding"] = $encoding !== false ? $encoding : "";
+            $transfer["encoding"] = "base64";
 
             $att = new FileAttachment($transfer);
             $list[] = $att;
