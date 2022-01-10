@@ -48,14 +48,14 @@ class HordeBodyComposer implements BodyComposer
      */
     public function compose(string $target, MessageBodyDraft $messageBodyDraft): string
     {
-
+        $message = Horde_Mime_Part::parseMessage($target);
         $headers = Horde_Mime_Headers::parseHeaders($target);
 
         $plain = $messageBodyDraft->getTextPlain();
         $html = $messageBodyDraft->getTextHtml();
 
         $basePart = new Horde_Mime_Part();
-        $basePart->setType('multipart/alternative');
+        $basePart->setType('multipart/mixed');
         $basePart->isBasePart(true);
 
         $htmlBody = new Horde_Mime_Part();
@@ -70,6 +70,12 @@ class HordeBodyComposer implements BodyComposer
 
         $basePart[] = $htmlBody;
         $basePart[] = $plainBody;
+
+        foreach ($message as $part) {
+            if ($part->isAttachment()) {
+                $basePart[] = $part;
+            }
+        }
 
         $headers = $basePart->addMimeHeaders(["headers" => $headers]);
 
