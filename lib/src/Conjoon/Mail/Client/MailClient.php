@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Conjoon\Mail\Client;
 
+use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 use Conjoon\Mail\Client\Attachment\FileAttachmentList;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -204,6 +205,22 @@ interface MailClient
      * @throws MailClientException if any exception occurs
      */
     public function getUnreadMessageCount(FolderKey $folderKey): int;
+
+
+    /**
+     * Appends new attachments to the specified message..
+     *
+     * @param MessageKey $messageKey
+     * @param FileAttachmentList $attachmentList
+     *
+     * @return FileAttachmentItemList the created FileAttachmentItemList
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function createAttachments(
+        MessageKey $messageKey,
+        FileAttachmentList $attachmentList
+    ): FileAttachmentList;
 
 
     /**

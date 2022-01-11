@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -42,6 +42,7 @@ use Conjoon\Mail\Client\Folder\ListMailFolder;
 use Conjoon\Mail\Client\Folder\MailFolderList;
 use Conjoon\Mail\Client\Imap\ImapClientException;
 use Conjoon\Mail\Client\MailClient;
+use Conjoon\Mail\Client\Message\Composer\AttachmentComposer;
 use Conjoon\Mail\Client\Message\Composer\BodyComposer;
 use Conjoon\Mail\Client\Message\Composer\HeaderComposer;
 use Conjoon\Mail\Client\Message\Flag\AnsweredFlag;
@@ -80,6 +81,7 @@ class HordeClient implements MailClient
 {
     use FilterTrait;
     use AttributeTrait;
+    use AttachmentTrait;
 
     /**
      * @var MailAccount
@@ -106,6 +108,10 @@ class HordeClient implements MailClient
      */
     protected HeaderComposer $headerComposer;
 
+    /**
+     * @var AttachmentComposer
+     */
+    protected AttachmentComposer $attachmentComposer;
 
     /**
      * HordeClient constructor.
@@ -117,11 +123,13 @@ class HordeClient implements MailClient
     public function __construct(
         MailAccount $account,
         BodyComposer $bodyComposer,
-        HeaderComposer $headerComposer
+        HeaderComposer $headerComposer,
+        AttachmentComposer $attachmentComposer
     ) {
         $this->mailAccount = $account;
         $this->bodyComposer = $bodyComposer;
         $this->headerComposer = $headerComposer;
+        $this->attachmentComposer = $attachmentComposer;
     }
 
 
@@ -146,6 +154,16 @@ class HordeClient implements MailClient
         return $this->headerComposer;
     }
 
+
+    /**
+     * Returns the AttachmentComposer this instance was configured with.
+     *
+     * @return AttachmentComposer
+     */
+    public function getAttachmentComposer(): AttachmentComposer
+    {
+        return $this->attachmentComposer;
+    }
 
     /**
      * Returns the MailAccount providing connection info for the CompoundKey
@@ -460,73 +478,6 @@ class HordeClient implements MailClient
     /**
      * @inheritdoc
      */
-    public function getFileAttachmentList(MessageKey $messageKey): FileAttachmentList
-    {
-
-        try {
-            $client = $this->connect($messageKey);
-
-            $messageItemId = $messageKey->getId();
-            $mailFolderId = $messageKey->getMailFolderId();
-
-            $query = new Horde_Imap_Client_Fetch_Query();
-            $query->structure();
-
-            $uid = new Horde_Imap_Client_Ids($messageItemId);
-
-            $serverItem = $client->fetch($mailFolderId, $query, array(
-                'ids' => $uid
-            ))->first();
-
-            $messageStructure = $serverItem->getStructure();
-            $bodyQuery = new Horde_Imap_Client_Fetch_Query();
-
-            $partMap = $messageStructure->contentTypeMap();
-            foreach ($partMap as $typePart => $part) {
-                if ($messageStructure->getPart($typePart)->isAttachment()) {
-                    $bodyQuery->bodyPart($typePart, array(
-                       "peek" => true
-                    ));
-                }
-            }
-
-            $messageData = $client->fetch(
-                $mailFolderId,
-                $bodyQuery,
-                ['ids' => new Horde_Imap_Client_Ids($messageItemId)]
-            )->first();
-
-            $attachmentList = new FileAttachmentList();
-
-            if ($messageData) {
-                $id = 0;
-                foreach ($partMap as $typePart => $part) {
-                    $stream = $messageData->getBodyPart($typePart, true);
-                    $partData = $messageStructure->getPart($typePart);
-                    $partData->setContents($stream, array('usestream' => true));
-
-                    if (!!$partData->getName($typePart)) {
-                        $filename = $partData->getName($typePart);
-                        $attachmentList[] = $this->buildAttachment(
-                            $messageKey,
-                            $partData,
-                            $filename,
-                            (string)++$id
-                        );
-                    }
-                }
-            }
-        } catch (Exception $e) {
-            throw new ImapClientException($e->getMessage(), 0, $e);
-        }
-
-        return $attachmentList;
-    }
-
-
-    /**
-     * @inheritdoc
-     */
     public function setFlags(MessageKey $messageKey, FlagList $flagList): bool
     {
         try {
@@ -608,17 +559,10 @@ class HordeClient implements MailClient
         try {
             $mailFolderId = $key->getMailFolderId();
             $mailAccountId = $key->getMailAccountId();
-            $id = $key->getId();
 
             $client = $this->connect($key);
 
-            $rangeList = new Horde_Imap_Client_Ids();
-            $rangeList->add($id);
-
-            $fetchQuery = new Horde_Imap_Client_Fetch_Query();
-            $fetchQuery->fullText(["peek" => true]);
-            $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
-            $target = $fetchResult[$id]->getFullMsg(false);
+            $target = $this->getFullMsg($key, $client);
 
             $newDraft = $this->appendAsDraft(
                 $client,
@@ -646,21 +590,11 @@ class HordeClient implements MailClient
 
         try {
             $messageKey = $messageItemDraft->getMessageKey();
+            $mailFolderId = $messageKey->getMailFolderId();
 
             $client = $this->connect($messageKey);
 
-            $id = $messageKey->getId();
-
-            $mailFolderId = $messageKey->getMailFolderId();
-
-            $fetchQuery = new Horde_Imap_Client_Fetch_Query();
-            $fetchQuery->fullText(["peek" => true]);
-
-            $rangeList = new Horde_Imap_Client_Ids();
-            $rangeList->add($id);
-
-            $fetchResult = $client->fetch($messageKey->getMailFolderId(), $fetchQuery, ['ids' => $rangeList]);
-            $msg = $fetchResult[$id]->getFullMsg(false);
+            $msg = $this->getFullMsg($messageKey, $client);
 
             $fullText = $this->getHeaderComposer()->compose($msg, $messageItemDraft);
 
@@ -906,35 +840,6 @@ class HordeClient implements MailClient
         $this->setFlags($messageKey, $flagList);
 
         return $messageBodyDraft->setMessageKey($messageKey);
-    }
-
-
-    /**
-     * Builds an attachment from the specified data.
-     *
-     * @param MessageKey $key
-     * @param Horde_Mime_Part $part
-     * @param string $fileName
-     * @param string $id
-     *
-     * @return FileAttachment
-     */
-    protected function buildAttachment(
-        MessageKey $key,
-        Horde_Mime_Part $part,
-        string $fileName,
-        string $id
-    ): FileAttachment {
-
-        $mimeType = $part->getType();
-
-        return new FileAttachment(new AttachmentKey($key, $id), [
-            "type" => $mimeType,
-            "text" => $fileName,
-            "size" => $part->getBytes(),
-            "content" => base64_encode($part->getContents()),
-            "encoding" => "base64"
-        ]);
     }
 
 
@@ -1498,5 +1403,23 @@ class HordeClient implements MailClient
                 }
                 return $mailAddressList;
         }
+    }
+
+    /**
+     * @param MessageKey $messageKey
+     */
+    protected function getFullMsg(MessageKey $messageKey, Horde_Imap_Client_Socket $client)
+    {
+        $mailFolderId = $messageKey->getMailFolderId();
+        $id = $messageKey->getId();
+
+        $rangeList = new Horde_Imap_Client_Ids();
+        $rangeList->add($id);
+
+        $fetchQuery = new Horde_Imap_Client_Fetch_Query();
+        $fetchQuery->fullText(["peek" => true]);
+        $fetchResult = $client->fetch($mailFolderId, $fetchQuery, ['ids' => $rangeList]);
+
+        return $fetchResult[$id]->getFullMsg(false);
     }
 }
