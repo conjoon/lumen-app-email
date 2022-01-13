@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -55,7 +55,6 @@ class DefaultAttachmentServiceTest extends TestCase
      */
     public function testInstance()
     {
-
         $service = $this->createService();
         $this->assertInstanceOf(AttachmentService::class, $service);
     }
@@ -93,6 +92,59 @@ class DefaultAttachmentServiceTest extends TestCase
                 ->andReturn($fileAttachmentList);
 
         $result = $service->getFileAttachmentItemList($messageKey);
+
+        $this->isInstanceOf(FileAttachmentItemList::class, $result);
+
+        $this->assertSame(1, count($result));
+        $this->assertSame("mockFile", $result[0]->getText());
+    }
+
+
+    /**
+     * Test createAttachments()
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     * @noinspection PhpUndefinedMethodInspection
+     */
+    public function testCreateAttachments()
+    {
+
+        $mailAccount = $this->getTestMailAccount("dev");
+        $messageKey = new MessageKey($mailAccount, "INBOX", "123");
+        $service = $this->createService();
+
+        $fileAttachmentListClient = new FileAttachmentList();
+        $fileAttachmentListClient[] = new FileAttachment(
+            [
+                "size" => 0,
+                "text" => "file",
+                "type" => "text/html",
+                "content" => "CONTENT",
+                "encoding" => "base64"
+            ]
+        );
+
+        $fileAttachmentListServer = new FileAttachmentList();
+        $fileAttachmentListServer[] = new FileAttachment(
+            new AttachmentKey($messageKey, "1"),
+            [
+                "size" => 0,
+                "text" => "file",
+                "type" => "text/html",
+                "content" => "CONTENT",
+                "encoding" => "base64"
+            ]
+        );
+
+
+        $service->getMailClient()
+            ->shouldReceive("createAttachments")
+            ->with($messageKey, $fileAttachmentListClient)
+            ->andReturn($fileAttachmentListServer);
+
+        $result = $service->createAttachments($messageKey, $fileAttachmentListClient);
+        $this->isInstanceOf(FileAttachmentItemList::class, $result);
 
         $this->assertSame(1, count($result));
         $this->assertSame("mockFile", $result[0]->getText());
@@ -137,8 +189,6 @@ class DefaultAttachmentServiceTest extends TestCase
 
             public function process(FileAttachment $fileAttachment): FileAttachmentItem
             {
-
-
                 return new FileAttachmentItem(
                     $fileAttachment->getAttachmentKey(),
                     [

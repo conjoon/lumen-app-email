@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Service;
 
 use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
 use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\MailClient;
@@ -84,20 +85,24 @@ class DefaultAttachmentService implements AttachmentService
     /**
      * @inheritdoc
      */
+    public function createAttachments(
+        MessageKey $messageKey,
+        FileAttachmentList $fileAttachments
+    ): FileAttachmentItemList {
+        $attachments = $this->getMailClient()->createAttachments($messageKey, $fileAttachments);
+
+        return $this->processFileAttachments($attachments);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function getFileAttachmentItemList(MessageKey $key): FileAttachmentItemList
     {
+        $attachments = $this->getMailClient()->getFileAttachmentList($key);
 
-        $fileAttachmentList = $this->getMailClient()->getFileAttachmentList($key);
-
-        $itemList = new FileAttachmentItemList();
-
-        $processor = $this->getFileAttachmentProcessor();
-
-        foreach ($fileAttachmentList as $attachment) {
-            $itemList[] = $processor->process($attachment);
-        }
-
-        return $itemList;
+        return $this->processFileAttachments($attachments);
     }
 
 
@@ -109,5 +114,26 @@ class DefaultAttachmentService implements AttachmentService
     public function getMailClient(): MailClient
     {
         return $this->mailClient;
+    }
+
+
+    /**
+     * Returns the attachmentList converted to a FileAttachmentItemList.
+     *
+     * @param FileAttachmentList $attachmentList
+     *
+     * @return FileAttachmentItemList
+     */
+    protected function processFileAttachments(FileAttachmentList $attachmentList): FileAttachmentItemList
+    {
+        $itemList = new FileAttachmentItemList();
+
+        $processor = $this->getFileAttachmentProcessor();
+
+        foreach ($attachmentList as $attachment) {
+            $itemList[] = $processor->process($attachment);
+        }
+
+        return $itemList;
     }
 }
