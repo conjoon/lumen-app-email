@@ -52,6 +52,8 @@ class AttachmentTraitTest extends TestCase
     /**
      * Test getFileAttachmentList()
      *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function testGetFileAttachmentList()
     {
