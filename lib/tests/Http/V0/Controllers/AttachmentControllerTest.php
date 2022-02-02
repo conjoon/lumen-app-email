@@ -38,6 +38,7 @@ use Conjoon\Mail\Client\Service\AttachmentService;
 use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -185,6 +186,101 @@ class AttachmentControllerTest extends TestCase
             "success" => true,
             "data"    => $fileAttachmentItemList->toJson()
         ]);
+    }
+
+
+    /**
+     * Tests delete for deleting attachments.
+     *
+     * @return void
+     */
+    public function testDeleteSuccess()
+    {
+        $service = $this->getMockBuilder(DefaultAttachmentService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $parentMessageItemId = "123";
+        $id = "1";
+
+        $attachmentKey = new AttachmentKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
+        $newMessageKey = new MessageKey($mailAccountId, $mailFolderId, "1234");
+
+        $this->app->when(AttachmentController::class)
+            ->needs(AttachmentService::class)
+            ->give(function () use ($service) {
+                return $service;
+            });
+
+        $service->expects($this->once())
+            ->method("deleteAttachment")
+            ->with($attachmentKey)
+            ->willReturn($newMessageKey);
+
+
+        $this->actingAs($this->getTestUserStub())
+            ->call(
+                "DELETE",
+                $this->getImapEndpoint(
+                    "MailAccounts/${mailAccountId}/MailFolders/" .
+                    "${mailFolderId}/MessageItems/${parentMessageItemId}/Attachments/${id}",
+                    "v0"
+                )
+            );
+
+        $this->assertResponseOk();
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data"    => $newMessageKey->toJson()
+        ]);
+    }
+
+
+    /**
+     * Tests delete for deleting attachments.
+     *
+     * @return void
+     */
+    public function testDeleteFailure()
+    {
+        $service = $this->getMockBuilder(DefaultAttachmentService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $parentMessageItemId = "123";
+        $id = "1";
+
+        $attachmentKey = new AttachmentKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
+        $newMessageKey = null;
+
+        $this->app->when(AttachmentController::class)
+            ->needs(AttachmentService::class)
+            ->give(function () use ($service) {
+                return $service;
+            });
+
+        $service->expects($this->once())
+            ->method("deleteAttachment")
+            ->with($attachmentKey)
+            ->willThrowException(new Exception());
+
+
+        $this->actingAs($this->getTestUserStub())
+            ->call(
+                "DELETE",
+                $this->getImapEndpoint(
+                    "MailAccounts/${mailAccountId}/MailFolders/" .
+                    "${mailFolderId}/MessageItems/${parentMessageItemId}/Attachments/${id}",
+                    "v0"
+                )
+            );
+
+        $this->assertResponseStatus(500);
     }
 
 

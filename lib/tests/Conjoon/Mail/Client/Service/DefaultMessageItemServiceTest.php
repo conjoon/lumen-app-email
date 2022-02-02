@@ -1205,6 +1205,7 @@ class DefaultMessageItemServiceTest extends TestCase
                 "moveMessage",
                 "deleteMessage",
                 "createAttachments",
+                "deleteAttachment",
                 "getSupportedAttributes",
                 "getDefaultAttributes"
             ])

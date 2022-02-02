@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Request\Attachment\Transformer\AttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Service\AttachmentService;
@@ -73,24 +74,21 @@ class AttachmentController extends Controller
 
     /**
      * Returns all available Attachments for $mailAccountId, the specified
-     * $mailFolderId,
-     * and the specified $messageItemId
+     * $mailFolderId, and the specified $parentMessageItemId
      *
      * @param Request $request
      * @param $mailAccountId
      * @param $mailFolderId
-     * @param $messageItemId
-     *
+     * @param $parentMessageItemId
      * @return JsonResponse
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    public function index(Request $request, $mailAccountId, $mailFolderId, $parentMessageItemId): JsonResponse
     {
-
         $user = Auth::user();
 
         $attachmentService = $this->attachmentService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+        $key               = new MessageKey($mailAccount, $mailFolderId, $parentMessageItemId);
 
         return response()->json([
             "success" => true,
@@ -101,21 +99,22 @@ class AttachmentController extends Controller
 
     /**
      * Posts new attachment data to this controller for adding this attachment to the resource uniquely identified
-     * by mailAccountId, maiLFolderId and messageItemId.
+     * by mailAccountId, maiLFolderId and parentMessageItemId.
      *
      * @param Request $request
      * @param {String} $mailAccountId
      * @param {String} $mailFolderId
-     * @param {String} $messageItemId
+     * @param {String} $parentMessageItemId
      *
      * @return JsonResponse
      */
-    public function post(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
+    public function post(Request $request, $mailAccountId, $mailFolderId, $parentMessageItemId): JsonResponse
     {
         $user = Auth::user();
         $attachmentService = $this->attachmentService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+        $key               = new MessageKey($mailAccount, $mailFolderId, $parentMessageItemId);
 
         $postedData = $request->get("files");
         foreach ($postedData as $index => $req) {
@@ -129,5 +128,44 @@ class AttachmentController extends Controller
             "success" => true,
             "data"    => $attachmentItemList->toJson()
         ]);
+    }
+
+
+    /**
+     * Deletes the attachment uniquely identified by mailAccountId, mailFolderId, parentMessageItemId
+     * and $attachmentId.
+     *
+     * @param Request $request
+     * @param $mailAccountId
+     * @param $mailFolderId
+     * @param $parentMessageItemId
+     * @param $attachmentId
+     *
+     * @return JsonResponse
+     */
+    public function delete(
+        Request $request,
+        $mailAccountId,
+        $mailFolderId,
+        $parentMessageItemId,
+        $attachmentId
+    ): JsonResponse {
+
+        $user = Auth::user();
+
+        $attachmentService = $this->attachmentService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+        $mailAccount = $user->getMailAccount($mailAccountId);
+
+        $mailFolderId = urldecode($mailFolderId);
+
+        $attachmentKey = new AttachmentKey($mailAccount, $mailFolderId, $parentMessageItemId, $attachmentId);
+
+        $messageKey = $attachmentService->deleteAttachment($attachmentKey);
+
+        return response()->json([
+            "success" => !!$messageKey,
+            "data" => $messageKey ?  $messageKey->toJson() : null
+        ], $messageKey ? 200 : 500);
     }
 }
