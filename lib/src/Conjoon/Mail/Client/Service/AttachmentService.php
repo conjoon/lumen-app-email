@@ -31,6 +31,7 @@ namespace Conjoon\Mail\Client\Service;
 
 use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\MailClient;
 
@@ -65,6 +66,16 @@ interface AttachmentService
      * @return FileAttachmentItemList
      */
     public function getFileAttachmentItemList(MessageKey $key): FileAttachmentItemList;
+
+
+    /**
+     * Deletes the attachment with the specified AttachmentKey.
+     *
+     * @param AttachmentKey $attachmentKey
+     *
+     * @return MessageKey The key of the resource the attachment belonged to.
+     */
+    public function deleteAttachment(AttachmentKey $attachmentKey): MessageKey;
 
 
     /**

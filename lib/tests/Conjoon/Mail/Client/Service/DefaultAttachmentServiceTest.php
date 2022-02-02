@@ -151,6 +151,30 @@ class DefaultAttachmentServiceTest extends TestCase
     }
 
 
+    /**
+     * Tests deleteAttachment()
+     */
+    public function testDeleteAttachment()
+    {
+        $attachmentKey = new AttachmentKey("dev", "INBOX", "123", "1");
+        $newMessageKey = new MessageKey("dev", "INBOX", "124");
+
+        $client = $this->getMockForAbstractClass(MailClient::class);
+
+        $client->expects($this->once())
+            ->method("deleteAttachment")
+            ->with($attachmentKey)
+            ->willReturn($newMessageKey);
+
+        $service = new DefaultAttachmentService(
+            $client,
+            $this->getFileAttachmentProcessorMock()
+        );
+
+        $this->assertSame($newMessageKey, $service->deleteAttachment($attachmentKey));
+    }
+
+
 // +--------------------------------------
 // | Helper
 // +--------------------------------------

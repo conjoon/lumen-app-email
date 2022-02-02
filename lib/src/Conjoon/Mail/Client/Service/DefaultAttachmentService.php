@@ -33,6 +33,7 @@ use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 use Conjoon\Mail\Client\Attachment\FileAttachmentList;
 use Conjoon\Mail\Client\Attachment\Processor\FileAttachmentProcessor;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\MailClient;
 
 /**
@@ -93,6 +94,16 @@ class DefaultAttachmentService implements AttachmentService
 
         return $this->processFileAttachments($attachments);
     }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function deleteAttachment(AttachmentKey $attachmentKey): MessageKey
+    {
+        return $this->getMailClient()->deleteAttachment($attachmentKey);
+    }
+
 
 
     /**
