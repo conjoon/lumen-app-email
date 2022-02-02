@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -120,6 +120,55 @@ class MessageItemChildCompoundKeyTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         $this->createMessageItemChildCompoundKey("dev", "INBOX", null, "2");
+    }
+
+
+    /**
+     * Test getMessageKey()
+     */
+    public function testGetMessageKey()
+    {
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $parentMessageItemId = "89";
+        $id = "123";
+        $key = $this->createMessageItemChildCompoundKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
+
+        $messageKey = $key->getMessageKey();
+
+        $this->assertInstanceOf(MessageKey::class, $messageKey);
+
+        $this->assertNotSame($messageKey, $key);
+
+        $this->assertSame($key->getParentMessageItemId(), $messageKey->getId());
+        $this->assertSame($key->getMailFolderId(), $messageKey->getMailFolderId());
+        $this->assertSame($key->getMailAccountId(), $messageKey->getMailAccountId());
+    }
+
+
+    /**
+     * Test equals()
+     */
+    public function testEquals()
+    {
+        $mailAccountId = "dev";
+        $mailFolderId = "INBOX";
+        $parentMessageItemId = "89";
+        $id = "123";
+        $key = $this->createMessageItemChildCompoundKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
+        $keyEqual = $this->createMessageItemChildCompoundKey($mailAccountId, $mailFolderId, $parentMessageItemId, $id);
+        $keyNotEqual = $this->createMessageItemChildCompoundKey(
+            $mailAccountId,
+            $mailFolderId,
+            $parentMessageItemId,
+            $id . "8"
+        );
+
+        $this->assertTrue($key->equals($keyEqual));
+        $this->assertTrue($keyEqual->equals($key));
+
+        $this->assertFalse($key->equals($keyNotEqual));
+        $this->assertFalse($keyNotEqual->equals($key));
     }
 
 // ---------------------
