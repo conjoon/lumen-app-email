@@ -39,6 +39,8 @@ use Conjoon\Mail\Client\Message\Flag\FlagList;
 use Exception;
 use Horde_Imap_Client_Fetch_Query;
 use Horde_Imap_Client_Ids;
+use Horde_Mime_Exception;
+use Horde_Mime_Headers;
 use Horde_Mime_Part;
 use RuntimeException;
 
@@ -123,56 +125,86 @@ trait AttachmentTrait
     {
         try {
             $client = $this->connect($messageKey);
-
-            $messageItemId = $messageKey->getId();
-            $mailFolderId = $messageKey->getMailFolderId();
-
-            $query = new Horde_Imap_Client_Fetch_Query();
-            $query->structure();
-
-            $uid = new Horde_Imap_Client_Ids($messageItemId);
-
-            $serverItem = $client->fetch($mailFolderId, $query, ['ids' => $uid])->first();
-
-            $messageStructure = $serverItem->getStructure();
-            $bodyQuery = new Horde_Imap_Client_Fetch_Query();
-
-            $partMap = $messageStructure->contentTypeMap();
-            foreach ($partMap as $typePart => $part) {
-                if ($messageStructure->getPart($typePart)->isAttachment()) {
-                    $bodyQuery->bodyPart($typePart, ["peek" => true]);
-                }
-            }
-
-            $messageData = $client->fetch(
-                $mailFolderId,
-                $bodyQuery,
-                ['ids' => $uid]
-            )->first();
+            $target = $this->getFullMsg($messageKey, $client);
+            $message = $this->parseMessage($target);
 
             $attachmentList = new FileAttachmentList();
 
-            if ($messageData) {
-                foreach ($partMap as $typePart => $part) {
-                    $stream = $messageData->getBodyPart($typePart, true);
-                    $partData = $messageStructure->getPart($typePart);
-                    $partData->setContents($stream, ['usestream' => true]);
+            foreach ($message as $part) {
+                $isAttachment = $part->isAttachment();
+                $name = $part->getName();
 
-                    if (!!$partData->getName($typePart)) {
-                        $filename = $partData->getName($typePart);
-                        $attachmentList[] = $this->buildAttachment(
-                            $messageKey,
-                            $partData,
-                            $filename
-                        );
-                    }
+                if ($isAttachment && !!$name) {
+                    $attachmentList[] = $this->buildAttachment(
+                        $messageKey,
+                        $part,
+                        $name
+                    );
                 }
             }
+
+            return $attachmentList;
         } catch (Exception $e) {
             throw new ImapClientException($e->getMessage(), 0, $e);
         }
+    }
 
-        return $attachmentList;
+
+    /**
+     * @inheritdoc
+     */
+    public function deleteAttachment(AttachmentKey $attachmentKey): MessageKey
+    {
+        try {
+            $messageKey = $attachmentKey->getMessageKey();
+            $mailFolderId = $attachmentKey->getMailFolderId();
+            $mailAccountId = $attachmentKey->getMailAccountId();
+            $client = $this->connect($messageKey);
+
+            $target = $this->getFullMsg($messageKey, $client);
+
+            $message = $this->parseMessage($target);
+            $headers = $this->parseHeaders($target);
+
+            $basePart = $this->createBasePart();
+
+
+            foreach ($message as $part) {
+                if (
+                    $part->isAttachment() &&
+                    !!$part->getName() &&
+                    $this->buildAttachment(
+                        $messageKey,
+                        $part,
+                        $part->getName()
+                    )->getAttachmentKey()->equals($attachmentKey)
+                ) {
+                    continue;
+                }
+                $basePart[] = $part;
+            }
+
+            $headers = $basePart->addMimeHeaders(["headers" => $headers]);
+
+            $rawMessage = trim($headers->toString()) .
+                "\n\n" .
+                trim($basePart->toString());
+
+
+            $ids = $client->append($mailFolderId, [["data" => $rawMessage]]);
+            $newMessageKey = new MessageKey($mailAccountId, $mailFolderId, (string)$ids->ids[0]);
+
+            $flagList = new FlagList();
+            $flagList[] = new DraftFlag(true);
+            $this->setFlags($newMessageKey, $flagList);
+
+            // delete the previous draft
+            $this->deleteMessage($messageKey);
+
+            return $newMessageKey;
+        } catch (Exception $e) {
+            throw new ImapClientException($e->getMessage(), 0, $e);
+        }
     }
 
 
@@ -193,5 +225,49 @@ trait AttachmentTrait
         }
 
         return md5($attachment->getText() . $attachment->getContent());
+    }
+
+
+    /**
+     * Returns the parsed message.
+     *
+     * @param string $target
+     *
+     * @return Horde_Mime_Part
+     *
+     * @throws Horde_Mime_Exception
+     */
+    protected function parseMessage(string $target): Horde_Mime_Part
+    {
+        return Horde_Mime_Part::parseMessage($target);
+    }
+
+
+    /**
+     * Returns the parsed headers.
+     *
+     * @param string $target
+     *
+     * @return Horde_Mime_Headers
+     *
+     */
+    protected function parseHeaders(string $target): Horde_Mime_Headers
+    {
+        return Horde_Mime_Headers::parseHeaders($target);
+    }
+
+
+    /**
+     * Returns a base part for a message.
+     *
+     * @return Horde_Mime_Part
+     */
+    protected function createBasePart(): Horde_Mime_Part
+    {
+        $basePart = new Horde_Mime_Part();
+        $basePart->setType('multipart/mixed');
+        $basePart->isBasePart(true);
+
+        return $basePart;
     }
 }

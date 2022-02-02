@@ -31,6 +31,7 @@ namespace Conjoon\Mail\Client;
 
 use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
 use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\Data\MailAccount;
@@ -233,6 +234,20 @@ interface MailClient
      * @throws MailClientException if any exception occurs
      */
     public function getFileAttachmentList(MessageKey $messageKey): FileAttachmentList;
+
+
+    /**
+     * Deletes the Attachment represented by the AttachmentKey for the specified message.
+     *
+     * @param AttachmentKey $attachmentKey
+     *
+     * @return MessageKey The key of the Message for which the attachment was deleted. If removing
+     * the attachment triggered a location change of the message, this must be reflected in the returned
+     * key.
+     *
+     * @throws MailClientException if any exception occurs
+     */
+    public function deleteAttachment(AttachmentKey $attachmentKey): MessageKey;
 
 
     /**
