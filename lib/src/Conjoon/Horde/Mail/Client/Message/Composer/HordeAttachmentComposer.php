@@ -29,8 +29,9 @@ declare(strict_types=1);
 
 namespace Conjoon\Horde\Mail\Client\Message\Composer;
 
-use Conjoon\Mail\Client\Message\Composer\BodyComposer;
-use Conjoon\Mail\Client\Message\MessageBodyDraft;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Message\Composer\AttachmentComposer;
+use Horde_Mime_Exception;
 use Horde_Mime_Headers;
 use Horde_Mime_Part;
 
@@ -39,48 +40,31 @@ use Horde_Mime_Part;
  *
  * @package Conjoon\Horde\Mail\Client\Message\Composer
  */
-class HordeBodyComposer implements BodyComposer
+class HordeAttachmentComposer implements AttachmentComposer
 {
 
 
     /**
      * @inheritdoc
+     * @throws Horde_Mime_Exception
      */
-    public function compose(string $target, MessageBodyDraft $messageBodyDraft): string
+    public function compose(string $target, FileAttachmentList $fileAttachmentList): string
     {
+
         $message = Horde_Mime_Part::parseMessage($target);
         $headers = Horde_Mime_Headers::parseHeaders($target);
 
-        $plain = $messageBodyDraft->getTextPlain();
-        $html = $messageBodyDraft->getTextHtml();
-
-        $basePart = new Horde_Mime_Part();
-        $basePart->setType('multipart/mixed');
-        $basePart->isBasePart(true);
-
-        $htmlBody = new Horde_Mime_Part();
-        $htmlBody->setType('text/html');
-        $htmlBody->setCharset($html->getCharset());
-        $htmlBody->setContents($html->getContents());
-
-        $plainBody = new Horde_Mime_Part();
-        $plainBody->setType('text/plain');
-        $plainBody->setCharset($plain->getCharset());
-        $plainBody->setContents($plain->getContents());
-
-        $basePart[] = $htmlBody;
-        $basePart[] = $plainBody;
-
-        foreach ($message as $part) {
-            if ($part->isAttachment()) {
-                $basePart[] = $part;
-            }
+        foreach ($fileAttachmentList as $attachment) {
+            $part = new Horde_Mime_Part();
+            $part->setType($attachment->getType());
+            $part->setCharset("us-ascii");
+            $part->setDisposition("attachment");
+            $part->setContents($attachment->getContent(), ["encoding" => $attachment->getEncoding()]);
+            $part->setBytes($attachment->getSize());
+            $part->setName($attachment->getText());
+            $message[] = $part;
         }
 
-        $headers = $basePart->addMimeHeaders(["headers" => $headers]);
-
-        return trim($headers->toString()) .
-            "\n\n" .
-            trim($basePart->toString());
+        return trim($headers->toString()) . "\n\n" . trim($message->toString());
     }
 }

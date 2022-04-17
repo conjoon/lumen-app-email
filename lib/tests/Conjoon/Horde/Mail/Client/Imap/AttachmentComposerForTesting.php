@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,39 +27,15 @@
 
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Attachment;
-
-use Conjoon\Util\AbstractList;
-use Conjoon\Util\Jsonable;
+namespace Tests\Conjoon\Horde\Mail\Client\Imap;
 
 /**
- * Class FileAttachmentList organizes a list of FileAttachments.
- *
- * @package Conjoon\Mail\Client\Attachment
+ * Class AttachmentComposerForTesting
+ * @package Tests\Conjoon\Horde\Mail\Client\Imap
  */
-class FileAttachmentList extends AbstractList implements Jsonable
+class AttachmentComposerForTesting
 {
-    /**
-     * @inheritdoc
-     */
-    public function getEntityType(): string
+    public function compose()
     {
-        return FileAttachment::class;
-    }
-
-
-    /**
-     * @return array
-     */
-    public function toJson(): array
-    {
-
-        $data = [];
-
-        foreach ($this->data as $item) {
-            $data[] = $item->toJson();
-        }
-
-        return $data;
     }
 }

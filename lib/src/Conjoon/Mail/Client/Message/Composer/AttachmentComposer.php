@@ -27,39 +27,29 @@
 
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Attachment;
+namespace Conjoon\Mail\Client\Message\Composer;
 
-use Conjoon\Util\AbstractList;
-use Conjoon\Util\Jsonable;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
 
 /**
- * Class FileAttachmentList organizes a list of FileAttachments.
+ * Interface AttachmentComposer
  *
- * @package Conjoon\Mail\Client\Attachment
+ * Contract for composing attachments for a raw message.
+ *
+ *
+ * @package Conjoon\Mail\Client\Message\Composer
  */
-class FileAttachmentList extends AbstractList implements Jsonable
+interface AttachmentComposer
 {
-    /**
-     * @inheritdoc
-     */
-    public function getEntityType(): string
-    {
-        return FileAttachment::class;
-    }
 
 
     /**
-     * @return array
+     * Processes the message and adds new attachments.
+     *
+     * @param string $target The raw email message for which the attachments should be composed
+     * @param FileAttachmentList $fileAttachmentList
+     *
+     * @return string A valid MIME message text
      */
-    public function toJson(): array
-    {
-
-        $data = [];
-
-        foreach ($this->data as $item) {
-            $data[] = $item->toJson();
-        }
-
-        return $data;
-    }
+    public function compose(string $target, FileAttachmentList $fileAttachmentList): string;
 }

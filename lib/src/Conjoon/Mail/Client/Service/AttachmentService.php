@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Service;
 
 use Conjoon\Mail\Client\Attachment\FileAttachmentItemList;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
 use Conjoon\Mail\Client\MailClient;
 
@@ -41,6 +43,20 @@ use Conjoon\Mail\Client\MailClient;
 interface AttachmentService
 {
 
+    /**
+     * Creates new Attachments from the submitted FileAttachmentList for the specified MessageKey and returns
+     * an instance of FileAttachmentItemList from the created attachments.
+     *
+     * @param MessageKey $messageKey
+     * @param FileAttachmentList $fileAttachments
+     *
+     * @return FileAttachmentItemList
+     */
+    public function createAttachments(
+        MessageKey $messageKey,
+        FileAttachmentList $fileAttachments
+    ): FileAttachmentItemList;
+
 
     /**
      * Returns a list of FileAttachmentItems for the specified MessageKey.
@@ -50,6 +66,16 @@ interface AttachmentService
      * @return FileAttachmentItemList
      */
     public function getFileAttachmentItemList(MessageKey $key): FileAttachmentItemList;
+
+
+    /**
+     * Deletes the attachment with the specified AttachmentKey.
+     *
+     * @param AttachmentKey $attachmentKey
+     *
+     * @return MessageKey The key of the resource the attachment belonged to.
+     */
+    public function deleteAttachment(AttachmentKey $attachmentKey): MessageKey;
 
 
     /**

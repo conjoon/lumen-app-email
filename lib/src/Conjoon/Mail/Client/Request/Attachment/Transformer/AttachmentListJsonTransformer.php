@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,39 +27,29 @@
 
 declare(strict_types=1);
 
-namespace Conjoon\Mail\Client\Attachment;
+namespace Conjoon\Mail\Client\Request\Attachment\Transformer;
 
-use Conjoon\Util\AbstractList;
-use Conjoon\Util\Jsonable;
+use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Util\JsonDecodable;
 
 /**
- * Class FileAttachmentList organizes a list of FileAttachments.
+ * Interface AttachmentListJsonTransformer
+ * Interface for setting up contracts for converting raw string/array data into a FileAttachmentList.
  *
- * @package Conjoon\Mail\Client\Attachment
+ *
+ * @package Conjoon\Mail\Client\Request\Attachment\Transformer
  */
-class FileAttachmentList extends AbstractList implements Jsonable
+interface AttachmentListJsonTransformer extends JsonDecodable
 {
+
     /**
      * @inheritdoc
      */
-    public function getEntityType(): string
-    {
-        return FileAttachment::class;
-    }
+    public static function fromString(string $value): FileAttachmentList;
 
 
     /**
-     * @return array
+     * @inheritdoc
      */
-    public function toJson(): array
-    {
-
-        $data = [];
-
-        foreach ($this->data as $item) {
-            $data[] = $item->toJson();
-        }
-
-        return $data;
-    }
+    public static function fromArray(array $arr): FileAttachmentList;
 }

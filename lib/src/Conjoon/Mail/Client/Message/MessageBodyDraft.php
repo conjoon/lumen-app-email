@@ -41,7 +41,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  *
  *    $body = new MessageBodyDraft(new MessageKey("a", "b", "c"));
  *
- *    *
+ *
  *    $keyedDraft = $body->setMessageKey(new MessageKey("x", "y", "z"));
  *
  *    $keyedDraft !== $body; // true

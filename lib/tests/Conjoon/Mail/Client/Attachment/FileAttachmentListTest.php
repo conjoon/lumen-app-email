@@ -31,7 +31,9 @@ namespace Tests\Conjoon\Mail\Client\Attachment;
 
 use Conjoon\Mail\Client\Attachment\FileAttachment;
 use Conjoon\Mail\Client\Attachment\FileAttachmentList;
+use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
 use Conjoon\Util\AbstractList;
+use Conjoon\Util\Jsonable;
 use Tests\TestCase;
 
 /**
@@ -54,7 +56,47 @@ class FileAttachmentListTest extends TestCase
 
         $attachmentList = new FileAttachmentList();
         $this->assertInstanceOf(AbstractList::class, $attachmentList);
+        $this->assertInstanceOf(Jsonable::class, $attachmentList);
+
 
         $this->assertSame(FileAttachment::class, $attachmentList->getEntityType());
+    }
+
+
+    /**
+     * Tests toJson()
+     */
+    public function testToJson()
+    {
+        $attachment1 = $this->createAttachment();
+        $attachment2 = $this->createAttachment();
+
+        $attachmentList = new FileAttachmentList();
+        $attachmentList[] = $attachment1;
+        $attachmentList[] = $attachment2;
+
+        $this->assertSame([
+            $attachment1->toJson(),
+            $attachment2->toJson(),
+        ], $attachmentList->toJson());
+    }
+
+
+    /**
+     * @return FileAttachment
+     */
+    protected function createAttachment(): FileAttachment
+    {
+
+        return new FileAttachment(
+            new AttachmentKey("dev", "INBOX", "123", "1"),
+            [
+                "type"          => "1",
+                "text"          => "2",
+                "size"          => 3,
+                "content"   => "4",
+                "encoding" => "base64"
+            ]
+        );
     }
 }

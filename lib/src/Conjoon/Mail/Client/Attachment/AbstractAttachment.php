@@ -31,6 +31,7 @@ namespace Conjoon\Mail\Client\Attachment;
 
 use BadMethodCallException;
 use Conjoon\Mail\Client\Data\CompoundKey\AttachmentKey;
+use Conjoon\Util\Jsonable;
 use InvalidArgumentException;
 
 /**
@@ -42,13 +43,13 @@ use InvalidArgumentException;
  * @method string getText()
  * @method int getSize()
  */
-abstract class AbstractAttachment
+abstract class AbstractAttachment implements Jsonable
 {
 
     /**
-     * @var AttachmentKey
+     * @var AttachmentKey|null
      */
-    protected AttachmentKey $attachmentKey;
+    protected ?AttachmentKey $attachmentKey;
 
     /**
      * @var string
@@ -69,12 +70,13 @@ abstract class AbstractAttachment
     /**
      * Attachment constructor.
      *
-     * @param AttachmentKey $attachmentKey
+     * @param AttachmentKey|null $attachmentKey The $attachmentKey of the attachment. Inheriting classes
+     * must decide if the key is required.
      * @param array|null $data
      *
      * @throws InvalidArgumentException if text, type or size in $data is missing
      */
-    public function __construct(AttachmentKey $attachmentKey, array $data)
+    public function __construct(?AttachmentKey $attachmentKey, array $data)
     {
 
         $this->attachmentKey = $attachmentKey;
@@ -107,7 +109,7 @@ abstract class AbstractAttachment
      *
      * @return AttachmentKey
      */
-    public function getAttachmentKey(): AttachmentKey
+    public function getAttachmentKey(): ?AttachmentKey
     {
         return $this->attachmentKey;
     }
@@ -148,5 +150,21 @@ abstract class AbstractAttachment
     public function setSize(int $size)
     {
         $this->size = $size;
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    public function toJson(): array
+    {
+        return array_merge(
+            $this->attachmentKey ? $this->attachmentKey->toJson() : [],
+            [
+            "text" => $this->getText(),
+            "type" => $this->getType(),
+            "size" => $this->getSize()
+            ]
+        );
     }
 }

@@ -68,7 +68,7 @@ class HordeBodyComposerTest extends TestCase
 
         $composer = $this->createComposer();
 
-        $txt = ["Content-Type: multipart/alternative;",
+        $txt = ["Content-Type: multipart/mixed;",
             "MIME-Version: 1.0",
             "",
             "This message is in MIME format.",
@@ -83,7 +83,7 @@ class HordeBodyComposerTest extends TestCase
             "bar",
             "--="];
 
-        $default = ["Content-Type: multipart/alternative; boundary=\"_zu6MNuSkrIrVCCCyolqPVoz\"",
+        $default = ["Content-Type: multipart/mixed; boundary=\"_zu6MNuSkrIrVCCCyolqPVoz\"",
             "MIME-Version: 1.0",
             "",
             "This message is in MIME format.",

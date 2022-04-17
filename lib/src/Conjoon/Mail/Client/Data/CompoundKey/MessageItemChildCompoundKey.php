@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -84,6 +84,40 @@ abstract class MessageItemChildCompoundKey extends MessageKey
     public function getParentMessageItemId(): string
     {
         return $this->parentMessageItemId;
+    }
+
+
+    /**
+     * Returns the MessageKey this MessageItemChildCompoundKey represents.
+     * No references between *this* and the returned key exist.
+     *
+     * @return MessageKey
+     */
+    public function getMessageKey(): MessageKey
+    {
+        return new MessageKey(
+            $this->getMailAccountId(),
+            $this->getMailFolderId(),
+            $this->getParentMessageItemId()
+        );
+    }
+
+
+    /**
+     * Returns true if, and only if all contained values of *this* key are the same
+     * value and type compared with the values of $key.
+     *
+     * @param MessageItemChildCompoundKey $key
+     *
+     * @return bool
+     */
+    public function equals(MessageItemChildCompoundKey $key): bool
+    {
+        return
+            $this->getMailAccountId() === $key->getMailAccountId() &&
+            $this->getMailFolderId() === $key->getMailFolderId() &&
+            $this->getParentMessageItemId() === $key->getParentMessageItemId() &&
+            $this->getId() === $key->getId();
     }
 
 

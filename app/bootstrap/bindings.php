@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,7 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\Exceptions\Handler;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
@@ -43,6 +44,8 @@ use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\DefaultPlainReadableStrategy;
 use Conjoon\Mail\Client\Reader\PurifiedHtmlStrategy;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Request\Attachment\Transformer\AttachmentListJsonTransformer;
+use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
@@ -63,9 +66,12 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 // helper function to make sure Services can share HordeClients for the same account
 $mailClients = [];
 $hordeBodyComposer = new HordeBodyComposer();
+$hordeAttachmentComposer = new HordeAttachmentComposer();
 $hordeHeaderComposer = new HordeHeaderComposer();
 
-$getMailClient = function (MailAccount $account) use (&$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer) {
+$getMailClient = function (MailAccount $account) use (
+    &$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer, &$hordeAttachmentComposer
+) {
 
     $accountId = $account->getId();
 
@@ -74,7 +80,7 @@ $getMailClient = function (MailAccount $account) use (&$mailClients, &$hordeBody
     }
 
 
-    $mailClient = new HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer);
+    $mailClient = new HordeClient($account, $hordeBodyComposer, $hordeHeaderComposer, $hordeAttachmentComposer);
     $mailClients[$accountId] = $mailClient;
     return $mailClient;
 };
@@ -119,6 +125,10 @@ $app->singleton(MessageItemDraftJsonTransformer::class, function () {
 
 $app->singleton(MessageBodyDraftJsonTransformer::class, function () {
     return new DefaultMessageBodyDraftJsonTransformer();
+});
+
+$app->singleton(AttachmentListJsonTransformer::class, function () {
+    return new LaravelAttachmentListJsonTransformer();
 });
 
 $app->singleton(MessageItemService::class, function ($app) use ($getMailClient) {

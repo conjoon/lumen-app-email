@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -1204,6 +1204,8 @@ class DefaultMessageItemServiceTest extends TestCase
                 "sendMessageDraft",
                 "moveMessage",
                 "deleteMessage",
+                "createAttachments",
+                "deleteAttachment",
                 "getSupportedAttributes",
                 "getDefaultAttributes"
             ])
