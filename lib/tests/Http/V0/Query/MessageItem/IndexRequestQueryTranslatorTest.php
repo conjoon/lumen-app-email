@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -72,7 +72,6 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
         $this->assertEquals([
             "limit",
-            "ids",
             "start",
             "sort",
             "attributes",
@@ -112,11 +111,19 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $extractParametersReflection = $reflection->getMethod("extractParameters");
         $extractParametersReflection->setAccessible(true);
 
-        $request = new Request(["limit" => 0, "ids" => "2", "start" => 3, "foo" => "bar"]);
+        $request = new Request([
+            "limit" => 0,
+            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
+            "start" => 3,
+            "foo" => "bar"]);
 
         $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
 
-        $this->assertEquals(["limit" => 0, "ids" => "2", "start" => 3], $extracted);
+        $this->assertEquals([
+            "limit" => 0,
+            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
+            "start" => 3
+        ], $extracted);
     }
 
 
@@ -273,10 +280,10 @@ class IndexRequestQueryTranslatorTest extends TestCase
             ],
             [
                 "input" => [
-                    "ids" => "123198731,1331,123121,212"
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
                 ],
                 "output" => [
-                    "ids" => explode(",", "123198731,1331,123121,212"),
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
                     "attributes" => $getExpectedAttributes(
                         [],
@@ -287,11 +294,11 @@ class IndexRequestQueryTranslatorTest extends TestCase
             ],
             [
                 "input" => [
-                    "ids" => "123198731,1331,123121,212",
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
                     "attributes" => "previewText"
                 ],
                 "output" => [
-                    "ids" => explode(",", "123198731,1331,123121,212"),
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
                     "attributes" => [
                         "html" => $this->getDefaultAttributes()["html"],
@@ -317,7 +324,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
             ],
             [
                 "input" => [
-                    "ids" => 18601,
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
                     "attributes" => "previewText",
                     "target" => "messageItem",
                     "options" => json_encode(
@@ -334,7 +341,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "limit" => -1
                 ],
                 "output" => [
-                    "ids" => ["18601"],
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "target" => "messageItem",
                     "attributes" => [
                         "html" => ["length" => 200],
