@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -71,11 +71,17 @@ trait FilterTrait
             $clientSearches = [];
 
             foreach ($clientFilter as $filter) {
-                if ($filter["property"] === "id" && $filter["operator"] === ">=") {
-                    $filterId = $filter["value"] . ":*" ;
-                    $latestQuery = new Horde_Imap_Client_Search_Query();
-                    $latestQuery->ids(new Horde_Imap_Client_Ids([$filterId]));
-                    $clientSearches[] = $latestQuery;
+                if ($filter["property"] === "id") {
+                    if ($filter["operator"] === ">=") {
+                        $filterId = $filter["value"] . ":*";
+                        $latestQuery = new Horde_Imap_Client_Search_Query();
+                        $latestQuery->ids(new Horde_Imap_Client_Ids([$filterId]));
+                        $clientSearches[] = $latestQuery;
+                    } elseif (strtolower($filter["operator"]) === "in") {
+                        $latestQuery = new Horde_Imap_Client_Search_Query();
+                        $latestQuery->ids(new Horde_Imap_Client_Ids($filter["value"]));
+                        $clientSearches[] = $latestQuery;
+                    }
                 }
                 if ($filter["property"] === "recent" && $filter["operator"] === "=" && $filter["value"] === true) {
                     $recentQuery = new Horde_Imap_Client_Search_Query();

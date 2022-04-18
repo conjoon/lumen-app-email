@@ -1112,7 +1112,10 @@ class HordeClient implements MailClient
      * @param array|null $options An array with the following options
      * - start (integer) The start position from where to return the results
      * - limit (integer) The number of items to return.
-     * - ids (array) an array of message ids to consider and exclusively include in the return array
+     * - filter (array) an array of filters to consider. Any ids to look up must be included in the filter.
+     * A filter is assembled using "property" (field-name), "operator" and "value" (value to look up). For
+     * filtering for multiple ids, use a filter in the form of
+     * (["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]])
      * - attributes (array) an assoc array of attributes that should be queried. Ignored by this method.
      *
      * @example
@@ -1158,13 +1161,7 @@ class HordeClient implements MailClient
             $searchOptions = ["sort" => $sortInfo];
         }
 
-
         $searchQuery = $this->getSearchQueryFromFilter($options["filter"] ?? []);
-
-
-        if (isset($options["ids"]) && is_array($options["ids"])) {
-            $searchQuery->ids(new Horde_Imap_Client_Ids($options["ids"]));
-        }
 
         // search and narrow down list
         return $client->search($key->getId(), $searchQuery, $searchOptions);

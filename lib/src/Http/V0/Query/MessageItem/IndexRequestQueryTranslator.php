@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -61,16 +61,28 @@ class IndexRequestQueryTranslator extends QueryTranslator
              $this->getDefaultAttributes()
          );
 
+        $ids = null;
         if ($bag->getString("filter")) {
-            $bag->filter = json_decode($bag->filter);
+            $bag->filter = json_decode($bag->filter, true);
             if (!$bag->filter) {
                 throw new InvalidQueryException(
                     "parameter \"filter\" must be JSON decodable"
                 );
             }
+
+            foreach ($bag->filter as $filterEntry) {
+                if (
+                    isset($filterEntry["property"]) && strtolower($filterEntry["property"]) === "id" &&
+                    isset($filterEntry["operator"]) && strtolower($filterEntry["operator"]) === "in"
+                ) {
+                    $ids = $filterEntry["value"] ?? null;
+                }
+            }
         }
 
-        if (!$bag->getString("ids")) {
+
+
+        if (!$ids) {
             if (!$bag->getInt("limit")) {
                 throw new InvalidQueryException(
                     "parameter \"limit\" must not be omitted"
@@ -89,8 +101,6 @@ class IndexRequestQueryTranslator extends QueryTranslator
 
             $bag->start = $bag->getInt("start") ?? 0;
             $bag->limit = $bag->getInt("limit");
-        } else {
-            $bag->ids = explode(",", $bag->getString("ids"));
         }
 
         if (!$bag->sort) {
@@ -237,7 +247,6 @@ class IndexRequestQueryTranslator extends QueryTranslator
     {
         return [
             "limit",
-            "ids",
             "start",
             "sort",
             "attributes",

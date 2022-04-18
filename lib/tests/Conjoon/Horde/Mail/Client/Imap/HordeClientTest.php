@@ -390,7 +390,7 @@ class HordeClientTest extends TestCase
                 "INBOX"
             ),
             new MessageItemListResourceQuery(new ParameterBag(
-                ["ids" => [34]]
+                ["filter" => [["property" => "id", "operator" => "in", "value" => [34]]]]
             ))
         );
 
