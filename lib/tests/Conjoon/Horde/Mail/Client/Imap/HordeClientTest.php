@@ -440,6 +440,7 @@ class HordeClientTest extends TestCase
 
 
         $attach = new Horde_Mime_Part();
+        $attach->setType("text/plain");
         $attach->setDisposition("attachment");
         $fetchResults[16]->setStructure($attach);
 
