@@ -1215,7 +1215,10 @@ class HordeClient implements MailClient
             $ret["hasAttachments"] = false;
             foreach ($typeMap as $part => $type) {
                 if (
-                    in_array($type, ["text/plain", "text/html"]) === false &&
+                    /**
+                     * @see conjoon/php-ms-imapuser#48
+                     */
+                    //in_array($type, ["text/plain", "text/html"]) === false &&
                     $messageStructure->getPart($part)->isAttachment()
                 ) {
                     $ret["hasAttachments"] = true;
