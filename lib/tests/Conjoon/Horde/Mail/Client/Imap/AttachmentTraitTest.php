@@ -341,7 +341,7 @@ class AttachmentTraitTest extends TestCase
         $trait
             ->expects($this->once())
             ->method("setFlags")
-            ->with($newMessageKey,  $flagList);
+            ->with($newMessageKey, $flagList);
 
         $result = $trait->deleteAttachment($attachmentKey);
 
