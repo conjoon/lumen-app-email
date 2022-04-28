@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -46,27 +46,8 @@ use Conjoon\Mail\Client\MailClientException;
  */
 class MessageItemDraft extends AbstractMessageItem
 {
+    use DraftTrait;
 
-    /**
-     * @var MailAddressList|null
-     */
-    protected ?MailAddressList $cc = null;
-
-    /**
-     * @var MailAddressList|null
-     */
-    protected ?MailAddressList $bcc = null;
-
-    /**
-     * @var MailAddress|null
-     */
-    protected ?MailAddress $replyTo = null;
-
-    /**
-     * A MessageItemDraft "draft" flag is by default always true.
-     * @var boolean
-     */
-    protected ?bool $draft = true;
 
     /**
      * A json encoded array, encoded as a base64-string, containing information about the
@@ -85,11 +66,11 @@ class MessageItemDraft extends AbstractMessageItem
     /**
      * @inheritdoc
      */
-    public static function isHeaderField($field): bool
+    public function __construct(MessageKey $messageKey, array $data = null)
     {
-        return parent::isHeaderField($field) || in_array($field, ["cc", "bcc", "replyTo"]);
+        $this->draft = true;
+        parent::__construct($messageKey, $data);
     }
-
 
     /**
      * Sets the "messageKey" by creating a new MessageItemDraft with the specified
@@ -132,51 +113,6 @@ class MessageItemDraft extends AbstractMessageItem
         }
         $draft->resumeModifiable();
         return $draft;
-    }
-
-
-    /**
-     * Sets the "cc" property of this message.
-     * Makes sure no reference to the MailAddressList-object is stored.
-     *
-     * @param MailAddressList|null $mailAddressList
-     * @return $this
-     */
-    public function setCc(MailAddressList $mailAddressList = null): MessageItemDraft
-    {
-        $this->addModified("cc");
-        $this->cc = $mailAddressList ? clone($mailAddressList) : null;
-        return $this;
-    }
-
-
-    /**
-     * Sets the "bcc" property of this message.
-     * Makes sure no reference to the MailAddressList-object is stored.
-     *
-     * @param MailAddressList|null $mailAddressList
-     * @return $this
-     */
-    public function setBcc(MailAddressList $mailAddressList = null): MessageItemDraft
-    {
-        $this->addModified("bcc");
-        $this->bcc = $mailAddressList ? clone($mailAddressList) : null;
-        return $this;
-    }
-
-
-    /**
-     * Sets the "replyTo" property of this message.
-     * Makes sure no reference to the MailAddress-object is stored.
-     *
-     * @param MailAddress|null $replyTo
-     * @return $this
-     */
-    public function setReplyTo(MailAddress $replyTo = null): MessageItemDraft
-    {
-        $this->addModified("replyTo");
-        $this->replyTo = $replyTo === null ? null : clone($replyTo);
-        return $this;
     }
 
 
