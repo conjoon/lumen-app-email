@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Controllers;
 
 use App\Http\V0\Controllers\MessageItemController;
+use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -162,6 +163,73 @@ class MessageItemControllerTest extends TestCase
     }
 
 
+    public function testGetMessageItemNoTargetParameter()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
+
+
+        $folderKey = new FolderKey(
+            $this->getTestMailAccount("dev_sys_conjoon_org"),
+            "INBOX"
+        );
+
+        $request = new Request(["attributes" => "*"]);
+        $request->setRouteResolver(function () {
+            return new class {
+                public function parameter()
+                {
+                    return "744";
+                }
+            };
+        });
+
+        $query = (new GetRequestQueryTranslator())->translate($request);
+
+        $messageItemList = new MessageItemList();
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey($folderKey, "744"),
+            [],
+            new MessagePart("", "", "")
+        );
+
+        $serviceStub->expects($this->once())
+            ->method("getMessageItemList")
+            ->with(
+                $folderKey,
+                $this->callback(
+                    function ($rq) use ($query) {
+                        $this->assertEquals($query->toJson(), $rq->toJson());
+                        return true;
+                    }
+                )
+            )
+            ->willReturn($messageItemList);
+
+
+        $endpoint = $this->getImapEndpoint(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/744",
+            "v0"
+        );
+        $client = $this->actingAs($this->getTestUserStub());
+
+        $response = $client->call(
+            "GET",
+            $endpoint,
+            ["attributes" => "*,preveiwText"]
+        );
+
+
+        $this->assertSame($response->status(), 200);
+
+        $this->seeJsonEquals([
+            "success" => true,
+            "data" => $messageItemList[0]->toJson()
+        ]);
+    }
+
+
     /**
      * Tests get() to make sure method returns the MessageBody of a Message
      *
@@ -186,7 +254,7 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->call("GET", $this->getImapEndpoint(
-                "$this->messageItemsUrl?target=MessageBody",
+                "$this->messageItemsUrl/MessageBody",
                 "v0"
             ));
 
@@ -198,110 +266,6 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
-
-    /**
-     * Tests get() to make sure method returns the MessageItem of a Message
-     *
-     *
-     * @return void
-     */
-    public function testGetMessageItemSuccess()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-
-        $messageItem = new MessageItem($messageKey);
-
-        $serviceStub->expects($this->once())
-            ->method("getMessageItem")
-            ->with($messageKey)
-            ->willReturn($messageItem);
-
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->call("GET", $this->getImapEndpoint(
-                "$this->messageItemsUrl?target=MessageItem",
-                "v0"
-            ));
-
-        $this->assertEquals(200, $response->status());
-
-        $this->seeJsonEquals([
-            "success" => true,
-            "data" => $messageItem->toJson()
-        ]);
-    }
-
-
-    /**
-     * Tests get() to make sure method returns the MessageItemDraft of a Message
-     *
-     *
-     * @return void
-     */
-    public function testGetMessageItemDraftSuccess()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-
-        $messageItemDraft = new MessageItemDraft($messageKey);
-
-        $serviceStub->expects($this->once())
-            ->method("getMessageItemDraft")
-            ->with($messageKey)
-            ->willReturn($messageItemDraft);
-
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->call("GET", $this->getImapEndpoint(
-                "$this->messageItemsUrl?target=MessageDraft",
-                "v0"
-            ));
-
-        $this->assertEquals(200, $response->status());
-
-        $this->seeJsonEquals([
-            "success" => true,
-            "data" => $messageItemDraft->toJson()
-        ]);
-    }
-
-
-    /**
-     * Tests get() to make sure method relies on target-parameter
-     *
-     *
-     * @return void
-     */
-    public function testGetMessageItemBadRequest()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $serviceStub->expects($this->never())
-            ->method("getMessageItem");
-
-
-        $this->actingAs($this->getTestUserStub())
-            ->call("GET", $this->getImapEndpoint(
-                "$this->messageItemsUrl",
-                "v0"
-            ));
-
-        $this->assertResponseStatus(400);
-
-        $this->seeJsonEquals([
-            "success" => false,
-            "msg" => "\"target\" must be specified with either \"MessageBody\", \"MessageItem\" or \"MessageDraft\"."
-        ]);
-    }
 
     /**
      * Tests put() to make sure method relies on proper

@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\Controllers;
 
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
+use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
 use Illuminate\Support\Facades\Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -128,9 +129,7 @@ class MessageItemController extends Controller
 
 
     /**
-     * Returns a single MessageItem or MessageBody according to the specified arguments.
-     * The entity to return is specified in the parameter "target". If that is missing or does not
-     * default to "MessageBody" or "MessageItem", a "400 - Bad Request" is returned.
+     * Returns a single MessageBody according to the specified arguments.
      *
      * @param Request $request
      * @param string $mailAccountId
@@ -139,8 +138,43 @@ class MessageItemController extends Controller
      *
      * @return JsonResponse
      */
+    public function getMessageBody(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
+
+        $messageKey = new MessageKey(
+            /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+            Auth::user()->getMailAccount($mailAccountId),
+            urldecode($mailFolderId),
+            $messageItemId
+        );
+
+        $item = $this->messageItemService->getMessageBody($messageKey);
+
+        return response()->json([
+            "success" => true,
+            "data" => $item->toJson()
+        ]);
+    }
+
+
+    /**
+     * Returns a single MessageItem or MessageItemDraft according to the specified arguments.
+     *
+     * @param Request $request
+     * @param GetRequestQueryTranslator $translator
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     *
+     * @return JsonResponse
+     */
     public function get(
         Request $request,
+        GetRequestQueryTranslator $translator,
         string $mailAccountId,
         string $mailFolderId,
         string $messageItemId
@@ -148,34 +182,17 @@ class MessageItemController extends Controller
 
         $user = Auth::user();
 
-        $messageItemService = $this->messageItemService;
+        $resourceQuery = $translator->translate($request);
+
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        $mailAccount        = $user->getMailAccount($mailAccountId);
+        $mailAccount = $user->getMailAccount($mailAccountId);
+        $folderKey   = new FolderKey($mailAccount, urldecode($mailFolderId));
 
-        // possible targets: MessageItem, MessageBody
-        $target = $request->input("target");
-
-        $mailFolderId = urldecode($mailFolderId);
-
-        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
-
-        if ($target === "MessageBody") {
-            $item = $messageItemService->getMessageBody($messageKey);
-        } elseif ($target === "MessageItem") {
-            $item = $messageItemService->getMessageItem($messageKey);
-        } elseif ($target === "MessageDraft") {
-            $item = $messageItemService->getMessageItemDraft($messageKey);
-        } else {
-            return response()->json([
-                "success" => false,
-                "msg" => "\"target\" must be specified with either \"MessageBody\", " .
-                         "\"MessageItem\" or \"MessageDraft\"."
-            ], 400);
-        }
+        $messageItemService = $this->messageItemService;
 
         return response()->json([
             "success" => true,
-            "data" => $item->toJson()
+            "data" => $messageItemService->getMessageItemList($folderKey, $resourceQuery)[0]->toJson()
         ]);
     }
 
