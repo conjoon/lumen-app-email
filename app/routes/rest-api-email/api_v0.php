@@ -51,10 +51,19 @@ $router->post(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
     'MessageItemController@post'
 );
+
+/**
+ * GET MessageItem / MessageBody / MessageDraft
+ */
 $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@get'
 );
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
+    'MessageItemController@getMessageBody'
+);
+
 $router->put(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@put'
