@@ -29,11 +29,11 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\Query\MessageItem;
 
+use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Http\Query\QueryTranslator;
 use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
@@ -41,7 +41,7 @@ use Tests\TestCase;
 
 /**
  * Class IndexRequestQueryTranslatorTest
- * @package Tests\App\Http\V0\Request\MessageItem\Get
+ * @package Tests\App\Http\V0\Query\MessageItem
  */
 class IndexRequestQueryTranslatorTest extends TestCase
 {
@@ -53,7 +53,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
     {
         $inst = new IndexRequestQueryTranslator();
 
-        $this->assertInstanceOf(QueryTranslator::class, $inst);
+        $this->assertInstanceOf(AbstractMessageItemQueryTranslator::class, $inst);
     }
 
 
@@ -85,24 +85,6 @@ class IndexRequestQueryTranslatorTest extends TestCase
      * Extract parameters not Request
      * @throws ReflectionException
      */
-    public function testExtractParametersException()
-    {
-        $this->expectException(InvalidParameterResourceException::class);
-
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
-
-        $extractParametersReflection->invokeArgs($translator, ["foo"]);
-    }
-
-
-    /**
-     * Extract parameters not Request
-     * @throws ReflectionException
-     */
     public function testExtractParameters()
     {
         $translator = new IndexRequestQueryTranslator();
@@ -124,24 +106,6 @@ class IndexRequestQueryTranslatorTest extends TestCase
             "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
             "start" => 3
         ], $extracted);
-    }
-
-
-    /**
-     * getDefaultAttributes()
-     * @throws ReflectionException
-     */
-    public function testGetDefaultParameters()
-    {
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $getDefaultAttributesReflection = $reflection->getMethod("getDefaultAttributes");
-        $getDefaultAttributesReflection->setAccessible(true);
-
-        $attr = $getDefaultAttributesReflection->invokeArgs($translator, []);
-
-        $this->assertEquals($this->getDefaultAttributes(), $attr);
     }
 
 
@@ -226,6 +190,15 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "limit" => 10,
                     "sort" => $this->getDefaultSort(),
                     "attributes" => $getExpectedAttributes(["html", "plain"])
+                ]
+            ],
+            [
+                "input" => ["start" => 0, "limit" => "10", "attributes" => "*,cc,bcc"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => 10,
+                    "sort" => $this->getDefaultSort(),
+                    "attributes" => $getExpectedAttributes(["cc", "bcc"])
                 ]
             ],
             [
@@ -409,53 +382,24 @@ class IndexRequestQueryTranslatorTest extends TestCase
     }
 
 
-
-    protected function getDefaultAttributes(): array
-    {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
-        ];
-    }
-
     protected function getDefaultSort(): array
     {
         return [["property" => "date", "direction" => "DESC"]];
     }
 
 
-    protected function getAttributes(): array
+    /**
+     * @return mixed
+     * @throws ReflectionException
+     */
+    protected function getDefaultAttributes()
     {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments"
-        ];
+        $translator = new IndexRequestQueryTranslator();
+        $reflection = new ReflectionClass($translator);
+
+        $translateParametersReflection = $reflection->getMethod("getDefaultAttributes");
+        $translateParametersReflection->setAccessible(true);
+
+        return $translateParametersReflection->invokeArgs($translator, []);
     }
 }
