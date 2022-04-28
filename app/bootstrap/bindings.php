@@ -70,7 +70,10 @@ $hordeAttachmentComposer = new HordeAttachmentComposer();
 $hordeHeaderComposer = new HordeHeaderComposer();
 
 $getMailClient = function (MailAccount $account) use (
-    &$mailClients, &$hordeBodyComposer, &$hordeHeaderComposer, &$hordeAttachmentComposer
+    &$mailClients,
+    &$hordeBodyComposer,
+    &$hordeHeaderComposer,
+    &$hordeAttachmentComposer
 ) {
 
     $accountId = $account->getId();
