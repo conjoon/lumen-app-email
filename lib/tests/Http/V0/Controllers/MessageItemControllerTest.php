@@ -996,18 +996,6 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
-     * Tests delete() to make sure method relies on target-parameter.
-     *
-     *
-     * @return void
-     */
-    public function testDeleteMessageItemBadRequestMissingTarget()
-    {
-        $this->deleteMessageItemTest("missing");
-    }
-
-
-    /**
      * Tests delete() w/ 500
      *
      *
@@ -1043,37 +1031,23 @@ class MessageItemControllerTest extends TestCase
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
-        if ($type === "missing") {
-            $serviceStub->expects($this->never())
-                ->method("deleteMessage");
-        } else {
-            $serviceStub->expects($this->once())
-                ->method("deleteMessage")
-                ->with(new MessageKey("dev_sys_conjoon_org", "INBOX", "311"))
-                ->willReturn($type);
-        }
+        $serviceStub->expects($this->once())
+            ->method("deleteMessage")
+            ->with(new MessageKey("dev_sys_conjoon_org", "INBOX", "311"))
+            ->willReturn($type);
 
         $this->actingAs($this->getTestUserStub())
             ->call(
                 "DELETE",
                 $this->getImapEndpoint("$this->messageItemsUrl", "v0")
-                . ($type !== "missing" ? "?target=MessageItem" : "")
             );
 
-        if ($type === "missing") {
-            $this->assertResponseStatus(400);
+        $this->assertResponseStatus($type === false ? 500 : 200);
 
-            $this->seeJsonContains([
-                "success" => false,
-                "msg" => "\"target\" must be specified with \"MessageItem\"."
-            ]);
-        } else {
-            $this->assertResponseStatus($type === false ? 500 : 200);
+        $this->seeJsonContains([
+            "success" => $type
+        ]);
 
-            $this->seeJsonContains([
-                "success" => $type
-            ]);
-        }
     }
 
 

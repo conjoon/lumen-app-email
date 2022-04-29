@@ -198,9 +198,7 @@ class MessageItemController extends Controller
 
 
     /**
-     * Deletes a single MessageItem permanently.
-     * The target parameter must be set to "MessageItem" in order to process
-     * the request. Returns a 400 - Bad Request if missing.
+     * Deletes a single MessageItem and its associations permanently.
      *
      * @param Request $request
      * @param string $mailAccountId
@@ -220,23 +218,13 @@ class MessageItemController extends Controller
 
         $messageItemService = $this->messageItemService;
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        $mailAccount        = $user->getMailAccount($mailAccountId);
-
-        // possible targets: MessageItem, MessageBody
-        $target = $request->input("target");
+        $mailAccount  = $user->getMailAccount($mailAccountId);
 
         $mailFolderId = urldecode($mailFolderId);
 
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
-        if ($target === "MessageItem") {
-            $result = $messageItemService->deleteMessage($messageKey);
-        } else {
-            return response()->json([
-                "success" => false,
-                "msg" =>  "\"target\" must be specified with \"MessageItem\"."
-            ], 400);
-        }
+        $result = $messageItemService->deleteMessage($messageKey);
 
         return response()->json([
             "success" => $result
