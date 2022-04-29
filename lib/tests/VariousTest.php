@@ -132,6 +132,7 @@ class VariousTest extends TestCase
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
                 "POST/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
+                "PUT/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
                 "PUT/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
                 "DELETE/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),

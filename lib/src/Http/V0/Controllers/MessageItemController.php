@@ -233,8 +233,54 @@ class MessageItemController extends Controller
 
 
     /**
-     * Changes data of a single MessageItem or a MessageBody.
-     * Allows for specifying target=MessageItem, target=MessageDraft or target=MessageBodyDraft.
+     * Updates the MessageBody.
+     *
+     * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     * @return JsonResponse
+     */
+    public function updateMessageBody(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
+
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+        $mailAccount  = $user->getMailAccount($mailAccountId);
+
+        $mailFolderId = urldecode($mailFolderId);
+
+        $data = array_merge(
+            $request->only(["textHtml", "textPlain"]),
+            [
+                "mailAccountId" => $mailAccount->getId(),
+                "mailFolderId" => $mailFolderId,
+                "id" => $messageItemId,
+            ]
+        );
+
+        $messageBody        = $this->messageBodyDraftJsonTransformer::fromArray($data);
+        $updatedMessageBody = $messageItemService->updateMessageBodyDraft($messageBody);
+
+        $resp = ["success" => !!$updatedMessageBody];
+        if ($updatedMessageBody) {
+            $resp["data"] = $updatedMessageBody->toJson();
+        } else {
+            $resp["msg"] = "Updating the MessageBodyDraft failed.";
+        }
+        return response()->json($resp);
+    }
+
+
+    /**
+     * Changes data of a single MessageItem.
+     * Allows for specifying target=MessageItem, target=MessageDraft.
      * If the target MessageItem is specified, the flag-properties
      * seen=true/false and/or flagged=true/false can be set.
      * If the target is MessageDraft, the following parameters are expected:
@@ -248,7 +294,6 @@ class MessageItemController extends Controller
      * - from
      * - subject
      * - to
-     * For target=MessageBodyDraft, one of (or both) textPlain/textHtml-parameters should be set.
      *
      * Everything else returns a 405.
      *
@@ -279,24 +324,6 @@ class MessageItemController extends Controller
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         switch ($target) {
-            case "MessageBodyDraft":
-                $keys = [
-                    "mailAccountId", "mailFolderId", "id", "textHtml", "textPlain"
-                ];
-                $data = $request->only($keys);
-
-                $messageBody        = $this->messageBodyDraftJsonTransformer::fromArray($data);
-                $updatedMessageBody = $messageItemService->updateMessageBodyDraft($messageBody);
-
-                $resp = ["success" => !!$updatedMessageBody];
-                if ($updatedMessageBody) {
-                    $resp["data"] = $updatedMessageBody->toJson();
-                } else {
-                    $resp["msg"] = "Updating the MessageBodyDraft failed.";
-                }
-                return response()->json($resp);
-
-
             case "MessageDraft":
                 $isCreate = $request->input("origin") === "create";
 
@@ -419,8 +446,8 @@ class MessageItemController extends Controller
             default:
                 return response()->json([
                     "success" => false,
-                    "msg" => "\"target\" must be specified with \"MessageDraft\", " .
-                             "\"MessageItem\" or \"MessageBodyDraft\"."
+                    "msg" => "\"target\" must be specified with \"MessageDraft\" or " .
+                             "\"MessageItem\"."
                 ], 400);
         }
     }

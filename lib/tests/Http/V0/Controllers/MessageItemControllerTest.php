@@ -324,7 +324,7 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => false,
-            "msg" => "\"target\" must be specified with \"MessageDraft\", \"MessageItem\" or \"MessageBodyDraft\"."
+            "msg" => "\"target\" must be specified with \"MessageDraft\" or \"MessageItem\"."
         ]);
     }
 
@@ -864,7 +864,10 @@ class MessageItemControllerTest extends TestCase
         $transformDraft = new MessageBodyDraft($messageKey);
 
         $data = [
-            "textPlain" => "Hello World!"
+            "textPlain" => "Hello World!",
+            "mailAccountId" => "dev_sys_conjoon_org",
+            "mailFolderId" => "INBOX",
+            "id" => "311"
         ];
 
         $transformer->returnDraftForData($data, $transformDraft);
@@ -876,8 +879,8 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageBodyDraft", "textPlain" => "Hello World!"]//,
+                "{$this->getImapEndpoint($this->messageItemsUrl, "v0")}/MessageBody",
+                ["textPlain" => "Hello World!"]//,
             );
 
         $response->assertResponseOk();
@@ -913,7 +916,10 @@ class MessageItemControllerTest extends TestCase
         );
 
         $data = [
-            "textHtml" => "Hello World!"
+            "textHtml" => "Hello World!",
+            "mailAccountId" => "dev_sys_conjoon_org",
+            "mailFolderId" => "INBOX",
+            "id" => "311"
         ];
 
         $transformDraft = new MessageBodyDraft($messageKey);
@@ -928,8 +934,8 @@ class MessageItemControllerTest extends TestCase
 
         $response = $this->actingAs($this->getTestUserStub())
             ->put(
-                $this->getImapEndpoint($this->messageItemsUrl, "v0"),
-                ["target" => "MessageBodyDraft", "textHtml" => "Hello World!"]//,
+                "{$this->getImapEndpoint($this->messageItemsUrl, "v0")}/MessageBody",
+                ["textHtml" => "Hello World!"]//,
             );
 
         $response->assertResponseOk();
@@ -1047,7 +1053,6 @@ class MessageItemControllerTest extends TestCase
         $this->seeJsonContains([
             "success" => $type
         ]);
-
     }
 
 

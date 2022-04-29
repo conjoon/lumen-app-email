@@ -65,6 +65,11 @@ $router->get(
 );
 
 $router->put(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
+    'MessageItemController@updateMessageBody'
+);
+
+$router->put(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@put'
 );
