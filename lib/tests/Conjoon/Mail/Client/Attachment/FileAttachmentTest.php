@@ -191,7 +191,7 @@ class FileAttachmentTest extends TestCase
         $attachmentCopy = $attachment->setAttachmentKey($attachmentKey);
         $this->assertNotSame($attachmentCopy, $attachment);
         $this->assertSame($attachmentCopy->getAttachmentKey(), $attachmentKey);
-        $this->assertEquals(ArrayUtil::intersect($attachmentCopy->toJson(), array_keys($data)), $data);
+        $this->assertEquals(ArrayUtil::only($attachmentCopy->toJson(), array_keys($data)), $data);
 
 
         $attachment = new FileAttachment($attachmentKey, $data);
@@ -200,6 +200,6 @@ class FileAttachmentTest extends TestCase
         );
         $this->assertNotSame($attachmentCopy, $attachment);
         $this->assertNotSame($attachmentKey, $attachmentCopy->getAttachmentKey());
-        $this->assertEquals(ArrayUtil::intersect($attachmentCopy->toJson(), array_keys($data)), $data);
+        $this->assertEquals(ArrayUtil::only($attachmentCopy->toJson(), array_keys($data)), $data);
     }
 }
