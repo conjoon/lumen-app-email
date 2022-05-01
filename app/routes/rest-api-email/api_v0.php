@@ -59,24 +59,38 @@ $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@get'
 );
+
+$router->patch(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageItem',
+    'MessageItemController@patchMessageItem'
+);
+
+$router->patch(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageDraft',
+    'MessageItemController@patchMessageDraft'
+);
+
+$router->delete(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@delete'
+);
+
+/**
+ * MessageBody
+ */
 $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
     'MessageItemController@getMessageBody'
 );
 
-$router->put(
+$router->patch(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
-    'MessageItemController@updateMessageBody'
+    'MessageItemController@patchMessageBody'
 );
 
-$router->put(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@put'
-);
-$router->delete(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@delete'
-);
+/**
+ * Attachments
+ */
 $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
     'AttachmentController@index'

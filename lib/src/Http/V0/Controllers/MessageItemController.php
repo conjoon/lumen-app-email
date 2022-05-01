@@ -241,7 +241,7 @@ class MessageItemController extends Controller
      * @param string $messageItemId
      * @return JsonResponse
      */
-    public function updateMessageBody(
+    public function patchMessageBody(
         Request $request,
         string $mailAccountId,
         string $mailFolderId,
@@ -257,7 +257,7 @@ class MessageItemController extends Controller
         $mailFolderId = urldecode($mailFolderId);
 
         $data = array_merge(
-            $request->only(["textHtml", "textPlain"]),
+            ArrayUtil::only(ArrayUtil::unchain("data.attributes", $request->all(), []), ["textHtml", "textPlain"]),
             [
                 "mailAccountId" => $mailAccount->getId(),
                 "mailFolderId" => $mailFolderId,
@@ -277,25 +277,68 @@ class MessageItemController extends Controller
         return response()->json($resp);
     }
 
+    /**
+     * Changes data of a single MessageDraft
+     *     *
+     * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
+     *
+     * @return JsonResponse
+     */
+    public function patchMessageDraft(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
+
+        $user = Auth::user();
+
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+
+        $mailFolderId = urldecode($mailFolderId);
+        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+
+        $messageItemService = $this->messageItemService;
+
+        $attributes = ArrayUtil::unchain("data.attributes", $request->all());
+
+        $root = [
+            "mailAccountId" => $mailAccount->getId(),
+            "mailFolderId" => $messageKey->getMailFolderId(),
+            "id" => $messageKey->getId()
+        ];
+        $additional = ["inReplyTo", "references", "xCnDraftInfo"];
+
+        $data = array_merge(
+            $attributes,
+            $root,
+            // extract additional data  ["inReplyTo", "references", "xCnDraftInfo"]
+            ArrayUtil::only(ArrayUtil::unchain("data.attributes", $request->all()), $additional)
+        );
+
+        $messageItemDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
+        $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageItemDraft);
+
+        $resp = [
+            "success" => !!$updatedMessageItemDraft
+        ];
+        if ($updatedMessageItemDraft) {
+            $json = $updatedMessageItemDraft->toJson();
+            $resp["data"] = ArrayUtil::only($json, array_merge(array_keys($data), ["messageId"]));
+        } else {
+            $resp["msg"] = "Updating the MessageDraft failed.";
+        }
+
+        return response()->json($resp);
+    }
+
 
     /**
      * Changes data of a single MessageItem.
-     * Allows for specifying target=MessageItem, target=MessageDraft.
-     * If the target MessageItem is specified, the flag-properties
-     * seen=true/false and/or flagged=true/false can be set.
-     * If the target is MessageDraft, the following parameters are expected:
-     *
-     * - id - compound key information
-     * - mailAccountId - compound key information
-     * - mailFolderId - compound key information
-     * - bcc
-     * - cc
-     * - date
-     * - from
-     * - subject
-     * - to
-     *
-     * Everything else returns a 405.
      *
      * @param Request $request
      * @param string $mailAccountId
@@ -304,7 +347,7 @@ class MessageItemController extends Controller
      *
      * @return JsonResponse
      */
-    public function put(
+    public function patchMessageItem(
         Request $request,
         string $mailAccountId,
         string $mailFolderId,
@@ -317,138 +360,86 @@ class MessageItemController extends Controller
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
-        // possible targets: MessageItem
-        $target = $request->input("target");
-
         $mailFolderId = urldecode($mailFolderId);
         $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
-        switch ($target) {
-            case "MessageDraft":
-                $isCreate = $request->input("origin") === "create";
 
-                $keys = [
-                    "mailAccountId", "mailFolderId", "id", "subject", "date",
-                    "from", "to", "cc", "bcc", "seen", "flagged", "replyTo"
-                ];
+        $attributes = ArrayUtil::unchain("data.attributes", $request->all());
 
-                if ($isCreate) {
-                    $keys = array_merge($keys, ["inReplyTo", "references", "xCnDraftInfo"]);
-                }
+        $response   = [];
 
-                $data = $request->only($keys);
+        $seen    = $attributes["seen"] ?? null;
+        $flagged = $attributes["flagged"] ?? null;
+        $draft   = $attributes["draft"] ?? null;
 
-                $messageItemDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
-                $updatedMessageItemDraft = $messageItemService->updateMessageDraft($messageItemDraft);
+        $newMailFolderId = $attributes["mailFolderId"] ?? null;
 
-                $resp = [
-                    "success" => !!$updatedMessageItemDraft
-                ];
-                if ($updatedMessageItemDraft) {
-                    $json = $updatedMessageItemDraft->toJson();
-                    if ($isCreate) {
-                        $resp["data"] = ArrayUtil::intersect($json, array_merge(array_keys($data), ["messageId"]));
-                    } else {
-                        $resp["data"] = ArrayUtil::intersect($json, array_keys($data));
-                    }
-                } else {
-                    $resp["msg"] = "Updating the MessageDraft failed.";
-                }
-                return response()->json($resp);
+        $isMove = $newMailFolderId;
 
-            case "MessageItem":
-                $response   = [];
+        if ($isMove && $newMailFolderId === $mailFolderId) {
+            return response()->json([
+                "success" => false,
+                "msg"     => "Cannot move message since it already belongs to this folder."
+            ], 400);
+        }
 
-                $action = $request->input("action");
-                $isMove = $action === "move";
+        if (!$isMove && !is_bool($seen) && !is_bool($flagged) && !is_bool($draft)) {
+            return response()->json([
+                "success" => false,
+                "msg"     => "Invalid request payload.",
+                "flagged" => $flagged,
+                "seen"    => $seen,
+                "draft"   => $draft
+            ], 400);
+        }
 
-                $seen    = $request->input("seen");
-                $flagged = $request->input("flagged");
-                $draft   = $request->input("draft");
+        $flagList = new FlagList();
+        if ($seen !== null) {
+            $flagList[] = new SeenFlag($seen);
+            $response["seen"] = $seen;
+        }
+        if ($flagged !== null) {
+            $flagList[] = new FlaggedFlag($flagged);
+            $response["flagged"] = $flagged;
+        }
 
-                $newMailFolderId = $request->input("mailFolderId");
+        if ($draft !== null) {
+            $flagList[] = new DraftFlag($draft);
+            $response["draft"] = $draft;
+        }
+        if (count($flagList) !== 0) {
+            $flagResult = $messageItemService->setFlags($messageKey, $flagList);
 
-                // check required parameters first
-                if ($seen === null && $flagged === null && $draft === null && !$isMove) {
-                    return response()->json([
-                        "success" => false,
-                        "msg" => "Invalid request payload."
-                    ], 400);
-                }
-
-                if ($isMove && $newMailFolderId === $mailFolderId) {
-                    return response()->json([
-                        "success" => false,
-                        "msg"     => "Cannot move message since it already belongs to this folder."
-                    ], 400);
-                }
-
-                if (!$isMove && !is_bool($seen) && !is_bool($flagged) && !is_bool($draft)) {
-                    return response()->json([
-                        "success" => false,
-                        "msg"     => "Invalid request payload.",
-                        "flagged" => $flagged,
-                        "seen"    => $seen,
-                        "draft"   => $draft,
-                        "action"  => $action
-                    ], 400);
-                }
-
-                $flagList = new FlagList();
-                if ($seen !== null) {
-                    $flagList[] = new SeenFlag($seen);
-                    $response["seen"] = $seen;
-                }
-                if ($flagged !== null) {
-                    $flagList[] = new FlaggedFlag($flagged);
-                    $response["flagged"] = $flagged;
-                }
-
-                if ($draft !== null) {
-                    $flagList[] = new DraftFlag($draft);
-                    $response["draft"] = $draft;
-                }
-                if (count($flagList) !== 0) {
-                    $flagResult = $messageItemService->setFlags($messageKey, $flagList);
-
-                    // exit here if we do not have anything related to MailFolders
-                    if ($newMailFolderId === null || $newMailFolderId === $mailFolderId) {
-                        return response()->json([
-                            "success" => $flagResult,
-                            "data"    => array_merge(
-                                $messageKey ->toJson(),
-                                $response
-                            )
-                        ], $flagResult ? 200 : 500);
-                    }
-                }
-
-                // if we are here, we require to move messages
-                $newMessageKey = $messageItemService->moveMessage(
-                    $messageKey,
-                    new FolderKey($mailAccountId, $newMailFolderId)
-                );
-
-                if ($newMessageKey) {
-                    $item = $messageItemService->getListMessageItem($newMessageKey);
-
-                    return response()->json([
-                        "success" => true,
-                        "data"    => $item->toJson()
-                    ]);
-                } else {
-                    return response()->json([
-                        "success" => false,
-                        "msg"     => "Could not move the message."
-                    ], 500);
-                }
-
-            default:
+            // exit here if we do not have anything related to MailFolders
+            if ($newMailFolderId === null || $newMailFolderId === $mailFolderId) {
                 return response()->json([
-                    "success" => false,
-                    "msg" => "\"target\" must be specified with \"MessageDraft\" or " .
-                             "\"MessageItem\"."
-                ], 400);
+                    "success" => $flagResult,
+                    "data"    => array_merge(
+                        $messageKey ->toJson(),
+                        $response
+                    )
+                ], $flagResult ? 200 : 500);
+            }
+        }
+
+        // if we are here, we require to move messages
+        $newMessageKey = $messageItemService->moveMessage(
+            $messageKey,
+            new FolderKey($mailAccountId, $newMailFolderId)
+        );
+
+        if ($newMessageKey) {
+            $item = $messageItemService->getListMessageItem($newMessageKey);
+
+            return response()->json([
+                "success" => true,
+                "data"    => $item->toJson()
+            ]);
+        } else {
+            return response()->json([
+                "success" => false,
+                "msg"     => "Could not move the message."
+            ], 500);
         }
     }
 

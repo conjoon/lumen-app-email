@@ -285,8 +285,8 @@ class MessageItemControllerTest extends TestCase
 
 
         $this->actingAs($this->getTestUserStub())
-            ->call("PUT", $this->getImapEndpoint(
-                "$this->messageItemsUrl?target=MessageItem",
+            ->call("PATCH", $this->getImapEndpoint(
+                "$this->messageItemsUrl/MessageItem",
                 "v0"
             ));
 
@@ -295,36 +295,6 @@ class MessageItemControllerTest extends TestCase
         $this->seeJsonContains([
             "success" => false,
             "msg" => "Invalid request payload."
-        ]);
-    }
-
-
-    /**
-     * Tests put() to make sure method relies on target-parameter.
-     *
-     *
-     * @return void
-     */
-    public function testPutMessageItemBadRequestMissingTarget()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $serviceStub->expects($this->never())
-            ->method("setFlags");
-
-        $this->actingAs($this->getTestUserStub())
-            ->call("PUT", $this->getImapEndpoint(
-                "$this->messageItemsUrl?target=MessageBody",
-                "v0"
-            ));
-
-        $this->assertResponseStatus(400);
-
-        $this->seeJsonContains([
-            "success" => false,
-            "msg" => "\"target\" must be specified with \"MessageDraft\" or \"MessageItem\"."
         ]);
     }
 
@@ -353,9 +323,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(true);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageItem", "seen" => true]//,
+            ->patch(
+                "{$this->getImapEndpoint("$this->messageItemsUrl", "v0")}/MessageItem",
+                ["data" => ["attributes" => ["seen" => true]]]
             );
 
         $response->assertResponseOk();
@@ -407,9 +377,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn($listMessageItem);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+            ->patch(
+                "{$this->getImapEndpoint("$this->messageItemsUrl", "v0")}/MessageItem",
+                ["data" => ["attributes" => ["draft" => false, "mailFolderId" => $toFolderId]]]
             );
 
         $response->assertResponseOk();
@@ -449,12 +419,12 @@ class MessageItemControllerTest extends TestCase
             ->method("getListMessageItem");
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
+            ->patch(
                 $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/$toFolderId/MessageItems/311?action=move",
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/$toFolderId/MessageItems/311/MessageItem",
                     "v0"
                 ),
-                ["target" => "MessageItem", "draft" => false, "mailFolderId" => $toFolderId]//,
+                ["data" => ["attributes" => ["draft" => false, "mailFolderId" => $toFolderId]]]
             );
 
         $response->assertResponseStatus(400);
@@ -499,12 +469,12 @@ class MessageItemControllerTest extends TestCase
             ->willReturn($listMessageItem);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
+            ->patch(
                 $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move",
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123/MessageItem",
                     "v0"
                 ),
-                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+                ["data" => ["attributes" => ["mailFolderId" => $toFolderId]]]
             );
 
         $response->assertResponseOk();
@@ -544,12 +514,12 @@ class MessageItemControllerTest extends TestCase
             ->method("getListMessageItem");
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
+            ->patch(
                 $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123?action=move",
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/123/MessageItem",
                     "v0"
                 ),
-                ["target" => "MessageItem", "mailFolderId" => $toFolderId]//,
+                ["data" => ["attributes" => ["mailFolderId" => $toFolderId]]]
             );
 
         $response->assertResponseStatus(500);
@@ -586,9 +556,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(true);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageItem", "seen" => true, "flagged" => false]//,
+            ->patch(
+                "{$this->getImapEndpoint("$this->messageItemsUrl", "v0")}/MessageItem",
+                ["data" => ["attributes" => ["seen" => true, "flagged" => false]]]
             );
 
         $response->assertResponseOk();
@@ -627,9 +597,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(false);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageItem", "flagged" => false]//,
+            ->patch(
+                "{$this->getImapEndpoint("$this->messageItemsUrl", "v0")}/MessageItem",
+                ["data" => ["attributes" => ["flagged" => false]]]
             );
 
         $response->assertResponseStatus(500);
@@ -774,25 +744,66 @@ class MessageItemControllerTest extends TestCase
 
     /**
      * Tests put() to make sure setting MessageDraft-data works as expected
-     * Tests w/o "origin" GET parameter
      *
      * @return void
      */
     public function testPutMessageDraftData()
     {
-        $this->runMessageDraftPutTest(false);
-    }
+        $serviceStub = $this->initServiceStub();
+        $transformer = $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
+
+        $messageKey = new MessageKey(
+            $this->getTestMailAccount("dev_sys_conjoon_org"),
+            "INBOX",
+            "311"
+        );
+        $newMessageKey = new MessageKey(
+            $this->getTestMailAccount("dev_sys_conjoon_org"),
+            "INBOX",
+            "abc"
+        );
+
+        $to = json_encode(["address" => "dev@conjoon.org"]);
+        $data = [
+            "subject" => "Hello World!",
+            "to" => $to,
+            "references" => "ref",
+            "inReplyTo" => "irt",
+            "xCnDraftInfo" => "info"
+        ];
 
 
-    /**
-     * Tests put() to make sure setting MessageDraft-data works as expected
-     * Tests with GET parameter origin=create
-     *
-     * @return void
-     */
-    public function testPutMessageDraftDataOriginCreate()
-    {
-        $this->runMessageDraftPutTest(true);
+        $transformDraft = new MessageItemDraft($messageKey);
+        $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
+
+        $transformer->returnDraftForData(array_merge($data, $messageKey->toJson()), $transformDraft);
+
+        $serviceStub->expects($this->once())
+            ->method("updateMessageDraft")
+            ->with($transformDraft)
+            ->willReturn($messageItemDraft);
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->patch(
+                $this->getImapEndpoint(
+                    "$this->messageItemsUrl/MessageDraft",
+                    "v0"
+                ),
+                ["data" => ["attributes" => $data]]
+            );
+
+        $response->assertResponseOk();
+
+        $set = array_merge(
+            ["subject", "to", "messageId", "inReplyTo", "references", "xCnDraftInfo"],
+            array_keys($newMessageKey->toJson())
+        );
+
+        $response->seeJsonEquals([
+            "success" => true,
+            "data"    => ArrayUtil::only($messageItemDraft->toJson(), $set)
+        ]);
     }
 
 
@@ -821,7 +832,7 @@ class MessageItemControllerTest extends TestCase
             "to" => $to
         ];
 
-        $transformer->returnDraftForData($data, $transformDraft);
+        $transformer->returnDraftForData(array_merge($data, $messageKey->toJson()), $transformDraft);
 
         $serviceStub->expects($this->once())
             ->method("updateMessageDraft")
@@ -829,9 +840,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(null);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint("$this->messageItemsUrl", "v0"),
-                ["target" => "MessageDraft", "subject" => "Hello World!", "to" => $to]//,
+            ->patch(
+                "{$this->getImapEndpoint($this->messageItemsUrl, "v0")}/MessageDraft",
+                ["data" => ["attributes" => $data]]
             );
 
 
@@ -878,9 +889,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(null);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
+            ->patch(
                 "{$this->getImapEndpoint($this->messageItemsUrl, "v0")}/MessageBody",
-                ["textPlain" => "Hello World!"]//,
+                ["data" => ["attributes" => ["textPlain" => "Hello World!"]]]
             );
 
         $response->assertResponseOk();
@@ -933,9 +944,9 @@ class MessageItemControllerTest extends TestCase
             ->willReturn($messageBodyDraft);
 
         $response = $this->actingAs($this->getTestUserStub())
-            ->put(
+            ->patch(
                 "{$this->getImapEndpoint($this->messageItemsUrl, "v0")}/MessageBody",
-                ["textHtml" => "Hello World!"]//,
+                ["data" => ["attributes" => ["textHtml" => "Hello World!"]]]
             );
 
         $response->assertResponseOk();
@@ -1052,76 +1063,6 @@ class MessageItemControllerTest extends TestCase
 
         $this->seeJsonContains([
             "success" => $type
-        ]);
-    }
-
-
-    /**
-     * Helper function to test PUT with target = MessageDraft
-     * Use $origin=true to pass GET parameter origin=true
-     */
-    protected function runMessageDraftPutTest($origin)
-    {
-        $serviceStub = $this->initServiceStub();
-        $transformer = $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $messageKey = new MessageKey(
-            $this->getTestMailAccount("dev_sys_conjoon_org"),
-            "INBOX",
-            "311"
-        );
-        $newMessageKey = new MessageKey(
-            $this->getTestMailAccount("dev_sys_conjoon_org"),
-            "INBOX",
-            "abc"
-        );
-
-        $to = json_encode(["address" => "dev@conjoon.org"]);
-        $data = [
-            "subject" => "Hello World!",
-            "to" => $to
-        ];
-
-        if ($origin === true) {
-            $data = array_merge($data, [
-                "references" => "ref",
-                "inReplyTo" => "irt",
-                "xCnDraftInfo" => "info"
-            ]);
-        }
-
-        $transformDraft = new MessageItemDraft($messageKey);
-        $messageItemDraft = new MessageItemDraft($newMessageKey, ["messageId" => "foo"]);
-
-        $transformer->returnDraftForData($data, $transformDraft);
-
-        $serviceStub->expects($this->once())
-            ->method("updateMessageDraft")
-            ->with($transformDraft)
-            ->willReturn($messageItemDraft);
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->put(
-                $this->getImapEndpoint(
-                    "$this->messageItemsUrl?target=MessageDraft",
-                    "v0"
-                ) .
-                ($origin === true ? "&origin=create" : ""),
-                $data
-            );
-
-        $response->assertResponseOk();
-
-        $set = ["subject", "to"];
-
-        if ($origin === true) {
-            $set = array_merge($set, ["messageId", "inReplyTo", "references", "xCnDraftInfo"]);
-        }
-
-        $response->seeJsonEquals([
-           "success" => true,
-           "data"    => ArrayUtil::intersect($messageItemDraft->toJson(), $set)
         ]);
     }
 
