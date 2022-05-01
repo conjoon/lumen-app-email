@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -117,7 +117,7 @@ class FileAttachment extends AbstractAttachment
     {
         return new self(
             $attachmentKey,
-            ArrayUtil::intersect($this->toJson(), ["content", "encoding", "text", "size", "type"])
+            ArrayUtil::only($this->toJson(), ["content", "encoding", "text", "size", "type"])
         );
     }
 
