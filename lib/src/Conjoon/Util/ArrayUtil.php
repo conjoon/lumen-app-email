@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -40,6 +40,37 @@ class ArrayUtil
 {
 
     /**
+     * Returns true if the specified $target array consist only of the specified keys,
+     * or of a subset of keys specified in $keys.
+     *
+     * @example
+     *     $target = [
+     *         "foo" => "bar", "snafu" => "foo"
+     *     ];
+     *     ArrayUtil::hasOnlyKeys($data, ["foo"]); // false
+     *     ArrayUtil::hasOnlyKeys($data, ["foo", "snafu"]); // true
+     *     ArrayUtil::hasOnlyKeys($data, ["foo", "snafu", "bar"]); // true
+     *
+     * @param array $target
+     * @param array $keys
+     * @return bool
+     */
+    public static function hasOnly(array $target, array $keys): bool
+    {
+        $keys = array_unique($keys);
+        $targetKeys = array_keys($target);
+
+        if (count($keys) < count($targetKeys)) {
+            return false;
+        }
+
+        $res = array_filter($targetKeys, fn ($key) => array_search($key, $keys) === false);
+
+        return count($res) === 0;
+    }
+
+
+    /**
      * Returns an array that contains only the keys specified in $keys
      *
      * @example
@@ -48,14 +79,14 @@ class ArrayUtil
      *  ];
      *  $keys = ["foo", "bar"];
      *
-     *  ArrayUtil::intersect($data, $keys)); // returns ["foo" => "bar", "bar" => "snafu"]
+     *  ArrayUtil::only($data, $keys)); // returns ["foo" => "bar", "bar" => "snafu"]
      *
      * @param array $data
      * @param array $keys
      *
      * @return array
      */
-    public static function intersect(array $data, array $keys): array
+    public static function only(array $data, array $keys): array
     {
         return array_intersect_key($data, array_flip($keys));
     }

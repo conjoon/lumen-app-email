@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -46,7 +46,7 @@ class ArrayUtilTest extends TestCase
 // ---------------------
 
     /**
-     * Tests intersect()
+     * Tests only()
      */
     public function testIntersect()
     {
@@ -57,7 +57,7 @@ class ArrayUtilTest extends TestCase
 
         $keys = [1, 3];
 
-        $this->assertEquals([1 => 2, 3 => 4], ArrayUtil::intersect($data, $keys));
+        $this->assertEquals([1 => 2, 3 => 4], ArrayUtil::only($data, $keys));
 
         $data = [
             "foo" => "bar", "bar" => "snafu", 3 => 4
@@ -65,7 +65,7 @@ class ArrayUtilTest extends TestCase
 
         $keys = ["foo", "bar"];
 
-        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::intersect($data, $keys));
+        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::only($data, $keys));
 
 
         $data = [
@@ -74,7 +74,7 @@ class ArrayUtilTest extends TestCase
 
         $keys = ["foo", "bar"];
 
-        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::intersect($data, $keys));
+        $this->assertEquals(["foo" => "bar", "bar" => "snafu"], ArrayUtil::only($data, $keys));
     }
 
 
@@ -142,5 +142,23 @@ class ArrayUtilTest extends TestCase
         $this->assertSame(2, ArrayUtil::unchain("foo.bar.snafu", $target));
 
         $this->assertNull(ArrayUtil::unchain("foo.no.snafu", $target));
+    }
+
+
+    /**
+     * Tests hasOnlyKeys
+     */
+    public function testHasOnly()
+    {
+        $data = [
+            "foo" => "bar", "snafu" => "foo"
+        ];
+
+        $this->assertTrue(ArrayUtil::hasOnly($data, ["foo", "foo", "snafu", "foo", "snafu"]));
+        $this->assertTrue(ArrayUtil::hasOnly($data, ["foo", "foo", "snafu", "foo", "snafu", "bar"]));
+        $this->assertTrue(ArrayUtil::hasOnly($data, ["foo", "snafu"]));
+        $this->assertFalse(ArrayUtil::hasOnly($data, ["foo"]));
+        $this->assertTrue(ArrayUtil::hasOnly($data, ["foo", "snafu", "bar"]));
+        $this->assertFalse(ArrayUtil::hasOnly($data, ["foo", "bar"]));
     }
 }
