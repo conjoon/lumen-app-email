@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,9 @@ declare(strict_types=1);
 namespace Tests\Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
+use Conjoon\Mail\Client\Message\DraftTrait;
 use Conjoon\Mail\Client\Message\ListMessageItem;
 use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessagePart;
@@ -52,6 +55,8 @@ class ListMessageItemTest extends TestCase
      */
     public function testConstructor()
     {
+        $uses = class_uses(ListMessageItem::class);
+        $this->assertContains(DraftTrait::class, $uses);
 
         $messageKey = $this->createMessageKey();
         $messageItem = new ListMessageItem($messageKey, null, $this->createMessagePart());
@@ -75,6 +80,9 @@ class ListMessageItemTest extends TestCase
             $this->createMessagePart($previewText, "UTF-8", "text/plain")
         );
 
+        $this->assertNull($messageItem->getDraft());
+        $messageItem->setDraft(true);
+
         $this->assertSame($previewText, $messageItem->getMessagePart()->getContents());
 
         $mp = $messageItem->getMessagePart();
@@ -87,8 +95,21 @@ class ListMessageItemTest extends TestCase
         $this->assertSame($messageItem, $messageItem->setMessagePart($mp));
         $this->assertSame($mp, $messageItem->getMessagePart());
 
+        $cc = $this->createAddresses(1);
+        $messageItem->setCc($cc);
+        $bcc = $this->createAddresses(2);
+        $messageItem->setBcc($bcc);
+        $replyTo = $this->createAddress(3);
+        $messageItem->setReplyTo($replyTo);
+
         $arr = $messageItem->toJson();
         $this->assertSame("YO!", $arr["subject"]);
+        $this->assertTrue($arr["draft"]);
+
+        $this->assertEquals($cc->toJson(), $arr["cc"]);
+        $this->assertEquals($bcc->toJson(), $arr["bcc"]);
+        $this->assertEquals($replyTo->toJson(), $arr["replyTo"]);
+
         $this->assertSame("snafu", $arr["previewText"]);
     }
 
@@ -97,6 +118,30 @@ class ListMessageItemTest extends TestCase
 // ---------------------
 //    Helper Functions
 // ---------------------
+
+    /**
+     * @return MailAddressList
+     */
+    protected function createAddresses($id): MailAddressList
+    {
+
+        $list = new MailAddressList();
+
+        $list[] = $this->createAddress($id);
+
+        return $list;
+    }
+
+
+    /**
+     * @return MailAddress
+     */
+    protected function createAddress($id): MailAddress
+    {
+        return new MailAddress("name{$id}", "name{$id}@address.testcomdomaindev");
+    }
+
+
     /**
      * Returns a MessageKey.
      *

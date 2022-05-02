@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace Conjoon\Mail\Client\Message;
 
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAddress;
+use Conjoon\Mail\Client\Data\MailAddressList;
 
 /**
  * Class ListMessageItem models envelope information along with a MessagePart
@@ -62,6 +64,7 @@ use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
  */
 class ListMessageItem extends MessageItem
 {
+    use DraftTrait;
 
     /**
      * @var MessagePart|null
@@ -120,6 +123,12 @@ class ListMessageItem extends MessageItem
         if ($this->getMessagePart()) {
             $data["previewText"] = $this->getMessagePart()->getContents();
         }
+
+        $data = array_merge($data, [
+            'cc' => $this->getCc() ? $this->getCc()->toJson() : null,
+            'bcc' => $this->getBcc() ? $this->getBcc()->toJson() : null,
+            'replyTo' => $this->getReplyTo() ? $this->getReplyTo()->toJson() : null
+        ]);
 
         return $this->buildJson($data);
     }

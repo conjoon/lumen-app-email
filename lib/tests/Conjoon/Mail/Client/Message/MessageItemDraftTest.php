@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -34,6 +34,7 @@ use Conjoon\Mail\Client\Data\MailAddress;
 use Conjoon\Mail\Client\Data\MailAddressList;
 use Conjoon\Mail\Client\MailClientException;
 use Conjoon\Mail\Client\Message\AbstractMessageItem;
+use Conjoon\Mail\Client\Message\DraftTrait;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Util\Modifiable;
 use Tests\TestCase;
@@ -56,6 +57,8 @@ class MessageItemDraftTest extends TestCase
      */
     public function testConstructor()
     {
+        $uses = class_uses(MessageItemDraft::class);
+        $this->assertContains(DraftTrait::class, $uses);
 
         $messageItem = $this->createMessageItem();
         $this->assertInstanceOf(AbstractMessageItem::class, $messageItem);
