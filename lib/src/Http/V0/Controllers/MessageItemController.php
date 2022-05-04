@@ -462,21 +462,10 @@ class MessageItemController extends Controller
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount        = $user->getMailAccount($mailAccountId);
 
-        // possible targets: MessageBody
-        $target = $request->input("target");
-
-        if ($target !== "MessageBodyDraft") {
-            return response()->json([
-                "success" => false,
-                "msg" =>  "\"target\" must be specified with \"MessageBodyDraft\"."
-            ], 400);
-        }
-
         $mailFolderId = urldecode($mailFolderId);
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
-        $keys = ["textHtml", "textPlain"];
-        $data = $request->only($keys);
+        $data = ArrayUtil::only(ArrayUtil::unchain("data.attributes", $request->all()), ["textHtml", "textPlain"]);
 
         $messageBody             = $this->messageBodyDraftJsonTransformer::fromArray($data);
         $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
