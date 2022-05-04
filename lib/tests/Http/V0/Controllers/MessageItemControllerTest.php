@@ -631,7 +631,13 @@ class MessageItemControllerTest extends TestCase
         $textPlain = "PLAIN";
 
         $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
-        $requestData = array_merge($data, ["target" => "MessageBodyDraft"]);
+        $requestData = [
+            "data" => [
+                "mailAccountId" => "dev_sys_conjoon_org",
+                "mailFolderId" => "INBOX",
+                "attributes" => $data
+            ]
+        ];
 
         $messageBody = new MessageBodyDraft();
         $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
@@ -662,39 +668,6 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
-     * Tests post() with wrong target.
-     *
-     *
-     * @return void
-     */
-    public function testPostMessageBodyNoMessageBody()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
-
-        $serviceStub->expects($this->never())
-            ->method("createMessageBodyDraft");
-
-        $this->actingAs($this->getTestUserStub())
-            ->call(
-                "POST",
-                $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
-                    "v0"
-                )
-            );
-
-        $this->assertResponseStatus(400);
-
-        $this->seeJsonContains([
-            "success" => false,
-            "msg" => "\"target\" must be specified with \"MessageBodyDraft\"."
-        ]);
-    }
-
-
-    /**
      * Tests post() to make sure response is okay when no MessageBody as created.
      *
      * @return void
@@ -711,6 +684,15 @@ class MessageItemControllerTest extends TestCase
 
         $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
 
+        $requestData = [
+            "data" => [
+                "mailAccountId" => "dev_sys_conjoon_org",
+                "mailFolderId" => "INBOX",
+                "attributes" => $data
+            ]
+        ];
+
+
         $messageBody = new MessageBodyDraft();
         $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
         $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
@@ -723,14 +705,12 @@ class MessageItemControllerTest extends TestCase
             ->willReturn(null);
 
         $this->actingAs($this->getTestUserStub())
-            ->call(
-                "POST",
+            ->post(
                 $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems" .
-                    "?target=MessageBodyDraft&textHtml=" .
-                    $textHtml . "&textPlain=" . $textPlain,
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
                     "v0"
-                )
+                ),
+                $requestData
             );
 
         $this->assertResponseStatus(400);
