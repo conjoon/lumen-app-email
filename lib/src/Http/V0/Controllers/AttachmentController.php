@@ -88,7 +88,7 @@ class AttachmentController extends Controller
 
         $attachmentService = $this->attachmentService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $parentMessageItemId);
+        $key               = new MessageKey($mailAccount, urldecode($mailFolderId), $parentMessageItemId);
 
         return response()->json([
             "success" => true,
