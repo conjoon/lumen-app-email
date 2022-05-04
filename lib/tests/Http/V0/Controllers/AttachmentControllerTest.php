@@ -69,11 +69,13 @@ class AttachmentControllerTest extends TestCase
                 return $service;
             });
 
-        $messageKey = new MessageKey("dev", "INBOX", "123");
+        $urlencodedMaiLFolderId = "INBOX.Sent%20Messages";
+
+        $messageKey = new MessageKey("dev", $urlencodedMaiLFolderId, "123");
 
         $resultList   = new FileAttachmentItemList();
         $resultList[] = new FileAttachmentItem(
-            new AttachmentKey("dev", "INBOX", "123", "1"),
+            new AttachmentKey("dev", $urlencodedMaiLFolderId, "123", "1"),
             [
                 "size" => 0,
                 "type" => "text/plain",
@@ -85,13 +87,17 @@ class AttachmentControllerTest extends TestCase
 
         $service->expects($this->once())
             ->method("getFileAttachmentItemList")
-            ->with($messageKey)
+            ->with(
+                $this->callback(function ($key) use ($messageKey) {
+                    return $key->getMailFolderId() === urldecode($messageKey->getMailFolderId());
+                })
+            )
             ->willReturn($resultList);
 
 
         $actor = $this->actingAs($this->getTestUserStub());
         $endpoint = $this->getImapEndpoint(
-            "MailAccounts/dev/MailFolders/INBOX/MessageItems/123/Attachments",
+            "MailAccounts/dev/MailFolders/$urlencodedMaiLFolderId/MessageItems/123/Attachments",
             "v0"
         );
         $response = $actor->call("GET", $endpoint);
