@@ -489,22 +489,26 @@ class MessageItemController extends Controller
      * "mailFolderId" and "id".
      *
      * @param Request $request
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     * @param string $messageItemId
      *
      * @return JsonResponse
      */
-    public function sendMessageDraft(Request $request): JsonResponse
-    {
+    public function sendMessageDraft(
+        Request $request,
+        string $mailAccountId,
+        string $mailFolderId,
+        string $messageItemId
+    ): JsonResponse {
         $user = Auth::user();
 
-        $keys = ["mailAccountId", "mailFolderId", "id"];
-        $data = $request->only($keys);
-
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        $mailAccount = $user->getMailAccount($data["mailAccountId"]);
+        $mailAccount = $user->getMailAccount($mailAccountId);
 
         $messageItemService = $this->messageItemService;
 
-        $messageKey = new MessageKey($mailAccount, $data["mailFolderId"], $data["id"]);
+        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         $status = $messageItemService->sendMessageDraft($messageKey);
 
@@ -516,7 +520,7 @@ class MessageItemController extends Controller
         }
 
         return response()->json([
-            "success" => true
+           "success" => true
         ]);
     }
 }

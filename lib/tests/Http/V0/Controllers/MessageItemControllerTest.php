@@ -969,8 +969,15 @@ class MessageItemControllerTest extends TestCase
 
             $response = $this->actingAs($this->getTestUserStub())
                 ->post(
-                    $this->getImapEndpoint("SendMessage", "v0"),
-                    $requestData
+                    $this->getImapEndpoint(
+                        "MailAccounts/" .
+                                $requestData["mailAccountId"] .
+                                "/MailFolders/" .
+                                $requestData["mailFolderId"] .
+                                "/MessageItems/" .
+                        $requestData["id"],
+                        "v0"
+                    )
                 );
 
             if ($expected === true) {
