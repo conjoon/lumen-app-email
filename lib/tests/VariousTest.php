@@ -134,6 +134,7 @@ class VariousTest extends TestCase
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
                 "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "POST/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
                 "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageItem", $version),
                 "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageDraft", $version),
                 "DELETE/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
@@ -148,8 +149,7 @@ class VariousTest extends TestCase
                 "DELETE/" . $this->getImapEndpoint(
                     $messageItemsEndpoint . "/{messageItemId}/Attachments/{id}",
                     $version
-                ),
-                "POST/" . $this->getImapEndpoint("SendMessage", $version)
+                )
             ];
 
             foreach ($testAuthsFor as $route) {

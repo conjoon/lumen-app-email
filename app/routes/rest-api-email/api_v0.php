@@ -35,7 +35,10 @@ declare(strict_types=1);
 | https://github.com/conjoon/rest-api-description
 */
 
-$router->post('SendMessage', 'MessageItemController@sendMessageDraft');
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@sendMessageDraft'
+);
 
 $router->get('MailAccounts', 'MailAccountController@index');
 
