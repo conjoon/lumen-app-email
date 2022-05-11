@@ -45,7 +45,6 @@ use Tests\TestCase;
  */
 class IndexRequestQueryTranslatorTest extends TestCase
 {
-
     /**
      *
      */

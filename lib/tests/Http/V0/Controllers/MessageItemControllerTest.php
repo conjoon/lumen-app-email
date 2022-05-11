@@ -1064,7 +1064,6 @@ class MessageItemControllerTest extends TestCase
     protected function initMessageItemDraftJsonTransformer()
     {
         $transformer = new class extends DefaultMessageItemDraftJsonTransformer {
-
             /**
              * @var MessageItemDraft
              */
@@ -1126,7 +1125,6 @@ class MessageItemControllerTest extends TestCase
     protected function initMessageBodyDraftJsonTransformer()
     {
         $transformer = new class extends DefaultMessageBodyDraftJsonTransformer {
-
             /**
              * @var MessageBodyDraft
              */

@@ -41,7 +41,6 @@ use Illuminate\Support\ServiceProvider;
  */
 class ImapAuthServiceProvider extends ServiceProvider
 {
-
     /**
      * Register any application services.
      *

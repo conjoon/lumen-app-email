@@ -42,7 +42,6 @@ use Tests\TestCase;
  */
 class AbstractMessageItemQueryTranslatorTest extends TestCase
 {
-
     /**
      *
      */

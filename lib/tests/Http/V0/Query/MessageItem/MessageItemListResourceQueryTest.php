@@ -40,7 +40,6 @@ use Tests\TestCase;
  */
 class MessageItemListResourceQueryTest extends TestCase
 {
-
     /**
      * test class
      */

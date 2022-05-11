@@ -42,7 +42,6 @@ use Illuminate\Http\Request;
  */
 abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
 {
-
     /**
      * Parses and builds up the attribute list.
      *

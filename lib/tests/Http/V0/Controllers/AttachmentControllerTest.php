@@ -300,7 +300,6 @@ class AttachmentControllerTest extends TestCase
     protected function initAttachmentListJsonTransformer()
     {
         $transformer = new class implements AttachmentListJsonTransformer {
-
             /**
              * @var FileAttachmentList
              */

@@ -40,7 +40,6 @@ use Illuminate\Http\Request;
  */
 class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 {
-
     /**
      * @inheritdoc
      * @noinspection PhpUndefinedFieldInspection

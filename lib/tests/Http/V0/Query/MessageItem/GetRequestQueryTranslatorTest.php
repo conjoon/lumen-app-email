@@ -46,7 +46,6 @@ use Tests\TestCase;
  */
 class GetRequestQueryTranslatorTest extends TestCase
 {
-
     /**
      *
      */

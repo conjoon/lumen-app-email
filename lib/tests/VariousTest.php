@@ -357,7 +357,6 @@ class VariousTest extends TestCase
         // make sure routing works
         $request->setRouteResolver(function () use ($cmpId) {
             return new class ($cmpId) {
-
                 protected string $cmpId;
 
                 public function __construct($cmpId)

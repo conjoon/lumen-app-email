@@ -42,7 +42,6 @@ use Illuminate\Http\Response;
  */
 abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 {
-
     /**
      * Creates the application.
      *

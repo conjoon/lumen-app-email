@@ -38,7 +38,6 @@ use Illuminate\Http\JsonResponse;
  */
 class MailAccountController extends Controller
 {
-
     /**
      * Returns all available MailAccounts for the user that is currently
      * authenticated with this application in the json response.

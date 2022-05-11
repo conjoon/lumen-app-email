@@ -46,7 +46,6 @@ use Tests\TestCase;
  */
 class ImapAuthServiceProviderTest extends TestCase
 {
-
     /**
      * Makes sure register() registers the ImapUserProvider.
      *

@@ -39,8 +39,6 @@ use Illuminate\Support\Facades\Auth;
  */
 class MailFolderController extends Controller
 {
-
-
     /**
      * @var MailFolderService
      */

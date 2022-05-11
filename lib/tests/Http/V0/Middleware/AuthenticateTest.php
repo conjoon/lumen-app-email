@@ -56,7 +56,6 @@ class AuthenticateTest extends TestCase
             ->getMock();
 
         $stubbedStub = new class {
-
             public static bool $isGuest = true;
 
             public function guest(): bool
@@ -146,7 +145,6 @@ class AuthenticateTest extends TestCase
         // OKAY
         $newRequest->setRouteResolver(function () use ($user) {
             return new class ($user) {
-
                 protected $user;
 
                 public function __construct($user)

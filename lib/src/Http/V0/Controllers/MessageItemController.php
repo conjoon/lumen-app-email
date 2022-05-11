@@ -51,7 +51,6 @@ use Illuminate\Http\JsonResponse;
  */
 class MessageItemController extends Controller
 {
-
     /**
      * @type MessageItemService
      */

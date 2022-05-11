@@ -41,7 +41,6 @@ use Illuminate\Http\Request;
  */
 class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 {
-
     /**
      * @inheritdoc
      * @noinspection PhpUndefinedFieldInspection

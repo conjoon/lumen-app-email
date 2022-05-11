@@ -43,8 +43,6 @@ use Illuminate\Support\Facades\Auth;
  */
 class AttachmentController extends Controller
 {
-
-
     /**
      * @var attachmentService
      */
