@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,7 +35,10 @@ declare(strict_types=1);
 | https://github.com/conjoon/rest-api-description
 */
 
-$router->post('SendMessage', 'MessageItemController@sendMessageDraft');
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
+    'MessageItemController@sendMessageDraft'
+);
 
 $router->get('MailAccounts', 'MailAccountController@index');
 
@@ -51,19 +54,55 @@ $router->post(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
     'MessageItemController@post'
 );
+
+/**
+ * GET MessageItem / MessageBody / MessageDraft
+ */
 $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@get'
 );
-$router->put(
-    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
-    'MessageItemController@put'
+
+$router->patch(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageItem',
+    'MessageItemController@patchMessageItem'
 );
+
+$router->patch(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageDraft',
+    'MessageItemController@patchMessageDraft'
+);
+
 $router->delete(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}',
     'MessageItemController@delete'
 );
+
+/**
+ * MessageBody
+ */
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
+    'MessageItemController@getMessageBody'
+);
+
+$router->patch(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/MessageBody',
+    'MessageItemController@patchMessageBody'
+);
+
+/**
+ * Attachments
+ */
 $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
     'AttachmentController@index'
+);
+$router->post(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments',
+    'AttachmentController@post'
+);
+$router->delete(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems/{messageItemId}/Attachments/{id}',
+    'AttachmentController@delete'
 );

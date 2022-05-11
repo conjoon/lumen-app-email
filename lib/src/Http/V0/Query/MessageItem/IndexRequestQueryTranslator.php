@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,7 +32,6 @@ namespace App\Http\V0\Query\MessageItem;
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Http\Query\QueryTranslator;
 use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\Request;
 
@@ -40,9 +39,8 @@ use Illuminate\Http\Request;
  * Class IndexRequestQueryTranslator
  * @package App\Http\V0\Query\MessageItem
  */
-class IndexRequestQueryTranslator extends QueryTranslator
+class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 {
-
     /**
      * @inheritdoc
      * @noinspection PhpUndefinedFieldInspection
@@ -61,7 +59,28 @@ class IndexRequestQueryTranslator extends QueryTranslator
              $this->getDefaultAttributes()
          );
 
-        if (!$bag->getString("ids")) {
+        $ids = null;
+        if ($bag->getString("filter")) {
+            $bag->filter = json_decode($bag->filter, true);
+            if (!$bag->filter) {
+                throw new InvalidQueryException(
+                    "parameter \"filter\" must be JSON decodable"
+                );
+            }
+
+            foreach ($bag->filter as $filterEntry) {
+                if (
+                    isset($filterEntry["property"]) && strtolower($filterEntry["property"]) === "id" &&
+                    isset($filterEntry["operator"]) && strtolower($filterEntry["operator"]) === "in"
+                ) {
+                    $ids = $filterEntry["value"] ?? null;
+                }
+            }
+        }
+
+
+
+        if (!$ids) {
             if (!$bag->getInt("limit")) {
                 throw new InvalidQueryException(
                     "parameter \"limit\" must not be omitted"
@@ -80,8 +99,6 @@ class IndexRequestQueryTranslator extends QueryTranslator
 
             $bag->start = $bag->getInt("start") ?? 0;
             $bag->limit = $bag->getInt("limit");
-        } else {
-            $bag->ids = explode(",", $bag->getString("ids"));
         }
 
         if (!$bag->sort) {
@@ -92,39 +109,6 @@ class IndexRequestQueryTranslator extends QueryTranslator
 
 
         return new MessageItemListResourceQuery($bag);
-    }
-
-    /**
-     * Maps required configurations to passed attributes not available in the target
-     * entity.
-     *
-     * @param $target
-     * @param $parsed
-     * @param $default
-     * @return array
-     */
-    protected function mapConfigToAttributes($target, $parsed, $default): array
-    {
-
-        $result = [];
-        foreach ($target as $attributeName) {
-            $result[$attributeName] = $parsed[$attributeName] ??
-                ($default[$attributeName] ?? true);
-        }
-
-        if (isset($result["previewText"])) {
-            if (!is_array($result["previewText"])) {
-                $result["html"]  = $this->getDefaultAttributes()["html"];
-                $result["plain"]  = $this->getDefaultAttributes()["plain"];
-            } else {
-                $result["html"]  = ArrayUtil::unchain("previewText.html", $result, $result["previewText"]);
-                $result["plain"] = ArrayUtil::unchain("previewText.plain", $result, $result["previewText"]);
-            }
-
-            unset($result["previewText"]);
-        }
-
-        return $result;
     }
 
 
@@ -142,43 +126,8 @@ class IndexRequestQueryTranslator extends QueryTranslator
         if (!$options) {
             return [];
         }
+
         return json_decode($options, true);
-    }
-
-
-    /**
-     * Parses and builds up the attribute list.
-     *
-     * @param ParameterBag $bag
-     * @return string[]
-     *
-     * @noinspection PhpUndefinedFieldInspection
-     */
-    protected function parseAttributes(ParameterBag $bag): array
-    {
-        if (!$bag->attributes) {
-            return $this->getAttributes();
-        }
-        $attributes = explode(",", $bag->attributes);
-        if (in_array("*", $attributes) !== false) {
-            $excludes   = array_filter($attributes, fn ($item) => $item !== "*");
-            $attributes = array_filter($this->getAttributes(), fn ($item) => !in_array($item, $excludes));
-        } else {
-            $notAllowed = $this->hasOnlyAllowedAttributes($attributes ?? []);
-            if (!empty($notAllowed)) {
-                throw new InvalidQueryException(
-                    "parameter \"attributes\" has unknown entries: " . implode(",", $notAllowed)
-                );
-            }
-
-            if (in_array("previewText", $attributes)) {
-                $attributes = array_filter($attributes, fn($item) => $item !== "previewText");
-                $attributes[] = "html";
-                $attributes[] = "plain";
-            }
-        }
-
-        return $attributes;
     }
 
 
@@ -194,95 +143,17 @@ class IndexRequestQueryTranslator extends QueryTranslator
 
 
     /**
-     * @inheritdocs
-     */
-    protected function extractParameters($parameterResource): array
-    {
-        if (!($parameterResource instanceof Request)) {
-            throw new InvalidParameterResourceException(
-                "Expected \"parameterResource\" to be instance of {Illuminate::class}"
-            );
-        }
-        return $parameterResource->only($this->getExpectedParameters());
-    }
-
-
-    /**
      * @inheritdoc
      */
     protected function getExpectedParameters(): array
     {
         return [
             "limit",
-            "ids",
             "start",
             "sort",
             "attributes",
-            "options"
-        ];
-    }
-
-
-    /**
-     * Default attributes to pass to the lower level api.
-     *
-     * @return array
-     */
-    protected function getDefaultAttributes(): array
-    {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
-        ];
-    }
-
-
-    /**
-     * Checks if there are attributes which are not part of the attributes defined for the
-     * entity the translator should process the parameters for.
-     *
-     * @param $received
-     * @return array
-     */
-    protected function hasOnlyAllowedAttributes($received): array
-    {
-        return array_diff($received, $this->getAttributes());
-    }
-
-
-    /**
-     * Returns all attributes the entity exposes.
-     *
-     * @return string[]
-     */
-    protected function getAttributes(): array
-    {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText"
+            "options",
+            "filter"
         ];
     }
 }

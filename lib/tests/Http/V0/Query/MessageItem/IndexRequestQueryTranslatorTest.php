@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,11 +29,11 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\Query\MessageItem;
 
+use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Http\Query\QueryTranslator;
 use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
@@ -41,11 +41,10 @@ use Tests\TestCase;
 
 /**
  * Class IndexRequestQueryTranslatorTest
- * @package Tests\App\Http\V0\Request\MessageItem\Get
+ * @package Tests\App\Http\V0\Query\MessageItem
  */
 class IndexRequestQueryTranslatorTest extends TestCase
 {
-
     /**
      *
      */
@@ -53,7 +52,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
     {
         $inst = new IndexRequestQueryTranslator();
 
-        $this->assertInstanceOf(QueryTranslator::class, $inst);
+        $this->assertInstanceOf(AbstractMessageItemQueryTranslator::class, $inst);
     }
 
 
@@ -72,30 +71,12 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
         $this->assertEquals([
             "limit",
-            "ids",
             "start",
             "sort",
             "attributes",
-            "options"
+            "options",
+            "filter"
         ], $expected);
-    }
-
-
-    /**
-     * Extract parameters not Request
-     * @throws ReflectionException
-     */
-    public function testExtractParametersException()
-    {
-        $this->expectException(InvalidParameterResourceException::class);
-
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
-
-        $extractParametersReflection->invokeArgs($translator, ["foo"]);
     }
 
 
@@ -111,29 +92,19 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $extractParametersReflection = $reflection->getMethod("extractParameters");
         $extractParametersReflection->setAccessible(true);
 
-        $request = new Request(["limit" => 0, "ids" => "2", "start" => 3, "foo" => "bar"]);
+        $request = new Request([
+            "limit" => 0,
+            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
+            "start" => 3,
+            "foo" => "bar"]);
 
         $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
 
-        $this->assertEquals(["limit" => 0, "ids" => "2", "start" => 3], $extracted);
-    }
-
-
-    /**
-     * getDefaultAttributes()
-     * @throws ReflectionException
-     */
-    public function testGetDefaultParameters()
-    {
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $getDefaultAttributesReflection = $reflection->getMethod("getDefaultAttributes");
-        $getDefaultAttributesReflection->setAccessible(true);
-
-        $attr = $getDefaultAttributesReflection->invokeArgs($translator, []);
-
-        $this->assertEquals($this->getDefaultAttributes(), $attr);
+        $this->assertEquals([
+            "limit" => 0,
+            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
+            "start" => 3
+        ], $extracted);
     }
 
 
@@ -221,6 +192,15 @@ class IndexRequestQueryTranslatorTest extends TestCase
                 ]
             ],
             [
+                "input" => ["start" => 0, "limit" => "10", "attributes" => "*,cc,bcc"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => 10,
+                    "sort" => $this->getDefaultSort(),
+                    "attributes" => $getExpectedAttributes(["cc", "bcc"])
+                ]
+            ],
+            [
                 "input" => [
                     "start" => 0,
                     "limit" => "20",
@@ -272,10 +252,10 @@ class IndexRequestQueryTranslatorTest extends TestCase
             ],
             [
                 "input" => [
-                    "ids" => "123198731,1331,123121,212"
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
                 ],
                 "output" => [
-                    "ids" => explode(",", "123198731,1331,123121,212"),
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
                     "attributes" => $getExpectedAttributes(
                         [],
@@ -286,16 +266,61 @@ class IndexRequestQueryTranslatorTest extends TestCase
             ],
             [
                 "input" => [
-                    "ids" => "123198731,1331,123121,212",
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
                     "attributes" => "previewText"
                 ],
                 "output" => [
-                    "ids" => explode(",", "123198731,1331,123121,212"),
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
                     "attributes" => [
                         "html" => $this->getDefaultAttributes()["html"],
                         "plain" => $this->getDefaultAttributes()["plain"]
                     ]
+                ]
+            ],
+            [
+                "input" => [
+                    "filter" => json_encode([["property" => "id", "value" => 2, "operator" => "="]]),
+                    "attributes" => "recent",
+                    "limit" => -1
+                ],
+                "output" => [
+                    "filter" => [["property" => "id", "value" => 2, "operator" => "="]],
+                    "sort" => $this->getDefaultSort(),
+                    "start" => 0,
+                    "limit" => -1,
+                     "attributes" => [
+                        "recent" => true
+                    ]
+                ]
+            ],
+            [
+                "input" => [
+                    "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
+                    "attributes" => "previewText",
+                    "target" => "messageItem",
+                    "options" => json_encode(
+                        ["previewText" => [
+                            "plain" => [
+                                "length" => 200,
+                                "precedence" => true
+                            ],
+                            "html" => [
+                                "length" => 200
+                            ]
+                        ]]
+                    ),
+                    "limit" => -1
+                ],
+                "output" => [
+                    "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
+                    "target" => "messageItem",
+                    "attributes" => [
+                        "html" => ["length" => 200],
+                        "plain" => ["length" => 200, "precedence" => true]
+                    ],
+                    "sort" => $this->getDefaultSort(),
+                    "limit" => -1
                 ]
             ]
         ];
@@ -338,26 +363,23 @@ class IndexRequestQueryTranslatorTest extends TestCase
     }
 
 
-
-    protected function getDefaultAttributes(): array
+    /**
+     * @throws ReflectionException
+     */
+    public function testExceptionFilterNotDecodable()
     {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
-        ];
+        $this->expectExceptionMessageMatches("/must be JSON decodable/");
+        $translator = new IndexRequestQueryTranslator();
+        $reflection = new ReflectionClass($translator);
+
+        $translateParametersReflection = $reflection->getMethod("translateParameters");
+        $translateParametersReflection->setAccessible(true);
+
+        $translateParametersReflection->invokeArgs($translator, [
+            new ParameterBag(["limit" => 1, "filter" => "id"])
+        ]);
     }
+
 
     protected function getDefaultSort(): array
     {
@@ -365,22 +387,18 @@ class IndexRequestQueryTranslatorTest extends TestCase
     }
 
 
-    protected function getAttributes(): array
+    /**
+     * @return mixed
+     * @throws ReflectionException
+     */
+    protected function getDefaultAttributes()
     {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText"
-        ];
+        $translator = new IndexRequestQueryTranslator();
+        $reflection = new ReflectionClass($translator);
+
+        $translateParametersReflection = $reflection->getMethod("getDefaultAttributes");
+        $translateParametersReflection->setAccessible(true);
+
+        return $translateParametersReflection->invokeArgs($translator, []);
     }
 }

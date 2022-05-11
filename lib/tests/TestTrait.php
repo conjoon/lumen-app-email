@@ -41,7 +41,6 @@ use ReflectionMethod;
  */
 trait TestTrait
 {
-
     /**
      * Returns a MockObject serving as the user stub.
      *

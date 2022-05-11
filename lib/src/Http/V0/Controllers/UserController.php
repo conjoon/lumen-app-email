@@ -39,7 +39,6 @@ use Illuminate\Http\JsonResponse;
  */
 class UserController extends Controller
 {
-
     /**
      * @var ImapUserProvider
      */

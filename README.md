@@ -94,15 +94,14 @@ In case you cannot run tests from within this folder with your phpunit-installat
 phpunit included in the vendor directory:
 ```./vendor/bin/phpunit```
 
-#### Composer 2.0 / Horde vows
-Unfortunately, there is no full support for the required Horde packages as of now. If you experience any troubles running ```composer update```, the following will most likely help:
+### Composer 2.0 - Pear/Horde vows
+As of **v1.0.1**, _php-lib-conjoon_ no longer requires _Composer 1.*_ for installation.
+For _Composer 2.*_-compatibility, _php-lib-conjoon_ relies on the following private composer
+package repository:
 
 ```
-// remove the "requires" and "repositories" from the composer.json
-//
-> composer self-update --1
-// add the previously "requires" and "repositories" from the composer.json back
-// ...
-> composer update
-> composer self-update --rollback
+https://horde-satis.maintaina.com
 ```
+This repository is mentioned in **THIS** package's _composer.json_
+This repository is also mentioned in the _composer.json_-file of
+[horde\/horde_deployment](https://github.com/horde/horde-deployment/blob/master/composer.json).

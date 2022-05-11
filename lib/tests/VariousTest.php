@@ -3,7 +3,7 @@
 /**
  * conjoon
  * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -31,10 +31,12 @@ namespace Tests;
 
 use Closure;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
+use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -42,6 +44,7 @@ use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
 use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
 use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
 use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\Mail\Client\Request\Attachment\Transformer\AttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
@@ -128,14 +131,25 @@ class VariousTest extends TestCase
                 "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders", $version),
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
                 "POST/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
+                "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
+                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
                 "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
-                "PUT/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "POST/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
+                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageItem", $version),
+                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageDraft", $version),
                 "DELETE/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
                 "GET/" . $this->getImapEndpoint(
                     $messageItemsEndpoint . "/{messageItemId}/Attachments",
                     $version
                 ),
-                "POST/" . $this->getImapEndpoint("SendMessage", $version)
+                "POST/" . $this->getImapEndpoint(
+                    $messageItemsEndpoint . "/{messageItemId}/Attachments",
+                    $version
+                ),
+                "DELETE/" . $this->getImapEndpoint(
+                    $messageItemsEndpoint . "/{messageItemId}/Attachments/{id}",
+                    $version
+                )
             ];
 
             foreach ($testAuthsFor as $route) {
@@ -187,6 +201,14 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs(
                 $this->app,
                 [MessageBodyDraftJsonTransformer::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            LaravelAttachmentListJsonTransformer::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [AttachmentListJsonTransformer::class]
             ))
         );
 
@@ -244,6 +266,10 @@ class VariousTest extends TestCase
         $this->assertInstanceOf(
             HordeHeaderComposer::class,
             $messageItemServiceMailClient->getHeaderComposer()
+        );
+        $this->assertInstanceOf(
+            HordeAttachmentComposer::class,
+            $messageItemServiceMailClient->getAttachmentComposer()
         );
 
         $this->assertInstanceOf(
@@ -331,7 +357,6 @@ class VariousTest extends TestCase
         // make sure routing works
         $request->setRouteResolver(function () use ($cmpId) {
             return new class ($cmpId) {
-
                 protected string $cmpId;
 
                 public function __construct($cmpId)

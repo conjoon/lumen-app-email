@@ -41,7 +41,6 @@ use Tests\TestCase;
  */
 class HandlerTest extends TestCase
 {
-
     /**
      * tests render()
      */

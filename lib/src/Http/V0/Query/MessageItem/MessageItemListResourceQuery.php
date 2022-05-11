@@ -37,6 +37,4 @@ use Conjoon\Mail\Client\Query\MessageItemListResourceQuery as BaseMessageItemLis
  */
 class MessageItemListResourceQuery extends BaseMessageItemListResourceQuery
 {
-
-
 }
