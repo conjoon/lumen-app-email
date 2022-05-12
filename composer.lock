@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "21dc2a7d2443b87f59a66131231a9984",
+    "content-hash": "dae5a89c768f868998a89c3252d345f5",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -64,16 +64,16 @@
         },
         {
             "name": "conjoon/php-lib-conjoon",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/conjoon/php-lib-conjoon.git",
-                "reference": "37d599fe6a503bc7690a13dada3185e999f070ac"
+                "reference": "4d9b6f50ac94975d9e96500425dbc90103d84f34"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/conjoon/php-lib-conjoon/zipball/37d599fe6a503bc7690a13dada3185e999f070ac",
-                "reference": "37d599fe6a503bc7690a13dada3185e999f070ac",
+                "url": "https://api.github.com/repos/conjoon/php-lib-conjoon/zipball/4d9b6f50ac94975d9e96500425dbc90103d84f34",
+                "reference": "4d9b6f50ac94975d9e96500425dbc90103d84f34",
                 "shasum": ""
             },
             "require": {
@@ -108,9 +108,9 @@
             "description": "PHP email library",
             "support": {
                 "issues": "https://github.com/conjoon/php-lib-conjoon/issues",
-                "source": "https://github.com/conjoon/php-lib-conjoon/tree/v1.0.1"
+                "source": "https://github.com/conjoon/php-lib-conjoon/tree/v1.0.2"
             },
-            "time": "2022-05-11T22:11:26+00:00"
+            "time": "2022-05-11T22:29:37+00:00"
         },
         {
             "name": "doctrine/inflector",

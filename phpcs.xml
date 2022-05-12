@@ -2,8 +2,8 @@
 <!--
 /**
  * conjoon
- * php-ms-imapuser
- * Copyright (C) 2020-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * lumen-app-email
+ * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,8 +25,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 -->
-<ruleset name="php-ms-imapuser coding standards">
-    <description>The coding standard (PSR-12) for conjoon/php-ms-imapuser.</description>
+<ruleset name="lumen-app-email coding standards">
+    <description>The coding standard (PSR-12) for conjoon/lumen-app-email.</description>
 
     <file>app/</file>
     <file>lib/</file>

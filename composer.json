@@ -1,5 +1,5 @@
 {
-    "name": "conjoon/php-ms-imapuser",
+    "name": "conjoon/lumen-app-email",
     "description": "PHP microservice for accessing IMAP servers, implementing rest-api-email from conjoon/rest-api-description.",
     "license": "MIT",
     "type": "project",
