@@ -42,5 +42,11 @@
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ]
-    }
+    },
+    "authors": [
+        {
+            "name": "Thorsten Suckow-Homberg",
+            "email": "thorsten@suckow-homberg.de"
+        }
+    ]
 }
