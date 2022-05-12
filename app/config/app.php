@@ -2,8 +2,8 @@
 
 /**
  * conjoon
- * php-ms-imapuser
- * Copyright (C) 2019-2021 Thorsten Suckow-Homberg https://github.com/conjoon/php-ms-imapuser
+ * lumen-app-email
+ * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -62,7 +62,7 @@ return [
 |
 */
 
-"name" => env("APP_NAME", "php-ms-imapuser"),
+"name" => env("APP_NAME", "lumen-app-email"),
 
 /*
 |--------------------------------------------------------------------------
@@ -101,7 +101,7 @@ return [
 |
 */
 
-"url" => env("APP_URL", "https://php-ms-imapuser.ddev.site"),
+"url" => env("APP_URL", "https://lumen-app-email.ddev.site"),
 
 /*
 |--------------------------------------------------------------------------
