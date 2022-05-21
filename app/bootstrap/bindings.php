@@ -51,7 +51,9 @@ use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonT
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Service\AttachmentService;
+use Conjoon\Mail\Client\Service\AuthService;
 use Conjoon\Mail\Client\Service\DefaultAttachmentService;
+use Conjoon\Mail\Client\Service\DefaultAuthService;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
@@ -124,6 +126,10 @@ $app->singleton(AttachmentService::class, function ($app) use ($getMailClient) {
 
 $app->singleton(MessageItemDraftJsonTransformer::class, function () {
     return new DefaultMessageItemDraftJsonTransformer();
+});
+
+$app->singleton(AuthService::class, function () {
+    return new DefaultAuthService();
 });
 
 $app->singleton(MessageBodyDraftJsonTransformer::class, function () {

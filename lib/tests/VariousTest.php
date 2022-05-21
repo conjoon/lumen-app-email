@@ -50,7 +50,9 @@ use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonT
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Service\AttachmentService;
+use Conjoon\Mail\Client\Service\AuthService;
 use Conjoon\Mail\Client\Service\DefaultAttachmentService;
+use Conjoon\Mail\Client\Service\DefaultAuthService;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
@@ -201,6 +203,14 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs(
                 $this->app,
                 [MessageBodyDraftJsonTransformer::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            DefaultAuthService::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [AuthService::class]
             ))
         );
 

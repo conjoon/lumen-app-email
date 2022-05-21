@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Middleware;
 
 use App\Http\V0\Middleware\Authenticate;
+use Conjoon\Mail\Client\Service\DefaultAuthService;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,10 @@ class AuthenticateTest extends TestCase
      */
     public function testHandle()
     {
+        $authService = $this->getMockBuilder(DefaultAuthService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
         $authStub = $this->getMockBuilder(AuthManager::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -67,7 +72,7 @@ class AuthenticateTest extends TestCase
         $authStub->method("guard")
             ->willReturn($stubbedStub);
 
-        $authenticate = new Authenticate($authStub);
+        $authenticate = new Authenticate($authStub, $authService);
 
         // test for is guest
         $stubbedStub::$isGuest = true;
@@ -98,6 +103,18 @@ class AuthenticateTest extends TestCase
      */
     public function testHandleAccountCompare()
     {
+        $authService = $this->getMockBuilder(DefaultAuthService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $authService->expects($this->exactly(1))
+            ->method("authenticate")
+            ->will(
+                $this->onConsecutiveCalls(
+                    true
+                )
+            );
+
         $authStub = $this->getMockBuilder(AuthManager::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -119,7 +136,7 @@ class AuthenticateTest extends TestCase
         $authStub->method("__call")
             ->willReturn($user);
 
-        $authenticate = new Authenticate($authStub);
+        $authenticate = new Authenticate($authStub, $authService);
 
         // test for authenticated
         $newRequest = new Request();
@@ -169,5 +186,76 @@ class AuthenticateTest extends TestCase
         });
         $this->assertNull($response);
         $this->assertTrue($called);
+    }
+
+
+    /**
+     * Tests handle() to make sure 401 is returned if authenticate() with
+     * AuthService failed.
+     *
+     * @return void
+     * @noinspection PhpMissingFieldTypeInspection
+     */
+    public function testAuthenticateFailed()
+    {
+        $authService = $this->getMockBuilder(DefaultAuthService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $authService->expects($this->exactly(1))
+            ->method("authenticate")
+            ->will(
+                $this->onConsecutiveCalls(
+                    false
+                )
+            );
+
+        $authStub = $this->getMockBuilder(AuthManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $stubbedStub = new class {
+            public function guest(): bool
+            {
+                return false;
+            }
+        };
+
+        $user = $this->getTestUserStub();
+
+        $authStub->method("guard")
+            ->willReturn($stubbedStub);
+
+        // we just need the test user here in the __call to
+        // guard->user()
+        $authStub->method("__call")
+            ->willReturn($user);
+
+        $authenticate = new Authenticate($authStub, $authService);
+
+        // test for authenticated
+        $newRequest = new Request();
+        $newRequest->setRouteResolver(function () use ($user) {
+            return new class ($user) {
+                public function __construct($user)
+                {
+                    $this->user = $user;
+                }
+                public function parameter($param): ?string
+                {
+                    if ($param === "mailAccountId") {
+                        return $this->user->getMailAccount("someId")->getId();
+                    }
+                    return null;
+                }
+            };
+        });
+
+        // 401
+        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
+            $this->assertSame($newRequest, $request);
+        });
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertSame($response->getStatusCode(), 401);
     }
 }
