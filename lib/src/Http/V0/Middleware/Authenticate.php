@@ -28,6 +28,7 @@
 namespace App\Http\V0\Middleware;
 
 use Closure;
+use Conjoon\Mail\Client\Service\AuthService;
 use Illuminate\Contracts\Auth\Factory as Auth;
 use Illuminate\Http\Request;
 
@@ -40,15 +41,23 @@ class Authenticate
      */
     protected Auth $auth;
 
+
+    /**
+     * @var AuthService $authService
+     */
+    protected AuthService $authService;
+
+
     /**
      * Create a new middleware instance.
      *
      * @param Auth $auth
      * @return void
      */
-    public function __construct(Auth $auth)
+    public function __construct(Auth $auth, AuthService $authService)
     {
         $this->auth = $auth;
+        $this->authService = $authService;
     }
 
     /**
@@ -72,10 +81,11 @@ class Authenticate
         // check if the mailAccountId exists in the request and verify
         // that the currently signed in user can access it
         $mailAccountId = $request->route("mailAccountId");
+
         if ($mailAccountId) {
             $account = $this->auth->user()->getMailAccount($mailAccountId);
 
-            if (!$account) {
+            if (!$account || !$this->authService->authenticate($account)) {
                 return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
             }
         }

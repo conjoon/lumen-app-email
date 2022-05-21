@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\Controllers;
 
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\Mail\Client\Service\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -46,13 +47,19 @@ class UserController extends Controller
 
 
     /**
+     * @var AuthService
+     */
+    protected AuthService $authService;
+
+
+    /**
      * UserController constructor.
      *
      * @param ImapUserProvider $repository
      */
-    public function __construct(ImapUserProvider $repository)
+    public function __construct(ImapUserProvider $repository, AuthService $authService)
     {
-
+        $this->authService = $authService;
         $this->repository = $repository;
     }
 
@@ -70,7 +77,7 @@ class UserController extends Controller
 
         $user = $this->repository->getUser($username, $password);
 
-        if ($user) {
+        if ($user && $this->authService->authenticate($user->getMailAccountForUserId($username))) {
              return response()->json([
                  "success" => true,
                  "data"    => $user->toArray()
