@@ -48,7 +48,7 @@ declare(strict_types=1);
 |        "inbox_ssl"       => true,
 |        "outbox_address"  => "smtp.gmail.com",
 |        "outbox_port"     => 465,
-|        "outbox_ssl"      => true,
+|        "outbox_secure"   => "ssl",
 |        // the root mailbox. For most IMAP servers, this will
 |        // be "INBOX". Gmail users can use  "[Gmail]" instead.
 |        // You can also provide a separate mailbox named "conjoon".
@@ -79,7 +79,7 @@ return [
         "inbox_ssl"       => true,
         "outbox_address"  => "smtp.gmail.com",
         "outbox_port"     => 465,
-        "outbox_ssl"      => true,
+        "outbox_secure"   => "ssl",
         "root"            => ["Gmail"],
         "match"           => ["/\@(googlemail.)(com)$/mi"]
     ],
@@ -96,7 +96,7 @@ return [
         "inbox_ssl"       => true,
         "outbox_address"  => "smtp-mail.outlook.com",
         "outbox_port"     => 587,
-        "outbox_ssl"      => true,
+        "outbox_secure"   => "tls",
         "root"            => [],
         "match"           => ["/\@(outlook.)(com)$/mi"]
     ]
