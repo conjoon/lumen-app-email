@@ -75,6 +75,8 @@ class VariousTest extends TestCase
 {
     use TestTrait;
 
+    protected bool $useFakeAuth = false;
+
     /**
      * We are currently on...
      *
