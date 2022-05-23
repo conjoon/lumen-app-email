@@ -72,16 +72,16 @@ return [
     // |           Google Mail               |
     // +-------------------------------------+
     [
-        "id"              => "gmail",
-        "inbox_type"      => "IMAP",
-        "inbox_address"   => 'imap.gmail.com',
-        "inbox_port"      => 993,
-        "inbox_ssl"       => true,
-        "outbox_address"  => "smtp.gmail.com",
-        "outbox_port"     => 465,
-        "outbox_secure"   => "ssl",
-        "root"            => ["Gmail"],
-        "match"           => ["/\@(googlemail.)(com)$/mi"]
+        "id"             => "GMail",
+        "inbox_type"     => "IMAP",
+        "inbox_address"  => 'imap.gmail.com',
+        "inbox_port"     => 993,
+        "inbox_ssl"      => true,
+        "outbox_address" => "smtp.gmail.com",
+        "outbox_port"    => 465,
+        "outbox_secure"  => "ssl",
+        "root"           => ["[Gmail]", "[Google Mail]"],
+        "match"          => ["/\@(googlemail.|gmail.)(com)$/mi"]
     ],
 
 
