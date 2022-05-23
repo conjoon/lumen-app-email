@@ -120,6 +120,23 @@ return [
 
 
     // +-------------------------------------+
+    // |           AOL                       |
+    // +-------------------------------------+
+    [
+        "id"              => "AOL",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.aol.com',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.aol.com",
+        "outbox_port"     => 465,
+        "outbox_secure"   => "ssl",
+        "root"            => [],
+        "match"           => ["/\@(aol.)(com)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
     // |           Freenet                   |
     // +-------------------------------------+
     [
