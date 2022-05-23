@@ -167,8 +167,24 @@ return [
         "outbox_secure"   => "tls",
         "root"            => [],
         "match"           => ["/\@(gmx.)(de|net)$/mi"]
-    ]
+    ],
 
+
+    // +-------------------------------------+
+    // |           WEB.DE                    |
+    // +-------------------------------------+
+    [
+        "id"              => "web.de",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.web.de',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.web.de",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "tls",
+        "root"            => [],
+        "match"           => ["/\@(web.)(de)$/mi"]
+    ]
 
 
 ];
