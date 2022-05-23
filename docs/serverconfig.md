@@ -80,7 +80,7 @@ Junk
 Trash
 ```
 
-Multiple root entries will be considered. Useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Googe Mail]` or `[Gmail]` 
+Multiple root entries will be considered. Useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Google Mail]` or `[Gmail]` 
 
 ## Additional Resources
 
