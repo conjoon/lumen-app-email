@@ -103,6 +103,23 @@ return [
 
 
     // +-------------------------------------+
+    // |           Yahoo Mail                |
+    // +-------------------------------------+
+    [
+        "id"              => "Yahoo",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.mail.yahoo.com',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.mail.yahoo.com",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "ssl",
+        "root"            => ["INBOX"],
+        "match"           => ["/\@(freenet.)(de)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
     // |           Freenet                   |
     // +-------------------------------------+
     [
