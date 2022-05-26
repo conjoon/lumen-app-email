@@ -4,7 +4,7 @@ In this file, you can specify an array of mail server configurations. Each entry
 
 Rename this file to `imapserver.php` once all configurations are defined.
 
-## Example entry
+## Entry Details
 
 ```php
     [
@@ -42,7 +42,7 @@ Rename this file to `imapserver.php` once all configurations are defined.
 ### Example for `match`
 **Prerequisite:** `match` is set to `["/\@(googlemail.)(com)$/mi"]`
 <br>
-A user signs in with the username "name@**googlemail.com**". `lumen-app-email` will query through the configurations of `imapserver.php` and test **this** username against regular expression defined in `match`. In this example, the above regular expression matches the username (i.e. email address). The configuration where the regular expression is specified will be used for subsequent operations requested by the client.
+A client authenticates with the username "name@**googlemail.com**". `lumen-app-email` will query through the configurations of `imapserver.php` and test **this** username against regular expression defined in `match`. In this example, the above regular expression matches the username (i.e. email address). The configuration where the regular expression is specified will be used for subsequent operations requested by the client.
 
 ### Example for `root`
 A common mailbox layout of IMAP servers looks like this: 

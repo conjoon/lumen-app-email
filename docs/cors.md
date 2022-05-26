@@ -1,4 +1,4 @@
-# Configuring CORS
+ # Configuring CORS
 **lumen-app-email** uses [fruitcake/laravel-cors](https://github.com/fruitcake/laravel-cors) for enabling
 [Cross-Origin Resource Sharing](http://enable-cors.org/).
 <br>
