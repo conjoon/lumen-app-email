@@ -57,7 +57,9 @@ use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Mail\Client\Util\JsonApiStrategy;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Util\JsonStrategy;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use ReflectionClass;
@@ -213,6 +215,14 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs(
                 $this->app,
                 [AuthService::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            JsonApiStrategy::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [JsonStrategy::class]
             ))
         );
 

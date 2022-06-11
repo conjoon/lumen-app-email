@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
+use Conjoon\Util\JsonStrategy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
@@ -38,6 +39,23 @@ use Illuminate\Http\JsonResponse;
  */
 class MailAccountController extends Controller
 {
+    /**
+     * @var jsonStrategy
+     */
+    protected JsonStrategy $jsonStrategy;
+
+
+    /**
+     * MailAccountController constructor.
+     *
+     * @param JsonStrategy $jsonStrategy
+     */
+    public function __construct(JsonStrategy $jsonStrategy)
+    {
+
+        $this->jsonStrategy = $jsonStrategy;
+    }
+
     /**
      * Returns all available MailAccounts for the user that is currently
      * authenticated with this application in the json response.
@@ -52,11 +70,10 @@ class MailAccountController extends Controller
         $accounts = $user->getMailAccounts();
         $res = [];
         foreach ($accounts as $acc) {
-            $res[] = $acc->toArray();
+            $res[] = $acc->toJson($this->jsonStrategy);
         }
 
         return response()->json([
-            "success" => true,
             "data" => $res
         ]);
     }

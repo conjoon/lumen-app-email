@@ -58,10 +58,12 @@ use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
+use Conjoon\Mail\Client\Util\JsonApiStrategy;
 use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
 use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 use Conjoon\Text\CharsetConverter;
+use Conjoon\Util\JsonStrategy;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 
@@ -130,6 +132,10 @@ $app->singleton(MessageItemDraftJsonTransformer::class, function () {
 
 $app->singleton(AuthService::class, function () {
     return new DefaultAuthService();
+});
+
+$app->singleton(JsonStrategy::class, function () {
+    return new JsonApiStrategy();
 });
 
 $app->singleton(MessageBodyDraftJsonTransformer::class, function () {
