@@ -4,7 +4,7 @@ In this file, you can specify an array of mail server configurations. Each entry
 
 Rename this file to `imapserver.php` once all configurations are defined.
 
-## Example entry
+## Entry Details
 
 ```php
     [
@@ -21,47 +21,31 @@ Rename this file to `imapserver.php` once all configurations are defined.
     ]
 ```
 
-#### `id` : `string`
-required for identifying the mail account. **MUST** be unique in
-the configuration file. Will be refered to as `mailAccountId` throughout [rest-api-email](https://conjoon.stoplight.io/docs/rest-api-description).
+| Option                           | Description                           |
+|----------------------------------|----------------------------------------|
+  `id`:_string_    |   required for identifying the mail account. **MUST** be unique in the configuration file. Will be refered to as `mailAccountId` throughout [rest-api-email](https://conjoon.stoplight.io/docs/rest-api-description).|
+|| **IMAP Settings** |
+`inbox_type`:_string_ | the protocol used with the server for receiving messages. Right now, only **IMAP** is supported. |
+`inbox_address`:_string_ | (ip-)address of the server |
+`inbox_port`:_integer_ | port that should be used with `inbox_address` for server communication |
+`inbox_ssl`:_boolean_ | use encrypted communication with the server. `true`: use **SSL** for encryption, `false`: use no encryption |
+|| **SMTP Settings** |
+`outbox_address`:_string_ | (ip-)address of the server |
+`outbox_port`:_integer_ | port that should be used with `outbox_address` for server communication |
+`outbox_secure`:_string_ | the encryption protocol to use with SMTP. Can be any of `ssl`, `tls` or `starttls` |
+|| **Account Settings** |
+`match`:_array_ | a regular expression that matches an email-address to **THIS** server configuration. |
+`root`:_array_ | an array of mailbox names that serve as root folders to display for this account. Leave the array empty if all mailboxes should be read out and send to the client.|
 
-### IMAP Server Settings
 
-#### `inbox_type` : `string`
-the protocol used with the server for receiving messages. Right now, only **IMAP** is supported.
 
-#### `inbox_address` : `string`
-the address where the inbox server can be found
+### Example for `match`
+**Prerequisite:** `match` is set to `["/\@(googlemail.)(com)$/mi"]`
+<br>
+A client authenticates with the username "name@**googlemail.com**". `lumen-app-email` will query through the configurations of `imapserver.php` and test **this** username against regular expression defined in `match`. In this example, the above regular expression matches the username (i.e. email address). The configuration where the regular expression is specified will be used for subsequent operations requested by the client.
 
-#### `inbox_port` : `integer`
-port that should be used with `inbox_address` for server communication 
-
-#### `inbox_ssl` : `boolean`
-use encrypted communication with the server. `true` will use **SSL** for encryption
-
-#### SMTP Server Settings
-
-#### `outbox_address` : `string`
-the address where the SMTP server can be found
-
-#### `outbox_port` : `integer`
-port that should be used with `outbox_address` for server communication
-
-#### `outbox_secure` : `string`
-the encryption protocol to use with SMTP. Can be any of `ssl`, `tls` or ``starttls`
-
-### Account Settings
-
-#### `match` : `array`
-a regular expression that matches an email-address to **THIS** server configuration. 
-Example: If a user signs in with the username "name@**googlemail.com**", `lumen-app-email` will query through its
-configurations and test this username against regular expression defined in `match`. The match's associated configuration will then be used with the request.
-
-#### `root` : `array`
-an array of mailbox names that serve as root folders to display for this account. Leave the array empty
-if all mailboxes should be read out and send to the client. 
-For example, a common mailbox layout of IMAP servers looks like this:
-
+### Example for `root`
+A common mailbox layout of IMAP servers looks like this: 
 ```
 INBOX
 INBOX.Drafts
@@ -70,7 +54,7 @@ INBOX.Junk
 INBOX.Trash
 ```
 
-If the `root`-configuration is set to `INBOX`, the following mailboxes will be returned to the client:
+If the `root`-configuration is set to `["INBOX"]`, the following mailboxes will be returned to the client:
 
 ```
 INBOX
@@ -80,8 +64,8 @@ Junk
 Trash
 ```
 
-Multiple root entries will be considered. Useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Google Mail]` or `[Gmail]` 
+Multiple root entries will be considered. This is useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Google Mail]` or `[Gmail]`. `root` should be set to `["[Google Mail]", "[Gmail]"]` in this case. 
+
 
 ## Additional Resources
-
 The documentation of [rest-api-email](https://conjoon.stoplight.io/docs/rest-api-description) provides information about querying available mailboxes for an authenticated client.

@@ -1,12 +1,14 @@
-# Configuring CORS
+ # Configuring CORS
 **lumen-app-email** uses [fruitcake/laravel-cors](https://github.com/fruitcake/laravel-cors) for enabling
 [Cross-Origin Resource Sharing](http://enable-cors.org/).
 <br>
-A configuration template can be found in ```config/cors.php.example```. You need to create a file named
-```config/cors.php``` - basically the configuration of ```config/cors.php.example``` should work, but if
-you need to set specific options, this would be the place to do so.
+A configuration template can be found in `app/config/cors.php.example`.
+<br> 
+Copy this file to `app/config/cors.php`, and adjust the settings to your needs. The example configuration works well with development environments, but you might want to add more strict options for production, auch as the settings for `allowed_origins` and `paths`.
+
 
 #### Options
+The options available for the cors configuration are as follows:
 
 | Option                   | Description                                                              | Default value |
 |--------------------------|--------------------------------------------------------------------------|---------------|

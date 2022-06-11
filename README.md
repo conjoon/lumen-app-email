@@ -1,10 +1,36 @@
 # conjoon/lumen-app-email ![MIT](https://img.shields.io/github/license/conjoon/lumen-app-email) ![Tests](https://github.com/conjoon/lumen-app-email/actions/workflows/run.tests.yml/badge.svg)
 Laravel/Lumen Microservice for RESTful communication with IMAP/SMTP servers.
 
-## About
+## What is lumen-app-email?
 **conjoon/lumen-app-email** is a PHP application built with [Lumen](https://lumen.laravel.com).
 It provides the REST API implementation according to [conjoon\/rest-api-description\#rest-api-email](conjoon/rest-api-description)
 and serves as a lightweight backend providing functionality for reading, writing and sending email messages.
+<br />
+It is a ready-to-use backend for accessing IMAP/SMTP-Servers with minimal setup required.
+
+## Examples
+
+````http request
+# Return a list of available MailAccounts for the requesting client
+GET /rest-api-email/api/v0/MailAccounts HTTP/1.1
+Content-Type: application/json
+Authorization: Basic Y29uam9vbjpIZWxsb1dvcmxk
+Host: hostname
+
+# Return the envelope data of the first 50 MessageItems w/o previewText of the INBOX mailbox
+# for the MailAccount identified by "gmail"
+GET /rest-api-email/api/v0/MailAccounts/gmail/MailFolders/INBOX/MessageItems?start=0&limit=50&attributes=*,previewText HTTP/1.1
+Content-Type: application/json
+Authorization: Basic Y29uam9vbjpIZWxsb1dvcmxk
+Host: hostname
+
+# Return the email identified with the uid 4356 of the INBOX mailbox for the MailAccount identified by "gmail"
+GET /rest-api-email/api/v0/MailAccounts/gmail/MailFolders/INBOX/MessageItems/4356 HTTP/1.1
+Content-Type: application/json
+Authorization: Basic Y29uam9vbjpIZWxsb1dvcmxk
+Host: hostname
+````
+
 
 ## Use Case
 
@@ -23,26 +49,13 @@ and serves as a lightweight backend providing functionality for reading, writing
 
 ## Supported REST API
 * **rest-api-email**
-  <br>For the list of endpoints this microservice provides, please refer to the OpenApi-documentation of `rest-api-email`,
-  hosted at [conjoon/rest-api-description](https://github.com/conjoon/rest-api-description) and available as OpenAPI documentation at [conjoon.stoplight.io](https://conjoon.stoplight.io/docs/rest-api-description/)
+  <br>For the list of endpoints this microservice provides, please refer to the 
+  [OpenApi-documentation of `rest-api-email`](https://github.com/conjoon/rest-api-description), available as OpenAPI documentation at [conjoon.stoplight.io](https://conjoon.stoplight.io/docs/rest-api-description/)
 
-## Installation and Configuration
-
-```shell
-$ git clone https://github.com/conjoon/lumen-app-email
-$ cd ./lumen-app-email
-$ composer i
-```
-
-The official [Lumen\-documentation](https://lumen.laravel.com/docs/) has guides on setting up webservers running Lumen applications. 
-<br>
-For a quick start, we suggest to use a pre-configured container for running the backend: [conjoon\/ddev-ms-email](conjoon/ddev-ms-email) provides a `.ddev`/**Docker** configuration for a container running **lumen-app-email** out-of-the-box and is easy to install.
-
-#### Documentation
+## Installation & Configuration
 Please refer to the official [documentation](./docs) of **lumen-app-email** for further information on installation and configuration.
 
-
-### Additional Notes
+## Additional Notes
 #### Composer 2.0 - Pear/Horde vows
 As of **v1.0.1**, **[php-lib-conjoon](conjoon/php-lib-conjoon)** no longer requires _Composer 1.*_ for installation.
 For _Composer 2.*_-compatibility, **php-lib-conjoon** relies on the following private composer
