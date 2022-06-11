@@ -64,4 +64,19 @@ class MailAccountControllerTest extends TestCase
             )]
           ]);
     }
+
+
+    /**
+     *
+     */
+    public function testIndex_401()
+    {
+        $response = $this->call(
+                "GET",
+                $this->getImapEndpoint("MailAccounts", "v0")
+            );
+
+        $this->assertEquals(401, $response->status());
+
+    }
 }
