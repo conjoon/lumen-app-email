@@ -72,12 +72,14 @@ class MailFolderControllerTest extends TestCase
 
         $resultList   = new MailFolderChildList();
         $resultList[] = new MailFolder(
-            new FolderKey("dev", "INBOX"), [
+            new FolderKey("dev", "INBOX"),
+            [
             "name"        => "INBOX",
             "unreadMessages" => 2,
             "totalMessages" => 100,
             "folderType"  => MailFolder::TYPE_INBOX
-        ]);
+            ]
+        );
 
         $service->expects($this->once())
                    ->method("getMailFolderChildList")
@@ -105,26 +107,25 @@ class MailFolderControllerTest extends TestCase
     /**
      * Http 401
      */
-    public function testIndex_401()
+    public function testIndex401()
     {
         $this->installUnauthorizedUser();
         $response = $this->actingAs($this->getTestUserStub())->call(
-                "GET",
-                $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders",
-                    "v0"
-                )
-            );
+            "GET",
+            $this->getImapEndpoint(
+                "MailAccounts/dev_sys_conjoon_org/MailFolders",
+                "v0"
+            )
+        );
 
         $this->assertEquals(401, $response->status());
-
     }
 
 
     /**
      * Http 404
      */
-    public function testIndex_404()
+    public function testIndex404()
     {
         $service = $this->getMockBuilder(DefaultMailFolderService::class)
             ->disableOriginalConstructor()
@@ -149,6 +150,5 @@ class MailFolderControllerTest extends TestCase
             );
 
         $this->assertEquals(404, $response->status());
-
     }
 }

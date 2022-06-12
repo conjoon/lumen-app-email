@@ -81,7 +81,7 @@ class ImapAuthServiceProvider extends ServiceProvider
      *
      * @return Authenticatable
      */
-    protected function getImapUser(Request $request, ImapUserProvider $provider):? Authenticatable
+    protected function getImapUser(Request $request, ImapUserProvider $provider): ?Authenticatable
     {
         $username = $request->getUser();
         $password = $request->getPassword();

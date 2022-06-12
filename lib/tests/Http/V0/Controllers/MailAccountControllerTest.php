@@ -64,5 +64,4 @@ class MailAccountControllerTest extends TestCase
             )]
           ]);
     }
-
 }

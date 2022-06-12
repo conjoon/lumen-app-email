@@ -42,7 +42,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
-
     /**
      * @var JsonStrategy|null
      */
@@ -96,9 +95,10 @@ class Handler extends ExceptionHandler
     public function render($request, Exception $e)
     {
         if ($e instanceof ConjoonHttpException) {
-
             $problem = ProblemFactory::make(
-                $e->getCode(), null, $e->getMessage()
+                $e->getCode(),
+                null,
+                $e->getMessage()
             );
 
             return response()->json(

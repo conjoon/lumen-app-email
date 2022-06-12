@@ -58,8 +58,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
         if ($this->useFakeAuth) {
             $app->singleton(AuthService::class, function () {
                 return new class implements AuthService {
-
-                    public function authenticate(MailAccount $mailAccount) : bool
+                    public function authenticate(MailAccount $mailAccount): bool
                     {
                         return true;
                     }

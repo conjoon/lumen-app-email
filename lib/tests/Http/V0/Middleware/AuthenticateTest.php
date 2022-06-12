@@ -80,7 +80,8 @@ class AuthenticateTest extends TestCase
         // test for is guest
         $stubbedStub::$isGuest = true;
         try {
-            $response = $authenticate->handle(new Request(), function () {});
+            $response = $authenticate->handle(new Request(), function () {
+            });
             $this->fail("Expected exception was never thrown.");
         } catch (Exception $e) {
             $this->assertInstanceOf(UnauthorizedException::class, $e);
@@ -158,7 +159,8 @@ class AuthenticateTest extends TestCase
         });
 
         try {
-            $authenticate->handle($newRequest, function() {});
+            $authenticate->handle($newRequest, function () {
+            });
             $this->fail("Exception was never thrown.");
         } catch (Exception $e) {
             $this->assertInstanceOf(NotFoundException::class, $e);
@@ -257,7 +259,8 @@ class AuthenticateTest extends TestCase
         });
 
         try {
-            $authenticate->handle($newRequest, function() {});
+            $authenticate->handle($newRequest, function () {
+            });
             $this->fail("Exception was never thrown.");
         } catch (Exception $e) {
             $this->assertInstanceOf(UnauthorizedException::class, $e);
