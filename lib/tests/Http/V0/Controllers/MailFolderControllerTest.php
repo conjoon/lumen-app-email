@@ -30,12 +30,15 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Controllers;
 
 use App\Http\V0\Controllers\MailFolderController;
+use App\Http\V0\Middleware\Authenticate;
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Folder\MailFolder;
 use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Service\AuthService;
+use Conjoon\Mail\Client\Service\DefaultAuthService;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\MailFolderService;
-use Conjoon\Util\JsonStrategy;
 use Tests\TestCase;
 use Tests\TestTrait;
 
@@ -104,7 +107,8 @@ class MailFolderControllerTest extends TestCase
      */
     public function testIndex_401()
     {
-        $response = $this->call(
+        $this->installUnauthorizedUser();
+        $response = $this->actingAs($this->getTestUserStub())->call(
                 "GET",
                 $this->getImapEndpoint(
                     "MailAccounts/dev_sys_conjoon_org/MailFolders",
@@ -113,6 +117,7 @@ class MailFolderControllerTest extends TestCase
             );
 
         $this->assertEquals(401, $response->status());
+
     }
 
 
@@ -133,7 +138,6 @@ class MailFolderControllerTest extends TestCase
 
         $service->expects($this->never())
             ->method("getMailFolderChildList");
-
 
         $response = $this->actingAs($this->getTestUserStub())
             ->call(
