@@ -28,6 +28,8 @@
 namespace App\Http\V0\Middleware;
 
 use Closure;
+use Conjoon\Http\Exception\UnauthorizedException;
+use Conjoon\Http\Exception\NotFoundException;
 use Conjoon\Mail\Client\Service\AuthService;
 use Illuminate\Contracts\Auth\Factory as Auth;
 use Illuminate\Http\Request;
@@ -71,6 +73,9 @@ class Authenticate
      * @param  string|null  $guard
      *
      * @return mixed
+     *
+     * @throws UnauthorizedException|NotFoundException UnauthorizedException if the user
+     * cannot be authenticated, or a NotFoundException if the requested mail account was not found.
      */
     public function handle(Request $request, Closure $next, $guard = null)
     {
@@ -85,8 +90,12 @@ class Authenticate
         if ($mailAccountId) {
             $account = $this->auth->user()->getMailAccount($mailAccountId);
 
-            if (!$account || !$this->authService->authenticate($account)) {
-                return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
+            if (!$account) {
+                throw new NotFoundException();
+            }
+
+            if (!$this->authService->authenticate($account)) {
+                throw new UnauthorizedException();
             }
         }
 

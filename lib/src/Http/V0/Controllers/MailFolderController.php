@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\Controllers;
 
 use Conjoon\Mail\Client\Service\MailFolderService;
+use Conjoon\Util\JsonStrategy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,16 +45,20 @@ class MailFolderController extends Controller
      */
     protected MailFolderService $mailFolderService;
 
+    /**
+     * @var jsonStrategy
+     */
+    protected JsonStrategy $jsonStrategy;
 
     /**
      * MailFolderController constructor.
      *
      * @param MailFolderService $mailFolderService
      */
-    public function __construct(MailFolderService $mailFolderService)
+    public function __construct(MailFolderService $mailFolderService, JsonStrategy $jsonStrategy)
     {
-
         $this->mailFolderService = $mailFolderService;
+        $this->jsonStrategy = $jsonStrategy;
     }
 
 
@@ -67,16 +72,13 @@ class MailFolderController extends Controller
      */
     public function index(string $mailAccountId): JsonResponse
     {
-
         $user = Auth::user();
 
         $mailFolderService = $this->mailFolderService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
 
-
         return response()->json([
-            "success" => true,
-            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
+            "data" => $mailFolderService->getMailFolderChildList($mailAccount)->toJson($this->jsonStrategy)
         ]);
     }
 }

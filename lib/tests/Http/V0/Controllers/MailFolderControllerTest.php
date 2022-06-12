@@ -35,6 +35,7 @@ use Conjoon\Mail\Client\Folder\MailFolder;
 use Conjoon\Mail\Client\Folder\MailFolderChildList;
 use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\MailFolderService;
+use Conjoon\Util\JsonStrategy;
 use Tests\TestCase;
 use Tests\TestTrait;
 
@@ -50,7 +51,7 @@ class MailFolderControllerTest extends TestCase
     /**
      * Tests get() to make sure method returns list of available MailFolders associated with
      * the current signed-in user.
-     *
+     * Http 200
      *
      * @return void
      */
@@ -68,11 +69,12 @@ class MailFolderControllerTest extends TestCase
 
         $resultList   = new MailFolderChildList();
         $resultList[] = new MailFolder(
-            new FolderKey("dev", "INBOX"),
-            ["name"        => "INBOX",
-             "unreadCount" => 2,
-             "folderType"  => MailFolder::TYPE_INBOX]
-        );
+            new FolderKey("dev", "INBOX"), [
+            "name"        => "INBOX",
+            "unreadMessages" => 2,
+            "totalMessages" => 100,
+            "folderType"  => MailFolder::TYPE_INBOX
+        ]);
 
         $service->expects($this->once())
                    ->method("getMailFolderChildList")
@@ -92,8 +94,57 @@ class MailFolderControllerTest extends TestCase
         $this->assertEquals(200, $response->status());
 
         $this->seeJsonEquals([
-            "success" => true,
-            "data"    => $resultList->toJson()
+            "data" => $resultList->toJson($this->app->get(JsonStrategy::class))
           ]);
+    }
+
+
+    /**
+     * Http 401
+     */
+    public function testIndex_401()
+    {
+        $response = $this->call(
+                "GET",
+                $this->getImapEndpoint(
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders",
+                    "v0"
+                )
+            );
+
+        $this->assertEquals(401, $response->status());
+    }
+
+
+    /**
+     * Http 404
+     */
+    public function testIndex_404()
+    {
+        $service = $this->getMockBuilder(DefaultMailFolderService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->app->when(MailFolderController::class)
+            ->needs(MailFolderService::class)
+            ->give(function () use ($service) {
+                return $service;
+            });
+
+        $service->expects($this->never())
+            ->method("getMailFolderChildList");
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call(
+                "GET",
+                $this->getImapEndpoint(
+                    "MailAccounts/testFail/MailFolders",
+                    "v0"
+                )
+            );
+
+        $this->assertEquals(404, $response->status());
+
     }
 }

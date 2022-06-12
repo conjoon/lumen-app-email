@@ -52,7 +52,6 @@ class MailAccountController extends Controller
      */
     public function __construct(JsonStrategy $jsonStrategy)
     {
-
         $this->jsonStrategy = $jsonStrategy;
     }
 
