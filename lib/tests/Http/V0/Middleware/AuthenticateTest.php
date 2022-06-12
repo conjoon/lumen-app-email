@@ -79,10 +79,12 @@ class AuthenticateTest extends TestCase
 
         // test for is guest
         $stubbedStub::$isGuest = true;
-        $response = $authenticate->handle(new Request(), function () {
-        });
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame($response->getStatusCode(), 401);
+        try {
+            $response = $authenticate->handle(new Request(), function () {});
+            $this->fail("Expected exception was never thrown.");
+        } catch (Exception $e) {
+            $this->assertInstanceOf(UnauthorizedException::class, $e);
+        }
 
         // test for authenticated
         $stubbedStub::$isGuest = false;

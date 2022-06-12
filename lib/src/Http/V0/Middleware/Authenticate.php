@@ -80,7 +80,7 @@ class Authenticate
     public function handle(Request $request, Closure $next, $guard = null)
     {
         if ($this->auth->guard($guard)->guest()) {
-            return response()->json(["success" => false, "msg" => "Unauthorized.", "status" => 401], 401);
+            throw new UnauthorizedException("Sorry, we do not accept guests to this time.");
         }
 
         // check if the mailAccountId exists in the request and verify
