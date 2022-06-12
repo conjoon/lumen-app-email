@@ -59,7 +59,7 @@ use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Mail\Client\Util\JsonApiStrategy;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use Conjoon\Util\JsonStrategy;
+use Conjoon\Core\JsonStrategy;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use ReflectionClass;

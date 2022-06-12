@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 use App\Console\Kernel as ConsoleKernel;
 use App\Exceptions\Handler;
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
@@ -63,7 +64,6 @@ use Conjoon\Mail\Client\Writer\DefaultHtmlWritableStrategy;
 use Conjoon\Mail\Client\Writer\DefaultPlainWritableStrategy;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
 use Conjoon\Text\CharsetConverter;
-use Conjoon\Util\JsonStrategy;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 

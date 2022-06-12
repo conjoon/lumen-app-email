@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Conjoon\Util\JsonStrategy;
+use Conjoon\Core\JsonStrategy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
