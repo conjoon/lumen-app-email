@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace Tests\Exceptions;
 
 use App\Exceptions\Handler;
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Http\Exception\BadRequestException;
 use Conjoon\Http\Json\Problem\ProblemFactory;
 use Illuminate\Http\Request;
@@ -46,13 +47,18 @@ class HandlerTest extends TestCase
      */
     public function testRender()
     {
-        $handler = new Handler();
         $exc = new BadRequestException();
+        $problem = ProblemFactory::make($exc->getCode(), null, $exc->getMessage());
+
+        $handler = new Handler();
         $resp = $handler->render(new Request(), $exc);
 
+        $strategy = $this->getMockForAbstractClass(JsonStrategy::class);
+        $strategy->expects($this->once())->method("toJson")->with($problem)->willReturn($problem->toArray());
+
         $this->assertEquals(
-            ProblemFactory::make($exc->getCode(), null, $exc->getMessage())->toJson(),
-            json_decode($resp->getContent(), true)
+            $problem->toJson($strategy),
+            json_decode($resp->getContent(), true)["errors"][0]
         );
 
         $this->assertSame(

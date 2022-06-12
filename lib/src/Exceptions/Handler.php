@@ -27,6 +27,7 @@
 
 namespace App\Exceptions;
 
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Http\Json\Problem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
 use Exception;
@@ -41,17 +42,31 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
+
+    /**
+     * @var JsonStrategy|null
+     */
+    protected JsonStrategy $jsonStrategy;
+
     /**
      * A list of the exception types that should not be reported.
      *
      * @var array
      */
     protected $dontReport = [
-        AuthorizationException::class,
-        HttpException::class,
         ModelNotFoundException::class,
         ValidationException::class,
     ];
+
+
+    /**
+     * @param JsonStrategy|null $jsonStrategy
+     */
+    public function __construct(JsonStrategy $jsonStrategy)
+    {
+        $this->jsonStrategy = $jsonStrategy;
+    }
+
 
     /**
      * Report or log an exception.
@@ -81,12 +96,14 @@ class Handler extends ExceptionHandler
     public function render($request, Exception $e)
     {
         if ($e instanceof ConjoonHttpException) {
+
+            $problem = ProblemFactory::make(
+                $e->getCode(), null, $e->getMessage()
+            );
+
             return response()->json(
-                ...ProblemFactory::makeJson(
-                    $e->getCode(),
-                    null,
-                    $e->getMessage()
-                )
+                ["errors" => [$problem->toJson($this->jsonStrategy)]],
+                $problem->getStatus()
             );
         }
         return parent::render($request, $e);
