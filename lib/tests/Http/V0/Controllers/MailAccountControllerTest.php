@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Controllers;
 
 use Conjoon\Mail\Client\Util\JsonApiStrategy;
-use Conjoon\Util\JsonStrategy;
+use Conjoon\Core\JsonStrategy;
 use Tests\TestCase;
 use Tests\TestTrait;
 
@@ -65,18 +65,4 @@ class MailAccountControllerTest extends TestCase
           ]);
     }
 
-
-    /**
-     *
-     */
-    public function testIndex_401()
-    {
-        $response = $this->call(
-                "GET",
-                $this->getImapEndpoint("MailAccounts", "v0")
-            );
-
-        $this->assertEquals(401, $response->status());
-
-    }
 }
