@@ -72,45 +72,56 @@ class AbstractMessageItemQueryTranslatorTest extends TestCase
 
 
     /**
-     * getDefaultAttributes()
+     * getDefaultFields()
      * @throws ReflectionException
      */
-    public function testGetDefaultAttributes()
+    public function testGetDefaultFields()
     {
         $translator = $this->getMockForAbstractClass(AbstractMessageItemQueryTranslator::class);
         $reflection = new ReflectionClass($translator);
 
-        $getDefaultAttributesReflection = $reflection->getMethod("getDefaultAttributes");
-        $getDefaultAttributesReflection->setAccessible(true);
+        $getDefaultFieldsReflection = $reflection->getMethod("getDefaultFields");
+        $getDefaultFieldsReflection->setAccessible(true);
 
-        $attr = $getDefaultAttributesReflection->invokeArgs($translator, []);
-
-        $this->assertEquals($this->getDefaultAttributes(), $attr);
+        foreach (["MessageItem", "MailFolder"] as $type) {
+            $attr = $getDefaultFieldsReflection->invokeArgs($translator, [$type]);
+            $this->assertEquals($this->getDefaultFields($type), $attr);
+        }
     }
 
 
-    protected function getDefaultAttributes(): array
+    protected function getDefaultFields($type = null): array
     {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+        $fieldsets = [
+            "MessageItem" => [
+                "from" => true,
+                "to" => true,
+                "subject" => true,
+                "date" => true,
+                "seen" => true,
+                "answered" => true,
+                "draft" => true,
+                "flagged" => true,
+                "recent" => true,
+                "charset" => true,
+                "references" => true,
+                "messageId" => true,
+                "size" => true,
+                "hasAttachments" => true,
+                "cc" => true,
+                "bcc" => true,
+                "replyTo" => true,
+                "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
+                "plain" => ["length" => 200, "trimApi" => true]
+            ],
+            "MailFolder" => [
+                "name" => true,
+                "folderType" => true,
+                "unreadMessages" => true,
+                "totalMessages" => true
+            ]
         ];
+
+        return !$type ? $fieldsets : $fieldsets[$type];
     }
 }

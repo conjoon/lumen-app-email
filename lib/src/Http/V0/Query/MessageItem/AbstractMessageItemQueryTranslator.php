@@ -43,76 +43,83 @@ use Illuminate\Http\Request;
 abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
 {
     /**
-     * Parses and builds up the attribute list.
+     * Parses and builds up the field list.
      *
      * @param ParameterBag $bag
      * @return string[]
      *
      * @noinspection PhpUndefinedFieldInspection
      */
-    protected function parseAttributes(ParameterBag $bag): array
+    protected function parseFields(ParameterBag $bag, string $type): array
     {
-        if (!$bag->attributes) {
-            return $this->getAttributes();
+
+        // must be set before parseFields is called to make sure it does not fall back to default
+        if (!$bag->getString("fields[$type]")) {
+            return $this->getFields($type);
         }
-        $attributes = explode(",", $bag->attributes);
-        if (in_array("*", $attributes) !== false) {
-            $excludes   = array_filter($attributes, fn ($item) => $item !== "*");
-            $attributes = array_filter($this->getAttributes(), fn ($item) => !in_array($item, $excludes));
+        $fields = explode(",", $bag->getString("fields[$type]"));
+        if (in_array("*", $fields) !== false) {
+            $excludes   = array_filter($fields, fn ($item) => $item !== "*");
+            $fields = array_filter($this->getFields($type), fn ($item) => !in_array($item, $excludes));
         } else {
-            $notAllowed = $this->hasOnlyAllowedAttributes($attributes ?? []);
+            $notAllowed = $this->hasOnlyAllowedFields($fields ?? [], $type);
             if (!empty($notAllowed)) {
                 throw new InvalidQueryException(
-                    "parameter \"attributes\" has unknown entries: " . implode(",", $notAllowed)
+                    "parameter \"fields[$type]\" has unknown entries: " . implode(",", $notAllowed)
                 );
             }
 
-            if (in_array("previewText", $attributes)) {
-                $attributes = array_filter($attributes, fn($item) => $item !== "previewText");
-                $attributes[] = "html";
-                $attributes[] = "plain";
+            if (in_array("previewText", $fields)) {
+                $fields = array_filter($fields, fn($item) => $item !== "previewText");
+                $fields[] = "html";
+                $fields[] = "plain";
             }
         }
 
-        return $attributes;
+        return $fields;
     }
 
 
     /**
-     * Maps required configurations to passed attributes not available in the target
+     * Maps required configurations to passed fields not available in the target
      * entity.
      *
      * @param $target
      * @param $parsed
      * @param $default
+     * @param string $type
+     *
+     *
      * @return array
      */
-    protected function mapConfigToAttributes($target, $parsed, $default): array
+    protected function mapConfigToFields($target, $parsed, $default, $type): array
     {
 
         $result = [];
 
-        // merge config from previewText into $parsed
-        $previewText = $parsed["previewText"] ?? [];
-        if (isset($previewText["html"]) || isset($previewText["plain"])) {
-            $parsed = array_merge($parsed, $previewText);
-            unset($parsed["previewText"]);
+        if ($type === "MessageItem") {
+            // merge config from previewText into $parsed
+            $previewText = $parsed["previewText"] ?? [];
+            if (isset($previewText["html"]) || isset($previewText["plain"])) {
+                $parsed = array_merge($parsed, $previewText);
+                unset($parsed["previewText"]);
 
-            if (in_array("previewText", $target)) {
-                isset($parsed["html"]) && ($target[] = "html");
-                isset($parsed["plain"]) && ($target[] = "plain");
-                $target = array_filter($target, fn ($item) => $item !== "previewText");
+                if (in_array("previewText", $target)) {
+                    isset($parsed["html"]) && ($target[] = "html");
+                    isset($parsed["plain"]) && ($target[] = "plain");
+                    $target = array_filter($target, fn ($item) => $item !== "previewText");
+                }
             }
         }
 
-        foreach ($target as $attributeName) {
-            $result[$attributeName] = $parsed[$attributeName] ?? ($default[$attributeName] ?? true);
+        foreach ($target as $fieldName) {
+            $result[$fieldName] = $parsed[$fieldName] ?? ($default[$fieldName] ?? true);
         }
 
-        if (isset($result["previewText"])) {
+        if ($type === "MessageItem" && isset($result["previewText"])) {
             if (!is_array($result["previewText"])) {
-                $result["html"]  = $this->getDefaultAttributes()["html"];
-                $result["plain"]  = $this->getDefaultAttributes()["plain"];
+                $result["html"]  = $this->getDefaultFields($type)["html"];
+                $result["plain"]  = $this->getDefaultFields($type)["plain"];
             } else {
                 $result["html"]  = ArrayUtil::unchain("previewText.html", $result, $result["previewText"]);
                 $result["plain"] = ArrayUtil::unchain("previewText.plain", $result, $result["previewText"]);
@@ -125,15 +132,17 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
     }
 
     /**
-     * Checks if there are attributes which are not part of the attributes defined for the
+     * Checks if there are fields which are not part of the fields defined for the
      * entity the translator should process the parameters for.
      *
      * @param $received
+     * @param string $type
+     *
      * @return array
      */
-    protected function hasOnlyAllowedAttributes($received): array
+    protected function hasOnlyAllowedFields($received, $type): array
     {
-        return array_diff($received, $this->getAttributes());
+        return array_diff($received, $this->getFields($type));
     }
 
 
@@ -152,62 +161,84 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
 
 
     /**
-     * Returns all attributes the entity exposes.
+     * Returns all fields the entity exposes.
+     *
+     * @param string $type The entity type for which the fields should be returned.
      *
      * @return string[]
      */
-    protected function getAttributes(): array
+    protected function getFields(string $type): array
     {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
+        $fieldsets = [
+            "MessageItem" => [
+                "from",
+                "to",
+                "subject",
+                "date",
+                "seen",
+                "answered",
+                "draft",
+                "flagged",
+                "recent",
+                "charset",
+                "references",
+                "messageId",
+                "previewText",
+                "size",
+                "hasAttachments",
+                "cc",
+                "bcc",
+                "replyTo"
+            ],
+            "MailFolder" => [
+                "name",
+                "folderType",
+                "unreadMessages",
+                "totalMessages"
+            ]
         ];
+
+        return $fieldsets[$type];
     }
 
 
     /**
-     * Default attributes to pass to the lower level api.
+     * Default fields to pass to the lower level api.
      *
      * @return array
      */
-    protected function getDefaultAttributes(): array
+    protected function getDefaultFields(string $type): array
     {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+        $fieldsets = [
+            "MessageItem" => [
+                "from" => true,
+                "to" => true,
+                "subject" => true,
+                "date" => true,
+                "seen" => true,
+                "answered" => true,
+                "draft" => true,
+                "flagged" => true,
+                "recent" => true,
+                "charset" => true,
+                "references" => true,
+                "messageId" => true,
+                "size" => true,
+                "hasAttachments" => true,
+                "cc" => true,
+                "bcc" => true,
+                "replyTo" => true,
+                "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
+                "plain" => ["length" => 200, "trimApi" => true]
+            ],
+            "MailFolder" => [
+                "name" => true,
+                "folderType" => true,
+                "unreadMessages" => true,
+                "totalMessages" => true
+            ]
         ];
+
+        return $fieldsets[$type];
     }
 }

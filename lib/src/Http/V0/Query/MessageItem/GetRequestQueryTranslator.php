@@ -46,21 +46,26 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
     {
+        $type = "MessageItem";
 
         $bag = new ParameterBag($source->toJson());
-        $attributes = $this->parseAttributes($bag);
+        $fields = $this->parseFields($bag, $type);
 
-        $bag->attributes = $this->mapConfigToAttributes(
-            $attributes,
-            [],
-            $this->getDefaultAttributes()
-        );
+        $bag->fields = [
+            $type => $this->mapConfigToFields(
+                $fields,
+                [],
+                $this->getDefaultFields($type),
+                $type
+            )
+        ];
 
         $bag->filter = [["property" => "id",
             "value" => [$bag->getString("messageItemId")],
             "operator" => "in"
         ]];
 
+        unset($bag->{"fields[$type]"});
         unset($bag->messageItemId);
 
         return new MessageItemListResourceQuery($bag);
@@ -91,7 +96,7 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
     protected function getExpectedParameters(): array
     {
         return [
-            "attributes",
+            "fields[MessageItem]",
             "messageItemId"
         ];
     }

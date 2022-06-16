@@ -50,14 +50,40 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 
         $bag = new ParameterBag($source->toJson());
 
-        $attributes = $this->parseAttributes($bag);
-        $attributeOptions = $this->parseAttributeOptions($bag);
 
-         $bag->attributes = $this->mapConfigToAttributes(
-             $attributes,
-             $attributeOptions,
-             $this->getDefaultAttributes()
-         );
+        if ($bag->include && $bag->getString("include") !== "MailFolders") {
+            throw new InvalidQueryException(
+                "parameter \"include\" must be set to \"MailFolder\", or omitted"
+            );
+        }
+
+        $types = ["MessageItem"];
+        if ($bag->include === "MailFolders") {
+            $types[] = "MailFolder";
+        }
+        $bag->fields = [];
+
+        foreach ($types as $type) {
+            $fieldOptions = [];
+
+            $fields = $this->parseFields($bag, $type);
+            if ($type === "MessageItem") {
+                $fieldOptions = $this->parseMessageItemFieldOptions($bag);
+            }
+
+            $bag->fields = array_merge(
+                $bag->fields,
+                [
+                $type => $this->mapConfigToFields(
+                    $fields,
+                    $fieldOptions,
+                    $this->getDefaultFields($type),
+                    $type
+                )]
+            );
+
+            unset($bag->{"fields[$type]"});
+        }
 
         $ids = null;
         if ($bag->getString("filter")) {
@@ -119,7 +145,7 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      * @return array
      * @noinspection PhpUndefinedFieldInspection
      */
-    protected function parseAttributeOptions(ParameterBag $bag): array
+    protected function parseMessageItemFieldOptions(ParameterBag $bag): array
     {
         $options = $bag->options;
         unset($bag->options);
@@ -151,7 +177,9 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
             "limit",
             "start",
             "sort",
-            "attributes",
+            "include",
+            "fields[MessageItem]",
+            "fields[MailFolder]",
             "options",
             "filter"
         ];

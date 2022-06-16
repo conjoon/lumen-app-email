@@ -71,7 +71,7 @@ class GetRequestQueryTranslatorTest extends TestCase
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
 
         $this->assertEquals([
-            "attributes",
+            "fields[MessageItem]",
             "messageItemId"
         ], $expected);
     }
@@ -90,7 +90,7 @@ class GetRequestQueryTranslatorTest extends TestCase
         $extractParametersReflection->setAccessible(true);
 
         $request = new Request([
-            "attributes" => "*,size",
+            "fields[MessageItem]" => "*,size",
             "foo" => "bar"]);
 
         $request->setRouteResolver(function () {
@@ -106,7 +106,7 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $this->assertEquals([
             "messageItemId" => "744",
-            "attributes" => "*,size",
+            "fields[MessageItem]" => "*,size",
         ], $extracted);
     }
 
@@ -123,9 +123,9 @@ class GetRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
 
-        $getExpectedAttributes = function ($exclude = [], $add = []) {
+        $getExpectedAttributes = function ($exclude = [], $add = [], $type) {
 
-            $parameters = $this->getDefaultAttributes();
+            $parameters = $this->getDefaultFields($type);
             array_walk(
                 $parameters,
                 fn(&$item, $key) => in_array($key, $exclude) ? $item = false : null
@@ -144,11 +144,14 @@ class GetRequestQueryTranslatorTest extends TestCase
             [
                 "input" => ["limit" => "-1", "messageItemId" => "744"],
                 "output" => [
-                    "attributes" => $getExpectedAttributes(
-                        ["html", "plain"],
-                        ["html" => $this->getDefaultAttributes()["html"],
-                        "plain" => $this->getDefaultAttributes()["plain"]]
-                    ),
+                    "fields" => [
+                        "MessageItem" => $getExpectedAttributes(
+                            ["html", "plain"],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                            "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        ),
+                    ],
                     "filter" => [[
                         "property" => "id",
                         "value" => ["744"],
@@ -158,15 +161,15 @@ class GetRequestQueryTranslatorTest extends TestCase
                 ]
             ],
             [
-                "input" => ["attributes" => "*,previewText", "messageItemId" => "744"],
+                "input" => ["fields[MessageItem]" => "*,previewText", "messageItemId" => "744"],
                 "output" => [
-                    "attributes" => $getExpectedAttributes(["html", "plain"]),
+                    "fields" => ["MessageItem" => $getExpectedAttributes(["html", "plain"], [], "MessageItem")],
                     "filter" => [[
                         "property" => "id",
                         "value" => ["744"],
                         "operator" => "in"
+                    ]
                     ]]
-                ]
             ]
         ];
 
@@ -193,14 +196,14 @@ class GetRequestQueryTranslatorTest extends TestCase
      * @return mixed
      * @throws ReflectionException
      */
-    protected function getDefaultAttributes()
+    protected function getDefaultFields($type)
     {
         $translator = new GetRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-        $translateParametersReflection = $reflection->getMethod("getDefaultAttributes");
+        $translateParametersReflection = $reflection->getMethod("getDefaultFields");
         $translateParametersReflection->setAccessible(true);
 
-        return $translateParametersReflection->invokeArgs($translator, []);
+        return $translateParametersReflection->invokeArgs($translator, [$type]);
     }
 }
