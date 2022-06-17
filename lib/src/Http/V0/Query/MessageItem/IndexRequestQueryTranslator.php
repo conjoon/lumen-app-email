@@ -53,7 +53,7 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 
         if ($bag->include && $bag->getString("include") !== "MailFolders") {
             throw new InvalidQueryException(
-                "parameter \"include\" must be set to \"MailFolder\", or omitted"
+                "parameter \"include\" must be set to \"MailFolders\", or omitted"
             );
         }
 

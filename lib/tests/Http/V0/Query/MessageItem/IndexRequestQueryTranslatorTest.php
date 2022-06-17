@@ -436,7 +436,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
         $translateParametersReflection->invokeArgs($translator, [
-            new ParameterBag(["limit" => 1, "include" => "MailFolder"])
+            new ParameterBag(["limit" => 1, "include" => "MailFold"])
         ])->toJson();
     }
 
