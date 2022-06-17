@@ -102,7 +102,6 @@ class MessageItemController extends Controller
         $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
         $this->messageBodyDraftJsonTransformer = $messageBodyDraftJsonTransformer;
         $this->jsonStrategy                    = $jsonStrategy;
-
     }
 
 

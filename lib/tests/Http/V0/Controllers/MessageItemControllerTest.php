@@ -128,7 +128,8 @@ class MessageItemControllerTest extends TestCase
 
         $resultList   = new MailFolderChildList();
         $resultList[] = new MailFolder(
-            $folderKey, ["unreadMessages" => $unreadCmp, "totalMessages" => $totalCmp, "data" => null]
+            $folderKey,
+            ["unreadMessages" => $unreadCmp, "totalMessages" => $totalCmp, "data" => null]
         );
 
 
