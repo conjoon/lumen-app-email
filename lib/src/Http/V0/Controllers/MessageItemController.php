@@ -31,6 +31,9 @@ namespace App\Http\V0\Controllers;
 
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
+use Conjoon\Core\JsonStrategy;
+use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
+use Conjoon\Mail\Client\Service\MailFolderService;
 use Illuminate\Support\Facades\Auth;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
@@ -44,6 +47,7 @@ use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Conjoon\Core\ParameterBag;
 
 /**
  * Class MessageItemController
@@ -57,15 +61,26 @@ class MessageItemController extends Controller
     protected MessageItemService $messageItemService;
 
     /**
+     * @type MailFolderService $mailFolderService
+     */
+    protected MailFolderService $mailFolderService;
+
+    /**
      * @type MessageItemDraftJsonTransformer
      */
     protected MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer;
-
 
     /**
      * @type MessagebodyDraftJsonTransformer
      */
     protected MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer;
+
+    /**
+     * @type JsonStrategy
+     */
+    protected JsonStrategy $jsonStrategy;
+
+
 
     /**
      * MessageItemController constructor.
@@ -76,13 +91,18 @@ class MessageItemController extends Controller
      */
     public function __construct(
         MessageItemService $messageItemService,
+        MailFolderService $mailFolderService,
         MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
-        MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer
+        MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer,
+        JsonStrategy $jsonStrategy
     ) {
 
+        $this->mailFolderService               = $mailFolderService;
         $this->messageItemService              = $messageItemService;
         $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
         $this->messageBodyDraftJsonTransformer = $messageBodyDraftJsonTransformer;
+        $this->jsonStrategy                    = $jsonStrategy;
+
     }
 
 
@@ -106,24 +126,31 @@ class MessageItemController extends Controller
 
         $user = Auth::user();
 
-        $resourceQuery = $translator->translate($request);
-
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount = $user->getMailAccount($mailAccountId);
-        $folderKey   = new FolderKey($mailAccount, urldecode($mailFolderId));
 
+        $resourceQuery = $translator->translate($request);
+
+        $response = [];
+
+        if ($resourceQuery->include === "MailFolders") {
+            $mailFolderResourceQuery  = new MailFolderListResourceQuery(new ParameterBag(
+                ["fields" => ["MailFolder" => $resourceQuery->fields["MailFolder"] ?? null]]
+            ));
+            $response["included"] = $this->mailFolderService->getMailFolderChildList(
+                $mailAccount,
+                $mailFolderResourceQuery
+            )->toJson($this->jsonStrategy);
+        }
+
+        $folderKey  = new FolderKey($mailAccount, urldecode($mailFolderId));
         $messageItemService = $this->messageItemService;
 
-        return response()->json([
-            "success" => true,
-            "meta" => [
-                 "cn_unreadCount" => $messageItemService->getUnreadMessageCount($folderKey),
-                 "mailFolderId"  =>  $folderKey->getId(),
-                 "mailAccountId" =>  $mailAccount->getId()
-            ],
-            "total" => $messageItemService->getTotalMessageCount($folderKey),
-            "data" => $messageItemService->getMessageItemList($folderKey, $resourceQuery)->toJson()
-        ]);
+        $response["data"] = $messageItemService->getMessageItemList($folderKey, $resourceQuery)->toJson(
+            $this->jsonStrategy
+        );
+
+        return response()->json($response);
     }
 
 

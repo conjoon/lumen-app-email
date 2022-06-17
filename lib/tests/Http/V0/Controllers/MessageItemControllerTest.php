@@ -32,8 +32,11 @@ namespace Tests\App\Http\V0\Controllers;
 use App\Http\V0\Controllers\MessageItemController;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
 use Conjoon\Mail\Client\Message\Flag\DraftFlag;
 use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
 use Conjoon\Mail\Client\Message\Flag\FlagList;
@@ -45,15 +48,19 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
+use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Exception;
 use Illuminate\Http\Request;
+use Conjoon\Core\ParameterBag;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -79,24 +86,32 @@ class MessageItemControllerTest extends TestCase
     public function testIndexSuccess()
     {
         $serviceStub = $this->initServiceStub();
+        $mailFolderService = $this->initMailFolderServiceStub();
+
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
         $unreadCmp = 5;
         $totalCmp = 100;
 
-        $folderKey = new FolderKey(
-            $this->getTestMailAccount("dev_sys_conjoon_org"),
-            "INBOX"
-        );
+        $account = $this->getTestMailAccount("dev_sys_conjoon_org");
+
+        $folderKey = new FolderKey($account, "INBOX");
 
         $query = (new IndexRequestQueryTranslator())->translate(new Request(
-            ["start" => 0,
+            [
+                "fields[MailFolder]" => "unreadMessages,totalMessages",
+                "include" => "MailFolders",
+                "start" => 0,
                 "limit" => 25,
                 "sort" => [
                     ["property" => "date", "direction" => "DESC"]
                 ]
             ]
+        ));
+
+        $mailFolderResourceQuery = new MailFolderListResourceQuery(new ParameterBag(
+            ["fields" => ["MailFolder" => ["unreadMessages" => true, "totalMessages" => true]]]
         ));
 
         $messageItemList = new MessageItemList();
@@ -111,6 +126,12 @@ class MessageItemControllerTest extends TestCase
             new MessagePart("", "", "")
         );
 
+        $resultList   = new MailFolderChildList();
+        $resultList[] = new MailFolder(
+            $folderKey, ["unreadMessages" => $unreadCmp, "totalMessages" => $totalCmp, "data" => null]
+        );
+
+
         $serviceStub->expects($this->once())
             ->method("getMessageItemList")
             ->with(
@@ -124,19 +145,21 @@ class MessageItemControllerTest extends TestCase
             )
             ->willReturn($messageItemList);
 
-        $serviceStub->expects($this->once())
-            ->method("getUnreadMessageCount")
-            ->with($folderKey)
-            ->willReturn($unreadCmp);
-
-        $serviceStub->expects($this->once())
-            ->method("getTotalMessageCount")
-            ->with($folderKey)
-            ->willReturn($totalCmp);
-
+        $mailFolderService->expects($this->once())
+            ->method("getMailFolderChildList")
+            ->with(
+                $account,
+                $this->callback(
+                    function ($rq) use ($mailFolderResourceQuery) {
+                        $this->assertEquals($mailFolderResourceQuery->toJson(), $rq->toJson());
+                        return true;
+                    }
+                )
+            )
+            ->willReturn($resultList);
 
         $endpoint = $this->getImapEndpoint(
-            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?start=0&limit=25",
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
             "v0"
         );
         $client = $this->actingAs($this->getTestUserStub());
@@ -144,21 +167,17 @@ class MessageItemControllerTest extends TestCase
         $response = $client->call(
             "GET",
             $endpoint,
-            ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]]
+            ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]],
+            "fields[MailFolder]" => "unreadMessages,totalMessages",
+            "include" => "MailFolders"]
         );
 
 
         $this->assertSame($response->status(), 200);
 
         $this->seeJsonEquals([
-            "success" => true,
-            "total" => $totalCmp,
-            "meta" => [
-                "cn_unreadCount" => $unreadCmp,
-                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
-                "mailFolderId" => "INBOX"
-            ],
-            "data" => $messageItemList->toJson()
+            "data" => $messageItemList->toJson($this->app->get(JsonStrategy::class)),
+            "included" => $resultList->toJson($this->app->get(JsonStrategy::class))
         ]);
     }
 
@@ -1188,6 +1207,25 @@ class MessageItemControllerTest extends TestCase
 
         $this->app->when(MessageItemController::class)
             ->needs(MessageItemService::class)
+            ->give(function () use ($serviceStub) {
+                return $serviceStub;
+            });
+
+        return $serviceStub;
+    }
+
+    /**
+     * @return DefaultMailFolderService|MockObject
+     */
+    protected function initMailFolderServiceStub()
+    {
+
+        $serviceStub = $this->getMockBuilder(DefaultMailFolderService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->app->when(MessageItemController::class)
+            ->needs(MailFolderService::class)
             ->give(function () use ($serviceStub) {
                 return $serviceStub;
             });
