@@ -192,6 +192,7 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
             ],
             "MailFolder" => [
                 "name",
+                "data",
                 "folderType",
                 "unreadMessages",
                 "totalMessages"
@@ -233,6 +234,7 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
             ],
             "MailFolder" => [
                 "name" => true,
+                "data" => true,
                 "folderType" => true,
                 "unreadMessages" => true,
                 "totalMessages" => true

@@ -118,7 +118,8 @@ class AbstractMessageItemQueryTranslatorTest extends TestCase
                 "name" => true,
                 "folderType" => true,
                 "unreadMessages" => true,
-                "totalMessages" => true
+                "totalMessages" => true,
+                "data" => true
             ]
         ];
 
