@@ -143,4 +143,24 @@ trait TestTrait
             "outbox_secure"   => "ssl"
         ]);
     }
+
+
+    // Tests
+
+    /**
+     *
+     */
+    protected function runTestForUnauthorizedAccessTo($endpoint, $method)
+    {
+        $this->installUnauthorizedUser();
+        $response = $this->actingAs($this->getTestUserStub())->call(
+            $method,
+            $this->getImapEndpoint(
+                $endpoint,
+                "v0"
+            )
+        );
+
+        $this->assertEquals(401, $response->status());
+    }
 }

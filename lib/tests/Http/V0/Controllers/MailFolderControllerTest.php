@@ -109,16 +109,10 @@ class MailFolderControllerTest extends TestCase
      */
     public function testIndex401()
     {
-        $this->installUnauthorizedUser();
-        $response = $this->actingAs($this->getTestUserStub())->call(
-            "GET",
-            $this->getImapEndpoint(
-                "MailAccounts/dev_sys_conjoon_org/MailFolders",
-                "v0"
-            )
+        $this->runTestForUnauthorizedAccessTo(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders",
+            "GET"
         );
-
-        $this->assertEquals(401, $response->status());
     }
 
 
