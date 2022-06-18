@@ -35,6 +35,7 @@ use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\JsonStrategy;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Exception\MailFolderNotFoundException;
 use Conjoon\Mail\Client\Folder\MailFolder;
 use Conjoon\Mail\Client\Folder\MailFolderChildList;
 use Conjoon\Mail\Client\Message\Flag\DraftFlag;
@@ -49,6 +50,7 @@ use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
 use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
@@ -180,6 +182,47 @@ class MessageItemControllerTest extends TestCase
             "data" => $messageItemList->toJson($this->app->get(JsonStrategy::class)),
             "included" => $resultList->toJson($this->app->get(JsonStrategy::class))
         ]);
+    }
+
+
+    /**
+     * Http 401
+     */
+    public function testIndex401()
+    {
+        $this->runTestForUnauthorizedAccessTo(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+            "GET"
+        );
+    }
+
+
+    /**
+     * Http 404
+     */
+    public function testIndex404()
+    {
+        $serviceStub = $this->initServiceStub();
+
+
+        $serviceStub->expects($this->once())
+            ->method("getMessageItemList")
+            ->with(
+                new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "_missing_"),
+                $this->anything()
+            )
+            ->willThrowException(new MailFolderNotFoundException("The MailFolder with the id \"_missing_\" was not found"));
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call(
+                "GET",
+                $this->getImapEndpoint(
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/_missing_/MessageItems?limit=-1",
+                    "v0"
+                )
+            );
+
+        $this->assertEquals(404, $response->status());
     }
 
 
