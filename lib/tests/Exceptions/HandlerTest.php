@@ -33,6 +33,7 @@ use App\Exceptions\Handler;
 use Conjoon\Core\JsonStrategy;
 use Conjoon\Http\Exception\BadRequestException;
 use Conjoon\Http\Json\Problem\ProblemFactory;
+use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
@@ -50,14 +51,20 @@ class HandlerTest extends TestCase
         $exc = new BadRequestException();
         $problem = ProblemFactory::make($exc->getCode(), null, $exc->getMessage());
 
-        $handler = new Handler();
+        $strategy = $this->getMockForAbstractClass(JsonStrategy::class);
+
+        $handler = new Handler($strategy);
+
+        $strategy->expects($this->once())
+            ->method("toJson")
+            ->with($problem)
+            ->willReturn($problem->toJson());
+
         $resp = $handler->render(new Request(), $exc);
 
-        $strategy = $this->getMockForAbstractClass(JsonStrategy::class);
-        $strategy->expects($this->once())->method("toJson")->with($problem)->willReturn($problem->toArray());
 
         $this->assertEquals(
-            $problem->toJson($strategy),
+            $problem->toJson(),
             json_decode($resp->getContent(), true)["errors"][0]
         );
 
@@ -69,11 +76,38 @@ class HandlerTest extends TestCase
 
 
     /**
+     * tests render w/ ResourceNotFoundException()
+     */
+    public function testRenderWithResourceNotFoundException()
+    {
+        $exc = $this->getMockForAbstractClass(ResourceNotFoundException::class);
+        $problem = ProblemFactory::make(404, null, $exc->getMessage());
+
+        $strategy = $this->getMockForAbstractClass(JsonStrategy::class);
+        $strategy->expects($this->once())->method("toJson")->with($problem)->willReturn($problem->toJson());
+
+        $handler = new Handler($strategy);
+
+        $resp = $handler->render(new Request(), $exc);
+
+        $this->assertEquals(
+            $problem->toJson(),
+            json_decode($resp->getContent(), true)["errors"][0]
+        );
+
+        $this->assertSame(
+            404,
+            $resp->getStatusCode()
+        );
+    }
+
+
+    /**
      * tests render()
      */
     public function testRenderRegular()
     {
-        $handler = new Handler();
+        $handler = new Handler($this->app->get(JsonStrategy::class));
         $exc = new \Exception();
         $resp = $handler->render(new Request(), $exc);
 

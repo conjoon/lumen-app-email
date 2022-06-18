@@ -30,6 +30,7 @@ namespace App\Exceptions;
 use Conjoon\Core\JsonStrategy;
 use Conjoon\Http\Json\Problem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
+use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -94,13 +95,25 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
+        $problem = null;
+
+        if ($e instanceof ResourceNotFoundException) {
+            $problem = ProblemFactory::make(
+                404,
+                null,
+                $e->getMessage()
+            );
+        }
+
         if ($e instanceof ConjoonHttpException) {
             $problem = ProblemFactory::make(
                 $e->getCode(),
                 null,
                 $e->getMessage()
             );
+        }
 
+        if ($problem) {
             return response()->json(
                 ["errors" => [$problem->toJson($this->jsonStrategy)]],
                 $problem->getStatus()
