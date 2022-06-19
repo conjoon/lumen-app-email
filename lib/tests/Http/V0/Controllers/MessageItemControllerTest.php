@@ -77,6 +77,19 @@ class MessageItemControllerTest extends TestCase
 
     protected string $messageItemsUrl = "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311";
 
+    /**
+     * Inits the server stubs to make sure service stubs intercept calls to not accidently
+     * authorize with the application.
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $serviceStub = $this->initServiceStub();
+        $mailFolderService = $this->initMailFolderServiceStub();
+    }
+
 
     /**
      * Tests index() to make sure method returns list of available MessageItems associated with
@@ -87,8 +100,8 @@ class MessageItemControllerTest extends TestCase
      */
     public function testIndexSuccess()
     {
-        $serviceStub = $this->initServiceStub();
-        $mailFolderService = $this->initMailFolderServiceStub();
+        $serviceStub = $this->serviceStub;
+        $mailFolderService = $this->mailFolderServiceStub;
 
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
@@ -184,12 +197,35 @@ class MessageItemControllerTest extends TestCase
         ]);
     }
 
+    /**
+     * Http 400
+     */
+    public function testIndex400()
+    {
+        $serviceStub = $this->serviceStub;
+        $mailFolderService = $this->mailFolderServiceStub;
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->call(
+                "GET",
+                $this->getImapEndpoint(
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/_missing_/MessageItems?limit=-1&include=mail",
+                    "v0"
+                )
+            );
+
+        $this->assertEquals(400, $response->status());
+    }
+
 
     /**
      * Http 401
      */
     public function testIndex401()
     {
+        $serviceStub = $this->serviceStub;
+        $mailFolderService = $this->mailFolderServiceStub;
+
         $this->runTestForUnauthorizedAccessTo(
             "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
             "GET"
@@ -202,7 +238,8 @@ class MessageItemControllerTest extends TestCase
      */
     public function testIndex404()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->serviceStub;
+        $mailFolderService = $this->mailFolderServiceStub;
 
 
         $serviceStub->expects($this->once())
@@ -1255,6 +1292,8 @@ class MessageItemControllerTest extends TestCase
                 return $serviceStub;
             });
 
+        $this->serviceStub = $serviceStub;
+
         return $serviceStub;
     }
 
@@ -1274,6 +1313,7 @@ class MessageItemControllerTest extends TestCase
                 return $serviceStub;
             });
 
+        $this->mailFolderServiceStub = $serviceStub;
         return $serviceStub;
     }
 
