@@ -51,14 +51,14 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
         $bag = new ParameterBag($source->toJson());
 
 
-        if ($bag->include && $bag->getString("include") !== "MailFolders") {
+        if ($bag->include && $bag->getString("include") !== "MailFolder") {
             throw new InvalidQueryException(
-                "parameter \"include\" must be set to \"MailFolders\", or omitted"
+                "parameter \"include\" must be set to \"MailFolder\", or omitted"
             );
         }
 
         $types = ["MessageItem"];
-        if ($bag->include === "MailFolders") {
+        if ($bag->include === "MailFolder") {
             $types[] = "MailFolder";
         }
         $bag->fields = [];

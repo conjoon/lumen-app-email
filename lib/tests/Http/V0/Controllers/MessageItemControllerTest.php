@@ -116,7 +116,7 @@ class MessageItemControllerTest extends TestCase
         $query = (new IndexRequestQueryTranslator())->translate(new Request(
             [
                 "fields[MailFolder]" => "unreadMessages,totalMessages",
-                "include" => "MailFolders",
+                "include" => "MailFolder",
                 "start" => 0,
                 "limit" => 25,
                 "sort" => [
@@ -185,7 +185,7 @@ class MessageItemControllerTest extends TestCase
             $endpoint,
             ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]],
             "fields[MailFolder]" => "unreadMessages,totalMessages",
-            "include" => "MailFolders"]
+            "include" => "MailFolder"]
         );
 
 

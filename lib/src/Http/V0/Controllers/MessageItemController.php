@@ -132,7 +132,7 @@ class MessageItemController extends Controller
 
         $response = [];
 
-        if ($resourceQuery->include === "MailFolders") {
+        if ($resourceQuery->include === "MailFolder") {
             $mailFolderResourceQuery  = new MailFolderListResourceQuery(new ParameterBag(
                 ["fields" => ["MailFolder" => $resourceQuery->fields["MailFolder"] ?? null]]
             ));

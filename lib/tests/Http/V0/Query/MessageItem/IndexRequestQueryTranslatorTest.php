@@ -140,7 +140,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
 
-        $getExpectedFields = function ($exclude = [], $add = [], $type) {
+        $getExpectedFields = function ($exclude = [], $add = [], $type = "") {
 
             $parameters = $this->getDefaultFields($type);
             array_walk(
@@ -174,12 +174,12 @@ class IndexRequestQueryTranslatorTest extends TestCase
                 ]
             ],
             [
-                "input" => ["limit" => "-1", "include" => "MailFolders"],
+                "input" => ["limit" => "-1", "include" => "MailFolder"],
                 "output" => [
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolders",
+                    "include" => "MailFolder",
                     "fields" => [
                         "MessageItem" => $getExpectedFields(
                             ["html", "plain"],
@@ -198,14 +198,14 @@ class IndexRequestQueryTranslatorTest extends TestCase
             [
                 "input" => [
                     "limit" => "-1",
-                    "include" => "MailFolders",
+                    "include" => "MailFolder",
                     "fields[MailFolder]" => "*,folderType,name"
                 ],
                 "output" => [
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolders",
+                    "include" => "MailFolder",
                     "fields" => [
                         "MessageItem" => $getExpectedFields(
                             ["html", "plain"],
