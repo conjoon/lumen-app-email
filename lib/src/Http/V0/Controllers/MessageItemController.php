@@ -29,8 +29,10 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
+use App\ControllerUtil;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
+use App\Util;
 use Conjoon\Core\JsonStrategy;
 use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
 use Conjoon\Mail\Client\Service\MailFolderService;
@@ -80,21 +82,28 @@ class MessageItemController extends Controller
      */
     protected JsonStrategy $jsonStrategy;
 
-
+    /**
+     * @var ControllerUtil
+     */
+    protected ControllerUtil $controllerUtil;
 
     /**
      * MessageItemController constructor.
      *
      * @param MessageItemService $messageItemService
+     * @param MailFolderService $mailFolderService
      * @param MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer
      * @param MessageBodyDraftJsonTransformer $messageBodyDraftJsonTransformer
+     * @param JsonStrategy $jsonStrategy
+     * @param ControllerUtil $controllerUtil
      */
     public function __construct(
         MessageItemService $messageItemService,
         MailFolderService $mailFolderService,
         MessageItemDraftJsonTransformer $messageItemDraftJsonTransformer,
         MessagebodyDraftJsonTransformer $messageBodyDraftJsonTransformer,
-        JsonStrategy $jsonStrategy
+        JsonStrategy $jsonStrategy,
+        ControllerUtil $controllerUtil
     ) {
 
         $this->mailFolderService               = $mailFolderService;
@@ -102,6 +111,7 @@ class MessageItemController extends Controller
         $this->messageItemDraftJsonTransformer = $messageItemDraftJsonTransformer;
         $this->messageBodyDraftJsonTransformer = $messageBodyDraftJsonTransformer;
         $this->jsonStrategy                    = $jsonStrategy;
+        $this->controllerUtil                  = $controllerUtil;
     }
 
 
@@ -470,7 +480,7 @@ class MessageItemController extends Controller
 
 
     /**
-     * Posts new MessageBody data to the specified $mailFolderId for the account identified by
+     * Posts new data to the specified $mailFolderId for the account identified by
      * $mailAccountId, creating an entirely new Message
      *
      * @param Request $request
@@ -490,21 +500,19 @@ class MessageItemController extends Controller
         $mailFolderId = urldecode($mailFolderId);
         $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
-        $data = ArrayUtil::only(ArrayUtil::unchain("data.attributes", $request->all()), ["textHtml", "textPlain"]);
+        $data = ArrayUtil::unchain("data.attributes", $request->all());
+        $messageDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
+        $createdMessageDraft = $messageItemService->createMessageDraft($folderKey, $messageDraft);
 
-        $messageBody             = $this->messageBodyDraftJsonTransformer::fromArray($data);
-        $createdMessageBodyDraft = $messageItemService->createMessageBodyDraft($folderKey, $messageBody);
-
-        if (!$createdMessageBodyDraft) {
-            return response()->json([
-                "success" => false,
-                "msg"     => "Creating the MessageBody failed."
-            ], 400);
-        }
 
         return response()->json([
-            "success" => !!$createdMessageBodyDraft ,
-            "data"    => $createdMessageBodyDraft->toJson()
+           "data" => $createdMessageDraft->toJson($this->jsonStrategy)
+        ], 201, [
+            "Location" => $this->controllerUtil->getResourceUrl(
+                "MessageItem",
+                $createdMessageDraft->getMessageKey(),
+                $request->url()
+            )
         ]);
     }
 

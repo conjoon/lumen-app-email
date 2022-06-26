@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\Controllers;
 
+use App\ControllerUtil;
+use App\Http\V0\Controllers\Controller;
 use App\Http\V0\Controllers\MessageItemController;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
@@ -61,8 +63,10 @@ use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Exception;
+use App\Util;
 use Illuminate\Http\Request;
 use Conjoon\Core\ParameterBag;
+use Mockery;
 use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 use Tests\TestTrait;
@@ -88,6 +92,17 @@ class MessageItemControllerTest extends TestCase
         parent::setUp();
         $serviceStub = $this->initServiceStub();
         $mailFolderService = $this->initMailFolderServiceStub();
+    }
+
+
+    /**
+     * @return void
+     */
+    public function testClass()
+    {
+        $ctrl = $this->getMockBuilder(MessageItemController::class)->disableOriginalConstructor()->getMock();
+
+        $this->assertInstanceOf(Controller::class, $ctrl);
     }
 
 
@@ -263,6 +278,136 @@ class MessageItemControllerTest extends TestCase
     }
 
 
+    /**
+     * Tests post() to make sure creating a Message with a MessageItemDraft
+     * works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPostMessageItem()
+    {
+        $serviceStub = $this->initServiceStub();
+        $transformer = $this->initMessageItemDraftJsonTransformer();
+        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $messageKey = new MessageKey($folderKey, "101");
+
+        $attributes = [
+            "subject" => "new subject"
+        ];
+        $requestData = [
+            "data" => [
+                "type" => "MessageItem",
+                "attributes" => $attributes
+            ]
+        ];
+
+        $messageDraft = new MessageItemDraft($attributes);
+        $transformer->returnDraftForData($attributes, $messageDraft);
+
+        $createdMessage = $messageDraft->setMessageKey($messageKey);
+
+        $serviceStub->expects($this->once())
+            ->method("createMessageDraft")
+            ->with($folderKey, $messageDraft)
+            ->will($this->returnCallback(function ($folderKey, $messageDraft) use ($createdMessage) {
+                return $createdMessage;
+            }));
+
+        $utilMock = $this->getMockBuilder(ControllerUtil::class)->onlyMethods(["getResourceUrl"])->getMock();
+        $this->app->when(MessageItemController::class)
+            ->needs(ControllerUtil::class)
+            ->give(function () use ($utilMock) {
+                return $utilMock;
+            });
+
+        $utilMock->expects($this->once())->method("getResourceUrl")->with(
+            "MessageItem",
+            $messageKey,
+            $this->callback(function ($url) {
+                $this->assertSame(
+                    "http://localhost/rest-api-email/api/v0/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+                    $url
+                );
+                return true;
+            })
+        )->willReturn("location value");
+
+
+        $response = $this->actingAs($this->getTestUserStub())
+            ->post(
+                $this->getImapEndpoint("MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems", "v0"),
+                $requestData
+            );
+
+        $response->assertResponseStatus(201);
+        $response->seeHeader("Location", "location value");
+
+
+        $response->seeJsonEquals([
+           "data" => $createdMessage->toJson($this->app->get(JsonStrategy::class))
+        ]);
+    }
+
+
+    /**
+     * Tests post() to make sure response is okay when no MessageBody as created.
+     *
+     * @return void
+     */
+    public function testPostMessageBodyNotCreated()
+    {
+        $serviceStub = $this->initServiceStub();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
+
+        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml = "HTML";
+        $textPlain = "PLAIN";
+
+        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
+
+        $requestData = [
+            "data" => [
+                "mailAccountId" => "dev_sys_conjoon_org",
+                "mailFolderId" => "INBOX",
+                "attributes" => $data
+            ]
+        ];
+
+
+        $messageBody = new MessageBodyDraft();
+        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
+        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
+
+        $transformer->returnDraftForData($data, $messageBody);
+
+        $serviceStub->expects($this->once())
+            ->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBody)
+            ->willReturn(null);
+
+        $this->actingAs($this->getTestUserStub())
+            ->post(
+                $this->getImapEndpoint(
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+                    "v0"
+                ),
+                $requestData
+            );
+
+        $this->assertResponseStatus(400);
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg" => "Creating the MessageBody failed."
+        ]);
+    }
+
+
+// +-------------------------------
+// | pre php-lib-conjoon#8
+// +-------------------------------
     public function testGetMessageItemNoTargetParameter()
     {
         $serviceStub = $this->initServiceStub();
@@ -709,115 +854,6 @@ class MessageItemControllerTest extends TestCase
             "data" => array_merge($messageKey->toJson(), [
                 "flagged" => false
             ])
-        ]);
-    }
-
-
-    /**
-     * Tests post() to make sure creating a MessageBody works as expected
-     *
-     *
-     * @return void
-     */
-    public function testPostMessageBody()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $transformer = $this->initMessageBodyDraftJsonTransformer();
-
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml = "HTML";
-        $textPlain = "PLAIN";
-
-        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
-        $requestData = [
-            "data" => [
-                "mailAccountId" => "dev_sys_conjoon_org",
-                "mailFolderId" => "INBOX",
-                "attributes" => $data
-            ]
-        ];
-
-        $messageBody = new MessageBodyDraft();
-        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
-        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
-
-        $transformer->returnDraftForData($data, $messageBody);
-
-        $serviceStub->expects($this->once())
-            ->method("createMessageBodyDraft")
-            ->with($folderKey, $messageBody)
-            ->will($this->returnCallback(function ($folderKey, $messageBody) use ($messageKey) {
-                return $messageBody->setMessageKey($messageKey);
-            }));
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->post(
-                $this->getImapEndpoint("MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems", "v0"),
-                $requestData
-            );
-
-        $response->assertResponseOk();
-
-        $response->seeJsonEquals([
-            "success" => true,
-            "data" => array_merge($messageKey->toJson(), $messageBody->toJson())
-        ]);
-    }
-
-
-    /**
-     * Tests post() to make sure response is okay when no MessageBody as created.
-     *
-     * @return void
-     */
-    public function testPostMessageBodyNotCreated()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $transformer = $this->initMessageBodyDraftJsonTransformer();
-
-        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml = "HTML";
-        $textPlain = "PLAIN";
-
-        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
-
-        $requestData = [
-            "data" => [
-                "mailAccountId" => "dev_sys_conjoon_org",
-                "mailFolderId" => "INBOX",
-                "attributes" => $data
-            ]
-        ];
-
-
-        $messageBody = new MessageBodyDraft();
-        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
-        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
-
-        $transformer->returnDraftForData($data, $messageBody);
-
-        $serviceStub->expects($this->once())
-            ->method("createMessageBodyDraft")
-            ->with($folderKey, $messageBody)
-            ->willReturn(null);
-
-        $this->actingAs($this->getTestUserStub())
-            ->post(
-                $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
-                    "v0"
-                ),
-                $requestData
-            );
-
-        $this->assertResponseStatus(400);
-
-        $this->seeJsonContains([
-            "success" => false,
-            "msg" => "Creating the MessageBody failed."
         ]);
     }
 
