@@ -54,39 +54,9 @@ class ControllerTest extends TestCase
 
 
     /**
-     * Tests getResourceUrl()
-     * @return void
+     * @param array $methods
+     * @return Controller
      */
-    public function testGetResourceUrl()
-    {
-        $ctrl = $this->getControllerMock([]);
-
-        $reflection = new ReflectionClass($ctrl);
-        $getResourceUrl = $reflection->getMethod("getResourceUrl");
-        $getResourceUrl->setAccessible(true);
-
-
-        $callerUri = "https://localhost:8080/api/v4/path?query=value";
-        $key = new MessageKey("A", "B", "C");
-
-        $this->assertSame(
-            config("app.url") . "/" . config("app.api.service.email") . "/v4/" .
-            "MailAccounts/A/MailFolders/B/MessageItems/C",
-            $getResourceUrl->invokeArgs($ctrl, ["MessageItem", $key, $callerUri])
-        );
-
-        // w/o version
-        $callerUri = "https://localhost:8080/api/path?query=value";
-
-        $this->assertSame(
-            config("app.url") . "/" . config("app.api.service.email") . "/" .
-            config("app.api.latest") . "/" .
-            "MailAccounts/A/MailFolders/B/MessageItems/C",
-            $getResourceUrl->invokeArgs($ctrl, ["MessageItem", $key, $callerUri])
-        );
-    }
-
-
     protected function getControllerMock(array $methods = []): Controller
     {
         return $this->getMockBuilder(Controller::class)
