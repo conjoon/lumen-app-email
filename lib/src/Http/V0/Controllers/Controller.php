@@ -27,9 +27,47 @@
 
 namespace App\Http\V0\Controllers;
 
+use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
+use Illuminate\Http\Request;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    // intentionally left empty
+    /**
+     * Returns the uri for the specified type. The type can be one
+     * - MessageItem
+     *
+     * @param string $type
+     * @param CompoundKey $key
+     * @param $callerUri The uri that triggered a call to this method, and from
+     * which the current version of the api being used should be extracted.
+     *
+     * @return string
+     */
+    protected function getResourceUrl(string $type, CompoundKey $key, $callerUri): string
+    {
+        preg_match("/\/(v\d*)\//mi", $callerUri, $matches);
+
+        $version = $matches[1] ?? config("app.api.latest");
+
+        $baseUrl = implode(
+            "/",
+            [config("app.url"), config("app.api.service.email"), $version]
+        );
+
+        switch ($type) {
+            case "MessageItem":
+                $path = implode("/", [
+                    "MailAccounts",
+                    $key->getMailAccountId() ,
+                    "MailFolders",
+                    $key->getMailFolderId() ,
+                    "MessageItems",
+                    $key->getId() ,
+                ]);
+                return $baseUrl . "/" . $path;
+        }
+
+        return $baseUrl;
+    }
 }
