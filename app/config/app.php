@@ -98,7 +98,9 @@ return [
 | This URL is used by the console to properly generate URLs when using
 | the Artisan command line tool. You should set this to the root of
 | your application so that it is used when running Artisan tasks.
-|
+| The value of this property is also used throughout the application when
+| controllers need to refer to the scheme and authority of the server
+| this application is used with.
 */
 
 "url" => env("APP_URL", "https://lumen-app-email.ddev.site"),
