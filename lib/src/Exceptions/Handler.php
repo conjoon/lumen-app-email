@@ -28,18 +28,18 @@
 namespace App\Exceptions;
 
 use Conjoon\Core\JsonStrategy;
+use Conjoon\Http\Json\Problem\AbstractProblem;
 use Conjoon\Http\Json\Problem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
 use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
+use Conjoon\Mail\Client\Service\ServiceException;
 use Exception;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -95,23 +95,7 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $e)
     {
-        $problem = null;
-
-        if ($e instanceof ResourceNotFoundException) {
-            $problem = ProblemFactory::make(
-                404,
-                null,
-                $e->getMessage()
-            );
-        }
-
-        if ($e instanceof ConjoonHttpException) {
-            $problem = ProblemFactory::make(
-                $e->getCode(),
-                null,
-                $e->getMessage()
-            );
-        }
+        $problem = $this->convertToProblem($e);
 
         if ($problem) {
             return response()->json(
@@ -120,5 +104,28 @@ class Handler extends ExceptionHandler
             );
         }
         return parent::render($request, $e);
+    }
+
+
+    /**
+     * Converts the exception to a Problem, if the exception is in the list of convertable
+     * exceptions.
+     *
+     * @param Exception $e
+     *
+     * @return Problem|null
+     */
+    protected function convertToProblem(Exception $e): ?AbstractProblem
+    {
+
+        switch (true) {
+            case ($e instanceof ConjoonHttpException):
+                return ProblemFactory::make($e->getCode(), null, $e->getMessage());
+            case ($e instanceof ServiceException):
+                return ProblemFactory::make(500, null, $e->getMessage());
+
+            default:
+                return null;
+        }
     }
 }
