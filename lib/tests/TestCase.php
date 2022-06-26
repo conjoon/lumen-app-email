@@ -37,12 +37,13 @@ use Illuminate\Support\Facades\Config;
 use Laravel\Lumen\Application;
 use RuntimeException;
 use Illuminate\Http\Response;
+use Laravel\Lumen\Testing\TestCase as LaravelTestCase;
 
 /**
  * Class TestCase
  * @package Tests
  */
-abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
+abstract class TestCase extends LaravelTestCase
 {
     protected bool $useFakeAuth = true;
 
