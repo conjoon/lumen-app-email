@@ -28,6 +28,7 @@
 declare(strict_types=1);
 
 use App\Console\Kernel as ConsoleKernel;
+use App\ControllerUtil;
 use App\Exceptions\Handler;
 use Conjoon\Core\JsonStrategy;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
@@ -136,6 +137,10 @@ $app->singleton(AuthService::class, function () {
 
 $app->singleton(JsonStrategy::class, function () {
     return new JsonApiStrategy();
+});
+
+$app->singleton(ControllerUtil::class, function () {
+    return new ControllerUtil();
 });
 
 $app->singleton(MessageBodyDraftJsonTransformer::class, function () {

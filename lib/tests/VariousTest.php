@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\ControllerUtil;
 use Closure;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
@@ -223,6 +224,14 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs(
                 $this->app,
                 [JsonStrategy::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            ControllerUtil::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [ControllerUtil::class]
             ))
         );
 
