@@ -59,7 +59,10 @@ class HandlerTest extends TestCase
             "400" => [["exc" => new BadRequestException()]],
             "401" => [["exc" => new UnauthorizedException()]],
             "403" => [["exc" => new ForbiddenException()]],
-            "404" => [["exc" => new NotFoundException()]],
+            "404" => [
+                ["exc" => new NotFoundException()],
+                ["exc" => $this->getMockForAbstractClass(ResourceNotFoundException::class), "code" => 404]
+            ],
             "405" => [["exc" => new MethodNotAllowedException()]],
             "500" => [[
                 "exc" => new InternalServerErrorException()

@@ -121,6 +121,8 @@ class Handler extends ExceptionHandler
         switch (true) {
             case ($e instanceof ConjoonHttpException):
                 return ProblemFactory::make($e->getCode(), null, $e->getMessage());
+            case ($e instanceof ResourceNotFoundException):
+                return ProblemFactory::make(404, null, $e->getMessage());
             case ($e instanceof ServiceException):
                 return ProblemFactory::make(500, null, $e->getMessage());
 
