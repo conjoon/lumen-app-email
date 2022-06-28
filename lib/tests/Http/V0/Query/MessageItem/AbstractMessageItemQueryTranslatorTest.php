@@ -67,28 +67,6 @@ class AbstractMessageItemQueryTranslatorTest extends TestCase
 
 
     /**
-     * tests parseFields() with ["previewText,subject"]
-     */
-    public function testParseFieldsWithPreviewText()
-    {
-        $type = "entity";
-        $bag = new ParameterBag();
-        $bag->{"fields[entity]"} = "previewText,subject";
-
-        $translator = $this->createTranslatorMock(["getFields", "hasOnlyAllowedFields"]);
-        $reflection = new ReflectionClass($translator);
-
-        $parseFieldsReflection = $reflection->getMethod("parseFields");
-        $parseFieldsReflection->setAccessible(true);
-
-        $this->assertEquals(
-            ["subject", "html", "plain"],
-            $parseFieldsReflection->invokeArgs($translator, [$bag->{"fields[entity]"}, $type])
-        );
-    }
-
-
-    /**
      * tests mapConfigToFields() with [[], ["subject" => ["length" => 200]], "entity"]
      * @return void
      */
@@ -180,7 +158,8 @@ class AbstractMessageItemQueryTranslatorTest extends TestCase
                 "plain" => ["length" => 200, "trimApi" => true, "precedence" => false],
                 "html" => ["length" => 200, "trimApi" => false, "precedence" => true]
             ]];
-        $defaultFields = ["previewText" => true, "date" => true];
+        $defaultFields = ["html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
+            "plain" => ["length" => 200, "trimApi" => true], "date" => true];
 
         $translator = $this->createTranslatorMock(["getDefaultFields"]);
 
@@ -193,6 +172,37 @@ class AbstractMessageItemQueryTranslatorTest extends TestCase
         $this->assertEquals([
             "html"  => ["length" => 200, "trimApi" => false, "precedence" => true],
             "plain" => ["length" => 200, "trimApi" => true, "precedence" => false],
+            "date" => true
+        ], $mapConfigToFields->invokeArgs($translator, [["previewText", "date"], $options, $type]));
+    }
+
+    /**
+     * tests mapConfigToFields() with [["previewText", "date"], ["previewText" => [
+     *         "length" => 20
+     *  ]], "MessageItem"]
+     * @return void
+     */
+    public function testMapConfigToFieldsWithMessageItemAndExpandablePreviewTextOptions()
+    {
+        $type = "MessageItem";
+
+        $options = [
+            "previewText" => ["length" => 20, "trimApi" => false]
+        ];
+        $defaultFields = ["html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
+            "plain" => ["length" => 200, "trimApi" => true], "date" => true];
+
+        $translator = $this->createTranslatorMock(["getDefaultFields"]);
+
+        $reflection = new ReflectionClass($translator);
+        $mapConfigToFields = $reflection->getMethod("mapConfigToFields");
+        $mapConfigToFields->setAccessible(true);
+
+        $translator->expects($this->once())->method("getDefaultFields")->with($type)->willReturn($defaultFields);
+
+        $this->assertEquals([
+            "html"  => ["length" => 20, "trimApi" => false],
+            "plain" => ["length" => 20, "trimApi" => false],
             "date" => true
         ], $mapConfigToFields->invokeArgs($translator, [["previewText", "date"], $options, $type]));
     }

@@ -75,29 +75,8 @@ abstract class AbstractMessageItemQueryTranslator extends JsonApiQueryTranslator
     /**
      * @inheritdoc
      */
-    protected function parseFields(?string $queryValue, string $type): array
-    {
-        $fields = parent::parseFields($queryValue, $type);
-
-        if (in_array("previewText", $fields)) {
-            // re-index
-            $fields = array_values(
-                array_filter($fields, fn($item) => $item !== "previewText")
-            );
-            $fields[] = "html";
-            $fields[] = "plain";
-        }
-
-        return $fields;
-    }
-
-
-    /**
-     * @inheritdoc
-     */
     protected function mapConfigToFields(array $fields, array $fieldOptions, string $type): array
     {
-
         $default = $this->getDefaultFields($type);
 
         $result = [];
@@ -112,7 +91,7 @@ abstract class AbstractMessageItemQueryTranslator extends JsonApiQueryTranslator
                 if (in_array("previewText", $fields)) {
                     isset($fieldOptions["html"]) && ($fields[] = "html");
                     isset($fieldOptions["plain"]) && ($fields[] = "plain");
-                    $fields = array_filter($fields, fn ($item) => $item !== "previewText");
+                    $fields = array_values(array_filter($fields, fn ($item) => $item !== "previewText"));
                 }
             }
         }
