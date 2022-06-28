@@ -29,51 +29,63 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Query\MessageItem;
 
+use App\Http\V0\Resource\MessageItemDescription;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
-use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Http\Query\QueryTranslator;
+use Conjoon\Http\Query\JsonApiQueryTranslator;
+use Conjoon\Http\Resource\ResourceObjectDescription;
 use Conjoon\Util\ArrayUtil;
-use Illuminate\Http\Request;
+
+;
 
 /**
  * Class AbstractMessageItemQueryTranslator
  * @package App\Http\V0\Query\MessageItem
  */
-abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
+abstract class AbstractMessageItemQueryTranslator extends JsonApiQueryTranslator
 {
     /**
-     * Parses and builds up the field list.
-     *
-     * @param ParameterBag $bag
-     * @return string[]
-     *
-     * @noinspection PhpUndefinedFieldInspection
+     * @return ResourceObjectDescription
      */
-    protected function parseFields(ParameterBag $bag, string $type): array
+    public function getResourceTarget(): ResourceObjectDescription
     {
+        return new MessageItemDescription();
+    }
 
-        // must be set before parseFields is called to make sure it does not fall back to default
-        if (!$bag->getString("fields[$type]")) {
-            return $this->getFields($type);
+
+    /**
+     * @param ParameterBag $bag
+     * @param string $type
+     * @return array
+     */
+    protected function extractFieldOptions(ParameterBag $bag, string $type): array
+    {
+        if ($type !== "MessageItem") {
+            return [];
         }
-        $fields = explode(",", $bag->getString("fields[$type]"));
-        if (in_array("*", $fields) !== false) {
-            $excludes   = array_filter($fields, fn ($item) => $item !== "*");
-            $fields = array_filter($this->getFields($type), fn ($item) => !in_array($item, $excludes));
-        } else {
-            $notAllowed = $this->hasOnlyAllowedFields($fields ?? [], $type);
-            if (!empty($notAllowed)) {
-                throw new InvalidQueryException(
-                    "parameter \"fields[$type]\" has unknown entries: " . implode(",", $notAllowed)
-                );
-            }
+        $options = $bag->options;
+        unset($bag->options);
+        if (!$options) {
+            return [];
+        }
 
-            if (in_array("previewText", $fields)) {
-                $fields = array_filter($fields, fn($item) => $item !== "previewText");
-                $fields[] = "html";
-                $fields[] = "plain";
-            }
+        return json_decode($options, true);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    protected function parseFields(?string $queryValue, string $type): array
+    {
+        $fields = parent::parseFields($queryValue, $type);
+
+        if (in_array("previewText", $fields)) {
+            // re-index
+            $fields = array_values(
+                array_filter($fields, fn($item) => $item !== "previewText")
+            );
+            $fields[] = "html";
+            $fields[] = "plain";
         }
 
         return $fields;
@@ -81,45 +93,38 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
 
 
     /**
-     * Maps required configurations to passed fields not available in the target
-     * entity.
-     *
-     * @param $target
-     * @param $parsed
-     * @param $default
-     * @param string $type
-     *
-     *
-     * @return array
+     * @inheritdoc
      */
-    protected function mapConfigToFields($target, $parsed, $default, $type): array
+    protected function mapConfigToFields(array $fields, array $fieldOptions, string $type): array
     {
+
+        $default = $this->getDefaultFields($type);
 
         $result = [];
 
         if ($type === "MessageItem") {
             // merge config from previewText into $parsed
-            $previewText = $parsed["previewText"] ?? [];
+            $previewText = $fieldOptions["previewText"] ?? [];
             if (isset($previewText["html"]) || isset($previewText["plain"])) {
-                $parsed = array_merge($parsed, $previewText);
-                unset($parsed["previewText"]);
+                $fieldOptions = array_merge($fieldOptions, $previewText);
+                unset($fieldOptions["previewText"]);
 
-                if (in_array("previewText", $target)) {
-                    isset($parsed["html"]) && ($target[] = "html");
-                    isset($parsed["plain"]) && ($target[] = "plain");
-                    $target = array_filter($target, fn ($item) => $item !== "previewText");
+                if (in_array("previewText", $fields)) {
+                    isset($fieldOptions["html"]) && ($fields[] = "html");
+                    isset($fieldOptions["plain"]) && ($fields[] = "plain");
+                    $fields = array_filter($fields, fn ($item) => $item !== "previewText");
                 }
             }
         }
 
-        foreach ($target as $fieldName) {
-            $result[$fieldName] = $parsed[$fieldName] ?? ($default[$fieldName] ?? true);
+        foreach ($fields as $fieldName) {
+            $result[$fieldName] = $fieldOptions[$fieldName] ?? ($default[$fieldName] ?? true);
         }
 
         if ($type === "MessageItem" && isset($result["previewText"])) {
             if (!is_array($result["previewText"])) {
-                $result["html"]  = $this->getDefaultFields($type)["html"];
-                $result["plain"]  = $this->getDefaultFields($type)["plain"];
+                $result["html"]  = $default["html"];
+                $result["plain"]  = $default["plain"];
             } else {
                 $result["html"]  = ArrayUtil::unchain("previewText.html", $result, $result["previewText"]);
                 $result["plain"] = ArrayUtil::unchain("previewText.plain", $result, $result["previewText"]);
@@ -129,118 +134,5 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
         }
 
         return $result;
-    }
-
-    /**
-     * Checks if there are fields which are not part of the fields defined for the
-     * entity the translator should process the parameters for.
-     *
-     * @param $received
-     * @param string $type
-     *
-     * @return array
-     */
-    protected function hasOnlyAllowedFields($received, $type): array
-    {
-        return array_diff($received, $this->getFields($type));
-    }
-
-
-    /**
-     * @inheritdocs
-     */
-    protected function extractParameters($parameterResource): array
-    {
-        if (!($parameterResource instanceof Request)) {
-            throw new InvalidParameterResourceException(
-                "Expected \"parameterResource\" to be instance of {Illuminate::class}"
-            );
-        }
-        return $parameterResource->only($this->getExpectedParameters());
-    }
-
-
-    /**
-     * Returns all fields the entity exposes.
-     *
-     * @param string $type The entity type for which the fields should be returned.
-     *
-     * @return string[]
-     */
-    protected function getFields(string $type): array
-    {
-        $fieldsets = [
-            "MessageItem" => [
-                "from",
-                "to",
-                "subject",
-                "date",
-                "seen",
-                "answered",
-                "draft",
-                "flagged",
-                "recent",
-                "charset",
-                "references",
-                "messageId",
-                "previewText",
-                "size",
-                "hasAttachments",
-                "cc",
-                "bcc",
-                "replyTo"
-            ],
-            "MailFolder" => [
-                "name",
-                "data",
-                "folderType",
-                "unreadMessages",
-                "totalMessages"
-            ]
-        ];
-
-        return $fieldsets[$type];
-    }
-
-
-    /**
-     * Default fields to pass to the lower level api.
-     *
-     * @return array
-     */
-    protected function getDefaultFields(string $type): array
-    {
-        $fieldsets = [
-            "MessageItem" => [
-                "from" => true,
-                "to" => true,
-                "subject" => true,
-                "date" => true,
-                "seen" => true,
-                "answered" => true,
-                "draft" => true,
-                "flagged" => true,
-                "recent" => true,
-                "charset" => true,
-                "references" => true,
-                "messageId" => true,
-                "size" => true,
-                "hasAttachments" => true,
-                "cc" => true,
-                "bcc" => true,
-                "replyTo" => true,
-                "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-                "plain" => ["length" => 200, "trimApi" => true]
-            ],
-            "MailFolder" => [
-                "name" => true,
-                "data" => true,
-                "folderType" => true,
-                "unreadMessages" => true,
-                "totalMessages" => true
-            ]
-        ];
-
-        return $fieldsets[$type];
     }
 }
