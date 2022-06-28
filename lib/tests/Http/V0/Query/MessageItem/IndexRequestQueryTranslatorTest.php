@@ -69,45 +69,19 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
 
-        $this->assertEquals([
+        $this->assertEqualsCanonicalizing([
             "limit",
             "start",
             "sort",
             "include",
             "fields[MessageItem]",
             "fields[MailFolder]",
+            "fields[MailAccount]",
             "options",
             "filter"
         ], $expected);
     }
 
-
-    /**
-     * Extract parameters not Request
-     * @throws ReflectionException
-     */
-    public function testExtractParameters()
-    {
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
-
-        $request = new Request([
-            "limit" => 0,
-            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-            "start" => 3,
-            "foo" => "bar"]);
-
-        $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
-
-        $this->assertEquals([
-            "limit" => 0,
-            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-            "start" => 3
-        ], $extracted);
-    }
 
 
     /**
@@ -158,6 +132,54 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
 
         $queries = [
+            [
+                "input" => [
+                    "limit" => "-1",
+                    "include" => "MailFolder",
+                    "fields[MailFolder]" => "",
+                    "fields[MessageItem]" => "previewText",
+                    "options" => json_encode([ "previewText" => ["length" => 20, "trimApi" => false]])
+                ],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => "MailFolder",
+                    "fields" => [
+                        "MessageItem" => [
+                            "html" => ["length" => 20, "trimApi" => false],
+                            "plain" => ["length" => 20, "trimApi" => false]
+                            ],
+                        "MailFolder" => []
+                    ]
+                ]
+            ],
+            [
+                "input" => ["limit" => "-1", "include" => "MailFolder", "fields[MailFolder]" => "", "fields[MessageItem]" => "subject"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => "MailFolder",
+                    "fields" => [
+                        "MessageItem" => ["subject" => true],
+                        "MailFolder" => []
+                    ]
+                ]
+            ],
+            [
+                "input" => ["limit" => "-1", "include" => "MailFolder", "fields[MessageItem]" => "subject", "fields[MailFolder]" => "name"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "include" => "MailFolder",
+                    "sort" => $this->getDefaultSort(),
+                    "fields" => [
+                        "MessageItem" => ["subject" => true],
+                        "MailFolder" => ["name" => true]
+                    ]
+                ]
+            ],
             [
                 "input" => ["limit" => "-1"],
                 "output" => [

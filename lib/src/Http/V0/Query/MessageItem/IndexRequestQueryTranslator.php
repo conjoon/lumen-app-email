@@ -47,43 +47,9 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
     {
-
         $bag = new ParameterBag($source->toJson());
 
-
-        if ($bag->include && $bag->getString("include") !== "MailFolder") {
-            throw new InvalidQueryException(
-                "parameter \"include\" must be set to \"MailFolder\", or omitted"
-            );
-        }
-
-        $types = ["MessageItem"];
-        if ($bag->include === "MailFolder") {
-            $types[] = "MailFolder";
-        }
-        $bag->fields = [];
-
-        foreach ($types as $type) {
-            $fieldOptions = [];
-
-            $fields = $this->parseFields($bag, $type);
-            if ($type === "MessageItem") {
-                $fieldOptions = $this->parseMessageItemFieldOptions($bag);
-            }
-
-            $bag->fields = array_merge(
-                $bag->fields,
-                [
-                $type => $this->mapConfigToFields(
-                    $fields,
-                    $fieldOptions,
-                    $this->getDefaultFields($type),
-                    $type
-                )]
-            );
-
-            unset($bag->{"fields[$type]"});
-        }
+        $bag = $this->getFieldsets($bag);
 
         $ids = null;
         if ($bag->getString("filter")) {
@@ -103,7 +69,6 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
                 }
             }
         }
-
 
 
         if (!$ids) {
@@ -139,25 +104,6 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 
 
     /**
-     * Parses json-encoded options.
-     *
-     * @param ParameterBag $bag
-     * @return array
-     * @noinspection PhpUndefinedFieldInspection
-     */
-    protected function parseMessageItemFieldOptions(ParameterBag $bag): array
-    {
-        $options = $bag->options;
-        unset($bag->options);
-        if (!$options) {
-            return [];
-        }
-
-        return json_decode($options, true);
-    }
-
-
-    /**
      * Returns the default sort to use, if not available via parameters.
      *
      * @return array
@@ -173,15 +119,13 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function getExpectedParameters(): array
     {
-        return [
+        return array_merge(parent::getExpectedParameters(), [
             "limit",
             "start",
             "sort",
             "include",
-            "fields[MessageItem]",
-            "fields[MailFolder]",
             "options",
             "filter"
-        ];
+        ]);
     }
 }
