@@ -31,10 +31,7 @@ namespace Tests\App\Http\V0\Query\MessageItem;
 
 use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
-use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
-use Conjoon\Http\Query\InvalidQueryException;
 use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
@@ -70,7 +67,10 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
 
-        $this->assertEquals([
+        $this->assertEqualsCanonicalizing([
+            "include",
+            "fields[MailAccount]",
+            "fields[MailFolder]",
             "fields[MessageItem]",
             "messageItemId"
         ], $expected);
@@ -91,6 +91,8 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $request = new Request([
             "fields[MessageItem]" => "*,size",
+            "fields[MailFolder]" => "textHtml",
+            "fields[MailAccount]" => "protocol",
             "foo" => "bar"]);
 
         $request->setRouteResolver(function () {
@@ -107,6 +109,8 @@ class GetRequestQueryTranslatorTest extends TestCase
         $this->assertEquals([
             "messageItemId" => "744",
             "fields[MessageItem]" => "*,size",
+            "fields[MailFolder]" => "textHtml",
+            "fields[MailAccount]" => "protocol"
         ], $extracted);
     }
 
@@ -142,7 +146,12 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $queries = [
             [
-                "input" => ["limit" => "-1", "messageItemId" => "744"],
+                "input" => [
+                    "limit" => "-1",
+                    "messageItemId" => "744",
+                    "include" => "MailFolder",
+                    "fields[MailFolder]" => "unreadMessages"
+                ],
                 "output" => [
                     "fields" => [
                         "MessageItem" => $getExpectedAttributes(
@@ -151,7 +160,11 @@ class GetRequestQueryTranslatorTest extends TestCase
                             "plain" => $this->getDefaultFields("MessageItem")["plain"]],
                             "MessageItem"
                         ),
+                        "MailFolder" => [
+                            "unreadMessages" => true
+                        ],
                     ],
+                    "include" => ["MailFolder"],
                     "filter" => [[
                         "property" => "id",
                         "value" => ["744"],

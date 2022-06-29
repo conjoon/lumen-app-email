@@ -30,9 +30,6 @@ declare(strict_types=1);
 namespace App\Http\V0\Query\MessageItem;
 
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
-use Conjoon\Util\ArrayUtil;
-use Illuminate\Http\Request;
 
 /**
  * Class GetRequestQueryTranslator
@@ -46,26 +43,15 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
     {
-        $type = "MessageItem";
-
         $bag = new ParameterBag($source->toJson());
-        $fields = $this->parseFields($bag, $type);
 
-        $bag->fields = [
-            $type => $this->mapConfigToFields(
-                $fields,
-                [],
-                $this->getDefaultFields($type),
-                $type
-            )
-        ];
+        $bag = $this->getFieldsets($bag);
 
         $bag->filter = [["property" => "id",
             "value" => [$bag->getString("messageItemId")],
             "operator" => "in"
         ]];
 
-        unset($bag->{"fields[$type]"});
         unset($bag->messageItemId);
 
         return new MessageItemListResourceQuery($bag);
@@ -77,14 +63,8 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function extractParameters($parameterResource): array
     {
-
-        $data = parent::extractParameters($parameterResource);
-
-        // use the one messageItemId available with the path parameter
-        unset($data["messageItemId"]);
-
         return array_merge(
-            $data,
+            parent::extractParameters($parameterResource),
             ["messageItemId" => $parameterResource->route("messageItemId")]
         );
     }
@@ -95,9 +75,9 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function getExpectedParameters(): array
     {
-        return [
-            "fields[MessageItem]",
-            "messageItemId"
-        ];
+        return array_merge(
+            parent::getExpectedParameters(),
+            ["messageItemId"]
+        );
     }
 }
