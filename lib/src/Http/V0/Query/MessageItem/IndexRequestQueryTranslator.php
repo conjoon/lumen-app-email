@@ -30,10 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\Query\MessageItem;
 
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Util\ArrayUtil;
-use Illuminate\Http\Request;
 
 /**
  * Class IndexRequestQueryTranslator
@@ -123,7 +120,6 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
             "limit",
             "start",
             "sort",
-            "include",
             "options",
             "filter"
         ]);

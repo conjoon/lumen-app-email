@@ -32,9 +32,7 @@ namespace Tests\App\Http\V0\Query\MessageItem;
 use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
 use Tests\TestCase;
@@ -144,7 +142,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolder",
+                    "include" => ["MailFolder"],
                     "fields" => [
                         "MessageItem" => [
                             "html" => ["length" => 20, "trimApi" => false],
@@ -160,7 +158,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolder",
+                    "include" => ["MailFolder"],
                     "fields" => [
                         "MessageItem" => ["subject" => true],
                         "MailFolder" => []
@@ -172,7 +170,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                 "output" => [
                     "start" => 0,
                     "limit" => -1,
-                    "include" => "MailFolder",
+                    "include" => ["MailFolder"],
                     "sort" => $this->getDefaultSort(),
                     "fields" => [
                         "MessageItem" => ["subject" => true],
@@ -201,7 +199,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolder",
+                    "include" => ["MailFolder"],
                     "fields" => [
                         "MessageItem" => $getExpectedFields(
                             ["html", "plain"],
@@ -227,7 +225,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "include" => "MailFolder",
+                    "include" => ["MailFolder"],
                     "fields" => [
                         "MessageItem" => $getExpectedFields(
                             ["html", "plain"],
