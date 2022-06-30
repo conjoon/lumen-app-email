@@ -37,14 +37,14 @@ class ControllerUtil
      *
      * @param string $type
      * @param compoundkey $key
-     * @param $calleruri the uri that triggered a call to this method, and from
+     * @param string $calleruri the uri that triggered a call to this method, and from
      * which the current version of the api being used should be extracted.
      *
      * @return string
      */
-    public function getResourceUrl(string $type, compoundkey $key, $calleruri): string
+    public function getResourceUrl(string $type, compoundkey $key, string $callerUri): string
     {
-        preg_match("/\/(v\d*)\//mi", $calleruri, $matches);
+        preg_match("/\/(v\d*)\//mi", $callerUri, $matches);
 
         $version = $matches[1] ?? config("app.api.latest");
 
