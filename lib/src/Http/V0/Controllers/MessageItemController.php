@@ -32,8 +32,13 @@ namespace App\Http\V0\Controllers;
 use App\ControllerUtil;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
+use App\Http\V0\Query\MessageItem\MessageItemQueryTranslator;
 use App\Util;
 use Conjoon\Core\JsonStrategy;
+use Conjoon\Core\ResourceQuery;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
+use Conjoon\Mail\Client\Folder\MailFolderList;
 use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Illuminate\Support\Facades\Auth;
@@ -134,33 +139,74 @@ class MessageItemController extends Controller
     ): JsonResponse {
 
         $user = Auth::user();
-
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount = $user->getMailAccount($mailAccountId);
+        $folderKey   = new FolderKey($mailAccount, urldecode($mailFolderId));
+
+        $resourceQuery = $translator->translate($request);
+        $included      = $this->getIncluded($resourceQuery, $mailAccount);
+        $response      = [
+            "included" => $included ? $included->toJson($this->jsonStrategy) : null,
+            "data"     => $this->messageItemService->getMessageItemList(
+                $folderKey,
+                $resourceQuery
+            )->toJson($this->jsonStrategy)
+        ];
+
+        return response()->json(array_filter($response, fn ($val) => $val !== null));
+    }
+
+
+    /**
+     * Posts new data to the specified $mailFolderId for the account identified by
+     * $mailAccountId, creating an entirely new Message
+     *
+     * @param Request $request
+     * @param MessageItemQueryTranslator $translator
+     * @param string $mailAccountId
+     * @param string $mailFolderId
+     *
+     * @return JsonResponse
+     */
+    public function post(
+        Request $request,
+        GetRequestQueryTranslator $translator,
+        string $mailAccountId,
+        string $mailFolderId
+    ): JsonResponse {
+        $user = Auth::user();
+
+        $messageItemService = $this->messageItemService;
+        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
+        $mailAccount        = $user->getMailAccount($mailAccountId);
+        $mailFolderId = urldecode($mailFolderId);
+        $folderKey = new FolderKey($mailAccount, $mailFolderId);
 
         $resourceQuery = $translator->translate($request);
 
-        $response = [];
+        $data = ArrayUtil::unchain("data.attributes", $request->all());
+        $messageDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
+        $createdMessageDraft = $messageItemService->createMessageDraft($folderKey, $messageDraft);
 
-        if ($resourceQuery->include === "MailFolder") {
-            $mailFolderResourceQuery  = new MailFolderListResourceQuery(new ParameterBag(
-                ["fields" => ["MailFolder" => $resourceQuery->fields["MailFolder"] ?? null]]
-            ));
-            $response["included"] = $this->mailFolderService->getMailFolderChildList(
-                $mailAccount,
-                $mailFolderResourceQuery
-            )->toJson($this->jsonStrategy);
-        }
+        $included = $this->getIncluded($resourceQuery, $mailAccount);
+        $response = [
+            "included" => $included ? $included->toJson($this->jsonStrategy) : null,
+            "data"     => $createdMessageDraft->toJson($this->jsonStrategy)
+        ];
 
-        $folderKey  = new FolderKey($mailAccount, urldecode($mailFolderId));
-        $messageItemService = $this->messageItemService;
-
-        $response["data"] = $messageItemService->getMessageItemList($folderKey, $resourceQuery)->toJson(
-            $this->jsonStrategy
+        return response()->json(
+            array_filter($response, fn ($val) => $val !== null),
+            201,
+            [
+            "Location" => $this->controllerUtil->getResourceUrl(
+                "MessageItem",
+                $createdMessageDraft->getMessageKey(),
+                $request->url()
+            )
+            ]
         );
-
-        return response()->json($response);
     }
+
 
 
     /**
@@ -480,44 +526,6 @@ class MessageItemController extends Controller
 
 
     /**
-     * Posts new data to the specified $mailFolderId for the account identified by
-     * $mailAccountId, creating an entirely new Message
-     *
-     * @param Request $request
-     * @param string $mailAccountId
-     * @param string $mailFolderId
-     *
-     * @return JsonResponse
-     */
-    public function post(Request $request, string $mailAccountId, string $mailFolderId): JsonResponse
-    {
-        $user = Auth::user();
-
-        $messageItemService = $this->messageItemService;
-        /** @noinspection PhpPossiblePolymorphicInvocationInspection */
-        $mailAccount        = $user->getMailAccount($mailAccountId);
-
-        $mailFolderId = urldecode($mailFolderId);
-        $folderKey = new FolderKey($mailAccount, $mailFolderId);
-
-        $data = ArrayUtil::unchain("data.attributes", $request->all());
-        $messageDraft        = $this->messageItemDraftJsonTransformer::fromArray($data);
-        $createdMessageDraft = $messageItemService->createMessageDraft($folderKey, $messageDraft);
-
-
-        return response()->json([
-           "data" => $createdMessageDraft->toJson($this->jsonStrategy)
-        ], 201, [
-            "Location" => $this->controllerUtil->getResourceUrl(
-                "MessageItem",
-                $createdMessageDraft->getMessageKey(),
-                $request->url()
-            )
-        ]);
-    }
-
-
-    /**
      * Sends the Draft identified by the POST-parameters "mailAccountId",
      * "mailFolderId" and "id".
      *
@@ -555,5 +563,33 @@ class MessageItemController extends Controller
         return response()->json([
            "success" => true
         ]);
+    }
+
+
+    /**
+     * Checks the ResourceQuery for the include-property and passes the query to the
+     * MailFolderService's getMailFolderChildList along with the specified account.
+     * Will return an array indexed with "included" that holds all the MailFolders
+     * found with for the specified query.
+     *
+     * @param ResourceQuery $resourceQuery
+     * @param MailAccount $mailAccount
+     *
+     * @return MailFolderChildList|null
+     */
+    protected function getIncluded(ResourceQuery $resourceQuery, MailAccount $mailAccount): ?MailFolderChildList
+    {
+
+        if ($resourceQuery->include && array_search("MailFolder", $resourceQuery->include) !== false) {
+            $mailFolderResourceQuery  = new MailFolderListResourceQuery(new ParameterBag(
+                ["fields" => ["MailFolder" => $resourceQuery->fields["MailFolder"] ?? null]]
+            ));
+            return $this->mailFolderService->getMailFolderChildList(
+                $mailAccount,
+                $mailFolderResourceQuery
+            );
+        }
+
+        return null;
     }
 }

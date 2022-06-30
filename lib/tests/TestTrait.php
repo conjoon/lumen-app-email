@@ -115,10 +115,10 @@ trait TestTrait
 
 
     /**
-     * @param $accountId
+     * @param string $accountId
      * @return MailAccount|null
      */
-    public function getTestMailAccount($accountId): ?MailAccount
+    public function getTestMailAccount(string $accountId = "dev_sys_conjoon_org"): ?MailAccount
     {
 
         if ($accountId === "testFail") {
