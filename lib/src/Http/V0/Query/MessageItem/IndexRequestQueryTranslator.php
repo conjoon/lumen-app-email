@@ -31,6 +31,7 @@ namespace App\Http\V0\Query\MessageItem;
 
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidQueryException;
+use Conjoon\Http\Query\InvalidQueryParameterValueException;
 
 /**
  * Class IndexRequestQueryTranslator
@@ -52,7 +53,7 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
         if ($bag->getString("filter")) {
             $bag->filter = json_decode($bag->filter, true);
             if (!$bag->filter) {
-                throw new InvalidQueryException(
+                throw new InvalidQueryParameterValueException(
                     "parameter \"filter\" must be JSON decodable"
                 );
             }
@@ -80,7 +81,7 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
             }
 
             if ($bag->getInt("start") < 0) {
-                throw new InvalidQueryException(
+                throw new InvalidQueryParameterValueException(
                     "parameter \"start\" must not be < 0"
                 );
             }

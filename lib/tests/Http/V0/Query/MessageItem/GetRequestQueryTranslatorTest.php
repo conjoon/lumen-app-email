@@ -81,13 +81,13 @@ class GetRequestQueryTranslatorTest extends TestCase
      * Extract parameters not Request
      * @throws ReflectionException
      */
-    public function testExtractParameters()
+    public function testGetParameters()
     {
         $translator = new GetRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
+        $getParametersReflection = $reflection->getMethod("getParameters");
+        $getParametersReflection->setAccessible(true);
 
         $request = new Request([
             "fields[MessageItem]" => "*,size",
@@ -104,13 +104,14 @@ class GetRequestQueryTranslatorTest extends TestCase
             };
         });
 
-        $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
+        $extracted = $getParametersReflection->invokeArgs($translator, [$request]);
 
         $this->assertEquals([
             "messageItemId" => "744",
             "fields[MessageItem]" => "*,size",
             "fields[MailFolder]" => "textHtml",
-            "fields[MailAccount]" => "protocol"
+            "fields[MailAccount]" => "protocol",
+            "foo" => "bar"
         ], $extracted);
     }
 

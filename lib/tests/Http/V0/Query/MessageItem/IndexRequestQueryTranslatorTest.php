@@ -33,6 +33,7 @@ use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
 use Conjoon\Http\Query\InvalidQueryException;
+use Conjoon\Http\Query\InvalidQueryParameterValueException;
 use ReflectionClass;
 use ReflectionException;
 use Tests\TestCase;
@@ -426,9 +427,9 @@ class IndexRequestQueryTranslatorTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testTranslateParametersExceptionAttr()
+    public function testTranslateParametersExceptionField()
     {
-        $this->expectException(InvalidQueryException::class);
+        $this->expectException(InvalidQueryParameterValueException::class);
 
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
@@ -437,26 +438,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
         $translateParametersReflection->invokeArgs($translator, [
-            new ParameterBag(["limit" => 1, "fields[MessageItem]" => "id"])
-        ])->toJson();
-    }
-
-
-    /**
-     * @throws ReflectionException
-     */
-    public function testTranslateParametersExceptionInclude()
-    {
-        $this->expectException(InvalidQueryException::class);
-
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $translateParametersReflection = $reflection->getMethod("translateParameters");
-        $translateParametersReflection->setAccessible(true);
-
-        $translateParametersReflection->invokeArgs($translator, [
-            new ParameterBag(["limit" => 1, "include" => "MailFold"])
+            new ParameterBag(["limit" => 1, "fields[MessageItem]" => "someField"])
         ])->toJson();
     }
 
@@ -466,6 +448,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
      */
     public function testExceptionFilterNotDecodable()
     {
+        $this->expectException(InvalidQueryParameterValueException::class);
         $this->expectExceptionMessageMatches("/must be JSON decodable/");
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);

@@ -61,10 +61,10 @@ class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
     /**
      * @inheritdocs
      */
-    protected function extractParameters($parameterResource): array
+    protected function getParameters($parameterResource): array
     {
         return array_merge(
-            parent::extractParameters($parameterResource),
+            parent::getParameters($parameterResource),
             ["messageItemId" => $parameterResource->route("messageItemId")]
         );
     }
