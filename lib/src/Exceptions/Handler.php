@@ -27,9 +27,10 @@
 
 namespace App\Exceptions;
 
-use Conjoon\Core\JsonStrategy;
-use Conjoon\Http\Json\Problem\AbstractProblem;
-use Conjoon\Http\Json\Problem\ProblemFactory;
+use Conjoon\Core\Data\JsonStrategy;
+use Conjoon\Http\Query\Exception\QueryException;
+use Conjoon\JsonProblem\AbstractProblem;
+use Conjoon\JsonProblem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
 use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
 use Conjoon\Mail\Client\Service\ServiceException;
@@ -41,10 +42,13 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
 
+/**
+ * ExceptionHandler.
+ */
 class Handler extends ExceptionHandler
 {
     /**
-     * @var JsonStrategy|null
+     * @var JsonStrategy
      */
     protected JsonStrategy $jsonStrategy;
 
@@ -60,28 +64,11 @@ class Handler extends ExceptionHandler
 
 
     /**
-     * @param JsonStrategy|null $jsonStrategy
+     * @param JsonStrategy $jsonStrategy
      */
     public function __construct(JsonStrategy $jsonStrategy)
     {
         $this->jsonStrategy = $jsonStrategy;
-    }
-
-
-    /**
-     * Report or log an exception.
-     *
-     * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
-     *
-     * @param Exception $e
-     *
-     * @return void
-     *
-     * @throws Exception
-     */
-    public function report(Exception $e)
-    {
-        parent::report($e);
     }
 
 
@@ -119,6 +106,8 @@ class Handler extends ExceptionHandler
     {
 
         switch (true) {
+            case ($e instanceof QueryException):
+                return ProblemFactory::make(400, null, $e->getMessage());
             case ($e instanceof ConjoonHttpException):
                 return ProblemFactory::make($e->getCode(), null, $e->getMessage());
             case ($e instanceof ResourceNotFoundException):

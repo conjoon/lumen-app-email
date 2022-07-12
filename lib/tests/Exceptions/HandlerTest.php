@@ -30,18 +30,18 @@ declare(strict_types=1);
 namespace Tests\Exceptions;
 
 use App\Exceptions\Handler;
-use Conjoon\Core\JsonStrategy;
+use Conjoon\Core\Data\JsonStrategy;
 use Conjoon\Http\Exception\BadRequestException;
 use Conjoon\Http\Exception\ForbiddenException;
 use Conjoon\Http\Exception\InternalServerErrorException;
 use Conjoon\Http\Exception\MethodNotAllowedException;
 use Conjoon\Http\Exception\NotFoundException;
 use Conjoon\Http\Exception\UnauthorizedException;
-use Conjoon\Http\Json\Problem\ProblemFactory;
+use Conjoon\JsonProblem\ProblemFactory;
+use Conjoon\Http\Query\Exception\QueryException;
 use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
 use Conjoon\Mail\Client\Service\ServiceException;
 use Illuminate\Http\Request;
-use Tests\Conjoon\Http\Exception\InternalServerErrorExceptionTest;
 use Tests\TestCase;
 
 /**
@@ -56,7 +56,10 @@ class HandlerTest extends TestCase
     public function testRender()
     {
         $exceptions = [
-            "400" => [["exc" => new BadRequestException()]],
+            "400" => [
+                ["exc" => new BadRequestException()],
+                ["exc" => $this->getMockForAbstractClass(QueryException::class), "code" => 400]
+            ],
             "401" => [["exc" => new UnauthorizedException()]],
             "403" => [["exc" => new ForbiddenException()]],
             "404" => [
