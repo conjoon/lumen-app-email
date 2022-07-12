@@ -27,26 +27,24 @@
 
 declare(strict_types=1);
 
-namespace Tests\App\Http\V0\Resource;
+namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use App\Http\V0\Resource\MailFolderDescription;
-use App\Http\V0\Resource\MessageItemDescription;
-use Conjoon\Http\Resource\ResourceObjectDescription;
+use App\Http\V0\JsonApi\Resource\MailAccount;
+use Conjoon\jsonApi\Resource\ObjectDescription;
 use Tests\TestCase;
 
 /**
- * Class MessageItemDescriptionTest
- * @package Tests\App\Http\V0\Resource
+ * Tests MailAccount.
  */
-class MessageItemDescriptionTest extends TestCase
+class MailAccountTest extends TestCase
 {
     /**
      * test class
      */
     public function testClass()
     {
-        $inst = new MessageItemDescription();
-        $this->assertInstanceOf(ResourceObjectDescription::class, $inst);
+        $inst = new MailAccount();
+        $this->assertInstanceOf(ObjectDescription::class, $inst);
     }
 
 
@@ -55,7 +53,7 @@ class MessageItemDescriptionTest extends TestCase
      */
     public function testGetType(): void
     {
-        $this->assertSame("MessageItem", $this->createDescription()->getType());
+        $this->assertSame("MailAccount", $this->createDescription()->getType());
     }
 
 
@@ -65,9 +63,7 @@ class MessageItemDescriptionTest extends TestCase
     public function testGetRelationships(): void
     {
         $list = $this->createDescription()->getRelationships();
-        $this->assertSame(1, count($list));
-
-        $this->assertInstanceOf(MailFolderDescription::class, $list[0]);
+        $this->assertSame(0, count($list));
     }
 
 
@@ -77,24 +73,20 @@ class MessageItemDescriptionTest extends TestCase
     public function testGetFields(): void
     {
         $this->assertEquals([
+            "name",
+            "folderType",
             "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
+            "replyTo",
+            "inbox_address",
+            "inbox_port",
+            "inbox_user",
+            "inbox_password",
+            "inbox_ssl",
+            "outbox_address",
+            "outbox_port",
+            "outbox_user",
+            "outbox_password",
+            "outbox_secure"
         ], $this->createDescription()->getFields());
     }
 
@@ -105,34 +97,29 @@ class MessageItemDescriptionTest extends TestCase
     public function testGetDefaultFields(): void
     {
         $this->assertEquals([
+            "name" => true,
+            "folderType" => true,
             "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
             "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+            "inbox_address" => true,
+            "inbox_port" => true,
+            "inbox_user" => true,
+            "inbox_password" => true,
+            "inbox_ssl" => true,
+            "outbox_address" => true,
+            "outbox_port" => true,
+            "outbox_user" => true,
+            "outbox_password" => true,
+            "outbox_secure" => true
         ], $this->createDescription()->getDefaultFields());
     }
 
 
     /**
-     * @return MessageItemDescription
+     * @return MailAccount
      */
-    protected function createDescription(): MessageItemDescription
+    protected function createDescription(): MailAccount
     {
-        return new MessageItemDescription();
+        return new MailAccount();
     }
 }

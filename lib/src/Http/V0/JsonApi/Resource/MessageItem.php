@@ -2,8 +2,8 @@
 
 /**
  * conjoon
- * php-lib-conjoon
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/php-lib-conjoon
+ * lumen-app-email
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,16 +27,16 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Resource;
+namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Http\Resource\ResourceObjectDescription;
-use Conjoon\Http\Resource\ResourceObjectDescriptionList;
+use Conjoon\JsonApi\Resource\ObjectDescription;
+use Conjoon\jsonApi\Resource\ObjectDescriptionList;
 
 /**
  * ResourceDescription for a MessageItem.
  *
  */
-class MessageItemDescription extends ResourceObjectDescription
+class MessageItem extends ObjectDescription
 {
     /**
      * @return string
@@ -48,12 +48,12 @@ class MessageItemDescription extends ResourceObjectDescription
 
 
     /**
-     * @return ResourceObjectDescriptionList
+     * @return ObjectDescriptionList
      */
-    public function getRelationships(): ResourceObjectDescriptionList
+    public function getRelationships(): ObjectDescriptionList
     {
-        $list = new ResourceObjectDescriptionList();
-        $list[] = new MailFolderDescription();
+        $list = new ObjectDescriptionList();
+        $list[] = new MailFolder();
 
         return $list;
     }

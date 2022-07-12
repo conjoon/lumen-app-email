@@ -27,26 +27,25 @@
 
 declare(strict_types=1);
 
-namespace Tests\App\Http\V0\Resource;
+namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use App\Http\V0\Resource\MailAccountDescription;
-use App\Http\V0\Resource\MessageItemDescription;
-use Conjoon\Http\Resource\ResourceObjectDescription;
+use App\Http\V0\JsonApi\Resource\MailAccount;
+use App\Http\V0\JsonApi\Resource\MailFolder;
+use Conjoon\JsonApi\Resource\ObjectDescription;
 use Tests\TestCase;
 
 /**
- * Class MailAccountDescriptionTest
- * @package Tests\App\Http\V0\Resource
+ * Tests MailFolder.
  */
-class MailAccountDescriptionTest extends TestCase
+class MailFolderTest extends TestCase
 {
     /**
      * test class
      */
     public function testClass()
     {
-        $inst = new MailAccountDescription();
-        $this->assertInstanceOf(ResourceObjectDescription::class, $inst);
+        $inst = new MailFolder();
+        $this->assertInstanceOf(ObjectDescription::class, $inst);
     }
 
 
@@ -55,7 +54,7 @@ class MailAccountDescriptionTest extends TestCase
      */
     public function testGetType(): void
     {
-        $this->assertSame("MailAccount", $this->createDescription()->getType());
+        $this->assertSame("MailFolder", $this->createDescription()->getType());
     }
 
 
@@ -65,7 +64,9 @@ class MailAccountDescriptionTest extends TestCase
     public function testGetRelationships(): void
     {
         $list = $this->createDescription()->getRelationships();
-        $this->assertSame(0, count($list));
+        $this->assertSame(1, count($list));
+
+        $this->assertInstanceOf(MailAccount::class, $list[0]);
     }
 
 
@@ -76,19 +77,10 @@ class MailAccountDescriptionTest extends TestCase
     {
         $this->assertEquals([
             "name",
+            "data",
             "folderType",
-            "from",
-            "replyTo",
-            "inbox_address",
-            "inbox_port",
-            "inbox_user",
-            "inbox_password",
-            "inbox_ssl",
-            "outbox_address",
-            "outbox_port",
-            "outbox_user",
-            "outbox_password",
-            "outbox_secure"
+            "unreadMessages",
+            "totalMessages"
         ], $this->createDescription()->getFields());
     }
 
@@ -100,28 +92,19 @@ class MailAccountDescriptionTest extends TestCase
     {
         $this->assertEquals([
             "name" => true,
+            "data" => true,
             "folderType" => true,
-            "from" => true,
-            "replyTo" => true,
-            "inbox_address" => true,
-            "inbox_port" => true,
-            "inbox_user" => true,
-            "inbox_password" => true,
-            "inbox_ssl" => true,
-            "outbox_address" => true,
-            "outbox_port" => true,
-            "outbox_user" => true,
-            "outbox_password" => true,
-            "outbox_secure" => true
+            "unreadMessages" => true,
+            "totalMessages" => true
         ], $this->createDescription()->getDefaultFields());
     }
 
 
     /**
-     * @return MailAccountDescription
+     * @return MailFolder
      */
-    protected function createDescription(): MailAccountDescription
+    protected function createDescription(): MailFolder
     {
-        return new MailAccountDescription();
+        return new MailFolder();
     }
 }

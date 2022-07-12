@@ -27,27 +27,25 @@
 
 declare(strict_types=1);
 
-namespace Tests\App\Http\V0\Resource;
+namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use App\Http\V0\Resource\MailAccountDescription;
-use App\Http\V0\Resource\MailFolderDescription;
-use App\Http\V0\Resource\MessageItemDescription;
-use Conjoon\Http\Resource\ResourceObjectDescription;
+use App\Http\V0\JsonApi\Resource\MailFolder;
+use App\Http\V0\JsonApi\Resource\MessageItem;
+use Conjoon\JsonApi\Resource\ObjectDescription;
 use Tests\TestCase;
 
 /**
- * Class MailFolderDescriptionTest
- * @package Tests\App\Http\V0\Resource
+ * Tests MessageItem.
  */
-class MailFolderDescriptionTest extends TestCase
+class MessageItemTest extends TestCase
 {
     /**
      * test class
      */
     public function testClass()
     {
-        $inst = new MailFolderDescription();
-        $this->assertInstanceOf(ResourceObjectDescription::class, $inst);
+        $inst = new MessageItem();
+        $this->assertInstanceOf(ObjectDescription::class, $inst);
     }
 
 
@@ -56,7 +54,7 @@ class MailFolderDescriptionTest extends TestCase
      */
     public function testGetType(): void
     {
-        $this->assertSame("MailFolder", $this->createDescription()->getType());
+        $this->assertSame("MessageItem", $this->createDescription()->getType());
     }
 
 
@@ -68,7 +66,7 @@ class MailFolderDescriptionTest extends TestCase
         $list = $this->createDescription()->getRelationships();
         $this->assertSame(1, count($list));
 
-        $this->assertInstanceOf(MailAccountDescription::class, $list[0]);
+        $this->assertInstanceOf(MailFolder::class, $list[0]);
     }
 
 
@@ -78,11 +76,24 @@ class MailFolderDescriptionTest extends TestCase
     public function testGetFields(): void
     {
         $this->assertEquals([
-            "name",
-            "data",
-            "folderType",
-            "unreadMessages",
-            "totalMessages"
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId",
+            "previewText",
+            "size",
+            "hasAttachments",
+            "cc",
+            "bcc",
+            "replyTo"
         ], $this->createDescription()->getFields());
     }
 
@@ -93,20 +104,34 @@ class MailFolderDescriptionTest extends TestCase
     public function testGetDefaultFields(): void
     {
         $this->assertEquals([
-            "name" => true,
-            "data" => true,
-            "folderType" => true,
-            "unreadMessages" => true,
-            "totalMessages" => true
+            "from" => true,
+            "to" => true,
+            "subject" => true,
+            "date" => true,
+            "seen" => true,
+            "answered" => true,
+            "draft" => true,
+            "flagged" => true,
+            "recent" => true,
+            "charset" => true,
+            "references" => true,
+            "messageId" => true,
+            "size" => true,
+            "hasAttachments" => true,
+            "cc" => true,
+            "bcc" => true,
+            "replyTo" => true,
+            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
+            "plain" => ["length" => 200, "trimApi" => true]
         ], $this->createDescription()->getDefaultFields());
     }
 
 
     /**
-     * @return MailFolderDescription
+     * @return MessageItem
      */
-    protected function createDescription(): MailFolderDescription
+    protected function createDescription(): MessageItem
     {
-        return new MailFolderDescription();
+        return new MessageItem();
     }
 }
