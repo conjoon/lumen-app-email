@@ -55,7 +55,7 @@ class Locator extends UrlMatcherLocator
     public function __construct()
     {
         parent::__construct(
-            "App\\JsonApi\\Resource",
+            "App\\Http\\V0\\JsonApi\\Resource",
             [
                 "/(MailAccounts)\/?[^\/]*$/m",
                 "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)\/*.*$/m",

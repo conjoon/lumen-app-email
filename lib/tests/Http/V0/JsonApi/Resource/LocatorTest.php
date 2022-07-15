@@ -51,7 +51,7 @@ class LocatorTest extends TestCase
         $getMatchers = $this->makeAccessible($locator, "getMatchers");
 
         $this->assertSame(
-            "App\\JsonApi\\Resource",
+            "App\\Http\\V0\\JsonApi\\Resource",
             $getResourceBucket->invokeArgs($locator, [])
         );
 
