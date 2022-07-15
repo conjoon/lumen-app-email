@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\JsonApi\Resource;
 
 use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\jsonApi\Resource\ObjectDescriptionList;
+use Conjoon\JsonApi\Resource\ObjectDescriptionList;
 
 /**
  * ResourceDescription for a MessageItem.
