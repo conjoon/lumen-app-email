@@ -41,6 +41,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
+use Throwable;
 
 /**
  * ExceptionHandler.
@@ -76,11 +77,11 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param Request $request
-     * @param Exception $e
+     * @param Throwable $e
      *
      * @return Response|JsonResponse
      */
-    public function render($request, Exception $e)
+    public function render($request, Throwable $e)
     {
         $problem = $this->convertToProblem($e);
 
@@ -102,7 +103,7 @@ class Handler extends ExceptionHandler
      *
      * @return Problem|null
      */
-    protected function convertToProblem(Exception $e): ?AbstractProblem
+    protected function convertToProblem(Throwable $e): ?AbstractProblem
     {
 
         switch (true) {
