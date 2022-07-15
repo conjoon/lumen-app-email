@@ -30,13 +30,18 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\ControllerUtil;
 use App\Exceptions\Handler;
+use App\Http\V0\JsonApi\Resource\Locator as ResourceLocator;
+use Conjoon\Http\Request\Request as HttpRequest;
 use Conjoon\Core\Data\JsonStrategy;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
+use Conjoon\Illuminate\Http\Request\LaravelRequest;
+use Conjoon\JsonApi\Request\Request as JsonApiRequest;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\JsonApi\Resource\Locator;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -149,6 +154,24 @@ $app->singleton(MessageBodyDraftJsonTransformer::class, function () {
 
 $app->singleton(AttachmentListJsonTransformer::class, function () {
     return new LaravelAttachmentListJsonTransformer();
+});
+
+$app->singleton(AttachmentListJsonTransformer::class, function () {
+    return new LaravelAttachmentListJsonTransformer();
+});
+
+$app->singleton(Locator::class, function () {
+    return new ResourceLocator();
+});
+
+$app->scoped(HttpRequest::class, function ($app) {
+    return new LaravelRequest($app->request);
+});
+
+$app->scoped(JsonApiRequest::class, function ($app) {
+    $locator = $app->make(Locator::class);
+    $request = $app->make(HttpRequest::class);
+    return new JsonApiRequest($request, $locator->getResourceTarget($request));
 });
 
 $app->singleton(MessageItemService::class, function ($app) use ($getMailClient) {

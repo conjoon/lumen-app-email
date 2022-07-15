@@ -38,6 +38,7 @@ use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\JsonApi\Resource\ObjectDescription;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -60,9 +61,14 @@ use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Mail\Client\Util\JsonApiStrategy;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use Conjoon\Core\JsonStrategy;
+use Conjoon\Core\Data\JsonStrategy;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
+use Conjoon\JsonApi\Request\Request as JsonApiRequest;
+use Conjoon\Http\Request\Request as HttpRequest;
+use Conjoon\Illuminate\Http\Request\LaravelRequest;
+use Conjoon\JsonApi\Resource\Locator;
+use App\Http\V0\JsonApi\Resource\Locator as ResourceLocator;
 use ReflectionClass;
 use ReflectionException;
 
@@ -177,6 +183,7 @@ class VariousTest extends TestCase
      */
     public function testConcretes()
     {
+
 
         $userStub = $this->getTemplateUserStub(["getMailAccount"]);
         $userStub->method("getMailAccount")
@@ -319,6 +326,66 @@ class VariousTest extends TestCase
             DefaultPreviewTextProcessor::class,
             $messageItemService->getPreviewTextProcessor()
         );
+
+        $this->assertInstanceOf(
+            ResourceLocator::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [Locator::class]
+            ))
+        );
+    }
+
+
+    /**
+     * @return void
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws \Illuminate\Contracts\Container\CircularDependencyException
+     */
+    public function testScopedRequest()
+    {
+        $reflection = new ReflectionClass($this->app);
+        $scoped = $reflection->getProperty("scopedInstances");
+        $scoped->setAccessible(true);
+
+        $this->app->request = new Request();
+
+        $this->assertTrue(in_array(HttpRequest::class, $scoped->getValue($this->app)));
+        $this->assertTrue(in_array(JsonApiRequest::class, $scoped->getValue($this->app)));
+
+        $httpRequest = $this->app->make(HttpRequest::class);
+        $this->assertSame($httpRequest, $this->app->make(HttpRequest::class));
+
+        $httpRequestSource = $this->makeAccessible($httpRequest, "request", true);
+        $this->assertInstanceOf(
+            LaravelRequest::class,
+            $httpRequest
+        );
+
+        $this->assertSame($this->app->request, $httpRequestSource->getValue($httpRequest));
+
+        $resourceTarget = $this->createMockForAbstract(ObjectDescription::class);
+        $locator = $this->createMockForAbstract(Locator::class, ["getResourceTarget"]);
+        $locator->expects($this->once())
+                ->method("getResourceTarget")
+                ->with($httpRequest)
+                ->willReturn($resourceTarget);
+
+
+        $this->app->singleton(Locator::class, function () use ($locator) {
+            return $locator;
+        });
+
+        $jsonApiRequest = $this->app->make(JsonApiRequest::class);
+
+        $this->assertInstanceOf(JsonApiRequest::class, $jsonApiRequest);
+
+        $getRequest = $this->makeAccessible($jsonApiRequest, "request", true);
+
+        $this->assertSame($httpRequest, $getRequest->getValue($jsonApiRequest));
+
+        $this->assertSame($resourceTarget, $jsonApiRequest->getResourceTarget());
     }
 
 
