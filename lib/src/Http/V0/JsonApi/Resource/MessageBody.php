@@ -33,17 +33,17 @@ use Conjoon\JsonApi\Resource\ObjectDescription;
 use Conjoon\JsonApi\Resource\ObjectDescriptionList;
 
 /**
- * ResourceDescription for a MessageItem.
+ * ResourceDescription for a MessageBody.
  *
  */
-class MessageItem extends ObjectDescription
+class MessageBody extends ObjectDescription
 {
     /**
      * @return string
      */
     public function getType(): string
     {
-        return "MessageItem";
+        return "MessageBody";
     }
 
 
@@ -54,7 +54,11 @@ class MessageItem extends ObjectDescription
     {
         $list = new ObjectDescriptionList();
         $list[] = new MailFolder();
-        $list[] = new MessageBody();
+        $list[] = new MessageItem();
+
+        // MessageBody.MailFolder
+        // MessageBody.MessageItem
+        // MessageBody.MailFolder.MailAccount
 
         return $list;
     }
@@ -68,24 +72,8 @@ class MessageItem extends ObjectDescription
     public function getFields(): array
     {
         return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
+            "textHtml",
+            "textPlain"
         ];
     }
 
@@ -98,25 +86,8 @@ class MessageItem extends ObjectDescription
     public function getDefaultFields(): array
     {
         return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+            "textPlain" => true,
+            "textHtml" => true
         ];
     }
 }

@@ -38,14 +38,14 @@ use Tests\TestCase;
 /**
  * Tests MessageItem.
  */
-class MessageItemTest extends TestCase
+class MessageBodyTest extends TestCase
 {
     /**
      * test class
      */
     public function testClass()
     {
-        $inst = new MessageItem();
+        $inst = new MessageBody();
         $this->assertInstanceOf(ObjectDescription::class, $inst);
     }
 
@@ -55,7 +55,7 @@ class MessageItemTest extends TestCase
      */
     public function testGetType(): void
     {
-        $this->assertSame("MessageItem", $this->createDescription()->getType());
+        $this->assertSame("MessageBody", $this->createDescription()->getType());
     }
 
 
@@ -68,10 +68,10 @@ class MessageItemTest extends TestCase
         $this->assertSame(2, count($list));
 
         $this->assertInstanceOf(MailFolder::class, $list[0]);
-        $this->assertInstanceOf(MessageBody::class, $list[1]);
+        $this->assertInstanceOf(MessageItem::class, $list[1]);
 
         $this->assertSame(
-            ["MessageItem", "MessageItem.MailFolder", "MessageItem.MailFolder.MailAccount", "MessageItem.MessageBody"],
+            ["MessageBody", "MessageBody.MailFolder", "MessageBody.MailFolder.MailAccount", "MessageBody.MessageItem"],
             $this->createDescription()->getAllRelationshipPaths(true)
         );
 
@@ -87,25 +87,9 @@ class MessageItemTest extends TestCase
      */
     public function testGetFields(): void
     {
-        $this->assertEquals([
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
+        $this->assertEqualsCanonicalizing([
+            "textPlain",
+            "textHtml"
         ], $this->createDescription()->getFields());
     }
 
@@ -116,34 +100,17 @@ class MessageItemTest extends TestCase
     public function testGetDefaultFields(): void
     {
         $this->assertEquals([
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+            "textPlain" => true,
+            "textHtml" => true
         ], $this->createDescription()->getDefaultFields());
     }
 
 
     /**
-     * @return MessageItem
+     * @return MessageBody
      */
-    protected function createDescription(): MessageItem
+    protected function createDescription(): MessageBody
     {
-        return new MessageItem();
+        return new MessageBody();
     }
 }
