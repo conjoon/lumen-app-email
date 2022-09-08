@@ -64,6 +64,16 @@ class MailAccountTest extends TestCase
     {
         $list = $this->createDescription()->getRelationships();
         $this->assertSame(0, count($list));
+
+        $this->assertSame(
+            ["MailAccount"],
+            $this->createDescription()->getAllRelationshipPaths(true)
+        );
+
+        $this->assertEqualsCanonicalizing(
+            ["MailAccount"],
+            $this->createDescription()->getAllRelationshipTypes(true)
+        );
     }
 
 

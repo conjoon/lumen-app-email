@@ -67,6 +67,16 @@ class MailFolderTest extends TestCase
         $this->assertSame(1, count($list));
 
         $this->assertInstanceOf(MailAccount::class, $list[0]);
+
+        $this->assertSame(
+            ["MailFolder", "MailFolder.MailAccount"],
+            $this->createDescription()->getAllRelationshipPaths(true)
+        );
+
+        $this->assertEqualsCanonicalizing(
+            ["MailFolder", "MailAccount"],
+            $this->createDescription()->getAllRelationshipTypes(true)
+        );
     }
 
 
