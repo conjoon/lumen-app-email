@@ -43,7 +43,7 @@ $latest = config("app.api.latest");
 foreach ($versions as $version) {
     $app->router->group([
         'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
-        'prefix' => "rest-imapuser/api/" . $version
+        'prefix' => str_replace("{apiVersion}", $version, config("app.api.imapUserApiPrefix"))
     ], function () use ($router, $version) {
         require base_path("routes/rest-imapuser/api_" . $version . ".php");
     });
@@ -52,7 +52,7 @@ foreach ($versions as $version) {
 // config for latest
 $router->group([
     'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-    'prefix' => "rest-imapuser/api"
+    'prefix' => str_replace("{apiVersion}", "", config("app.api.imapUserApiPrefix"))
 ], function () use ($router, $latest) {
     require base_path("routes/rest-imapuser/api_" . $latest . ".php");
 });

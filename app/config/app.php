@@ -34,7 +34,7 @@ return [
 
 /*
 |--------------------------------------------------------------------------
-| Api Version
+| Api
 |--------------------------------------------------------------------------
 |
 | Supported API versions by this installation of rest-api-email, along
@@ -47,9 +47,26 @@ return [
         "email" => "rest-api-email",
         "auth"  => "rest-imapuser"
     ],
+    // route prefix for rest-api-email. Implementing APIs are advised to dynamically replace
+    // {apiVersion} with available api versions implemented by the backend
+    "emailApiPrefix" => "rest-api-email/api/{apiVersion}",
+    "imapUserApiPrefix" => "rest-imapuser/api/{apiVersion}",
+    "versionRegex" => "/\/(v[0-9]+)/mi",
     "versions" => ["v0"],
-    "latest" => "v0"
+    "latest" => "v0",
+    "resourceUrls" => [
+        ["regex" => "/(MailAccounts)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageBodies)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+    ],
+    "resourceDescriptionTpl" => "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
+    "validationTpl" => [
+        "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+        "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+    ]
 ],
+
 
 /*
 |--------------------------------------------------------------------------

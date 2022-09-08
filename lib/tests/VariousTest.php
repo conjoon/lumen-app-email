@@ -38,6 +38,8 @@ use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\JsonApi\Query\Validation\Validator;
+use Conjoon\JsonApi\Request\ResourceUrlRegexList;
 use Conjoon\JsonApi\Resource\ObjectDescription;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
@@ -67,8 +69,6 @@ use Illuminate\Http\Request;
 use Conjoon\JsonApi\Request\Request as JsonApiRequest;
 use Conjoon\Http\Request\Request as HttpRequest;
 use Conjoon\Illuminate\Http\Request\LaravelRequest;
-use Conjoon\JsonApi\Resource\Locator;
-use App\Http\V0\JsonApi\Resource\Locator as ResourceLocator;
 use ReflectionClass;
 use ReflectionException;
 
@@ -91,10 +91,30 @@ class VariousTest extends TestCase
      *
      * @return void
      */
-    public function testApi()
+    public function testConfig()
     {
         $this->assertEquals(["v0"], config("app.api.versions"));
         $this->assertSame("v0", config("app.api.latest"));
+
+        $this->assertEqualsCanonicalizing([
+            ["regex" => "/(MailAccounts)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageBodies)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+        ], config("app.api.resourceUrls"));
+
+        $this->assertSame("rest-imapuser/api/{apiVersion}", config("app.api.imapUserApiPrefix"));
+        $this->assertSame("rest-api-email/api/{apiVersion}", config("app.api.emailApiPrefix"));
+        $this->assertSame("/\/(v[0-9]+)/mi", config("app.api.versionRegex"));
+        $this->assertSame(
+            "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
+            config("app.api.resourceDescriptionTpl")
+        );
+
+        $this->assertSame([
+            "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+            "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+        ], config("app.api.validationTpl"));
     }
 
     /**
@@ -327,13 +347,15 @@ class VariousTest extends TestCase
             $messageItemService->getPreviewTextProcessor()
         );
 
+        $resourceUrlRegexList = $this->app->build($property->invokeArgs(
+            $this->app,
+            [ResourceUrlRegexList::class]
+        ));
         $this->assertInstanceOf(
-            ResourceLocator::class,
-            $this->app->build($property->invokeArgs(
-                $this->app,
-                [Locator::class]
-            ))
+            ResourceUrlRegexList::class,
+            $resourceUrlRegexList
         );
+        $this->assertEquals(config("app.api.resourceUrls"), $resourceUrlRegexList->toArray());
     }
 
 
@@ -345,47 +367,54 @@ class VariousTest extends TestCase
      */
     public function testScopedRequest()
     {
-        $reflection = new ReflectionClass($this->app);
-        $scoped = $reflection->getProperty("scopedInstances");
-        $scoped->setAccessible(true);
+        $urls = [
+            "/MailAccounts/dev/MailFolders/INBOX/MessageItems",
+            "/MailAccounts/dev/MailFolders/INBOX/MessageBodies",
+            "/MailAccounts",
+            "/MailAccounts/dev/MailFolders/INBOX"
+        ];
+        foreach ($urls as $testUrl) {
+            $this->app = $this->createApplication();
 
-        $this->app->request = new Request();
+            $reflection = new ReflectionClass($this->app);
+            $scoped = $reflection->getProperty("scopedInstances");
+            $scoped->setAccessible(true);
 
-        $this->assertTrue(in_array(HttpRequest::class, $scoped->getValue($this->app)));
-        $this->assertTrue(in_array(JsonApiRequest::class, $scoped->getValue($this->app)));
+            $request = $this->createMockForAbstract(Request::class, ["url", "route"]);
+            $route = $this->createMockForAbstract(\Laravel\Lumen\Routing\Router::class, ["getPrefix"], [$this->app]);
+            $route->expects($this->any())->method("getPrefix")->willReturn("rest-api-email/api/v0");
+            $request->expects($this->any())->method("route")->willReturn($route);
+            $request->expects($this->any())->method("url")->willReturn(
+                $testUrl
+            );
 
-        $httpRequest = $this->app->make(HttpRequest::class);
-        $this->assertSame($httpRequest, $this->app->make(HttpRequest::class));
+            $this->app->request = $request;
 
-        $httpRequestSource = $this->makeAccessible($httpRequest, "request", true);
-        $this->assertInstanceOf(
-            LaravelRequest::class,
-            $httpRequest
-        );
+            $this->assertTrue(in_array(HttpRequest::class, $scoped->getValue($this->app)));
+            $this->assertTrue(in_array(JsonApiRequest::class, $scoped->getValue($this->app)));
 
-        $this->assertSame($this->app->request, $httpRequestSource->getValue($httpRequest));
+            $httpRequest = $this->app->make(HttpRequest::class);
+            $this->assertSame($httpRequest, $this->app->make(HttpRequest::class));
 
-        $resourceTarget = $this->createMockForAbstract(ObjectDescription::class);
-        $locator = $this->createMockForAbstract(Locator::class, ["getResourceTarget"]);
-        $locator->expects($this->once())
-                ->method("getResourceTarget")
-                ->with($httpRequest)
-                ->willReturn($resourceTarget);
+            $httpRequestSource = $this->makeAccessible($httpRequest, "request", true);
+            $this->assertInstanceOf(
+                LaravelRequest::class,
+                $httpRequest
+            );
 
+            $this->assertSame($this->app->request, $httpRequestSource->getValue($httpRequest));
 
-        $this->app->singleton(Locator::class, function () use ($locator) {
-            return $locator;
-        });
+            $jsonApiRequest = $this->app->make(JsonApiRequest::class);
 
-        $jsonApiRequest = $this->app->make(JsonApiRequest::class);
+            $this->assertInstanceOf(JsonApiRequest::class, $jsonApiRequest);
 
-        $this->assertInstanceOf(JsonApiRequest::class, $jsonApiRequest);
+            $getRequest = $this->makeAccessible($jsonApiRequest, "request", true);
 
-        $getRequest = $this->makeAccessible($jsonApiRequest, "request", true);
+            $this->assertSame($httpRequest, $getRequest->getValue($jsonApiRequest));
 
-        $this->assertSame($httpRequest, $getRequest->getValue($jsonApiRequest));
-
-        $this->assertSame($resourceTarget, $jsonApiRequest->getResourceTarget());
+            $this->assertInstanceOf(ObjectDescription::class, $jsonApiRequest->getResourceTarget());
+            $this->assertInstanceOf(Validator::class, $jsonApiRequest->getQueryValidator());
+        }
     }
 
 

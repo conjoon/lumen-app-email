@@ -30,18 +30,22 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\ControllerUtil;
 use App\Exceptions\Handler;
-use App\Http\V0\JsonApi\Resource\Locator as ResourceLocator;
+use Conjoon\Core\ClassLookup;
 use Conjoon\Http\Request\Request as HttpRequest;
 use Conjoon\Core\Data\JsonStrategy;
 use Conjoon\Horde\Mail\Client\Imap\HordeClient;
 use Conjoon\Illuminate\Http\Request\LaravelRequest;
+use Conjoon\JsonApi\Query\Validation\Validator;
 use Conjoon\JsonApi\Request\Request as JsonApiRequest;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Conjoon\JsonApi\Resource\Locator;
+use Conjoon\JsonApi\Request\ResourceUrlParser;
+use Conjoon\JsonApi\Request\ResourceUrlRegex;
+use Conjoon\JsonApi\Request\ResourceUrlRegexList;
+use Conjoon\JsonApi\Resource\ObjectDescription;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
@@ -160,18 +164,71 @@ $app->singleton(AttachmentListJsonTransformer::class, function () {
     return new LaravelAttachmentListJsonTransformer();
 });
 
-$app->singleton(Locator::class, function () {
-    return new ResourceLocator();
+
+$app->singleton(ResourceUrlRegexList::class, function () {
+    $resourceUrls = config("app.api.resourceUrls");
+
+    $urlRegexList = new ResourceUrlRegexList();
+
+    foreach ($resourceUrls as $resourceUrlCfg) {
+        $urlRegexList[] = new ResourceUrlRegex(
+            $resourceUrlCfg["regex"],
+            $resourceUrlCfg["nameIndex"],
+            $resourceUrlCfg["singleIndex"]
+        );
+    }
+
+    return $urlRegexList;
 });
+
 
 $app->scoped(HttpRequest::class, function ($app) {
     return new LaravelRequest($app->request);
 });
 
+
 $app->scoped(JsonApiRequest::class, function ($app) {
-    $locator = $app->make(Locator::class);
-    $request = $app->make(HttpRequest::class);
-    return new JsonApiRequest($request, $locator->getResourceTarget($request));
+
+    $request      = $app->make(HttpRequest::class);
+    $urlRegexList = $app->make(ResourceUrlRegexList::class);
+
+    $latest = config("app.api.latest");
+    preg_match_all(
+        config("app.api.versionRegex"),
+        $app->request->route()->getPrefix(),
+        $matches,
+        PREG_SET_ORDER,
+        0
+    );
+    $apiVersion = strtoupper(
+        $matches && $matches[0][1] ? $matches[0][1] : $latest
+    );
+    $resourceDescriptionParser = new ResourceUrlParser(
+        $urlRegexList,
+        str_replace("{apiVersion}", $apiVersion, config("app.api.resourceDescriptionTpl"))
+    );
+
+    $validationParser = new ResourceUrlParser(
+        $urlRegexList,
+        str_replace("{apiVersion}", $apiVersion, config("app.api.validationTpl.single")),
+        str_replace("{apiVersion}", $apiVersion, config("app.api.validationTpl.collection"))
+    );
+
+    $classLookup = new ClassLookup();
+    $resourceDescription = $classLookup->load(
+        $resourceDescriptionParser->parse($request->getUrl()),
+        ObjectDescription::class
+    );
+    $validator = $classLookup->load(
+        $validationParser->parse($request->getUrl()),
+        Validator::class
+    );
+
+    return new JsonApiRequest(
+        $request,
+        $resourceDescription,
+        $validator
+    );
 });
 
 $app->singleton(MessageItemService::class, function ($app) use ($getMailClient) {
