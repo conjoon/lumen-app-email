@@ -32,7 +32,7 @@ namespace Tests\App\Http\V0\JsonApi\Resource;
 use App\Http\V0\JsonApi\Resource\MailFolder;
 use App\Http\V0\JsonApi\Resource\MessageBody;
 use App\Http\V0\JsonApi\Resource\MessageItem;
-use Conjoon\JsonApi\Resource\ObjectDescription;
+use Conjoon\Mail\Client\Data\Resource\MessageBody as BaseMessageBody;
 use Tests\TestCase;
 
 /**
@@ -46,7 +46,7 @@ class MessageBodyTest extends TestCase
     public function testClass()
     {
         $inst = new MessageBody();
-        $this->assertInstanceOf(ObjectDescription::class, $inst);
+        $this->assertInstanceOf(BaseMessageBody::class, $inst);
     }
 
 
@@ -100,8 +100,8 @@ class MessageBodyTest extends TestCase
     public function testGetDefaultFields(): void
     {
         $this->assertEquals([
-            "textPlain" => true,
-            "textHtml" => true
+            "textPlain",
+            "textHtml"
         ], $this->createDescription()->getDefaultFields());
     }
 

@@ -31,7 +31,7 @@ namespace Tests\App\Http\V0\JsonApi\Resource;
 
 use App\Http\V0\JsonApi\Resource\MailAccount;
 use App\Http\V0\JsonApi\Resource\MailFolder;
-use Conjoon\JsonApi\Resource\ObjectDescription;
+use Conjoon\Mail\Client\Data\Resource\MailFolder as BaseMailFolder;
 use Tests\TestCase;
 
 /**
@@ -45,7 +45,7 @@ class MailFolderTest extends TestCase
     public function testClass()
     {
         $inst = new MailFolder();
-        $this->assertInstanceOf(ObjectDescription::class, $inst);
+        $this->assertInstanceOf(BaseMailFolder::class, $inst);
     }
 
 
@@ -101,11 +101,11 @@ class MailFolderTest extends TestCase
     public function testGetDefaultFields(): void
     {
         $this->assertEquals([
-            "name" => true,
-            "data" => true,
-            "folderType" => true,
-            "unreadMessages" => true,
-            "totalMessages" => true
+            "name",
+            "data",
+            "folderType",
+            "unreadMessages",
+            "totalMessages"
         ], $this->createDescription()->getDefaultFields());
     }
 

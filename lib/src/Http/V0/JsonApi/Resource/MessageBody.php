@@ -29,14 +29,14 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\JsonApi\Resource\ObjectDescriptionList;
+use Conjoon\Core\Data\Resource\ObjectDescriptionList;
+use Conjoon\Mail\Client\Data\Resource\MessageBody as BaseMessageBody;
 
 /**
  * ResourceDescription for a MessageBody.
  *
  */
-class MessageBody extends ObjectDescription
+class MessageBody extends BaseMessageBody
 {
     /**
      * @return string
@@ -86,8 +86,8 @@ class MessageBody extends ObjectDescription
     public function getDefaultFields(): array
     {
         return [
-            "textPlain" => true,
-            "textHtml" => true
+            "textPlain",
+            "textHtml"
         ];
     }
 }

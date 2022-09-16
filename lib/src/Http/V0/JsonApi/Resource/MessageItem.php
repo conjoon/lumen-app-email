@@ -29,14 +29,14 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\JsonApi\Resource\ObjectDescriptionList;
+use Conjoon\Mail\Client\Data\Resource\MessageItem as BaseMessageItem;
+use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 
 /**
  * ResourceDescription for a MessageItem.
  *
  */
-class MessageItem extends ObjectDescription
+class MessageItem extends BaseMessageItem
 {
     /**
      * @return string
@@ -80,7 +80,6 @@ class MessageItem extends ObjectDescription
             "charset",
             "references",
             "messageId",
-            "previewText",
             "size",
             "hasAttachments",
             "cc",
@@ -98,25 +97,20 @@ class MessageItem extends ObjectDescription
     public function getDefaultFields(): array
     {
         return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId",
+            "size",
+            "hasAttachments"
         ];
     }
 }

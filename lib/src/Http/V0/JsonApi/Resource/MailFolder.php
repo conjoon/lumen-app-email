@@ -29,14 +29,14 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\jsonApi\Resource\ObjectDescriptionList;
+use Conjoon\Core\Data\Resource\ObjectDescriptionList;
+use Conjoon\Mail\Client\Data\Resource\MailFolder as BaseMailFolder;
 
 /**
  * ResourceDescription for a MailFolder.
  *
  */
-class MailFolder extends ObjectDescription
+class MailFolder extends BaseMailFolder
 {
     /**
      * @return string
@@ -84,11 +84,11 @@ class MailFolder extends ObjectDescription
     public function getDefaultFields(): array
     {
         return [
-            "name" => true,
-            "data" => true,
-            "folderType" => true,
-            "unreadMessages" => true,
-            "totalMessages" => true
+            "name",
+            "data",
+            "folderType",
+            "unreadMessages",
+            "totalMessages"
         ];
     }
 }

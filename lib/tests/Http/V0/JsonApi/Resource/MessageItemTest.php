@@ -32,7 +32,7 @@ namespace Tests\App\Http\V0\JsonApi\Resource;
 use App\Http\V0\JsonApi\Resource\MailFolder;
 use App\Http\V0\JsonApi\Resource\MessageBody;
 use App\Http\V0\JsonApi\Resource\MessageItem;
-use Conjoon\JsonApi\Resource\ObjectDescription;
+use Conjoon\Mail\Client\Data\Resource\MessageItem as BaseMessageItem;
 use Tests\TestCase;
 
 /**
@@ -46,7 +46,7 @@ class MessageItemTest extends TestCase
     public function testClass()
     {
         $inst = new MessageItem();
-        $this->assertInstanceOf(ObjectDescription::class, $inst);
+        $this->assertInstanceOf(BaseMessageItem::class, $inst);
     }
 
 
@@ -87,7 +87,7 @@ class MessageItemTest extends TestCase
      */
     public function testGetFields(): void
     {
-        $this->assertEquals([
+        $this->assertEqualsCanonicalizing([
             "from",
             "to",
             "subject",
@@ -100,7 +100,6 @@ class MessageItemTest extends TestCase
             "charset",
             "references",
             "messageId",
-            "previewText",
             "size",
             "hasAttachments",
             "cc",
@@ -115,26 +114,21 @@ class MessageItemTest extends TestCase
      */
     public function testGetDefaultFields(): void
     {
-        $this->assertEquals([
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
+        $this->assertEqualsCanonicalizing([
+            "from",
+            "to",
+            "subject",
+            "date",
+            "seen",
+            "answered",
+            "draft",
+            "flagged",
+            "recent",
+            "charset",
+            "references",
+            "messageId",
+            "size",
+            "hasAttachments"
         ], $this->createDescription()->getDefaultFields());
     }
 

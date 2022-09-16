@@ -29,14 +29,14 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\jsonApi\Resource\ObjectDescriptionList;
+use Conjoon\Core\Data\Resource\ObjectDescriptionList;
+use Conjoon\Mail\Client\Data\Resource\MailAccount as BaseMailAccount;
 
 /**
  * ResourceDescription for a MailAccount.
  *
  */
-class MailAccount extends ObjectDescription
+class MailAccount extends BaseMailAccount
 {
     /**
      * @return string
@@ -90,20 +90,20 @@ class MailAccount extends ObjectDescription
     public function getDefaultFields(): array
     {
         return [
-            "name" => true,
-            "folderType" => true,
-            "from" => true,
-            "replyTo" => true,
-            "inbox_address" => true,
-            "inbox_port" => true,
-            "inbox_user" => true,
-            "inbox_password" => true,
-            "inbox_ssl" => true,
-            "outbox_address" => true,
-            "outbox_port" => true,
-            "outbox_user" => true,
-            "outbox_password" => true,
-            "outbox_secure" => true
+            "name",
+            "folderType",
+            "from",
+            "replyTo",
+            "inbox_address",
+            "inbox_port",
+            "inbox_user",
+            "inbox_password",
+            "inbox_ssl",
+            "outbox_address",
+            "outbox_port",
+            "outbox_user",
+            "outbox_password",
+            "outbox_secure"
         ];
     }
 }
