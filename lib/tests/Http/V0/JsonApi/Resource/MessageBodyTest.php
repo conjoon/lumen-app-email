@@ -51,15 +51,6 @@ class MessageBodyTest extends TestCase
 
 
     /**
-     * @return void
-     */
-    public function testGetType(): void
-    {
-        $this->assertSame("MessageBody", $this->createDescription()->getType());
-    }
-
-
-    /**
      * Tests getRelationships()
      */
     public function testGetRelationships(): void
@@ -79,30 +70,6 @@ class MessageBodyTest extends TestCase
             ["MessageItem", "MailFolder", "MessageBody", "MailAccount"],
             $this->createDescription()->getAllRelationshipTypes(true)
         );
-    }
-
-
-    /**
-     * Tests getFields()
-     */
-    public function testGetFields(): void
-    {
-        $this->assertEqualsCanonicalizing([
-            "textPlain",
-            "textHtml"
-        ], $this->createDescription()->getFields());
-    }
-
-
-    /**
-     * tests getDefaultFields()
-     */
-    public function testGetDefaultFields(): void
-    {
-        $this->assertEquals([
-            "textPlain",
-            "textHtml"
-        ], $this->createDescription()->getDefaultFields());
     }
 
 

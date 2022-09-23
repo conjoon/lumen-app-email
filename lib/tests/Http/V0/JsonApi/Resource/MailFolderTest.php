@@ -48,16 +48,6 @@ class MailFolderTest extends TestCase
         $this->assertInstanceOf(BaseMailFolder::class, $inst);
     }
 
-
-    /**
-     * @return string
-     */
-    public function testGetType(): void
-    {
-        $this->assertSame("MailFolder", $this->createDescription()->getType());
-    }
-
-
     /**
      * Tests getRelationships()
      */
@@ -77,36 +67,6 @@ class MailFolderTest extends TestCase
             ["MailFolder", "MailAccount"],
             $this->createDescription()->getAllRelationshipTypes(true)
         );
-    }
-
-
-    /**
-     * Tests getFields()
-     */
-    public function testGetFields(): void
-    {
-        $this->assertEquals([
-            "name",
-            "data",
-            "folderType",
-            "unreadMessages",
-            "totalMessages"
-        ], $this->createDescription()->getFields());
-    }
-
-
-    /**
-     * tests getDefaultFields()
-     */
-    public function testGetDefaultFields(): void
-    {
-        $this->assertEquals([
-            "name",
-            "data",
-            "folderType",
-            "unreadMessages",
-            "totalMessages"
-        ], $this->createDescription()->getDefaultFields());
     }
 
 

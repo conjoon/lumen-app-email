@@ -29,10 +29,10 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use App\Http\V0\JsonApi\Resource\MessageItem;
 use Conjoon\Core\Data\ParameterBag;
 use App\Http\V0\JsonApi\Resource\MessageItemListQuery;
 use Conjoon\Core\Data\SortInfoList;
+use App\Http\V0\JsonApi\Resource\MessageItem;
 use Conjoon\Mail\Client\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
 use Tests\TestCase;
 

@@ -43,85 +43,8 @@ class MailAccountTest extends TestCase
      */
     public function testClass()
     {
-        $inst = new MailAccount();
+        $inst = $this->createDescription();
         $this->assertInstanceOf(BaseMailAccount::class, $inst);
-    }
-
-
-    /**
-     * @return string
-     */
-    public function testGetType(): void
-    {
-        $this->assertSame("MailAccount", $this->createDescription()->getType());
-    }
-
-
-    /**
-     * Tests getRelationships()
-     */
-    public function testGetRelationships(): void
-    {
-        $list = $this->createDescription()->getRelationships();
-        $this->assertSame(0, count($list));
-
-        $this->assertSame(
-            ["MailAccount"],
-            $this->createDescription()->getAllRelationshipPaths(true)
-        );
-
-        $this->assertEqualsCanonicalizing(
-            ["MailAccount"],
-            $this->createDescription()->getAllRelationshipTypes(true)
-        );
-    }
-
-
-    /**
-     * Tests getFields()
-     */
-    public function testGetFields(): void
-    {
-        $this->assertEquals([
-            "name",
-            "folderType",
-            "from",
-            "replyTo",
-            "inbox_address",
-            "inbox_port",
-            "inbox_user",
-            "inbox_password",
-            "inbox_ssl",
-            "outbox_address",
-            "outbox_port",
-            "outbox_user",
-            "outbox_password",
-            "outbox_secure"
-        ], $this->createDescription()->getFields());
-    }
-
-
-    /**
-     * tests getDefaultFields()
-     */
-    public function testGetDefaultFields(): void
-    {
-        $this->assertEquals([
-            "name",
-            "folderType",
-            "from",
-            "replyTo",
-            "inbox_address",
-            "inbox_port",
-            "inbox_user",
-            "inbox_password",
-            "inbox_ssl",
-            "outbox_address",
-            "outbox_port",
-            "outbox_user",
-            "outbox_password",
-            "outbox_secure"
-        ], $this->createDescription()->getDefaultFields());
     }
 
 

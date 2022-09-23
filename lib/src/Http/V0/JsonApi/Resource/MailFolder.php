@@ -39,15 +39,6 @@ use Conjoon\Mail\Client\Data\Resource\MailFolder as BaseMailFolder;
 class MailFolder extends BaseMailFolder
 {
     /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return "MailFolder";
-    }
-
-
-    /**
      * @return ObjectDescriptionList
      */
     public function getRelationships(): ObjectDescriptionList
@@ -56,39 +47,5 @@ class MailFolder extends BaseMailFolder
         $list[] = new MailAccount();
 
         return $list;
-    }
-
-
-    /**
-     * Returns all fields the entity exposes.
-     *
-     * @return string[]
-     */
-    public function getFields(): array
-    {
-        return [
-            "name",
-            "data",
-            "folderType",
-            "unreadMessages",
-            "totalMessages"
-        ];
-    }
-
-
-    /**
-     * Default fields to pass to the lower level api.
-     *
-     * @return array
-     */
-    public function getDefaultFields(): array
-    {
-        return [
-            "name",
-            "data",
-            "folderType",
-            "unreadMessages",
-            "totalMessages"
-        ];
     }
 }

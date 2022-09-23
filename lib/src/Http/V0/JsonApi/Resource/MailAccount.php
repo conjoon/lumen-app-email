@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 use Conjoon\Mail\Client\Data\Resource\MailAccount as BaseMailAccount;
 
 /**
@@ -38,72 +37,4 @@ use Conjoon\Mail\Client\Data\Resource\MailAccount as BaseMailAccount;
  */
 class MailAccount extends BaseMailAccount
 {
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return "MailAccount";
-    }
-
-
-    /**
-     * @return ObjectDescriptionList
-     */
-    public function getRelationships(): ObjectDescriptionList
-    {
-        return new ObjectDescriptionList();
-    }
-
-
-    /**
-     * Returns all fields the entity exposes.
-     *
-     * @return string[]
-     */
-    public function getFields(): array
-    {
-        return [
-            "name",
-            "folderType",
-            "from",
-            "replyTo",
-            "inbox_address",
-            "inbox_port",
-            "inbox_user",
-            "inbox_password",
-            "inbox_ssl",
-            "outbox_address",
-            "outbox_port",
-            "outbox_user",
-            "outbox_password",
-            "outbox_secure"
-        ];
-    }
-
-
-    /**
-     * Default fields to pass to the lower level api.
-     *
-     * @return array
-     */
-    public function getDefaultFields(): array
-    {
-        return [
-            "name",
-            "folderType",
-            "from",
-            "replyTo",
-            "inbox_address",
-            "inbox_port",
-            "inbox_user",
-            "inbox_password",
-            "inbox_ssl",
-            "outbox_address",
-            "outbox_port",
-            "outbox_user",
-            "outbox_password",
-            "outbox_secure"
-        ];
-    }
 }

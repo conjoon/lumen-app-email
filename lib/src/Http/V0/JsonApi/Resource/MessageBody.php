@@ -29,8 +29,8 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 use Conjoon\Mail\Client\Data\Resource\MessageBody as BaseMessageBody;
+use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 
 /**
  * ResourceDescription for a MessageBody.
@@ -38,15 +38,6 @@ use Conjoon\Mail\Client\Data\Resource\MessageBody as BaseMessageBody;
  */
 class MessageBody extends BaseMessageBody
 {
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return "MessageBody";
-    }
-
-
     /**
      * @return ObjectDescriptionList
      */
@@ -56,38 +47,6 @@ class MessageBody extends BaseMessageBody
         $list[] = new MailFolder();
         $list[] = new MessageItem();
 
-        // MessageBody.MailFolder
-        // MessageBody.MessageItem
-        // MessageBody.MailFolder.MailAccount
-
         return $list;
-    }
-
-
-    /**
-     * Returns all fields the entity exposes.
-     *
-     * @return string[]
-     */
-    public function getFields(): array
-    {
-        return [
-            "textHtml",
-            "textPlain"
-        ];
-    }
-
-
-    /**
-     * Default fields to pass to the lower level api.
-     *
-     * @return array
-     */
-    public function getDefaultFields(): array
-    {
-        return [
-            "textPlain",
-            "textHtml"
-        ];
     }
 }

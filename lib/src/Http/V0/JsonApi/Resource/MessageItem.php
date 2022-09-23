@@ -39,15 +39,6 @@ use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 class MessageItem extends BaseMessageItem
 {
     /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return "MessageItem";
-    }
-
-
-    /**
      * @return ObjectDescriptionList
      */
     public function getRelationships(): ObjectDescriptionList
@@ -57,60 +48,5 @@ class MessageItem extends BaseMessageItem
         $list[] = new MessageBody();
 
         return $list;
-    }
-
-
-    /**
-     * Returns all fields the entity exposes.
-     *
-     * @return string[]
-     */
-    public function getFields(): array
-    {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
-        ];
-    }
-
-
-    /**
-     * Default fields to pass to the lower level api.
-     *
-     * @return array
-     */
-    public function getDefaultFields(): array
-    {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "size",
-            "hasAttachments"
-        ];
     }
 }

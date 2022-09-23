@@ -51,15 +51,6 @@ class MessageItemTest extends TestCase
 
 
     /**
-     * @return void
-     */
-    public function testGetType(): void
-    {
-        $this->assertSame("MessageItem", $this->createDescription()->getType());
-    }
-
-
-    /**
      * Tests getRelationships()
      */
     public function testGetRelationships(): void
@@ -79,57 +70,6 @@ class MessageItemTest extends TestCase
             ["MessageItem", "MailFolder", "MessageBody", "MailAccount"],
             $this->createDescription()->getAllRelationshipTypes(true)
         );
-    }
-
-
-    /**
-     * Tests getFields()
-     */
-    public function testGetFields(): void
-    {
-        $this->assertEqualsCanonicalizing([
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
-        ], $this->createDescription()->getFields());
-    }
-
-
-    /**
-     * tests getDefaultFields()
-     */
-    public function testGetDefaultFields(): void
-    {
-        $this->assertEqualsCanonicalizing([
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "size",
-            "hasAttachments"
-        ], $this->createDescription()->getDefaultFields());
     }
 
 
