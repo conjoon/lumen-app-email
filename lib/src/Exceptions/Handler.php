@@ -27,13 +27,14 @@
 
 namespace App\Exceptions;
 
-use Conjoon\Core\Data\JsonStrategy;
+use Conjoon\Core\Strategy\JsonStrategy;
 use Conjoon\Http\Query\Exception\QueryException;
 use Conjoon\JsonProblem\AbstractProblem;
+use Conjoon\JsonProblem\Problem;
 use Conjoon\JsonProblem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
-use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
-use Conjoon\Mail\Client\Service\ServiceException;
+use Conjoon\MailClient\Exception\ResourceNotFoundException;
+use Conjoon\MailClient\Service\ServiceException;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -101,7 +102,7 @@ class Handler extends ExceptionHandler
      *
      * @param Exception $e
      *
-     * @return Problem|null
+     * @return AbstractProblem|null
      */
     protected function convertToProblem(Throwable $e): ?AbstractProblem
     {

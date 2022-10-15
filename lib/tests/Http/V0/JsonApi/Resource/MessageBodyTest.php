@@ -32,7 +32,7 @@ namespace Tests\App\Http\V0\JsonApi\Resource;
 use App\Http\V0\JsonApi\Resource\MailFolder;
 use App\Http\V0\JsonApi\Resource\MessageBody;
 use App\Http\V0\JsonApi\Resource\MessageItem;
-use Conjoon\Mail\Client\Data\Resource\MessageBody as BaseMessageBody;
+use Conjoon\MailClient\Data\Resource\MessageBody as BaseMessageBody;
 use Tests\TestCase;
 
 /**

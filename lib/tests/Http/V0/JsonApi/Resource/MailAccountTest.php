@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\JsonApi\Resource;
 
 use App\Http\V0\JsonApi\Resource\MailAccount;
-use Conjoon\Mail\Client\Data\Resource\MailAccount as BaseMailAccount;
+use Conjoon\MailClient\Data\Resource\MailAccount as BaseMailAccount;
 use Tests\TestCase;
 
 /**

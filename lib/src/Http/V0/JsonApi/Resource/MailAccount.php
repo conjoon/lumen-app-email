@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Mail\Client\Data\Resource\MailAccount as BaseMailAccount;
+use Conjoon\MailClient\Data\Resource\MailAccount as BaseMailAccount;
 
 /**
  * ResourceDescription for a MailAccount.

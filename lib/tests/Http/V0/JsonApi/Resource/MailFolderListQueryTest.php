@@ -32,7 +32,7 @@ namespace Tests\App\Http\V0\JsonApi\Resource;
 use Conjoon\Core\Data\ParameterBag;
 use App\Http\V0\JsonApi\Resource\MailFolderListQuery;
 use App\Http\V0\JsonApi\Resource\MailFolder;
-use Conjoon\Mail\Client\Data\Resource\MailFolderListQuery as BaseMailFolderListQuery;
+use Conjoon\MailClient\Data\Resource\MailFolderListQuery as BaseMailFolderListQuery;
 use Tests\TestCase;
 
 /**

@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace Tests\Exceptions;
 
 use App\Exceptions\Handler;
-use Conjoon\Core\Data\JsonStrategy;
+use Conjoon\Core\Strategy\JsonStrategy;
 use Conjoon\Http\Exception\BadRequestException;
 use Conjoon\Http\Exception\ForbiddenException;
 use Conjoon\Http\Exception\InternalServerErrorException;
@@ -39,8 +39,8 @@ use Conjoon\Http\Exception\NotFoundException;
 use Conjoon\Http\Exception\UnauthorizedException;
 use Conjoon\JsonProblem\ProblemFactory;
 use Conjoon\Http\Query\Exception\QueryException;
-use Conjoon\Mail\Client\Exception\ResourceNotFoundException;
-use Conjoon\Mail\Client\Service\ServiceException;
+use Conjoon\MailClient\Exception\ResourceNotFoundException;
+use Conjoon\MailClient\Service\ServiceException;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 

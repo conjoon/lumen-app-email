@@ -30,9 +30,9 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Http\V0\Middleware\Authenticate;
-use Conjoon\Mail\Client\Data\MailAccount;
-use Conjoon\Mail\Client\Service\AuthService;
-use Conjoon\Mail\Client\Service\DefaultAuthService;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Service\AuthService;
+use Conjoon\MailClient\Service\DefaultAuthService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use PHPUnit\Framework\MockObject\MockObject;
 use ReflectionClass;

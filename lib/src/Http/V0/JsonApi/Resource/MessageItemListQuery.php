@@ -32,7 +32,10 @@ namespace App\Http\V0\JsonApi\Resource;
 use Conjoon\Core\Data\SortDirection;
 use Conjoon\Core\Data\SortInfo;
 use Conjoon\Core\Data\SortInfoList;
-use Conjoon\Mail\Client\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
+use Conjoon\Filter\Filter;
+use Conjoon\MailClient\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
+use Conjoon\Math\Expression\Operator\LogicalOperator;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class MessageItemListResourceQuery
@@ -96,6 +99,17 @@ class MessageItemListQuery extends BaseMessageItemListQuery
         }
 
         return $defaultFields;
+    }
+
+
+    /**
+     * Returns filter information for this query.
+     *
+     * @return Filter|null
+     */
+    public function getFilter(): ?Filter
+    {
+        return null;
     }
 
 

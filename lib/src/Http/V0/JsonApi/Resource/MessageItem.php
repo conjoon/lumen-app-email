@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Mail\Client\Data\Resource\MessageItem as BaseMessageItem;
+use Conjoon\MailClient\Data\Resource\MessageItem as BaseMessageItem;
 use Conjoon\Core\Data\Resource\ObjectDescriptionList;
 
 /**

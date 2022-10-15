@@ -33,7 +33,7 @@ use Conjoon\Core\Data\ParameterBag;
 use App\Http\V0\JsonApi\Resource\MessageItemListQuery;
 use Conjoon\Core\Data\SortInfoList;
 use App\Http\V0\JsonApi\Resource\MessageItem;
-use Conjoon\Mail\Client\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
+use Conjoon\MailClient\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
 use Tests\TestCase;
 
 /**

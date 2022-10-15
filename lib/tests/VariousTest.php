@@ -31,44 +31,45 @@ namespace Tests;
 
 use App\ControllerUtil;
 use Closure;
-use Conjoon\Horde\Mail\Client\Imap\HordeClient;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Horde_Imap\Client\SortInfoStrategy;
+use Conjoon\Http\Request\Request as HttpRequest;
+use Conjoon\Core\Strategy\JsonStrategy;
+use Conjoon\Horde_Imap\Client\HordeClient;
+use Conjoon\Illuminate\Http\Request\LaravelRequest;
+use Conjoon\JsonApi\Query\Validation\Validator;
+use Conjoon\JsonApi\Request\Request as JsonApiRequest;
+use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
+use Conjoon\Horde_Mime\Composer\HordeBodyComposer;
+use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
-use Conjoon\JsonApi\Query\Validation\Validator;
 use Conjoon\JsonApi\Request\ResourceUrlRegexList;
-use Conjoon\JsonApi\Resource\ObjectDescription;
-use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
-use Conjoon\Mail\Client\Data\MailAccount;
-use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
-use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
-use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
-use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
-use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
-use Conjoon\Mail\Client\Request\Attachment\Transformer\AttachmentListJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Service\AttachmentService;
-use Conjoon\Mail\Client\Service\AuthService;
-use Conjoon\Mail\Client\Service\DefaultAttachmentService;
-use Conjoon\Mail\Client\Service\DefaultAuthService;
-use Conjoon\Mail\Client\Service\DefaultMailFolderService;
-use Conjoon\Mail\Client\Service\DefaultMessageItemService;
-use Conjoon\Mail\Client\Service\MailFolderService;
-use Conjoon\Mail\Client\Service\MessageItemService;
-use Conjoon\Mail\Client\Util\JsonApiStrategy;
-use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use Conjoon\Core\Data\JsonStrategy;
+use Conjoon\Core\Data\Resource\ObjectDescription;
+use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
+use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
+use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
+use Conjoon\Illuminate\MailClient\Data\Protocol\Http\Request\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageBodyDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Service\AttachmentService;
+use Conjoon\MailClient\Service\AuthService;
+use Conjoon\MailClient\Service\DefaultAttachmentService;
+use Conjoon\MailClient\Service\DefaultAuthService;
+use Conjoon\MailClient\Service\DefaultMailFolderService;
+use Conjoon\MailClient\Service\DefaultMessageItemService;
+use Conjoon\MailClient\Service\MailFolderService;
+use Conjoon\MailClient\Service\MessageItemService;
+use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
+use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
-use Conjoon\JsonApi\Request\Request as JsonApiRequest;
-use Conjoon\Http\Request\Request as HttpRequest;
-use Conjoon\Illuminate\Http\Request\LaravelRequest;
 use ReflectionClass;
 use ReflectionException;
 
@@ -329,6 +330,11 @@ class VariousTest extends TestCase
             HordeAttachmentComposer::class,
             $messageItemServiceMailClient->getAttachmentComposer()
         );
+        $this->assertInstanceOf(
+            SortInfoStrategy::class,
+            $messageItemServiceMailClient->getSortInfoStrategy()
+        );
+
 
         $this->assertInstanceOf(
             DefaultMessageItemFieldsProcessor::class,

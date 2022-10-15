@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace App\Http\V0\JsonApi\Resource;
 
 use Conjoon\Core\Data\Resource\ObjectDescriptionList;
-use Conjoon\Mail\Client\Data\Resource\MailFolder as BaseMailFolder;
+use Conjoon\MailClient\Data\Resource\MailFolder as BaseMailFolder;
 
 /**
  * ResourceDescription for a MailFolder.
