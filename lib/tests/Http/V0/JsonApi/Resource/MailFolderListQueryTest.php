@@ -29,9 +29,9 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\Data\ParameterBag;
 use App\Http\V0\JsonApi\Resource\MailFolderListQuery;
 use App\Http\V0\JsonApi\Resource\MailFolder;
+use Conjoon\Data\ParameterBag;
 use Conjoon\MailClient\Data\Resource\MailFolderListQuery as BaseMailFolderListQuery;
 use Tests\TestCase;
 

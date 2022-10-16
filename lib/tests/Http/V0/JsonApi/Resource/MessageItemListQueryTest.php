@@ -29,9 +29,9 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\Data\ParameterBag;
+use Conjoon\Data\ParameterBag;
 use App\Http\V0\JsonApi\Resource\MessageItemListQuery;
-use Conjoon\Core\Data\SortInfoList;
+use Conjoon\Data\Sort\SortInfoList;
 use App\Http\V0\JsonApi\Resource\MessageItem;
 use Conjoon\MailClient\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
 use Tests\TestCase;

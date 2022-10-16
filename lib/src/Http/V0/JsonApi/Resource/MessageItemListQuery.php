@@ -29,14 +29,11 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\Data\SortDirection;
-use Conjoon\Core\Data\SortInfo;
-use Conjoon\Core\Data\SortInfoList;
-use Conjoon\Filter\Filter;
+use Conjoon\Data\Sort\SortDirection;
+use Conjoon\Data\Sort\SortInfo;
+use Conjoon\Data\Sort\SortInfoList;
+use Conjoon\Data\Filter\Filter;
 use Conjoon\MailClient\Data\Resource\MessageItemListQuery as BaseMessageItemListQuery;
-use Conjoon\Math\Expression\Operator\LogicalOperator;
-use Illuminate\Support\Facades\Log;
-
 /**
  * Class MessageItemListResourceQuery
  * @package App\Http\V0\Query\MessageItem
