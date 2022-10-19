@@ -30,12 +30,11 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\ControllerUtil;
 use App\Exceptions\Handler;
-use Conjoon\Core\Util\ClassLookup;
+use Conjoon\Core\Util\ClassLoader;
 use Conjoon\Horde_Imap\Client\SortInfoStrategy;
-use Conjoon\Http\Request\Request as HttpRequest;
 use Conjoon\Core\Contract\JsonStrategy;
 use Conjoon\Horde_Imap\Client\HordeClient;
-use Conjoon\Illuminate\Http\Request\LaravelRequest;
+use Conjoon\Http\Url;
 use Conjoon\JsonApi\Query\Validation\Validator;
 use Conjoon\JsonApi\Request\Request as JsonApiRequest;
 use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
@@ -44,6 +43,7 @@ use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\JsonApi\Request\ResourceUrlParser;
+use Conjoon\JsonApi\Request\Url as JsonApiUrl;
 use Conjoon\JsonApi\Request\ResourceUrlRegex;
 use Conjoon\JsonApi\Request\ResourceUrlRegexList;
 use Conjoon\Data\Resource\ObjectDescription;
@@ -191,14 +191,12 @@ $app->singleton(ResourceUrlRegexList::class, function () {
 });
 
 
-$app->scoped(HttpRequest::class, function ($app) {
-    return new LaravelRequest($app->request);
-});
-
 
 $app->scoped(JsonApiRequest::class, function ($app) {
 
-    $request      = $app->make(HttpRequest::class);
+    $fullUrl = $app->request->fullUrl();
+    $httpUrl = new Url($fullUrl);
+
     $urlRegexList = $app->make(ResourceUrlRegexList::class);
 
     $latest = config("app.api.latest");
@@ -223,19 +221,23 @@ $app->scoped(JsonApiRequest::class, function ($app) {
         str_replace("{apiVersion}", $apiVersion, config("app.api.validationTpl.collection"))
     );
 
-    $classLookup = new ClassLookup();
-    $resourceDescription = $classLookup->load(
-        $resourceDescriptionParser->parse($request->getUrl()),
+    $classLoader = new ClassLoader();
+    $resourceDescription = $classLoader->load(
+        $resourceDescriptionParser->parse($httpUrl),
         ObjectDescription::class
     );
-    $validator = $classLookup->load(
-        $validationParser->parse($request->getUrl()),
+
+    $validator = $classLoader->load(
+        $validationParser->parse($httpUrl),
         Validator::class
     );
 
     return new JsonApiRequest(
-        $request,
-        $resourceDescription,
+        new JsonApiUrl(
+            $fullUrl,
+            $resourceDescription,
+            $resourceDescriptionParser->targetsResourceCollection($httpUrl)
+        ),
         $validator
     );
 });

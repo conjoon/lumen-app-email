@@ -32,10 +32,8 @@ namespace Tests;
 use App\ControllerUtil;
 use Closure;
 use Conjoon\Horde_Imap\Client\SortInfoStrategy;
-use Conjoon\Http\Request\Request as HttpRequest;
 use Conjoon\Core\Contract\JsonStrategy;
 use Conjoon\Horde_Imap\Client\HordeClient;
-use Conjoon\Illuminate\Http\Request\LaravelRequest;
 use Conjoon\JsonApi\Query\Validation\Validator;
 use Conjoon\JsonApi\Request\Request as JsonApiRequest;
 use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
@@ -70,6 +68,7 @@ use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
 use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
+use Laravel\Lumen\Routing\Router;
 use ReflectionClass;
 use ReflectionException;
 
@@ -367,9 +366,7 @@ class VariousTest extends TestCase
 
     /**
      * @return void
-     * @throws BindingResolutionException
      * @throws ReflectionException
-     * @throws \Illuminate\Contracts\Container\CircularDependencyException
      */
     public function testScopedRequest()
     {
@@ -384,10 +381,9 @@ class VariousTest extends TestCase
 
             $reflection = new ReflectionClass($this->app);
             $scoped = $reflection->getProperty("scopedInstances");
-            $scoped->setAccessible(true);
 
             $request = $this->createMockForAbstract(Request::class, ["url", "route"]);
-            $route = $this->createMockForAbstract(\Laravel\Lumen\Routing\Router::class, ["getPrefix"], [$this->app]);
+            $route = $this->createMockForAbstract(Router::class, ["getPrefix"], [$this->app]);
             $route->expects($this->any())->method("getPrefix")->willReturn("rest-api-email/api/v0");
             $request->expects($this->any())->method("route")->willReturn($route);
             $request->expects($this->any())->method("url")->willReturn(
@@ -396,27 +392,13 @@ class VariousTest extends TestCase
 
             $this->app->request = $request;
 
-            $this->assertTrue(in_array(HttpRequest::class, $scoped->getValue($this->app)));
             $this->assertTrue(in_array(JsonApiRequest::class, $scoped->getValue($this->app)));
-
-            $httpRequest = $this->app->make(HttpRequest::class);
-            $this->assertSame($httpRequest, $this->app->make(HttpRequest::class));
-
-            $httpRequestSource = $this->makeAccessible($httpRequest, "request", true);
-            $this->assertInstanceOf(
-                LaravelRequest::class,
-                $httpRequest
-            );
-
-            $this->assertSame($this->app->request, $httpRequestSource->getValue($httpRequest));
 
             $jsonApiRequest = $this->app->make(JsonApiRequest::class);
 
             $this->assertInstanceOf(JsonApiRequest::class, $jsonApiRequest);
 
-            $getRequest = $this->makeAccessible($jsonApiRequest, "request", true);
-
-            $this->assertSame($httpRequest, $getRequest->getValue($jsonApiRequest));
+            $this->assertSame($testUrl, $jsonApiRequest->getUrl()->toString());
 
             $this->assertInstanceOf(ObjectDescription::class, $jsonApiRequest->getResourceTarget());
             $this->assertInstanceOf(Validator::class, $jsonApiRequest->getQueryValidator());
