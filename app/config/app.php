@@ -58,7 +58,7 @@ return [
         ["regex" => "/(MailAccounts)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
         ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageBodies)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
         ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
-        ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2]
     ],
     "resourceDescriptionTpl" => "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
     "validationTpl" => [
