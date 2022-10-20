@@ -31,6 +31,9 @@ namespace Tests\App\Http\V0\JsonApi;
 
 ;
 
+use App\Http\V0\JsonApi\JsonApiException;
+use Conjoon\Core\Exception\ClassNotFoundException;
+use Conjoon\Core\Exception\InvalidTypeException;
 use Conjoon\Core\Util\ClassLoader;
 use App\Http\V0\JsonApi\Resource\Query as QueryPool;
 use Conjoon\Data\ParameterBag;
@@ -40,6 +43,7 @@ use App\Http\V0\JsonApi\ResourceQueryFactory;
 use Conjoon\Data\Resource\ObjectDescription;
 use Conjoon\JsonApi\Query\Query as JsonApiQuery;
 use Conjoon\JsonApi\Request\Url as JsonApiUrl;
+use Exception;
 use ReflectionException;
 use Tests\TestCase;
 
@@ -48,7 +52,6 @@ use Tests\TestCase;
  */
 class ResourceQueryFactoryTest extends TestCase
 {
-
     /**
      * Tests class functionality
      * @return void
@@ -58,6 +61,69 @@ class ResourceQueryFactoryTest extends TestCase
         $classLoader = new ClassLoader();
         $resourceQueryFactory = new ResourceQueryFactory($classLoader);
         $this->assertSame($classLoader, $resourceQueryFactory->getClassLoader());
+    }
+
+
+    /**
+     * @return void
+     */
+    public function testJsonApiExceptionWithMissingTypeList(): void
+    {
+        $this->expectExceptionMessage(
+            "Could not find \"single\" configuration for resource \"lookingForIt\""
+        );
+
+        $factory = $this->createFactoryMock();
+
+        $factory->createQueryFromRequest(
+            $this->getMockBuilder(JsonApiRequest::class)
+                ->disableOriginalConstructor()
+                ->getMock()
+        );
+    }
+
+
+    /**
+     * @param Exception $exc
+     * @return void
+     */
+    public function templateForJsonApiExceptionFromClassLoaderException(Exception $exc): void
+    {
+        $this->expectException(JsonApiException::class);
+
+        $classLoader = $this->getMockBuilder(ClassLoader::class)
+                            ->disableOriginalConstructor()
+                            ->onlyMethods(["create"])
+                            ->getMock();
+        $classLoader->expects($this->once())->method("create")->willThrowException($exc);
+
+        $factory = $this->createFactoryMock(["getClassLoader"], ["class", "parent"]);
+
+        $factory->expects($this->once())->method("getClassLoader")->willReturn($classLoader);
+
+        $factory->createQueryFromRequest(
+            $this->getMockBuilder(JsonApiRequest::class)
+                ->disableOriginalConstructor()
+                ->getMock()
+        );
+    }
+
+
+    /**
+     * @return void
+     */
+    public function testJsonApiExceptionFromInvalidTypeException(): void
+    {
+        $this->templateForJsonApiExceptionFromClassLoaderException(new InvalidTypeException());
+    }
+
+
+    /**
+     * @return void
+     */
+    public function testJsonApiExceptionFromClassNotFoundException(): void
+    {
+        $this->templateForJsonApiExceptionFromClassLoaderException(new ClassNotFoundException());
     }
 
 
@@ -131,5 +197,31 @@ class ResourceQueryFactoryTest extends TestCase
             $pb = $this->makeAccessible($result, "parameterBag", true);
             $this->assertSame($item[2], $pb->getValue($result));
         }
+    }
+
+
+    /**
+     * Returns a mock for the ResourceQueryFactory.
+     * @param array $methods
+     * @param array $typeList
+     *
+     * @return ResourceQueryFactory|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected function createFactoryMock(array $additionalMethods = [], mixed $typeList = null)
+    {
+        $factory = $this->getMockBuilder(ResourceQueryFactory::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(array_merge($additionalMethods, ["getConfigForRequest"]))
+            ->getMock();
+        $factory->expects($this->once())->method("getConfigForRequest")->willReturn(
+            [
+                "parameters" => new ParameterBag(),
+                "resourceType" => "lookingForIt",
+                "ordinality" => "single",
+                "typeList" => $typeList
+            ]
+        );
+
+        return $factory;
     }
 }

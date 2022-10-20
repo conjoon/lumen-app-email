@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace App\Http\V0\JsonApi;
 
+use Conjoon\Core\Exception\ClassNotFoundException;
+use Conjoon\Core\Exception\InvalidTypeException;
 use Conjoon\Core\Util\ClassLoader;
 use App\Http\V0\JsonApi\Resource\Query as QueryPool;
 use Conjoon\Data\ParameterBag;
@@ -62,29 +64,80 @@ class ResourceQueryFactory
      *
      * @param JsonApiRequest $request
      *
-     * @return ResourceQuery|null
+     * @return ResourceQuery
      */
-    public function createQueryFromRequest(JsonApiRequest $request): ?ResourceQuery
+    public function createQueryFromRequest(JsonApiRequest $request): ResourceQuery
     {
-        $loader = $this->getClassLoader();
+        [
+            "parameters" => $parameters,
+            "typeList" => $typeList,
+            "ordinality" => $ordinality,
+            "resourceType" => $resourceType
+        ] = $this->getConfigForRequest($request);
 
+        if (!$typeList) {
+            throw new JsonApiException(
+                message:"Could not find \"$ordinality\" configuration for resource \"$resourceType\""
+            );
+        }
+
+        $loader = $this->getClassLoader();
+        try {
+            $inst = $loader->create(...array_merge($typeList, [[$parameters]]));
+        } catch (ClassNotFoundException | InvalidTypeException $e) {
+            throw new JsonApiException($e->getMessage(), $e->getCode(), $e);
+        }
+
+        return $inst;
+    }
+
+
+    /**
+     * Returns the configuration for passing to the ClassLoader for building a query.
+     * If typeList is null with the returned array, no matching Query for the targeted resource
+     * was found.
+     *
+     *
+     * @param JsonApiRequest $request
+     * @return array
+     */
+    protected function getConfigForRequest(JsonApiRequest $request): array
+    {
         $target = $request->getResourceTarget();
         $resourceType = $target->getType();
         $targetsResourceCollection = $request->targetsResourceCollection();
 
         $parameters = $request->getUrl()->getQuery()->getParameterBag() ?? new ParameterBag();
 
-        $type     = $targetsResourceCollection ? "collection" : "single";
-        $loadList = [
+        $ordinality  = $targetsResourceCollection ? "collection" : "single";
+        $loadList = $this->getMappings();
+        $typeList = $loadList[$resourceType][$ordinality] ?? null;
+
+        return [
+            "parameters" => $parameters,
+            "typeList" => $typeList,
+            "ordinality" => $ordinality,
+            "resourceType" => $resourceType
+        ];
+    }
+
+
+    /**
+     * Returns all  mappings for a resource in the form of
+     *   {ResourceTarget} => [{ordinality} => [{QueryClassFqn}, {ParentQueryFqn}]]
+     * whereas {ordinality} can be "single" and "collection".
+     *
+     * @return \string[][][]
+     */
+    protected function getMappings()
+    {
+        return [
             "MessageItem" => [
                 "single"     => [QueryPool\MessageItemQuery::class, QueryParent\MessageItemQuery::class],
                 "collection" => [QueryPool\MessageItemListQuery::class, QueryParent\MessageItemListQuery::class]
             ]
         ];
-
-        return $loader->load(...array_merge($loadList[$resourceType][$type], [[$parameters]]));
     }
-
 
     /**
      * @return ClassLoader
