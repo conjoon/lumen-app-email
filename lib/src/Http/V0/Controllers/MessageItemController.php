@@ -507,7 +507,7 @@ class MessageItemController extends Controller
 
         $messageItemService = $this->messageItemService;
 
-        $messageKey = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
+        $messageKey = new MessageKey($mailAccount, urldecode($mailFolderId), $messageItemId);
 
         $status = $messageItemService->sendMessageDraft($messageKey);
 

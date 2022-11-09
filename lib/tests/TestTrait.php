@@ -117,7 +117,7 @@ trait TestTrait
             "outbox_port"     => 993,
             "outbox_user"     => "outboxUser",
             "outbox_password" => "outboxPassword",
-            "outbox_ssl"      => true
+            "outbox_secure"   => "ssl"
         ]);
     }
 }

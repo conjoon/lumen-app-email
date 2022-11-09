@@ -178,7 +178,7 @@ class ImapAuthServiceProviderTest extends TestCase
                     "inbox_ssl" => true,
                     "outbox_address" => "a.b.c",
                     "outbox_port" => 993,
-                    "outbox_ssl" => true,
+                    "outbox_secure" => "ssl",
                     "root" => ["INBOX"],
                     "match" => ["/conjoon$/mi"]
                 ]

@@ -34,6 +34,8 @@ use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUser;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Service\AuthService;
+use Conjoon\Mail\Client\Service\DefaultAuthService;
 use Tests\TestCase;
 
 /**
@@ -53,6 +55,17 @@ class UserControllerTest extends TestCase
     {
         $endpoint = $this->getImapUserEndpoint("auth", "v0");
 
+        $authService = $this->getMockBuilder(DefaultAuthService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mailAccount = new MailAccount([]);
+
+        $userMock = $this->getMockBuilder(ImapUser::class)
+            ->setConstructorArgs(["foo", "bar", $mailAccount])
+            ->onlyMethods(["getMailAccountForUserId"])
+            ->getMock();
+
 
         $repository = $this->getMockBuilder(DefaultImapUserProvider::class)
                            ->disableOriginalConstructor()
@@ -64,21 +77,47 @@ class UserControllerTest extends TestCase
                  return $repository;
               });
 
-        $repository->expects($this->exactly(2))
+        $this->app->when(UserController::class)
+            ->needs(AuthService::class)
+            ->give(function () use ($authService) {
+                return $authService;
+            });
+
+        $repository->expects($this->exactly(3))
                    ->method("getUser")
                    ->will(
                        $this->onConsecutiveCalls(
                            null,
-                           new ImapUser("foo", "bar", new MailAccount([]))
+                           $userMock,
+                           $userMock
                        )
                    );
+
+        $userMock->expects($this->exactly(2))
+            ->method("getMailAccountForUserId")
+            ->with("user")
+            ->will(
+                $this->onConsecutiveCalls(
+                    $mailAccount,
+                    $mailAccount
+                )
+            );
+
+        $authService->expects($this->exactly(2))
+            ->method("authenticate")
+            ->will(
+                $this->onConsecutiveCalls(
+                    true,
+                    false
+                )
+            );
+
 
         $response = $this->call(
             "POST",
             $endpoint,
             ["username" => "dev@conjoon.org", "password" => "test"]
         );
-
         $this->assertEquals(401, $response->status());
         $this->assertEquals(
             ["success" => false, "msg" => "Unauthorized.", "status" => 401],
@@ -94,6 +133,18 @@ class UserControllerTest extends TestCase
         $this->assertEquals(200, $response->status());
         $this->assertEquals(
             ["success" => true, "data" => ["username" => "foo", "password" => "bar"]],
+            $response->getData(true)
+        );
+
+
+        $response = $this->call(
+            "POST",
+            $endpoint,
+            ["username" => "user", "password" => "test"]
+        );
+        $this->assertEquals(401, $response->status());
+        $this->assertEquals(
+            ["success" => false, "msg" => "Unauthorized.", "status" => 401],
             $response->getData(true)
         );
     }

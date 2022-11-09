@@ -43,7 +43,6 @@ return [
         "inbox_ssl" => true,
         "outbox_address" => 'someserver.somehost.org',
         "outbox_port" => 2,
-        "outbox_ssl" => false,
         "root" => ["INBOX"],
         "match" => ["/\@(conjoon.)(org|de|com|info)$/mi"]
      ]

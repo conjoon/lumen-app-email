@@ -948,13 +948,13 @@ class MessageItemControllerTest extends TestCase
     {
         $messageKey = new MessageKey(
             $this->getTestMailAccount("dev_sys_conjoon_org"),
-            "INBOX",
+            "Entwürfe",
             "311"
         );
 
         $requestData = [
             "mailAccountId" => $messageKey->getMailAccountId(),
-            "mailFolderId" => $messageKey->getMailFolderId(),
+            "mailFolderId" => "Entw%C3%BCrfe",
             "id" => $messageKey->getId()
         ];
 

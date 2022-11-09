@@ -30,6 +30,8 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Exceptions\Handler;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Service\AuthService;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Laravel\Lumen\Application;
@@ -42,6 +44,8 @@ use Illuminate\Http\Response;
  */
 abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 {
+    protected bool $useFakeAuth = true;
+
     /**
      * Creates the application.
      *
@@ -50,6 +54,20 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
     public function createApplication(): Application
     {
         $app = require __DIR__ . "/../../app/bootstrap/app.php";
+
+        if ($this->useFakeAuth) {
+            $app->singleton(AuthService::class, function () {
+                return new class implements AuthService {
+
+                    public function authenticate(MailAccount $mailAccount) : bool
+                    {
+                        return true;
+                    }
+                };
+            });
+        }
+
+
         Config::set("imapserver", require __DIR__ . "/config/imapserver.php");
         return $app;
     }

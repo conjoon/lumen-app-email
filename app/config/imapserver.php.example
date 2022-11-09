@@ -36,32 +36,155 @@ declare(strict_types=1);
 | of your application can connect to. The "match" entry should be a regular
 | expression that matches an email-address to "this" specific server configuration.
 | This file needs to be renamed to "imapserver.php" once configured.
+|
+| Example configuration:
+|    <?php
+|    return [[
+|        // unique id for this configuration entry
+|        "id"              => "gmail",
+|        "inbox_type"      => "IMAP",
+|        "inbox_address"   => 'imap.gmail.com',
+|        "inbox_port"      => 993,
+|        "inbox_ssl"       => true,
+|        "outbox_address"  => "smtp.gmail.com",
+|        "outbox_port"     => 465,
+|        "outbox_secure"   => "ssl",
+|        // the root mailbox. For most IMAP servers, this will
+|        // be "INBOX". Gmail users can use  "[Gmail]" instead.
+|        // You can also provide a separate mailbox named "conjoon".
+|        // The root folders are the only folders which will be
+|        // queried and displayed in the folder hierarchy for the
+|        // Mail Account, along with its contents, including sub folders.
+|        // leave empty to return all mailboxes
+|        "root"            => ["Gmail"],
+|        // a regular expression that makes sure a user's email-address
+|        // is matched against "this" entry, e.g. a sign-in with the
+|        // username "dev@googlemail.com" would be associated with "this",
+|        // server configuration, but "dev@somemailserver.com" wouldn't
+|        "match"           => ["/\@(googlemail.)(com)$/mi"]
+|    ]}
+|    ?>
 */
 
 return [
 
+    // +-------------------------------------+
+    // |           Google Mail               |
+    // +-------------------------------------+
     [
-        // a unique id for this configuration entry
-        "id"              => "Google_Mail",
+        "id"             => "GMail",
+        "inbox_type"     => "IMAP",
+        "inbox_address"  => 'imap.gmail.com',
+        "inbox_port"     => 993,
+        "inbox_ssl"      => true,
+        "outbox_address" => "smtp.gmail.com",
+        "outbox_port"    => 465,
+        "outbox_secure"  => "ssl",
+        "root"           => ["[Gmail]", "[Google Mail]"],
+        "match"          => ["/\@(googlemail.|gmail.)(com)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           Outlook.com               |
+    // +-------------------------------------+
+    [
+        "id"              => "outlook.com",
         "inbox_type"      => "IMAP",
-        "inbox_address"   => 'imap.gmail.com',
+        "inbox_address"   => 'outlook.office365.com',
         "inbox_port"      => 993,
         "inbox_ssl"       => true,
-        "outbox_address"  => "smtp.gmail.com",
-        "outbox_port"     => 465,
-        "outbox_ssl"      => true,
-        // the root mailbox. For most IMAP servers, this will
-        // be "INBOX". Gmail users can use  "[Gmail]" instead.
-        // You can also provide a separate mailbox named "conjoon".
-        // The root folders are the only folders which will be
-        // queried and displayed in the folder hierarchy for the
-        // Mail Account, along with its contents, including sub folders.
+        "outbox_address"  => "smtp-mail.outlook.com",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "tls",
+        "root"            => [],
+        "match"           => ["/\@(outlook.)(com)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           Yahoo Mail                |
+    // +-------------------------------------+
+    [
+        "id"              => "Yahoo",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.mail.yahoo.com',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.mail.yahoo.com",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "ssl",
         "root"            => ["INBOX"],
-        // a regular expression that makes sure a user's email-address
-        // is matched against "this" entry, e.g. a sign-in with the
-        // username "dev@googlemail.com" would be associated with "this",
-        // server configuration, but "dev@somemailserver.com" wouldn't
-        "match"           => ["/\@(googlemail.)(com)$/mi"]
+        "match"           => ["/\@(freenet.)(de)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           AOL                       |
+    // +-------------------------------------+
+    [
+        "id"              => "AOL",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.aol.com',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.aol.com",
+        "outbox_port"     => 465,
+        "outbox_secure"   => "ssl",
+        "root"            => [],
+        "match"           => ["/\@(aol.)(com)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           Freenet                   |
+    // +-------------------------------------+
+    [
+        "id"              => "Freenet",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'mx.freenet.de',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "mx.freenet.de",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "tls",
+        "root"            => ["INBOX"],
+        "match"           => ["/\@(freenet.)(de)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           GMX                       |
+    // +-------------------------------------+
+    [
+        "id"              => "gmx",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.gmx.net',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "mail.gmx.net",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "tls",
+        "root"            => [],
+        "match"           => ["/\@(gmx.)(de|net)$/mi"]
+    ],
+
+
+    // +-------------------------------------+
+    // |           WEB.DE                    |
+    // +-------------------------------------+
+    [
+        "id"              => "web.de",
+        "inbox_type"      => "IMAP",
+        "inbox_address"   => 'imap.web.de',
+        "inbox_port"      => 993,
+        "inbox_ssl"       => true,
+        "outbox_address"  => "smtp.web.de",
+        "outbox_port"     => 587,
+        "outbox_secure"   => "tls",
+        "root"            => [],
+        "match"           => ["/\@(web.)(de)$/mi"]
     ]
+
 
 ];
