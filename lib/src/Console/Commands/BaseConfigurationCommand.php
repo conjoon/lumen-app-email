@@ -58,7 +58,7 @@ abstract class BaseConfigurationCommand extends Command
      */
     protected function prepare()
     {
-        $this->appSettings = include($this->getAppPath());
+        $this->appSettings = include($this->getAppFile());
 
         if (file_exists($this->getEnvFile())) {
             $envFile = Dotenv::create($this->getEnvPath());
@@ -94,7 +94,7 @@ abstract class BaseConfigurationCommand extends Command
     }
 
 
-    private function getAppPath()
+    private function getAppFile()
     {
         return $this->getRootDir() . "/app/config/app.php";
     }
@@ -109,6 +109,12 @@ abstract class BaseConfigurationCommand extends Command
     protected function getEnvFile()
     {
         return $this->getRootDir() . "/.env";
+    }
+
+
+    protected function getConfigPath()
+    {
+        return $this->getRootDir() . "/app/config";
     }
 
 

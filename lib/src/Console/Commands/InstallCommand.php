@@ -47,6 +47,8 @@ class InstallCommand extends BaseConfigurationCommand
 
         $this->line("All configuration written to <fg=green;bg=white>" . $this->getEnvFile() . "</>!");
 
+        $this->call('copyconfig');
+
         $this->line(EndScreen::toString());
     }
 }
