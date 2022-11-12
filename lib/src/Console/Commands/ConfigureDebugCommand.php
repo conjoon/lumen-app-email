@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,40 +25,45 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace App\Console;
+declare(strict_types=1);
 
-use App\Console\Commands\ConfigureUrlCommand;
-use App\Console\Commands\InstallCommand;
-use App\Console\Commands\ConfigureDebugCommand;
-use App\Console\Commands\ConfigureApiCommand;
-use App\Console\Commands\ConfigureEnvCommand;
-use Illuminate\Console\Scheduling\Schedule;
-use Laravel\Lumen\Console\Kernel as ConsoleKernel;
+namespace App\Console\Commands;
 
-class Kernel extends ConsoleKernel
+/**
+ *
+ */
+class ConfigureDebugCommand extends BaseConfigurationCommand
 {
     /**
-     * The Artisan commands provided by your application.
+     * The name and signature of the console command.
      *
-     * @var array
+     * @var string
      */
-    protected $commands = [
-        InstallCommand::class,
-        ConfigureUrlCommand::class,
-        ConfigureApiCommand::class,
-        ConfigureDebugCommand::class,
-        ConfigureEnvCommand::class
-    ];
+    protected $signature = 'configure:debug';
+
 
     /**
-     * Define the application's command schedule.
+     * The console command description.
      *
-     * @param Schedule $schedule
-     *
-     * @return void
+     * @var string
      */
-    protected function schedule(Schedule $schedule)
+    protected $description = "Configure if debug mode should be set to on or off.";
+
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
     {
-        // intentionally left empty
+        $this->prepare();
+
+        $debug = $this->choice(
+            "Do you want to enable debug mode for this instance?",
+            ["yes", "no"],
+            "no"
+        );
+
+        $this->updateEnvSettings("APP_DEBUG", $debug === "yes" ? "true" : "false");
+        $this->flushEnv();
     }
 }

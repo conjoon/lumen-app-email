@@ -1,9 +1,9 @@
 # conjoon/lumen-app-email ![MIT](https://img.shields.io/github/license/conjoon/lumen-app-email) ![Tests](https://github.com/conjoon/lumen-app-email/actions/workflows/run.tests.yml/badge.svg)
-Laravel/Lumen Microservice for RESTful communication with IMAP/SMTP servers.
+A service for IMAP/SMTP email messaging based on Lumen.
 
 ## What is lumen-app-email?
 **conjoon/lumen-app-email** is a PHP application built with [Lumen](https://lumen.laravel.com).
-It provides the REST API implementation according to [conjoon\/rest-api-description\#rest-api-email](conjoon/rest-api-description)
+It provides the Backend API implementation according to [conjoon\/rest-api-description\#rest-api-email](conjoon/rest-api-description)
 and serves as a lightweight backend providing functionality for reading, writing and sending email messages.
 <br />
 It is a ready-to-use backend for accessing IMAP/SMTP-Servers with minimal setup required.
@@ -47,7 +47,7 @@ Host: hostname
  - need baked-in caching
 
 
-## Supported REST API
+## Supported Backend API
 * **rest-api-email**
   <br>For the list of endpoints this microservice provides, please refer to the 
   [OpenApi-documentation of `rest-api-email`](https://github.com/conjoon/rest-api-description), available as OpenAPI documentation at [conjoon.stoplight.io](https://conjoon.stoplight.io/docs/rest-api-description/)
