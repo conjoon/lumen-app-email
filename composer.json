@@ -1,6 +1,6 @@
 {
     "name": "conjoon/lumen-app-email",
-    "description": "PHP microservice for accessing IMAP servers, implementing rest-api-email from conjoon/rest-api-description.",
+    "description": "A backend service for IMAP/SMTP email messaging.",
     "license": "MIT",
     "type": "project",
     "repositories": [

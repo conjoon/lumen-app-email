@@ -1,5 +1,5 @@
 # conjoon/lumen-app-email ![MIT](https://img.shields.io/github/license/conjoon/lumen-app-email) ![Tests](https://github.com/conjoon/lumen-app-email/actions/workflows/run.tests.yml/badge.svg)
-A service for IMAP/SMTP email messaging based on Lumen.
+A backend service for IMAP/SMTP email messaging, based on Lumen.
 
 ## What is lumen-app-email?
 **conjoon/lumen-app-email** is a PHP application built with [Lumen](https://lumen.laravel.com).
