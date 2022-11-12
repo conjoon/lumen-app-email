@@ -58,8 +58,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
         if ($this->useFakeAuth) {
             $app->singleton(AuthService::class, function () {
                 return new class implements AuthService {
-
-                    public function authenticate(MailAccount $mailAccount) : bool
+                    public function authenticate(MailAccount $mailAccount): bool
                     {
                         return true;
                     }
@@ -95,11 +94,8 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
         if (!in_array($type, ["imap", "imapuser"])) {
             throw new RuntimeException("\"$type\" is not valid");
         }
-        return implode("", [
-            $mapping[$type] .
-            "/api",
-            ($version === "latest") ? "" : "/" . $version
-        ]);
+
+        return $mapping[$type] . (($version === "latest") ? "" : "/" . $version);
     }
 
 

@@ -44,8 +44,8 @@ return [
 */
 "api" => [
     "service" => [
-        "email" => "rest-api-email",
-        "auth"  => "rest-imapuser"
+        "email" => env("APP_EMAIL_PATH", "rest-api-email"),
+        "auth"  => env("APP_AUTH_PATH", "rest-imapuser")
     ],
     "versions" => ["v0"],
     "latest" => "v0"
@@ -101,7 +101,7 @@ return [
 |
 */
 
-"url" => env("APP_URL", "https://lumen-app-email.ddev.site"),
+"url" => env("APP_URL", "https://ddev-ms-email.ddev.site"),
 
 /*
 |--------------------------------------------------------------------------
