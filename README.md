@@ -3,7 +3,7 @@ A backend service for IMAP/SMTP email messaging, based on Lumen.
 
 ## What is lumen-app-email?
 **conjoon/lumen-app-email** is a PHP application built with [Lumen](https://lumen.laravel.com).
-It provides the Backend API implementation according to [conjoon\/rest-api-description\#rest-api-email](conjoon/rest-api-description)
+It provides the Backend API implementation according to [conjoon/rest-api-description](conjoon/rest-api-description)
 and serves as a lightweight backend providing functionality for reading, writing and sending email messages.
 <br />
 It is a ready-to-use backend for accessing IMAP/SMTP-Servers with minimal setup required.
