@@ -50,7 +50,7 @@ class StartScreen
   / / / / / __ `__ \/ _ \/ __ \______/ __ `/ __ \/ __ \______/ _ \/ __ `__ \/ __ `/ / /
  / / /_/ / / / / / /  __/ / / /_____/ /_/ / /_/ / /_/ /_____/  __/ / / / / / /_/ / / /
 /_/\__,_/_/ /_/ /_/\___/_/ /_/      \__,_/ .___/ .___/      \___/_/ /_/ /_/\__,_/_/_/
-                                        /_/   /_/   <href=https://www.conjoon.org/docs/api/backends/@conjoon/lumen-app-email>conjoon/lumen-app-email</> <fg=red;bg=white>$version</>
+                                        /_/   /_/   <fg=blue;href=https://www.conjoon.org/docs/api/backends/@conjoon/lumen-app-email>conjoon/lumen-app-email</><fg=red;bg=white>@$version</>
 </>
 
 <fg=green>Welcome!</>

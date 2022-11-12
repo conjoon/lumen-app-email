@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use Composer\InstalledVersions;
+
 /**
  *
  */
@@ -36,6 +38,33 @@ class EndScreen
 {
     public static function toString(): string
     {
-        return "\n<fg=green>Installation finished! Have a nice day! ☕</>\n";
+        $version = InstalledVersions::getVersion('conjoon/lumen-app-email');
+        // @codingStandardsIgnoreStart
+        $txt = <<<OUTRO
+
+        Installation  of <fg=blue>lumen-app-email</><fg=yellow>@$version</> finished!
+
+        You can always restart the installation-process by typing
+
+            <fg=green>php artisan install</>
+
+        or use any of the available configuration-commands:
+
+            <fg=green>php artisan configure:url</> (configure the URL where this instance is located)
+            <fg=green>php artisan configure:api</> (configure the paths to the API-endpoints)
+            <fg=green>php artisan configure:env</> (configure the environment this instance runs in)
+            <fg=green>php artisan configure:debug</> (configure the debug mode for this instance)
+
+        If you do not have a working frontend for this instance yet,
+        we recommend that you install <fg=blue>conjoon</>, a JavaScript
+        frontend application: https://conjoon.org
+
+            Have a nice day! ☕
+
+OUTRO;
+        // @codingStandardsIgnoreEnd
+
+
+        return $txt;
     }
 }

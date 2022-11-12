@@ -33,6 +33,7 @@ use App\Console\Commands\ConfigureDebugCommand;
 use App\Console\Commands\ConfigureApiCommand;
 use App\Console\Commands\ConfigureEnvCommand;
 use Illuminate\Console\Scheduling\Schedule;
+use App\Console\Commands\CopyConfigCommand;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -47,7 +48,8 @@ class Kernel extends ConsoleKernel
         ConfigureUrlCommand::class,
         ConfigureApiCommand::class,
         ConfigureDebugCommand::class,
-        ConfigureEnvCommand::class
+        ConfigureEnvCommand::class,
+        CopyConfigCommand::class
     ];
 
     /**
