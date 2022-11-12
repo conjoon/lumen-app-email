@@ -80,7 +80,7 @@ return [
         "outbox_address" => "smtp.gmail.com",
         "outbox_port"    => 465,
         "outbox_secure"  => "ssl",
-        "root"           => ["[Gmail]", "[Google Mail]"],
+        "root"           => ["INBOX", "[Gmail]", "[Google Mail]"],
         "match"          => ["/\@(googlemail.|gmail.)(com)$/mi"]
     ],
 

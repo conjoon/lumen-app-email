@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,40 +25,29 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace App\Console;
+declare(strict_types=1);
 
-use App\Console\Commands\ConfigureUrlCommand;
-use App\Console\Commands\InstallCommand;
-use App\Console\Commands\ConfigureDebugCommand;
-use App\Console\Commands\ConfigureApiCommand;
-use App\Console\Commands\ConfigureEnvCommand;
-use Illuminate\Console\Scheduling\Schedule;
-use Laravel\Lumen\Console\Kernel as ConsoleKernel;
+namespace App\Console\Commands;
 
-class Kernel extends ConsoleKernel
+
+/**
+ *
+ */
+class InstallCommand extends BaseConfigurationCommand
 {
-    /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
-     */
-    protected $commands = [
-        InstallCommand::class,
-        ConfigureUrlCommand::class,
-        ConfigureApiCommand::class,
-        ConfigureDebugCommand::class,
-        ConfigureEnvCommand::class
-    ];
+    protected $signature = 'install';
 
-    /**
-     * Define the application's command schedule.
-     *
-     * @param Schedule $schedule
-     *
-     * @return void
-     */
-    protected function schedule(Schedule $schedule)
+    public function handle()
     {
-        // intentionally left empty
+        $this->line(StartScreen::toString());
+
+        $this->call('configure:url');
+        $this->call('configure:api');
+        $this->call('configure:env');
+        $this->call('configure:debug');
+
+        $this->line("All configuration written to <fg=green;bg=white>" . $this->getEnvFile() . "</>!");
+
+        $this->line(EndScreen::toString());
     }
 }
