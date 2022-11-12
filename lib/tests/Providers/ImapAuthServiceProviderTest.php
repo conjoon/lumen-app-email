@@ -156,7 +156,9 @@ class ImapAuthServiceProviderTest extends TestCase
         $property = $reflection->getMethod("getImapUser");
         $property->setAccessible(true);
 
-        $property->invokeArgs($authProvider, [$request, $userProvider]);
+        $user = $property->invokeArgs($authProvider, [$request, $userProvider]);
+
+        $this->assertNotNull($user);
     }
 
 
