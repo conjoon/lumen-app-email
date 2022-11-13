@@ -2,7 +2,10 @@
 In order for users to authenticate against IMAP servers, `lumen-app-email` provides a template-configuration file in `app/config/imapserver.php.example`.
 In this file, you can specify an array of mail server configurations. Each entry represents a mail server to which connection may be established, for both sending and receiving messages.
 
-Rename this file to `imapserver.php` once all configurations are defined.
+Note:
+[`php artisan copyconfig`](./commands.md#copyconfig) can be used for automatically copying the configuration template
+`imapserver.example.php` to its target destination. If you choose to manually work with the template, copy and rename it 
+to `imapserver.php`, then adjust its entries.
 
 ## Entry Details
 
