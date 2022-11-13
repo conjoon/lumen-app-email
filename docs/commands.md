@@ -1,6 +1,6 @@
 # Available CLI commands
 
-One  **lumen-app-email** was installed, you can use [Artisan](https://laravel.com/docs/artisan) to interact with this
+One **lumen-app-email** was installed with `composer`, you can use [Artisan](https://laravel.com/docs/artisan) to interact with this
 instance using the CLI.
 
 Change the directory to your installation of **lumen-app-email** and type 
@@ -14,14 +14,14 @@ to get a list of all commands available with this installation.
 #### Commands
 The following CLI commands are available for an instance of **lumen-app-email**:
 
-| Command                         | Description                                                                                                          | 
-|---------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [install](#install)             | Starts the installation process                                                                                      |
-| [configure:url](#configure:url) | Configure URL where this instance is available                                                                       |
-| [configure:api](#configure:api) | Configure API paths                                                                                                  | 
-| [configure:env](#configure:env)           | Specify the environment this instance runs in                                                                        | 
-| [configure:debug](#configure:debug)       | Enable or disable debug mode                                                                                         | 
-| [copyconfig](#copyconfig)       | Activate pre-defined configuration templates for this instance | 
+| Command                        | Description                                                                                                          | 
+|--------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| [install](#install)            | Starts the installation process                                                                                      |
+| [configure:url](#configureurl) | Configure URL where this instance is available                                                                       |
+| [configure:api](#configureapi) | Configure API paths                                                                                                  | 
+| [configure:env](#configureenv)        | Specify the environment this instance runs in                                                                        | 
+| [configure:debug](#configuredebug)    | Enable or disable debug mode                                                                                         | 
+| [copyconfig](#copyconfig)      | Activate pre-defined configuration templates for this instance | 
  
 
 ## Configuration file
