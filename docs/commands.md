@@ -88,6 +88,7 @@ $ php artisan configure:api
 `APP_EMAIL_PATH`
 - Type: `String`
 - Default: `rest-api-email`
+
 The path to the _email_-Service. 
 
 `APP_AUTH_PATH`
