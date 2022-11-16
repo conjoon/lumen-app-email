@@ -116,6 +116,8 @@ $app->register(ImapAuthServiceProvider::class);
 |
 */
 
+date_default_timezone_set(env('APP_TIMEZONE', 'UTC'));
+
 require __DIR__ . '/../routes/web.php';
 
 return $app;

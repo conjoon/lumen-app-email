@@ -27,46 +27,50 @@
 
 namespace App\Exceptions;
 
-use Conjoon\Http\Json\Problem\ProblemFactory;
+use Conjoon\Core\Strategy\JsonStrategy;
+use Conjoon\Http\Query\Exception\QueryException;
+use Conjoon\JsonProblem\AbstractProblem;
+use Conjoon\JsonProblem\Problem;
+use Conjoon\JsonProblem\ProblemFactory;
 use Conjoon\Http\Exception\HttpException as ConjoonHttpException;
+use Conjoon\MailClient\Exception\ResourceNotFoundException;
+use Conjoon\MailClient\Service\ServiceException;
 use Exception;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Lumen\Exceptions\Handler as ExceptionHandler;
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use Throwable;
 
+/**
+ * ExceptionHandler.
+ */
 class Handler extends ExceptionHandler
 {
+    /**
+     * @var JsonStrategy
+     */
+    protected JsonStrategy $jsonStrategy;
+
     /**
      * A list of the exception types that should not be reported.
      *
      * @var array
      */
     protected $dontReport = [
-        AuthorizationException::class,
-        HttpException::class,
         ModelNotFoundException::class,
         ValidationException::class,
     ];
 
+
     /**
-     * Report or log an exception.
-     *
-     * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
-     *
-     * @param Exception $e
-     *
-     * @return void
-     *
-     * @throws Exception
+     * @param JsonStrategy $jsonStrategy
      */
-    public function report(Exception $e)
+    public function __construct(JsonStrategy $jsonStrategy)
     {
-        parent::report($e);
+        $this->jsonStrategy = $jsonStrategy;
     }
 
 
@@ -74,21 +78,47 @@ class Handler extends ExceptionHandler
      * Render an exception into an HTTP response.
      *
      * @param Request $request
-     * @param Exception $e
+     * @param Throwable $e
      *
      * @return Response|JsonResponse
      */
-    public function render($request, Exception $e)
+    public function render($request, Throwable $e)
     {
-        if ($e instanceof ConjoonHttpException) {
+        $problem = $this->convertToProblem($e);
+
+        if ($problem) {
             return response()->json(
-                ...ProblemFactory::makeJson(
-                    $e->getCode(),
-                    null,
-                    $e->getMessage()
-                )
+                ["errors" => [$problem->toJson($this->jsonStrategy)]],
+                $problem->getStatus()
             );
         }
         return parent::render($request, $e);
+    }
+
+
+    /**
+     * Converts the exception to a Problem, if the exception is in the list of convertable
+     * exceptions.
+     *
+     * @param Exception $e
+     *
+     * @return AbstractProblem|null
+     */
+    protected function convertToProblem(Throwable $e): ?AbstractProblem
+    {
+
+        switch (true) {
+            case ($e instanceof QueryException):
+                return ProblemFactory::make(400, null, $e->getMessage());
+            case ($e instanceof ConjoonHttpException):
+                return ProblemFactory::make($e->getCode(), null, $e->getMessage());
+            case ($e instanceof ResourceNotFoundException):
+                return ProblemFactory::make(404, null, $e->getMessage());
+            case ($e instanceof ServiceException):
+                return ProblemFactory::make(500, null, $e->getMessage());
+
+            default:
+                return null;
+        }
     }
 }

@@ -157,9 +157,47 @@ class ImapAuthServiceProviderTest extends TestCase
         $property->setAccessible(true);
 
         $user = $property->invokeArgs($authProvider, [$request, $userProvider]);
-
         $this->assertNotNull($user);
     }
+
+
+    /**
+     * Should return null if username or password are missing
+     *
+     * @throws ReflectionException
+     */
+    public function testGetImapUserNull()
+    {
+        $app = $this->createAppMock();
+
+        /** @noinspection PhpParamsInspection */
+        $authProvider = new ImapAuthServiceProvider($app);
+
+        $request = Mockery::mock(new Request());
+        $request->shouldReceive("getUser")
+            ->andReturn(null);
+        $request->shouldReceive("getPassword")
+            ->andReturn("somePassword");
+
+        $reflection = new ReflectionClass($authProvider);
+        $property = $reflection->getMethod("getImapUser");
+        $property->setAccessible(true);
+
+        $this->assertNull(
+            $property->invokeArgs($authProvider, [$request, $app->make(ImapUserProvider::class)])
+        );
+
+        $request = Mockery::mock(new Request());
+        $request->shouldReceive("getUser")
+            ->andReturn("someUser");
+        $request->shouldReceive("getPassword")
+            ->andReturn(null);
+
+        $this->assertNull(
+            $property->invokeArgs($authProvider, [$request, $app->make(ImapUserProvider::class)])
+        );
+    }
+
 
 
     /**

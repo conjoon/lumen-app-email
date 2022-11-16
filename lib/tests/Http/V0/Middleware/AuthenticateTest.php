@@ -30,7 +30,10 @@ declare(strict_types=1);
 namespace Tests\App\Http\V0\Middleware;
 
 use App\Http\V0\Middleware\Authenticate;
+use Conjoon\Http\Exception\NotFoundException;
+use Conjoon\Http\Exception\UnauthorizedException;
 use Conjoon\Mail\Client\Service\DefaultAuthService;
+use Exception;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,10 +79,13 @@ class AuthenticateTest extends TestCase
 
         // test for is guest
         $stubbedStub::$isGuest = true;
-        $response = $authenticate->handle(new Request(), function () {
-        });
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame($response->getStatusCode(), 401);
+        try {
+            $response = $authenticate->handle(new Request(), function () {
+            });
+            $this->fail("Expected exception was never thrown.");
+        } catch (Exception $e) {
+            $this->assertInstanceOf(UnauthorizedException::class, $e);
+        }
 
         // test for authenticated
         $stubbedStub::$isGuest = false;
@@ -152,12 +158,13 @@ class AuthenticateTest extends TestCase
             };
         });
 
-        // 401
-        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
-            $this->assertSame($newRequest, $request);
-        });
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame($response->getStatusCode(), 401);
+        try {
+            $authenticate->handle($newRequest, function () {
+            });
+            $this->fail("Exception was never thrown.");
+        } catch (Exception $e) {
+            $this->assertInstanceOf(NotFoundException::class, $e);
+        }
 
         // OKAY
         $newRequest->setRouteResolver(function () use ($user) {
@@ -251,11 +258,12 @@ class AuthenticateTest extends TestCase
             };
         });
 
-        // 401
-        $response = $authenticate->handle($newRequest, function ($request) use ($newRequest, &$called) {
-            $this->assertSame($newRequest, $request);
-        });
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertSame($response->getStatusCode(), 401);
+        try {
+            $authenticate->handle($newRequest, function () {
+            });
+            $this->fail("Exception was never thrown.");
+        } catch (Exception $e) {
+            $this->assertInstanceOf(UnauthorizedException::class, $e);
+        }
     }
 }

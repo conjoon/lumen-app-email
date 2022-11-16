@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,38 +27,24 @@
 
 declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-|API Versioning groups, loading specific route configurations based on the prefix.
-|
-*/
+namespace App\Http\V0\JsonApi\Query\Validation;
 
-$router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+use Conjoon\Http\Query\Validation\Parameter\IntegerValueRule;
+use Conjoon\Http\Query\Validation\Parameter\ParameterRuleList;
+use Conjoon\Http\Query\Validation\Query\ExclusiveGroupKeyRule;
+use Conjoon\Http\Query\Validation\Query\OnlyParameterNamesRule;
+use Conjoon\Http\Query\Validation\Query\QueryRuleList;
+use Conjoon\Http\Query\Validation\Query\RequiredParameterNamesRule;
+use Conjoon\JsonApi\Extensions\Query\Validation\Parameter\RelfieldRule;
+use Conjoon\JsonApi\Query\Query;
+use Conjoon\JsonApi\Query\Validation\CollectionValidator;
+use Conjoon\Http\Query\Query as HttpQuery;
+use Conjoon\JsonApi\Query\Validation\Parameter\PnFilterRule;
 
-$prefix = config("app.api.service.auth");
-
-foreach ($versions as $version) {
-    $app->router->group([
-        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
-
-        'prefix' => "$prefix/" . $version
-
-    ], function () use ($router, $version) {
-        require base_path("routes/rest-imapuser/api_" . $version . ".php");
-    });
+/**
+ * Query Validator for MessageBody collection requests.
+ *
+ */
+class MessageBodyCollectionValidator extends CollectionValidator
+{
 }
-
-// config for latest
-$router->group([
-    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-
-    'prefix' => $prefix
-
-], function () use ($router, $latest) {
-    require base_path("routes/rest-imapuser/api_" . $latest . ".php");
-});

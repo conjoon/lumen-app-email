@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,25 +27,26 @@
 
 declare(strict_types=1);
 
-namespace Tests\App\Http\V0\Query\MessageItem;
+namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\ParameterBag;
-use App\Http\V0\Query\MessageItem\MessageItemListResourceQuery;
-use Conjoon\Mail\Client\Query\MessageItemListResourceQuery as BaseMessageItemListResourceQuery;
-use Tests\TestCase;
+use Conjoon\MailClient\Data\Resource\MessageBody as BaseMessageBody;
+use Conjoon\Data\Resource\ObjectDescriptionList;
 
 /**
- * Class MessageItemListResourceQueryTest
- * @package Tests\App\Http\V0\Query\MessageItem
+ * ResourceDescription for a MessageBody.
+ *
  */
-class MessageItemListResourceQueryTest extends TestCase
+class MessageBody extends BaseMessageBody
 {
     /**
-     * test class
+     * @return ObjectDescriptionList
      */
-    public function testClass()
+    public function getRelationships(): ObjectDescriptionList
     {
-        $inst = new MessageItemListResourceQuery(new ParameterBag([]));
-        $this->assertInstanceOf(BaseMessageItemListResourceQuery::class, $inst);
+        $list = new ObjectDescriptionList();
+        $list[] = new MailFolder();
+        $list[] = new MessageItem();
+
+        return $list;
     }
 }

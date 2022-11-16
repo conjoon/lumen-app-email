@@ -27,9 +27,10 @@
 
 namespace App\Http\V0\Controllers;
 
+use Conjoon\Mail\Client\Data\CompoundKey\CompoundKey;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    // intentionally left empty
+        // intentionally left empty
 }

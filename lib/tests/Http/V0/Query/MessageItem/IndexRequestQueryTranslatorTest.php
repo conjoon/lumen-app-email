@@ -32,9 +32,8 @@ namespace Tests\App\Http\V0\Query\MessageItem;
 use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Illuminate\Http\Request;
+use Conjoon\Http\Query\InvalidQueryParameterValueException;
 use ReflectionClass;
 use ReflectionException;
 use Tests\TestCase;
@@ -69,43 +68,19 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
 
-        $this->assertEquals([
+        $this->assertEqualsCanonicalizing([
             "limit",
             "start",
             "sort",
-            "attributes",
+            "include",
+            "fields[MessageItem]",
+            "fields[MailFolder]",
+            "fields[MailAccount]",
             "options",
             "filter"
         ], $expected);
     }
 
-
-    /**
-     * Extract parameters not Request
-     * @throws ReflectionException
-     */
-    public function testExtractParameters()
-    {
-        $translator = new IndexRequestQueryTranslator();
-        $reflection = new ReflectionClass($translator);
-
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
-
-        $request = new Request([
-            "limit" => 0,
-            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-            "start" => 3,
-            "foo" => "bar"]);
-
-        $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
-
-        $this->assertEquals([
-            "limit" => 0,
-            "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-            "start" => 3
-        ], $extracted);
-    }
 
 
     /**
@@ -138,9 +113,9 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
 
-        $getExpectedAttributes = function ($exclude = [], $add = []) {
+        $getExpectedFields = function ($exclude = [], $add = [], $type = "") {
 
-            $parameters = $this->getDefaultAttributes();
+            $parameters = $this->getDefaultFields($type);
             array_walk(
                 $parameters,
                 fn(&$item, $key) => in_array($key, $exclude) ? $item = false : null
@@ -157,47 +132,149 @@ class IndexRequestQueryTranslatorTest extends TestCase
 
         $queries = [
             [
+                "input" => [
+                    "limit" => "-1",
+                    "include" => "MailFolder",
+                    "fields[MailFolder]" => "",
+                    "fields[MessageItem]" => "previewText",
+                    "options" => json_encode([ "previewText" => ["length" => 20, "trimApi" => false]])
+                ],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => ["MailFolder"],
+                    "fields" => [
+                        "MessageItem" => [
+                            "html" => ["length" => 20, "trimApi" => false],
+                            "plain" => ["length" => 20, "trimApi" => false]
+                            ],
+                        "MailFolder" => []
+                    ]
+                ]
+            ],
+            [
+                "input" => ["limit" => "-1", "include" => "MailFolder", "fields[MailFolder]" => "", "fields[MessageItem]" => "subject"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => ["MailFolder"],
+                    "fields" => [
+                        "MessageItem" => ["subject" => true],
+                        "MailFolder" => []
+                    ]
+                ]
+            ],
+            [
+                "input" => ["limit" => "-1", "include" => "MailFolder", "fields[MessageItem]" => "subject", "fields[MailFolder]" => "name"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "include" => ["MailFolder"],
+                    "sort" => $this->getDefaultSort(),
+                    "fields" => [
+                        "MessageItem" => ["subject" => true],
+                        "MailFolder" => ["name" => true]
+                    ]
+                ]
+            ],
+            [
                 "input" => ["limit" => "-1"],
                 "output" => [
                     "start" => 0,
                     "limit" => -1,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(
-                        ["html", "plain"],
-                        ["html" => $this->getDefaultAttributes()["html"],
-                        "plain" => $this->getDefaultAttributes()["plain"]]
-                    )
+                    "fields" => [
+                        "MessageItem" => $getExpectedFields(
+                            ["html", "plain"],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                            "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        )]
                 ]
             ],
             [
-                "input" => ["start" => 2, "limit" => "5", "attributes" => "*"],
+                "input" => ["limit" => "-1", "include" => "MailFolder"],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => ["MailFolder"],
+                    "fields" => [
+                        "MessageItem" => $getExpectedFields(
+                            ["html", "plain"],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                                "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        ),
+                        "MailFolder" => $getExpectedFields(
+                            [],
+                            [],
+                            "MailFolder"
+                        )
+                    ]
+                ]
+            ],
+            [
+                "input" => [
+                    "limit" => "-1",
+                    "include" => "MailFolder",
+                    "fields[MailFolder]" => "*,folderType,name"
+                ],
+                "output" => [
+                    "start" => 0,
+                    "limit" => -1,
+                    "sort" => $this->getDefaultSort(),
+                    "include" => ["MailFolder"],
+                    "fields" => [
+                        "MessageItem" => $getExpectedFields(
+                            ["html", "plain"],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                                "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        ),
+                        "MailFolder" => $getExpectedFields(
+                            ["folderType", "name"],
+                            [],
+                            "MailFolder"
+                        )
+                    ]
+                ]
+            ],
+            [
+                "input" => ["start" => 2, "limit" => "5", "fields[MessageItem]" => "*"],
                 "output" => [
                     "start" => 2,
                     "limit" => 5,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(
-                        [],
-                        ["html" => $this->getDefaultAttributes()["html"],
-                        "plain" => $this->getDefaultAttributes()["plain"]]
-                    )
-                ]
+                    "fields" => [
+                        "MessageItem" => $getExpectedFields(
+                            [],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                            "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        )]
+                    ]
             ],
             [
-                "input" => ["start" => 0, "limit" => "10", "attributes" => "*,previewText"],
+                "input" => ["start" => 0, "limit" => "10", "fields[MessageItem]" => "*,previewText"],
                 "output" => [
                     "start" => 0,
                     "limit" => 10,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(["html", "plain"])
+                    "fields" => [
+                        "MessageItem" => $getExpectedFields(["html", "plain"], [], "MessageItem")
+                    ]
                 ]
             ],
             [
-                "input" => ["start" => 0, "limit" => "10", "attributes" => "*,cc,bcc"],
+                "input" => ["start" => 0, "limit" => "10", "fields[MessageItem]" => "*,cc,bcc"],
                 "output" => [
                     "start" => 0,
                     "limit" => 10,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(["cc", "bcc"])
+                    "fields" => ["MessageItem" =>  $getExpectedFields(["cc", "bcc"], [], "MessageItem")]
                 ]
             ],
             [
@@ -216,12 +293,14 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => 20,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(
-                        [],
-                        ["plain" => ["length" => 20, "trimApi" => false],
-                        "html"   => ["length" => 20, "trimApi" => false]
-                        ]
-                    )
+                    "fields" => [
+                        "MessageItem" =>  $getExpectedFields(
+                            [],
+                            ["plain" => ["length" => 20, "trimApi" => false],
+                            "html"   => ["length" => 20, "trimApi" => false]
+                            ],
+                            "MessageItem"
+                        )]
                     ]
             ],
             [
@@ -243,12 +322,12 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "start" => 0,
                     "limit" => 20,
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(
+                    "fields" => ["MessageItem" =>  $getExpectedFields(
                         [],
                         ["plain" => ["length" => 200, "trimApi" => true],
-                        "html" => true]
-                    )
-                ]
+                        "html" => true],
+                        "MessageItem"
+                    )]]
             ],
             [
                 "input" => [
@@ -257,31 +336,32 @@ class IndexRequestQueryTranslatorTest extends TestCase
                 "output" => [
                     "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => $getExpectedAttributes(
+                    "fields" => ["MessageItem" =>  $getExpectedFields(
                         [],
-                        ["html" => $this->getDefaultAttributes()["html"],
-                            "plain" => $this->getDefaultAttributes()["plain"]]
+                        ["html" => $this->getDefaultFields("MessageItem")["html"],
+                            "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                        "MessageItem"
                     )
-                ]
+                    ]]
             ],
             [
                 "input" => [
                     "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-                    "attributes" => "previewText"
+                    "fields[MessageItem]" => "previewText"
                 ],
                 "output" => [
                     "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "sort" => $this->getDefaultSort(),
-                    "attributes" => [
-                        "html" => $this->getDefaultAttributes()["html"],
-                        "plain" => $this->getDefaultAttributes()["plain"]
-                    ]
+                    "fields" => ["MessageItem" =>  [
+                        "html" => $this->getDefaultFields("MessageItem")["html"],
+                        "plain" => $this->getDefaultFields("MessageItem")["plain"]
+                    ]]
                 ]
             ],
             [
                 "input" => [
                     "filter" => json_encode([["property" => "id", "value" => 2, "operator" => "="]]),
-                    "attributes" => "recent",
+                    "fields[MessageItem]" => "recent",
                     "limit" => -1
                 ],
                 "output" => [
@@ -289,15 +369,15 @@ class IndexRequestQueryTranslatorTest extends TestCase
                     "sort" => $this->getDefaultSort(),
                     "start" => 0,
                     "limit" => -1,
-                     "attributes" => [
+                    "fields" => ["MessageItem" =>  [
                         "recent" => true
-                    ]
+                    ]]
                 ]
             ],
             [
                 "input" => [
                     "filter" => json_encode([["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]]),
-                    "attributes" => "previewText",
+                    "fields[MessageItem]" => "previewText",
                     "target" => "messageItem",
                     "options" => json_encode(
                         ["previewText" => [
@@ -315,10 +395,10 @@ class IndexRequestQueryTranslatorTest extends TestCase
                 "output" => [
                     "filter" => [["property" => "id", "operator" => "in", "value" => ["1", "2", "3"]]],
                     "target" => "messageItem",
-                    "attributes" => [
+                    "fields" => ["MessageItem" =>  [
                         "html" => ["length" => 200],
                         "plain" => ["length" => 200, "precedence" => true]
-                    ],
+                    ]],
                     "sort" => $this->getDefaultSort(),
                     "limit" => -1
                 ]
@@ -347,9 +427,9 @@ class IndexRequestQueryTranslatorTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    public function testTranslateParametersExceptionAttr()
+    public function testTranslateParametersExceptionField()
     {
-        $this->expectException(InvalidQueryException::class);
+        $this->expectException(InvalidQueryParameterValueException::class);
 
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
@@ -358,7 +438,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
         $translateParametersReflection->invokeArgs($translator, [
-            new ParameterBag(["limit" => 1, "attributes" => "id"])
+            new ParameterBag(["limit" => 1, "fields[MessageItem]" => "someField"])
         ])->toJson();
     }
 
@@ -368,6 +448,7 @@ class IndexRequestQueryTranslatorTest extends TestCase
      */
     public function testExceptionFilterNotDecodable()
     {
+        $this->expectException(InvalidQueryParameterValueException::class);
         $this->expectExceptionMessageMatches("/must be JSON decodable/");
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
@@ -391,14 +472,14 @@ class IndexRequestQueryTranslatorTest extends TestCase
      * @return mixed
      * @throws ReflectionException
      */
-    protected function getDefaultAttributes()
+    protected function getDefaultFields($type)
     {
         $translator = new IndexRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-        $translateParametersReflection = $reflection->getMethod("getDefaultAttributes");
+        $translateParametersReflection = $reflection->getMethod("getDefaultFields");
         $translateParametersReflection->setAccessible(true);
 
-        return $translateParametersReflection->invokeArgs($translator, []);
+        return $translateParametersReflection->invokeArgs($translator, [$type]);
     }
 }

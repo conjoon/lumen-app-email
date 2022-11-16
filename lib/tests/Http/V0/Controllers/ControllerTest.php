@@ -27,57 +27,41 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace Tests\App\Http\V0\Controllers;
 
-use Conjoon\Core\ParameterBag;
+use App\Http\V0\Controllers\Controller;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Laravel\Lumen\Routing\Controller as BaseController;
+use ReflectionClass;
+use Tests\TestCase;
 
 /**
- * Class GetRequestQueryTranslator
- * @package App\Http\V0\Query\MessageItem
+ * Class ControllerTest
+ * @package Tests\App\Http\V0\Controllers
  */
-class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
+class ControllerTest extends TestCase
 {
     /**
-     * @inheritdoc
-     * @noinspection PhpUndefinedFieldInspection
+     * Tests class meta
+     * @return void
      */
-    protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
+    public function testClass()
     {
-        $bag = new ParameterBag($source->toJson());
+        $ctrl = $this->getControllerMock([]);
 
-        $bag = $this->getFieldsets($bag);
-
-        $bag->filter = [["property" => "id",
-            "value" => [$bag->getString("messageItemId")],
-            "operator" => "in"
-        ]];
-
-        unset($bag->messageItemId);
-
-        return new MessageItemListResourceQuery($bag);
+        $this->assertInstanceOf(BaseController::class, $ctrl);
     }
 
 
     /**
-     * @inheritdocs
+     * @param array $methods
+     * @return Controller
      */
-    protected function getParameters($parameterResource): array
+    protected function getControllerMock(array $methods = []): Controller
     {
-        return array_merge(
-            parent::getParameters($parameterResource),
-            ["messageItemId" => $parameterResource->route("messageItemId")]
-        );
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    protected function getExpectedParameters(): array
-    {
-        return array_merge(
-            parent::getExpectedParameters(),
-            ["messageItemId"]
-        );
+        return $this->getMockBuilder(Controller::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods($methods)
+            ->getMock();
     }
 }

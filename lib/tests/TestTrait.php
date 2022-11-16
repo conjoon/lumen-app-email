@@ -29,7 +29,10 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use Conjoon\Mail\Client\Data\MailAccount;
+use App\Http\V0\Middleware\Authenticate;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Service\AuthService;
+use Conjoon\MailClient\Service\DefaultAuthService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use PHPUnit\Framework\MockObject\MockObject;
 use ReflectionClass;
@@ -92,10 +95,30 @@ trait TestTrait
 
 
     /**
-     * @param $accountId
+     * Installs an unauthorized user to make sure authenticate() of the AuthService is
+     * stubbed and returns false.
+     *
+     * @return void
+     */
+    protected function installUnauthorizedUser()
+    {
+        $authService = $this->getMockBuilder(DefaultAuthService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $authService->expects($this->once())->method("authenticate")->willReturn(false);
+        $this->app->when(Authenticate::class)
+            ->needs(AuthService::class)
+            ->give(function () use ($authService) {
+                return $authService;
+            });
+    }
+
+
+    /**
+     * @param string $accountId
      * @return MailAccount|null
      */
-    public function getTestMailAccount($accountId): ?MailAccount
+    public function getTestMailAccount(string $accountId = "dev_sys_conjoon_org"): ?MailAccount
     {
 
         if ($accountId === "testFail") {
@@ -119,5 +142,25 @@ trait TestTrait
             "outbox_password" => "outboxPassword",
             "outbox_secure"   => "ssl"
         ]);
+    }
+
+
+    // Tests
+
+    /**
+     *
+     */
+    protected function runTestForUnauthorizedAccessTo($endpoint, $method)
+    {
+        $this->installUnauthorizedUser();
+        $response = $this->actingAs($this->getTestUserStub())->call(
+            $method,
+            $this->getImapEndpoint(
+                $endpoint,
+                "v0"
+            )
+        );
+
+        $this->assertEquals(401, $response->status());
     }
 }

@@ -29,37 +29,46 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\ControllerUtil;
 use Closure;
-use Conjoon\Horde\Mail\Client\Imap\HordeClient;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
-use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
+use Conjoon\Horde_Imap\Client\SortInfoStrategy;
+use Conjoon\Core\Contract\JsonStrategy;
+use Conjoon\Horde_Imap\Client\HordeClient;
+use Conjoon\JsonApi\Query\Validation\Validator;
+use Conjoon\JsonApi\Request\Request as JsonApiRequest;
+use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
+use Conjoon\Horde_Mime\Composer\HordeBodyComposer;
+use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
-use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
-use Conjoon\Mail\Client\Data\MailAccount;
-use Conjoon\Mail\Client\Folder\Tree\DefaultMailFolderTreeBuilder;
-use Conjoon\Mail\Client\Imap\Util\DefaultFolderIdToTypeMapper;
-use Conjoon\Mail\Client\Message\Text\DefaultMessageItemFieldsProcessor;
-use Conjoon\Mail\Client\Message\Text\DefaultPreviewTextProcessor;
-use Conjoon\Mail\Client\Reader\ReadableMessagePartContentProcessor;
-use Conjoon\Mail\Client\Request\Attachment\Transformer\AttachmentListJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
-use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
-use Conjoon\Mail\Client\Service\AttachmentService;
-use Conjoon\Mail\Client\Service\AuthService;
-use Conjoon\Mail\Client\Service\DefaultAttachmentService;
-use Conjoon\Mail\Client\Service\DefaultAuthService;
-use Conjoon\Mail\Client\Service\DefaultMailFolderService;
-use Conjoon\Mail\Client\Service\DefaultMessageItemService;
-use Conjoon\Mail\Client\Service\MailFolderService;
-use Conjoon\Mail\Client\Service\MessageItemService;
-use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\JsonApi\Request\ResourceUrlRegexList;
+use Conjoon\Data\Resource\ObjectDescription;
+use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
+use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
+use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
+use Conjoon\Illuminate\MailClient\Data\Protocol\Http\Request\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageBodyDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageBodyDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Service\AttachmentService;
+use Conjoon\MailClient\Service\AuthService;
+use Conjoon\MailClient\Service\DefaultAttachmentService;
+use Conjoon\MailClient\Service\DefaultAuthService;
+use Conjoon\MailClient\Service\DefaultMailFolderService;
+use Conjoon\MailClient\Service\DefaultMessageItemService;
+use Conjoon\MailClient\Service\MailFolderService;
+use Conjoon\MailClient\Service\MessageItemService;
+use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
+use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
+use Laravel\Lumen\Routing\Router;
 use ReflectionClass;
 use ReflectionException;
 
@@ -82,10 +91,30 @@ class VariousTest extends TestCase
      *
      * @return void
      */
-    public function testApi()
+    public function testConfig()
     {
         $this->assertEquals(["v0"], config("app.api.versions"));
         $this->assertSame("v0", config("app.api.latest"));
+
+        $this->assertEqualsCanonicalizing([
+            ["regex" => "/(MailAccounts)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageBodies)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+            ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+        ], config("app.api.resourceUrls"));
+
+        $this->assertSame("rest-imapuser/api/{apiVersion}", config("app.api.imapUserApiPrefix"));
+        $this->assertSame("rest-api-email/api/{apiVersion}", config("app.api.emailApiPrefix"));
+        $this->assertSame("/\/(v[0-9]+)/mi", config("app.api.versionRegex"));
+        $this->assertSame(
+            "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
+            config("app.api.resourceDescriptionTpl")
+        );
+
+        $this->assertSame([
+            "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+            "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+        ], config("app.api.validationTpl"));
     }
 
     /**
@@ -175,6 +204,7 @@ class VariousTest extends TestCase
     public function testConcretes()
     {
 
+
         $userStub = $this->getTemplateUserStub(["getMailAccount"]);
         $userStub->method("getMailAccount")
             ->with(null)
@@ -213,6 +243,22 @@ class VariousTest extends TestCase
             $this->app->build($property->invokeArgs(
                 $this->app,
                 [AuthService::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            JsonApiStrategy::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [JsonStrategy::class]
+            ))
+        );
+
+        $this->assertInstanceOf(
+            ControllerUtil::class,
+            $this->app->build($property->invokeArgs(
+                $this->app,
+                [ControllerUtil::class]
             ))
         );
 
@@ -283,6 +329,11 @@ class VariousTest extends TestCase
             HordeAttachmentComposer::class,
             $messageItemServiceMailClient->getAttachmentComposer()
         );
+        $this->assertInstanceOf(
+            SortInfoStrategy::class,
+            $messageItemServiceMailClient->getSortInfoStrategy()
+        );
+
 
         $this->assertInstanceOf(
             DefaultMessageItemFieldsProcessor::class,
@@ -300,6 +351,58 @@ class VariousTest extends TestCase
             DefaultPreviewTextProcessor::class,
             $messageItemService->getPreviewTextProcessor()
         );
+
+        $resourceUrlRegexList = $this->app->build($property->invokeArgs(
+            $this->app,
+            [ResourceUrlRegexList::class]
+        ));
+        $this->assertInstanceOf(
+            ResourceUrlRegexList::class,
+            $resourceUrlRegexList
+        );
+        $this->assertEquals(config("app.api.resourceUrls"), $resourceUrlRegexList->toArray());
+    }
+
+
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
+    public function testScopedRequest()
+    {
+        $urls = [
+            "/MailAccounts/dev/MailFolders/INBOX/MessageItems",
+            "/MailAccounts/dev/MailFolders/INBOX/MessageBodies",
+            "/MailAccounts",
+            "/MailAccounts/dev/MailFolders/INBOX"
+        ];
+        foreach ($urls as $testUrl) {
+            $this->app = $this->createApplication();
+
+            $reflection = new ReflectionClass($this->app);
+            $scoped = $reflection->getProperty("scopedInstances");
+
+            $request = $this->createMockForAbstract(Request::class, ["url", "route"]);
+            $route = $this->createMockForAbstract(Router::class, ["getPrefix"], [$this->app]);
+            $route->expects($this->any())->method("getPrefix")->willReturn("rest-api-email/api/v0");
+            $request->expects($this->any())->method("route")->willReturn($route);
+            $request->expects($this->any())->method("url")->willReturn(
+                $testUrl
+            );
+
+            $this->app->request = $request;
+
+            $this->assertTrue(in_array(JsonApiRequest::class, $scoped->getValue($this->app)));
+
+            $jsonApiRequest = $this->app->make(JsonApiRequest::class);
+
+            $this->assertInstanceOf(JsonApiRequest::class, $jsonApiRequest);
+
+            $this->assertSame($testUrl, $jsonApiRequest->getUrl()->toString());
+
+            $this->assertInstanceOf(ObjectDescription::class, $jsonApiRequest->getResourceTarget());
+            $this->assertInstanceOf(Validator::class, $jsonApiRequest->getQueryValidator());
+        }
     }
 
 

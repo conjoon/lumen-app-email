@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,57 +27,54 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace Tests\App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\ParameterBag;
+use App\Http\V0\JsonApi\Resource\MailAccount;
+use App\Http\V0\JsonApi\Resource\MailFolder;
+use Conjoon\MailClient\Data\Resource\MailFolder as BaseMailFolder;
+use Tests\TestCase;
 
 /**
- * Class GetRequestQueryTranslator
- * @package App\Http\V0\Query\MessageItem
+ * Tests MailFolder.
  */
-class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
+class MailFolderTest extends TestCase
 {
     /**
-     * @inheritdoc
-     * @noinspection PhpUndefinedFieldInspection
+     * test class
      */
-    protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
+    public function testClass()
     {
-        $bag = new ParameterBag($source->toJson());
-
-        $bag = $this->getFieldsets($bag);
-
-        $bag->filter = [["property" => "id",
-            "value" => [$bag->getString("messageItemId")],
-            "operator" => "in"
-        ]];
-
-        unset($bag->messageItemId);
-
-        return new MessageItemListResourceQuery($bag);
+        $inst = new MailFolder();
+        $this->assertInstanceOf(BaseMailFolder::class, $inst);
     }
 
-
     /**
-     * @inheritdocs
+     * Tests getRelationships()
      */
-    protected function getParameters($parameterResource): array
+    public function testGetRelationships(): void
     {
-        return array_merge(
-            parent::getParameters($parameterResource),
-            ["messageItemId" => $parameterResource->route("messageItemId")]
+        $list = $this->createDescription()->getRelationships();
+        $this->assertSame(1, count($list));
+
+        $this->assertInstanceOf(MailAccount::class, $list[0]);
+
+        $this->assertSame(
+            ["MailFolder", "MailFolder.MailAccount"],
+            $this->createDescription()->getAllRelationshipPaths(true)
+        );
+
+        $this->assertEqualsCanonicalizing(
+            ["MailFolder", "MailAccount"],
+            $this->createDescription()->getAllRelationshipTypes(true)
         );
     }
 
 
     /**
-     * @inheritdoc
+     * @return MailFolder
      */
-    protected function getExpectedParameters(): array
+    protected function createDescription(): MailFolder
     {
-        return array_merge(
-            parent::getExpectedParameters(),
-            ["messageItemId"]
-        );
+        return new MailFolder();
     }
 }

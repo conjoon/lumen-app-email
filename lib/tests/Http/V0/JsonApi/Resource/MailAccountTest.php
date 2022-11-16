@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,38 +27,32 @@
 
 declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-|API Versioning groups, loading specific route configurations based on the prefix.
-|
-*/
+namespace Tests\App\Http\V0\JsonApi\Resource;
 
-$router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+use App\Http\V0\JsonApi\Resource\MailAccount;
+use Conjoon\MailClient\Data\Resource\MailAccount as BaseMailAccount;
+use Tests\TestCase;
 
-$prefix = config("app.api.service.auth");
+/**
+ * Tests MailAccount.
+ */
+class MailAccountTest extends TestCase
+{
+    /**
+     * test class
+     */
+    public function testClass()
+    {
+        $inst = $this->createDescription();
+        $this->assertInstanceOf(BaseMailAccount::class, $inst);
+    }
 
-foreach ($versions as $version) {
-    $app->router->group([
-        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
 
-        'prefix' => "$prefix/" . $version
-
-    ], function () use ($router, $version) {
-        require base_path("routes/rest-imapuser/api_" . $version . ".php");
-    });
+    /**
+     * @return MailAccount
+     */
+    protected function createDescription(): MailAccount
+    {
+        return new MailAccount();
+    }
 }
-
-// config for latest
-$router->group([
-    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-
-    'prefix' => $prefix
-
-], function () use ($router, $latest) {
-    require base_path("routes/rest-imapuser/api_" . $latest . ".php");
-});

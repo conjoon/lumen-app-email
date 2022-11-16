@@ -27,57 +27,13 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace App\Http\V0\JsonApi;
 
-use Conjoon\Core\ParameterBag;
+use Conjoon\Http\Exception\InternalServerErrorException;
 
 /**
- * Class GetRequestQueryTranslator
- * @package App\Http\V0\Query\MessageItem
+ * Exception representing generic errors thrown in the JsonApi-layer.
  */
-class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
+class JsonApiException extends InternalServerErrorException
 {
-    /**
-     * @inheritdoc
-     * @noinspection PhpUndefinedFieldInspection
-     */
-    protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
-    {
-        $bag = new ParameterBag($source->toJson());
-
-        $bag = $this->getFieldsets($bag);
-
-        $bag->filter = [["property" => "id",
-            "value" => [$bag->getString("messageItemId")],
-            "operator" => "in"
-        ]];
-
-        unset($bag->messageItemId);
-
-        return new MessageItemListResourceQuery($bag);
-    }
-
-
-    /**
-     * @inheritdocs
-     */
-    protected function getParameters($parameterResource): array
-    {
-        return array_merge(
-            parent::getParameters($parameterResource),
-            ["messageItemId" => $parameterResource->route("messageItemId")]
-        );
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    protected function getExpectedParameters(): array
-    {
-        return array_merge(
-            parent::getExpectedParameters(),
-            ["messageItemId"]
-        );
-    }
 }

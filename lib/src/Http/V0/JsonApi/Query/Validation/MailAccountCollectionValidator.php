@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2021-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,14 +27,24 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace App\Http\V0\JsonApi\Query\Validation;
 
-use Conjoon\Mail\Client\Query\MessageItemListResourceQuery as BaseMessageItemListResourceQuery;
+use Conjoon\Http\Query\Validation\Parameter\IntegerValueRule;
+use Conjoon\Http\Query\Validation\Parameter\ParameterRuleList;
+use Conjoon\Http\Query\Validation\Query\ExclusiveGroupKeyRule;
+use Conjoon\Http\Query\Validation\Query\OnlyParameterNamesRule;
+use Conjoon\Http\Query\Validation\Query\QueryRuleList;
+use Conjoon\Http\Query\Validation\Query\RequiredParameterNamesRule;
+use Conjoon\JsonApi\Extensions\Query\Validation\Parameter\RelfieldRule;
+use Conjoon\JsonApi\Query\Query;
+use Conjoon\JsonApi\Query\Validation\CollectionValidator;
+use Conjoon\Http\Query\Query as HttpQuery;
+use Conjoon\JsonApi\Query\Validation\Parameter\PnFilterRule;
 
 /**
- * Class MessageItemListResourceQuery
- * @package App\Http\V0\Query\MessageItem
+ * Query Validator for MailAccount collection requests.
+ *
  */
-class MessageItemListResourceQuery extends BaseMessageItemListResourceQuery
+class MailAccountCollectionValidator extends CollectionValidator
 {
 }

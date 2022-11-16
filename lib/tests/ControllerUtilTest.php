@@ -27,57 +27,43 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace Tests\App;
 
-use Conjoon\Core\ParameterBag;
+use App\ControllerUtil;
+use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Tests\TestCase;
 
 /**
- * Class GetRequestQueryTranslator
- * @package App\Http\V0\Query\MessageItem
+ * Class ControllerUtilTest
+ * @package Tests\App\
  */
-class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
+class ControllerUtilTest extends TestCase
 {
     /**
-     * @inheritdoc
-     * @noinspection PhpUndefinedFieldInspection
+     * Tests getResourceUrl()
+     * @return void
      */
-    protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
+    public function testGetResourceUrl()
     {
-        $bag = new ParameterBag($source->toJson());
+        $ctrlUtil = new ControllerUtil();
 
-        $bag = $this->getFieldsets($bag);
+        $callerUri = "https://localhost:8080/api/v4/path?query=value";
+        $key = new MessageKey("A", "B", "C");
 
-        $bag->filter = [["property" => "id",
-            "value" => [$bag->getString("messageItemId")],
-            "operator" => "in"
-        ]];
-
-        unset($bag->messageItemId);
-
-        return new MessageItemListResourceQuery($bag);
-    }
-
-
-    /**
-     * @inheritdocs
-     */
-    protected function getParameters($parameterResource): array
-    {
-        return array_merge(
-            parent::getParameters($parameterResource),
-            ["messageItemId" => $parameterResource->route("messageItemId")]
+        $this->assertSame(
+            config("app.url") . "/" . config("app.api.service.email") . "/v4/" .
+            "MailAccounts/A/MailFolders/B/MessageItems/C",
+            $ctrlUtil->getResourceUrl("MessageItem", $key, $callerUri)
         );
-    }
 
+        // w/o version
+        $callerUri = "https://localhost:8080/api/path?query=value";
 
-    /**
-     * @inheritdoc
-     */
-    protected function getExpectedParameters(): array
-    {
-        return array_merge(
-            parent::getExpectedParameters(),
-            ["messageItemId"]
+        $this->assertSame(
+            config("app.url") . "/" . config("app.api.service.email") . "/" .
+            config("app.api.latest") . "/" .
+            "MailAccounts/A/MailFolders/B/MessageItems/C",
+            $ctrlUtil->getResourceUrl("MessageItem", $key, $callerUri)
         );
     }
 }

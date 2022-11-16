@@ -29,11 +29,18 @@ declare(strict_types=1);
 
 namespace Tests\App\Http\V0\Controllers;
 
+use App\ControllerUtil;
+use App\Http\V0\Controllers\Controller;
 use App\Http\V0\Controllers\MessageItemController;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
 use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
+use Conjoon\Core\JsonStrategy;
 use Conjoon\Mail\Client\Data\CompoundKey\FolderKey;
 use Conjoon\Mail\Client\Data\CompoundKey\MessageKey;
+use Conjoon\Mail\Client\Data\MailAccount;
+use Conjoon\Mail\Client\Exception\MailFolderNotFoundException;
+use Conjoon\Mail\Client\Folder\MailFolder;
+use Conjoon\Mail\Client\Folder\MailFolderChildList;
 use Conjoon\Mail\Client\Message\Flag\DraftFlag;
 use Conjoon\Mail\Client\Message\Flag\FlaggedFlag;
 use Conjoon\Mail\Client\Message\Flag\FlagList;
@@ -45,16 +52,25 @@ use Conjoon\Mail\Client\Message\MessageItem;
 use Conjoon\Mail\Client\Message\MessageItemDraft;
 use Conjoon\Mail\Client\Message\MessageItemList;
 use Conjoon\Mail\Client\Message\MessagePart;
+use Conjoon\Mail\Client\Query\MailFolderListResourceQuery;
+use Conjoon\Mail\Client\Query\MessageItemListResourceQuery;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\Mail\Client\Request\Message\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\Mail\Client\Service\DefaultMailFolderService;
 use Conjoon\Mail\Client\Service\DefaultMessageItemService;
+use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Util\ArrayUtil;
 use Exception;
+use App\Util;
 use Illuminate\Http\Request;
+use Conjoon\Core\ParameterBag;
+use Illuminate\Support\Facades\Mail;
+use Mockery;
 use PHPUnit\Framework\MockObject\MockObject;
+use ReflectionClass;
 use Tests\TestCase;
 use Tests\TestTrait;
 
@@ -66,106 +82,381 @@ class MessageItemControllerTest extends TestCase
 {
     use TestTrait;
 
+    protected $messageItemServiceMock;
+
+    protected $mailFolderServiceMock;
+
+    protected $controllerUtilMock;
+
     protected string $messageItemsUrl = "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems/311";
+
+    /**
+     * Inits the server stubs to make sure service stubs intercept calls to not accidently
+     * authorize with the application.
+     *
+     * @return void
+     */
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->messageItemServiceMock = $this->getMessageItemServiceMock();
+        $this->getMailFolderServiceMock();
+        $this->initMessageItemDraftJsonTransformer();
+        $this->initMessageBodyDraftJsonTransformer();
+    }
 
 
     /**
-     * Tests index() to make sure method returns list of available MessageItems associated with
-     * the current signed-in user.
-     *
+     * @return void
+     */
+    public function testClass()
+    {
+        $ctrl = $this->getMockBuilder(MessageItemController::class)->disableOriginalConstructor()->getMock();
+        $this->assertInstanceOf(Controller::class, $ctrl);
+    }
+
+
+    /**
+     * Tests getIncluded
+     * @return void
+     */
+    public function testGetIncluded()
+    {
+        $ctrl = $this->getMockBuilder(MessageItemController::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $mailFolderService = $this->getMailFolderServiceMock();
+        $jsonStrategy = $this->app->get(JsonStrategy::class);
+
+        $reflection = new ReflectionClass($ctrl);
+        $getIncludedRefl = $reflection->getMethod("getIncluded");
+        $getIncludedRefl->setAccessible(true);
+        $mailFolderServiceRefl = $reflection->getProperty("mailFolderService");
+        $mailFolderServiceRefl->setAccessible(true);
+        $mailFolderServiceRefl->setValue($ctrl, $mailFolderService);
+        $jsonStrategyRefl = $reflection->getProperty("jsonStrategy");
+        $jsonStrategyRefl->setAccessible(true);
+        $jsonStrategyRefl->setValue($ctrl, $jsonStrategy);
+
+        $mailAccount = $this->getTestMailAccount();
+        $folderKey = new FolderKey($mailAccount, "INBOX");
+        $resourceQuery = new MessageItemListResourceQuery(new ParameterBag([
+            "include" => ["MailFolder"],
+            "fields"  => ["MailFolder" => ["unreadMessages" => true]]
+        ]));
+        $mailFolderResourceQuery = new MailFolderListResourceQuery(new ParameterBag([
+            "fields" => ["MailFolder" => ["unreadMessages" => true]]
+        ]));
+
+        $resultList   = new MailFolderChildList();
+        $resultList[] = new MailFolder(
+            $folderKey,
+            ["unreadMessages" => 5, "totalMessages" => 100, "data" => null]
+        );
+
+        $mailFolderService->expects($this->once())->method("getMailFolderChildList")->with(
+            $mailAccount,
+            $this->callback(function ($query) use ($mailFolderResourceQuery) {
+                $this->assertEquals($mailFolderResourceQuery->toJson(), $query->toJson());
+                return true;
+            })
+        )->willReturn($resultList);
+
+        $this->assertEquals(
+            $resultList->toJson($jsonStrategy),
+            $getIncludedRefl->invokeArgs($ctrl, [$resourceQuery, $mailAccount])->toJson($jsonStrategy)
+        );
+    }
+
+
+
+    /**
+     * Tests index() with included MailFolder
      *
      * @return void
      */
     public function testIndexSuccess()
     {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $this->initMessageBodyDraftJsonTransformer();
+        $account   = $this->getTestMailAccount();
+        $folderKey = new FolderKey($account, "INBOX");
 
-        $unreadCmp = 5;
-        $totalCmp = 100;
-
-        $folderKey = new FolderKey(
-            $this->getTestMailAccount("dev_sys_conjoon_org"),
-            "INBOX"
-        );
-
-        $query = (new IndexRequestQueryTranslator())->translate(new Request(
-            ["start" => 0,
-                "limit" => 25,
-                "sort" => [
-                    ["property" => "date", "direction" => "DESC"]
-                ]
+        $query = [
+            "fields[MailFolder]" => "unreadMessages,totalMessages",
+            "include" => "MailFolder",
+            "start" => 0,
+            "limit" => 25,
+            "sort" => [
+                ["property" => "date", "direction" => "DESC"]
             ]
-        ));
+        ];
 
-        $messageItemList = new MessageItemList();
-        $messageItemList[] = new ListMessageItem(
-            new MessageKey($folderKey, "232"),
-            [],
-            new MessagePart("", "", "")
-        );
-        $messageItemList[] = new ListMessageItem(
-            new MessageKey($folderKey, "233"),
-            [],
-            new MessagePart("", "", "")
+        $messageItemList = $this->expectMessageItemList($query, $folderKey);
+        $resultList = $this->expectMailFolderInclude(
+            ["fields" => ["MailFolder" => ["unreadMessages" => true, "totalMessages" => true]]],
+            $account,
+            $folderKey
         );
 
-        $serviceStub->expects($this->once())
-            ->method("getMessageItemList")
-            ->with(
-                $folderKey,
-                $this->callback(
-                    function ($rq) use ($query) {
-                        $this->assertEquals($query->toJson(), $rq->toJson());
-                        return true;
-                    }
-                )
-            )
-            ->willReturn($messageItemList);
-
-        $serviceStub->expects($this->once())
-            ->method("getUnreadMessageCount")
-            ->with($folderKey)
-            ->willReturn($unreadCmp);
-
-        $serviceStub->expects($this->once())
-            ->method("getTotalMessageCount")
-            ->with($folderKey)
-            ->willReturn($totalCmp);
-
-
-        $endpoint = $this->getImapEndpoint(
-            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?start=0&limit=25",
-            "v0"
-        );
-        $client = $this->actingAs($this->getTestUserStub());
-
-        $response = $client->call(
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
             "GET",
-            $endpoint,
-            ["start" => 0, "limit" => 25, "sort" => [["property" => "date", "direction" => "DESC"]]]
+            $query
         );
-
 
         $this->assertSame($response->status(), 200);
-
         $this->seeJsonEquals([
-            "success" => true,
-            "total" => $totalCmp,
-            "meta" => [
-                "cn_unreadCount" => $unreadCmp,
-                "mailAccountId" => $this->getTestMailAccount("dev_sys_conjoon_org")->getId(),
-                "mailFolderId" => "INBOX"
-            ],
-            "data" => $messageItemList->toJson()
+            "data"     => $messageItemList->toJson($this->app->get(JsonStrategy::class)),
+            "included" => $resultList->toJson($this->app->get(JsonStrategy::class))
         ]);
     }
 
 
+    /**
+     * Tests index() with included MailFolder
+     *
+     * @return void
+     */
+    public function testIndexNoIncluded()
+    {
+        $account   = $this->getTestMailAccount();
+        $folderKey = new FolderKey($account, "INBOX");
+
+        $query = [
+            "fields[MailFolder]" => "unreadMessages,totalMessages",
+            "start" => 0,
+            "limit" => 25,
+            "sort" => [
+                ["property" => "date", "direction" => "DESC"]
+            ]
+        ];
+
+        $messageItemList = $this->expectMessageItemList($query, $folderKey);
+        $this->getMailFolderServiceMock()->expects($this->never())->method("getMailFolderChildList");
+
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+            "GET",
+            $query
+        );
+
+        $this->assertSame($response->status(), 200);
+        $this->seeJsonEquals([
+            "data"     => $messageItemList->toJson($this->app->get(JsonStrategy::class))
+        ]);
+    }
+
+
+    /**
+     * tests index() with 400 Bad Request due to InvalidQueryException
+     * Http 400
+     */
+    public function testIndex400()
+    {
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/_missing_/MessageItems?limit=-1&include=mail",
+            "GET"
+        );
+
+        $this->assertEquals(400, $response->status());
+    }
+
+
+    /**
+     * Tests index() with 401 Unauthorized
+     * Http 401
+     */
+    public function testIndex401()
+    {
+        $this->runTestForUnauthorizedAccessTo(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+            "GET"
+        );
+    }
+
+
+    /**
+     * Http 404
+     */
+    public function testIndex404()
+    {
+        $serviceStub = $this->getMessageItemServiceMock();
+
+        $serviceStub->expects($this->once())
+            ->method("getMessageItemList")
+            ->with(
+                new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "_missing_"),
+                $this->anything()
+            )
+            ->willThrowException(new MailFolderNotFoundException("The MailFolder with the id \"_missing_\" was not found"));
+
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/_missing_/MessageItems?limit=-1",
+            "GET"
+        );
+
+        $this->assertEquals(404, $response->status());
+    }
+
+
+    /**
+     * Tests post() to make sure creating a Message with a MessageItemDraft
+     * works as expected
+     *
+     *
+     * @return void
+     */
+    public function testPostMessageItem()
+    {
+        $account = $this->getTestMailAccount("dev_sys_conjoon_org");
+        $folderKey = new FolderKey($account, "INBOX");
+        $messageKey = new MessageKey($folderKey, "101");
+
+        $attributes = [
+            "subject" => "new subject"
+        ];
+        $requestData = [
+            "data" => [
+                "type" => "MessageItem",
+                "attributes" => $attributes
+            ]
+        ];
+
+
+        $createdMessage = $this->expectCreateMessageDraft($messageKey, $attributes);
+
+        $this->expectGetResourceUrl(
+            "http://localhost/rest-api-email/api/v0/MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+            "location value",
+            $messageKey
+        );
+
+        $resultList = $this->expectMailFolderInclude(
+            ["fields" => ["MailFolder" => []]],
+            $account,
+            $folderKey
+        );
+
+        $query = implode("&", ["fields[MessageItem]=*,previewText", "fields[MailFolder]=", "include=MailFolder"]);
+
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?$query",
+            "POST",
+            $requestData
+        );
+
+        $response->assertResponseStatus(201);
+        $response->seeHeader("Location", "location value");
+
+        $response->seeJsonEquals([
+           "data"      => $createdMessage->toJson($this->app->get(JsonStrategy::class)),
+            "included" => $resultList->toJson($this->app->get(JsonStrategy::class))
+        ]);
+    }
+
+
+    /**
+     * Tests post() to make sure include is ignored when not specified.
+     *
+     * @return void
+     */
+    public function testPostMessageItemNoInclude()
+    {
+        $account = $this->getTestMailAccount("dev_sys_conjoon_org");
+        $folderKey = new FolderKey($account, "INBOX");
+        $messageKey = new MessageKey($folderKey, "101");
+
+        $attributes = [
+            "subject" => "new subject"
+        ];
+        $requestData = [
+            "data" => [
+                "type" => "MessageItem",
+                "attributes" => $attributes
+            ]
+        ];
+
+        $createdMessage = $this->expectCreateMessageDraft($messageKey, $attributes);
+
+        $this->getMailFolderServiceMock()->expects($this->never())->method("getMailFolderChildList");
+
+        $query = "fields[MessageItem]=*,previewText";
+
+        $response = $this->callUrl(
+            "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems?$query",
+            "POST",
+            $requestData
+        );
+
+        $response->assertResponseStatus(201);
+
+        $response->seeJsonEquals([
+            "data"      => $createdMessage->toJson($this->app->get(JsonStrategy::class))
+        ]);
+    }
+
+
+    /**
+     * Tests post() to make sure response is okay when no MessageBody as created.
+     *
+     * @return void
+     */
+    public function testPostMessageBodyNotCreated()
+    {
+        $serviceStub = $this->getMessageItemServiceMock();
+        $this->initMessageItemDraftJsonTransformer();
+        $transformer = $this->initMessageBodyDraftJsonTransformer();
+
+        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
+        $textHtml = "HTML";
+        $textPlain = "PLAIN";
+
+        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
+
+        $requestData = [
+            "data" => [
+                "mailAccountId" => "dev_sys_conjoon_org",
+                "mailFolderId" => "INBOX",
+                "attributes" => $data
+            ]
+        ];
+
+
+        $messageBody = new MessageBodyDraft();
+        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
+        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
+
+        $transformer->returnDraftForData($data, $messageBody);
+
+        $serviceStub->expects($this->once())
+            ->method("createMessageBodyDraft")
+            ->with($folderKey, $messageBody)
+            ->willReturn(null);
+
+        $this->actingAs($this->getTestUserStub())
+            ->post(
+                $this->getImapEndpoint(
+                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
+                    "v0"
+                ),
+                $requestData
+            );
+
+        $this->assertResponseStatus(400);
+
+        $this->seeJsonContains([
+            "success" => false,
+            "msg" => "Creating the MessageBody failed."
+        ]);
+    }
+
+
+// +-------------------------------
+// | pre php-lib-conjoon#8
+// +-------------------------------
     public function testGetMessageItemNoTargetParameter()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -238,7 +529,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testGetMessageBodySuccess()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -276,7 +567,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemBadRequestMissingFlag()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -307,7 +598,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemFlag()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -347,7 +638,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemFlagAndMove()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -399,7 +690,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemMoveSameFolderId()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -444,7 +735,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemMoveNoFlag()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -494,7 +785,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemMoveFail()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -539,7 +830,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemAllFlags()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -581,7 +872,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageItemServiceFail()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -614,122 +905,13 @@ class MessageItemControllerTest extends TestCase
 
 
     /**
-     * Tests post() to make sure creating a MessageBody works as expected
-     *
-     *
-     * @return void
-     */
-    public function testPostMessageBody()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $transformer = $this->initMessageBodyDraftJsonTransformer();
-
-        $messageKey = new MessageKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX", "311");
-        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml = "HTML";
-        $textPlain = "PLAIN";
-
-        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
-        $requestData = [
-            "data" => [
-                "mailAccountId" => "dev_sys_conjoon_org",
-                "mailFolderId" => "INBOX",
-                "attributes" => $data
-            ]
-        ];
-
-        $messageBody = new MessageBodyDraft();
-        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
-        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
-
-        $transformer->returnDraftForData($data, $messageBody);
-
-        $serviceStub->expects($this->once())
-            ->method("createMessageBodyDraft")
-            ->with($folderKey, $messageBody)
-            ->will($this->returnCallback(function ($folderKey, $messageBody) use ($messageKey) {
-                return $messageBody->setMessageKey($messageKey);
-            }));
-
-        $response = $this->actingAs($this->getTestUserStub())
-            ->post(
-                $this->getImapEndpoint("MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems", "v0"),
-                $requestData
-            );
-
-        $response->assertResponseOk();
-
-        $response->seeJsonEquals([
-            "success" => true,
-            "data" => array_merge($messageKey->toJson(), $messageBody->toJson())
-        ]);
-    }
-
-
-    /**
-     * Tests post() to make sure response is okay when no MessageBody as created.
-     *
-     * @return void
-     */
-    public function testPostMessageBodyNotCreated()
-    {
-        $serviceStub = $this->initServiceStub();
-        $this->initMessageItemDraftJsonTransformer();
-        $transformer = $this->initMessageBodyDraftJsonTransformer();
-
-        $folderKey = new FolderKey($this->getTestMailAccount("dev_sys_conjoon_org"), "INBOX");
-        $textHtml = "HTML";
-        $textPlain = "PLAIN";
-
-        $data = ["textHtml" => $textHtml, "textPlain" => $textPlain];
-
-        $requestData = [
-            "data" => [
-                "mailAccountId" => "dev_sys_conjoon_org",
-                "mailFolderId" => "INBOX",
-                "attributes" => $data
-            ]
-        ];
-
-
-        $messageBody = new MessageBodyDraft();
-        $messageBody->setTextHtml(new MessagePart($textHtml, "UTF-8", "text/html"));
-        $messageBody->setTextPlain(new MessagePart($textPlain, "UTF-8", "text/plain"));
-
-        $transformer->returnDraftForData($data, $messageBody);
-
-        $serviceStub->expects($this->once())
-            ->method("createMessageBodyDraft")
-            ->with($folderKey, $messageBody)
-            ->willReturn(null);
-
-        $this->actingAs($this->getTestUserStub())
-            ->post(
-                $this->getImapEndpoint(
-                    "MailAccounts/dev_sys_conjoon_org/MailFolders/INBOX/MessageItems",
-                    "v0"
-                ),
-                $requestData
-            );
-
-        $this->assertResponseStatus(400);
-
-        $this->seeJsonContains([
-            "success" => false,
-            "msg" => "Creating the MessageBody failed."
-        ]);
-    }
-
-
-    /**
      * Tests put() to make sure setting MessageDraft-data works as expected
      *
      * @return void
      */
     public function testPutMessageDraftData()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $transformer = $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -794,7 +976,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageDraftNotCreated()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $transformer = $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -842,7 +1024,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageBodyDraftNotCreated()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $transformer = $this->initMessageBodyDraftJsonTransformer();
 
@@ -891,7 +1073,7 @@ class MessageItemControllerTest extends TestCase
      */
     public function testPutMessageBodyDraftData()
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $transformer = $this->initMessageBodyDraftJsonTransformer();
 
@@ -960,7 +1142,7 @@ class MessageItemControllerTest extends TestCase
 
         $testSend = function (bool $expected) use ($messageKey, $requestData) {
 
-            $serviceStub = $this->initServiceStub();
+            $serviceStub = $this->getMessageItemServiceMock();
 
             $serviceStub->expects($this->once())
                 ->method("sendMessageDraft")
@@ -1031,7 +1213,7 @@ class MessageItemControllerTest extends TestCase
      */
     protected function deleteMessageItemTest($type)
     {
-        $serviceStub = $this->initServiceStub();
+        $serviceStub = $this->getMessageItemServiceMock();
         $this->initMessageItemDraftJsonTransformer();
         $this->initMessageBodyDraftJsonTransformer();
 
@@ -1179,24 +1361,198 @@ class MessageItemControllerTest extends TestCase
     /**
      * @return DefaultMessageItemService|MockObject
      */
-    protected function initServiceStub()
+    protected function getMessageItemServiceMock()
     {
+        if ($this->messageItemServiceMock) {
+            return $this->messageItemServiceMock;
+        }
 
-        $serviceStub = $this->getMockBuilder(DefaultMessageItemService::class)
+        $mock = $this->getMockBuilder(DefaultMessageItemService::class)
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->app->when(MessageItemController::class)
             ->needs(MessageItemService::class)
-            ->give(function () use ($serviceStub) {
-                return $serviceStub;
+            ->give(function () use ($mock) {
+                return $mock;
             });
 
-        return $serviceStub;
+        $this->messageItemServiceMock = $mock;
+
+        return $mock;
+    }
+
+    /**
+     * @return DefaultMailFolderService|MockObject
+     */
+    protected function getMailFolderServiceMock()
+    {
+        if ($this->mailFolderServiceMock) {
+            return $this->mailFolderServiceMock;
+        }
+
+        $mock = $this->getMockBuilder(DefaultMailFolderService::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->app->when(MessageItemController::class)
+            ->needs(MailFolderService::class)
+            ->give(function () use ($mock) {
+                return $mock;
+            });
+
+        $this->mailFolderServiceMock = $mock;
+        return $mock;
     }
 
     protected function getIndexRequestQueryTranslator(): IndexRequestQueryTranslator
     {
         return new IndexRequestQueryTranslator();
+    }
+
+
+    protected function expectMailFolderInclude(
+        array $query,
+        MailAccount $account,
+        FolderKey $folderKey
+    ) {
+        $mailFolderResourceQuery = new MailFolderListResourceQuery(new ParameterBag(
+            $query
+        ));
+        $resultList   = new MailFolderChildList();
+        $resultList[] = new MailFolder(
+            $folderKey,
+            ["unreadMessages" => 5, "totalMessages" => 100, "data" => null]
+        );
+
+
+        $this->getMailFolderServiceMock()->expects($this->once())
+            ->method("getMailFolderChildList")
+            ->with(
+                $account,
+                $this->callback(
+                    function ($rq) use ($mailFolderResourceQuery) {
+                        $this->assertEquals($mailFolderResourceQuery->toJson(), $rq->toJson());
+                        return true;
+                    }
+                )
+            )
+            ->willReturn($resultList);
+
+        return $resultList;
+    }
+
+
+    protected function createMessageItemList($folderKey)
+    {
+        $messageItemList = new MessageItemList();
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey($folderKey, "232"),
+            [],
+            new MessagePart("", "", "")
+        );
+        $messageItemList[] = new ListMessageItem(
+            new MessageKey($folderKey, "233"),
+            [],
+            new MessagePart("", "", "")
+        );
+
+        return $messageItemList;
+    }
+
+    protected function callUrl($url, $method, $query = [])
+    {
+
+        $client = $this->actingAs($this->getTestUserStub());
+
+        if ($method === "POST") {
+            return $client->post(
+                $this->getImapEndpoint(
+                    $url,
+                    "v0"
+                ),
+                $query
+            );
+        }
+        return $client->call(
+            $method,
+            $this->getImapEndpoint(
+                $url,
+                "v0"
+            ),
+            $query
+        );
+    }
+
+
+    protected function expectMessageItemList(array $query, FolderKey $folderKey)
+    {
+        $resourceQuery = (new IndexRequestQueryTranslator())->translate(new Request($query));
+
+        $messageItemList = $this->createMessageItemList($folderKey);
+        $this->getMessageItemServiceMock()->expects($this->once())
+            ->method("getMessageItemList")
+            ->with(
+                $folderKey,
+                $this->callback(
+                    function ($rq) use ($resourceQuery) {
+                        $this->assertEquals($resourceQuery->toJson(), $rq->toJson());
+                        return true;
+                    }
+                )
+            )->willReturn($messageItemList);
+
+        return $messageItemList;
+    }
+
+    protected function getControllerUtilMock()
+    {
+        if ($this->controllerUtilMock) {
+            return $this->controllerUtilMock;
+        }
+
+        $mock = $this->getMockBuilder(ControllerUtil::class)->onlyMethods(["getResourceUrl"])->getMock();
+        $this->app->when(MessageItemController::class)
+            ->needs(ControllerUtil::class)
+            ->give(function () use ($mock) {
+                return $mock;
+            });
+
+        $this->controllerUtilMock = $mock;
+
+        return $mock;
+    }
+
+    protected function expectGetResourceUrl($expectUrl, $returnUrl, $messageKey)
+    {
+        $this->getControllerUtilMock()->expects($this->once())->method("getResourceUrl")->with(
+            "MessageItem",
+            $messageKey,
+            $this->callback(function ($url) use ($expectUrl) {
+                $this->assertSame(
+                    $expectUrl,
+                    $url
+                );
+                return true;
+            })
+        )->willReturn($returnUrl);
+    }
+
+    protected function expectCreateMessageDraft($messageKey, $attributes)
+    {
+        $transformer = $this->initMessageItemDraftJsonTransformer();
+        $folderKey = new FolderKey($messageKey->getMailAccountId(), $messageKey->getMailFolderId());
+        $messageDraft = new MessageItemDraft($attributes);
+        $transformer->returnDraftForData($attributes, $messageDraft);
+
+        $createdMessage = $messageDraft->setMessageKey($messageKey);
+        $this->getMessageItemServiceMock()->expects($this->once())
+            ->method("createMessageDraft")
+            ->with($folderKey, $messageDraft)
+            ->will($this->returnCallback(function ($folderKey, $messageDraft) use ($createdMessage) {
+                return $createdMessage;
+            }));
+
+        return $createdMessage;
     }
 }

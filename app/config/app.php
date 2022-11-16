@@ -34,7 +34,7 @@ return [
 
 /*
 |--------------------------------------------------------------------------
-| Api Version
+| Api
 |--------------------------------------------------------------------------
 |
 | Supported API versions by this installation of rest-api-email, along
@@ -47,9 +47,26 @@ return [
         "email" => env("APP_EMAIL_PATH", "rest-api-email"),
         "auth"  => env("APP_AUTH_PATH", "rest-imapuser")
     ],
+    // route prefix for rest-api-email. Implementing APIs are advised to dynamically replace
+    // {apiVersion} with available api versions implemented by the backend
+    "emailApiPrefix" => "rest-api-email/api/{apiVersion}",
+    "imapUserApiPrefix" => "rest-imapuser/api/{apiVersion}",
+    "versionRegex" => "/\/(v[0-9]+)/mi",
     "versions" => ["v0"],
-    "latest" => "v0"
+    "latest" => "v0",
+    "resourceUrls" => [
+        ["regex" => "/(MailAccounts)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageBodies)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/MailFolders\/.+\/(MessageItems)(\/*.*$)/m", "nameIndex" => 1, "singleIndex" => 2],
+        ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2]
+    ],
+    "resourceDescriptionTpl" => "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
+    "validationTpl" => [
+        "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+        "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+    ]
 ],
+
 
 /*
 |--------------------------------------------------------------------------
@@ -98,7 +115,9 @@ return [
 | This URL is used by the console to properly generate URLs when using
 | the Artisan command line tool. You should set this to the root of
 | your application so that it is used when running Artisan tasks.
-|
+| The value of this property is also used throughout the application when
+| controllers need to refer to the scheme and authority of the server
+| this application is used with.
 */
 
 "url" => env("APP_URL", "https://ddev-ms-email.ddev.site"),

@@ -27,57 +27,14 @@
 
 declare(strict_types=1);
 
-namespace App\Http\V0\Query\MessageItem;
+namespace App\Http\V0\JsonApi\Resource;
 
-use Conjoon\Core\ParameterBag;
+use Conjoon\MailClient\Data\Resource\MailAccount as BaseMailAccount;
 
 /**
- * Class GetRequestQueryTranslator
- * @package App\Http\V0\Query\MessageItem
+ * ResourceDescription for a MailAccount.
+ *
  */
-class GetRequestQueryTranslator extends AbstractMessageItemQueryTranslator
+class MailAccount extends BaseMailAccount
 {
-    /**
-     * @inheritdoc
-     * @noinspection PhpUndefinedFieldInspection
-     */
-    protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
-    {
-        $bag = new ParameterBag($source->toJson());
-
-        $bag = $this->getFieldsets($bag);
-
-        $bag->filter = [["property" => "id",
-            "value" => [$bag->getString("messageItemId")],
-            "operator" => "in"
-        ]];
-
-        unset($bag->messageItemId);
-
-        return new MessageItemListResourceQuery($bag);
-    }
-
-
-    /**
-     * @inheritdocs
-     */
-    protected function getParameters($parameterResource): array
-    {
-        return array_merge(
-            parent::getParameters($parameterResource),
-            ["messageItemId" => $parameterResource->route("messageItemId")]
-        );
-    }
-
-
-    /**
-     * @inheritdoc
-     */
-    protected function getExpectedParameters(): array
-    {
-        return array_merge(
-            parent::getExpectedParameters(),
-            ["messageItemId"]
-        );
-    }
 }

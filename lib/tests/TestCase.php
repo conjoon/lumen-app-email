@@ -35,14 +35,17 @@ use Conjoon\Mail\Client\Service\AuthService;
 use Exception;
 use Illuminate\Support\Facades\Config;
 use Laravel\Lumen\Application;
+use PHPUnit\Framework\MockObject\MockObject;
+use ReflectionClass;
 use RuntimeException;
 use Illuminate\Http\Response;
+use Laravel\Lumen\Testing\TestCase as LaravelTestCase;
 
 /**
  * Class TestCase
  * @package Tests
  */
-abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
+abstract class TestCase extends LaravelTestCase
 {
     protected bool $useFakeAuth = true;
 
@@ -157,5 +160,43 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
         });
 
         parent::expectException($exception);
+    }
+
+
+    protected function createMockForAbstract(string $originalClassName, array $mockedMethods = [], array $args = []): MockObject
+    {
+        return parent::getMockForAbstractClass(
+            $originalClassName,
+            $args,
+            '',
+            true,
+            true,
+            true,
+            $mockedMethods
+        );
+    }
+
+
+    /**
+     * @param mixed $inst
+     * @param $name
+     * @param bool $isProperty
+     *
+     * @return ReflectionMethod|ReflectionProperty
+     *
+     * @throws ReflectionException
+     */
+    protected function makeAccessible($inst, $name, bool $isProperty = false)
+    {
+        $refl = new ReflectionClass($inst);
+
+        $name = match ($isProperty) {
+            true => $refl->getProperty($name),
+            default => $refl->getMethod($name),
+        };
+
+        $name->setAccessible(true);
+
+        return $name;
     }
 }

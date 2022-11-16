@@ -31,10 +31,7 @@ namespace Tests\App\Http\V0\Query\MessageItem;
 
 use App\Http\V0\Query\MessageItem\AbstractMessageItemQueryTranslator;
 use App\Http\V0\Query\MessageItem\GetRequestQueryTranslator;
-use App\Http\V0\Query\MessageItem\IndexRequestQueryTranslator;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
-use Conjoon\Http\Query\InvalidQueryException;
 use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
@@ -70,8 +67,11 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $expected = $getExpectedParametersReflection->invokeArgs($translator, []);
 
-        $this->assertEquals([
-            "attributes",
+        $this->assertEqualsCanonicalizing([
+            "include",
+            "fields[MailAccount]",
+            "fields[MailFolder]",
+            "fields[MessageItem]",
             "messageItemId"
         ], $expected);
     }
@@ -81,16 +81,18 @@ class GetRequestQueryTranslatorTest extends TestCase
      * Extract parameters not Request
      * @throws ReflectionException
      */
-    public function testExtractParameters()
+    public function testGetParameters()
     {
         $translator = new GetRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-        $extractParametersReflection = $reflection->getMethod("extractParameters");
-        $extractParametersReflection->setAccessible(true);
+        $getParametersReflection = $reflection->getMethod("getParameters");
+        $getParametersReflection->setAccessible(true);
 
         $request = new Request([
-            "attributes" => "*,size",
+            "fields[MessageItem]" => "*,size",
+            "fields[MailFolder]" => "textHtml",
+            "fields[MailAccount]" => "protocol",
             "foo" => "bar"]);
 
         $request->setRouteResolver(function () {
@@ -102,11 +104,14 @@ class GetRequestQueryTranslatorTest extends TestCase
             };
         });
 
-        $extracted = $extractParametersReflection->invokeArgs($translator, [$request]);
+        $extracted = $getParametersReflection->invokeArgs($translator, [$request]);
 
         $this->assertEquals([
             "messageItemId" => "744",
-            "attributes" => "*,size",
+            "fields[MessageItem]" => "*,size",
+            "fields[MailFolder]" => "textHtml",
+            "fields[MailAccount]" => "protocol",
+            "foo" => "bar"
         ], $extracted);
     }
 
@@ -123,9 +128,9 @@ class GetRequestQueryTranslatorTest extends TestCase
         $translateParametersReflection->setAccessible(true);
 
 
-        $getExpectedAttributes = function ($exclude = [], $add = []) {
+        $getExpectedAttributes = function ($exclude = [], $add = [], $type) {
 
-            $parameters = $this->getDefaultAttributes();
+            $parameters = $this->getDefaultFields($type);
             array_walk(
                 $parameters,
                 fn(&$item, $key) => in_array($key, $exclude) ? $item = false : null
@@ -142,13 +147,25 @@ class GetRequestQueryTranslatorTest extends TestCase
 
         $queries = [
             [
-                "input" => ["limit" => "-1", "messageItemId" => "744"],
+                "input" => [
+                    "limit" => "-1",
+                    "messageItemId" => "744",
+                    "include" => "MailFolder",
+                    "fields[MailFolder]" => "unreadMessages"
+                ],
                 "output" => [
-                    "attributes" => $getExpectedAttributes(
-                        ["html", "plain"],
-                        ["html" => $this->getDefaultAttributes()["html"],
-                        "plain" => $this->getDefaultAttributes()["plain"]]
-                    ),
+                    "fields" => [
+                        "MessageItem" => $getExpectedAttributes(
+                            ["html", "plain"],
+                            ["html" => $this->getDefaultFields("MessageItem")["html"],
+                            "plain" => $this->getDefaultFields("MessageItem")["plain"]],
+                            "MessageItem"
+                        ),
+                        "MailFolder" => [
+                            "unreadMessages" => true
+                        ],
+                    ],
+                    "include" => ["MailFolder"],
                     "filter" => [[
                         "property" => "id",
                         "value" => ["744"],
@@ -158,15 +175,15 @@ class GetRequestQueryTranslatorTest extends TestCase
                 ]
             ],
             [
-                "input" => ["attributes" => "*,previewText", "messageItemId" => "744"],
+                "input" => ["fields[MessageItem]" => "*,previewText", "messageItemId" => "744"],
                 "output" => [
-                    "attributes" => $getExpectedAttributes(["html", "plain"]),
+                    "fields" => ["MessageItem" => $getExpectedAttributes(["html", "plain"], [], "MessageItem")],
                     "filter" => [[
                         "property" => "id",
                         "value" => ["744"],
                         "operator" => "in"
+                    ]
                     ]]
-                ]
             ]
         ];
 
@@ -193,14 +210,14 @@ class GetRequestQueryTranslatorTest extends TestCase
      * @return mixed
      * @throws ReflectionException
      */
-    protected function getDefaultAttributes()
+    protected function getDefaultFields($type)
     {
         $translator = new GetRequestQueryTranslator();
         $reflection = new ReflectionClass($translator);
 
-        $translateParametersReflection = $reflection->getMethod("getDefaultAttributes");
+        $translateParametersReflection = $reflection->getMethod("getDefaultFields");
         $translateParametersReflection->setAccessible(true);
 
-        return $translateParametersReflection->invokeArgs($translator, []);
+        return $translateParametersReflection->invokeArgs($translator, [$type]);
     }
 }

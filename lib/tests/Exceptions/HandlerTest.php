@@ -30,8 +30,17 @@ declare(strict_types=1);
 namespace Tests\Exceptions;
 
 use App\Exceptions\Handler;
+use Conjoon\Core\Strategy\JsonStrategy;
 use Conjoon\Http\Exception\BadRequestException;
-use Conjoon\Http\Json\Problem\ProblemFactory;
+use Conjoon\Http\Exception\ForbiddenException;
+use Conjoon\Http\Exception\InternalServerErrorException;
+use Conjoon\Http\Exception\MethodNotAllowedException;
+use Conjoon\Http\Exception\NotFoundException;
+use Conjoon\Http\Exception\UnauthorizedException;
+use Conjoon\JsonProblem\ProblemFactory;
+use Conjoon\Http\Query\Exception\QueryException;
+use Conjoon\MailClient\Exception\ResourceNotFoundException;
+use Conjoon\MailClient\Service\ServiceException;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
@@ -46,19 +55,48 @@ class HandlerTest extends TestCase
      */
     public function testRender()
     {
-        $handler = new Handler();
-        $exc = new BadRequestException();
-        $resp = $handler->render(new Request(), $exc);
+        $exceptions = [
+            "400" => [
+                ["exc" => new BadRequestException()],
+                ["exc" => $this->getMockForAbstractClass(QueryException::class), "code" => 400]
+            ],
+            "401" => [["exc" => new UnauthorizedException()]],
+            "403" => [["exc" => new ForbiddenException()]],
+            "404" => [
+                ["exc" => new NotFoundException()],
+                ["exc" => $this->getMockForAbstractClass(ResourceNotFoundException::class), "code" => 404]
+            ],
+            "405" => [["exc" => new MethodNotAllowedException()]],
+            "500" => [[
+                "exc" => new InternalServerErrorException()
+            ], [
+                "exc" => new ServiceException(), "code" => 500
+            ]],
+        ];
 
-        $this->assertEquals(
-            ProblemFactory::make($exc->getCode(), null, $exc->getMessage())->toJson(),
-            json_decode($resp->getContent(), true)
-        );
 
-        $this->assertSame(
-            $exc->getCode(),
-            $resp->getStatusCode()
-        );
+        foreach ($exceptions as $code => $testConfig) {
+            foreach ($testConfig as $config) {
+                $exc     = $config["exc"];
+                $excCode = $config["code"] ?? $exc->getCode();
+
+                $problem = ProblemFactory::make($excCode, null, $exc->getMessage());
+
+                // re-init, otherwise use onConsecutiveCalls
+                $strategy = $this->getMockForAbstractClass(JsonStrategy::class);
+                $handler = new Handler($strategy);
+                $strategy->expects($this->any())->method("toJson")->with($problem)->willReturn($problem->toJson());
+
+                $resp = $handler->render(new Request(), $exc);
+
+                $this->assertEquals(
+                    $problem->toJson(),
+                    json_decode($resp->getContent(), true)["errors"][0]
+                );
+
+                $this->assertSame($code, $resp->getStatusCode());
+            }
+        }
     }
 
 
@@ -67,7 +105,7 @@ class HandlerTest extends TestCase
      */
     public function testRenderRegular()
     {
-        $handler = new Handler();
+        $handler = new Handler($this->app->get(JsonStrategy::class));
         $exc = new \Exception();
         $resp = $handler->render(new Request(), $exc);
 

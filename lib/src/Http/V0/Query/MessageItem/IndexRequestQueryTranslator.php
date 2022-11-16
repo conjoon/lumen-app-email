@@ -30,10 +30,8 @@ declare(strict_types=1);
 namespace App\Http\V0\Query\MessageItem;
 
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
 use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Util\ArrayUtil;
-use Illuminate\Http\Request;
+use Conjoon\Http\Query\InvalidQueryParameterValueException;
 
 /**
  * Class IndexRequestQueryTranslator
@@ -47,23 +45,15 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function translateParameters(ParameterBag $source): MessageItemListResourceQuery
     {
-
         $bag = new ParameterBag($source->toJson());
 
-        $attributes = $this->parseAttributes($bag);
-        $attributeOptions = $this->parseAttributeOptions($bag);
-
-         $bag->attributes = $this->mapConfigToAttributes(
-             $attributes,
-             $attributeOptions,
-             $this->getDefaultAttributes()
-         );
+        $bag = $this->getFieldsets($bag);
 
         $ids = null;
         if ($bag->getString("filter")) {
             $bag->filter = json_decode($bag->filter, true);
             if (!$bag->filter) {
-                throw new InvalidQueryException(
+                throw new InvalidQueryParameterValueException(
                     "parameter \"filter\" must be JSON decodable"
                 );
             }
@@ -79,7 +69,6 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
         }
 
 
-
         if (!$ids) {
             if (!$bag->getInt("limit")) {
                 throw new InvalidQueryException(
@@ -92,7 +81,7 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
             }
 
             if ($bag->getInt("start") < 0) {
-                throw new InvalidQueryException(
+                throw new InvalidQueryParameterValueException(
                     "parameter \"start\" must not be < 0"
                 );
             }
@@ -113,25 +102,6 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
 
 
     /**
-     * Parses json-encoded options.
-     *
-     * @param ParameterBag $bag
-     * @return array
-     * @noinspection PhpUndefinedFieldInspection
-     */
-    protected function parseAttributeOptions(ParameterBag $bag): array
-    {
-        $options = $bag->options;
-        unset($bag->options);
-        if (!$options) {
-            return [];
-        }
-
-        return json_decode($options, true);
-    }
-
-
-    /**
      * Returns the default sort to use, if not available via parameters.
      *
      * @return array
@@ -147,13 +117,12 @@ class IndexRequestQueryTranslator extends AbstractMessageItemQueryTranslator
      */
     protected function getExpectedParameters(): array
     {
-        return [
+        return array_merge(parent::getExpectedParameters(), [
             "limit",
             "start",
             "sort",
-            "attributes",
             "options",
             "filter"
-        ];
+        ]);
     }
 }

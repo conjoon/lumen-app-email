@@ -29,90 +29,81 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Query\MessageItem;
 
+use App\Http\V0\Resource\MessageItemDescription;
 use Conjoon\Core\ParameterBag;
-use Conjoon\Http\Query\InvalidParameterResourceException;
-use Conjoon\Http\Query\InvalidQueryException;
-use Conjoon\Http\Query\QueryTranslator;
+use Conjoon\Http\Query\JsonApiQueryTranslator;
+use Conjoon\Http\Resource\ResourceObjectDescription;
 use Conjoon\Util\ArrayUtil;
-use Illuminate\Http\Request;
+
+;
 
 /**
  * Class AbstractMessageItemQueryTranslator
  * @package App\Http\V0\Query\MessageItem
  */
-abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
+abstract class AbstractMessageItemQueryTranslator extends JsonApiQueryTranslator
 {
     /**
-     * Parses and builds up the attribute list.
-     *
-     * @param ParameterBag $bag
-     * @return string[]
-     *
-     * @noinspection PhpUndefinedFieldInspection
+     * @return ResourceObjectDescription
      */
-    protected function parseAttributes(ParameterBag $bag): array
+    public function getResourceTarget(): ResourceObjectDescription
     {
-        if (!$bag->attributes) {
-            return $this->getAttributes();
-        }
-        $attributes = explode(",", $bag->attributes);
-        if (in_array("*", $attributes) !== false) {
-            $excludes   = array_filter($attributes, fn ($item) => $item !== "*");
-            $attributes = array_filter($this->getAttributes(), fn ($item) => !in_array($item, $excludes));
-        } else {
-            $notAllowed = $this->hasOnlyAllowedAttributes($attributes ?? []);
-            if (!empty($notAllowed)) {
-                throw new InvalidQueryException(
-                    "parameter \"attributes\" has unknown entries: " . implode(",", $notAllowed)
-                );
-            }
-
-            if (in_array("previewText", $attributes)) {
-                $attributes = array_filter($attributes, fn($item) => $item !== "previewText");
-                $attributes[] = "html";
-                $attributes[] = "plain";
-            }
-        }
-
-        return $attributes;
+        return new MessageItemDescription();
     }
 
 
     /**
-     * Maps required configurations to passed attributes not available in the target
-     * entity.
-     *
-     * @param $target
-     * @param $parsed
-     * @param $default
+     * @param ParameterBag $bag
+     * @param string $type
      * @return array
      */
-    protected function mapConfigToAttributes($target, $parsed, $default): array
+    protected function extractFieldOptions(ParameterBag $bag, string $type): array
     {
+        if ($type !== "MessageItem") {
+            return [];
+        }
+        $options = $bag->options;
+        unset($bag->options);
+        if (!$options) {
+            return [];
+        }
+
+        return json_decode($options, true);
+    }
+
+
+    /**
+     * @inheritdoc
+     */
+    protected function mapConfigToFields(array $fields, array $fieldOptions, string $type): array
+    {
+        $default = $this->getDefaultFields($type);
 
         $result = [];
 
-        // merge config from previewText into $parsed
-        $previewText = $parsed["previewText"] ?? [];
-        if (isset($previewText["html"]) || isset($previewText["plain"])) {
-            $parsed = array_merge($parsed, $previewText);
-            unset($parsed["previewText"]);
+        if ($type === "MessageItem") {
+            // merge config from previewText into $parsed
+            $previewText = $fieldOptions["previewText"] ?? [];
+            if (isset($previewText["html"]) || isset($previewText["plain"])) {
+                $fieldOptions = array_merge($fieldOptions, $previewText);
+                unset($fieldOptions["previewText"]);
 
-            if (in_array("previewText", $target)) {
-                isset($parsed["html"]) && ($target[] = "html");
-                isset($parsed["plain"]) && ($target[] = "plain");
-                $target = array_filter($target, fn ($item) => $item !== "previewText");
+                if (in_array("previewText", $fields)) {
+                    isset($fieldOptions["html"]) && ($fields[] = "html");
+                    isset($fieldOptions["plain"]) && ($fields[] = "plain");
+                    $fields = array_values(array_filter($fields, fn ($item) => $item !== "previewText"));
+                }
             }
         }
 
-        foreach ($target as $attributeName) {
-            $result[$attributeName] = $parsed[$attributeName] ?? ($default[$attributeName] ?? true);
+        foreach ($fields as $fieldName) {
+            $result[$fieldName] = $fieldOptions[$fieldName] ?? ($default[$fieldName] ?? true);
         }
 
-        if (isset($result["previewText"])) {
+        if ($type === "MessageItem" && isset($result["previewText"])) {
             if (!is_array($result["previewText"])) {
-                $result["html"]  = $this->getDefaultAttributes()["html"];
-                $result["plain"]  = $this->getDefaultAttributes()["plain"];
+                $result["html"]  = $default["html"];
+                $result["plain"]  = $default["plain"];
             } else {
                 $result["html"]  = ArrayUtil::unchain("previewText.html", $result, $result["previewText"]);
                 $result["plain"] = ArrayUtil::unchain("previewText.plain", $result, $result["previewText"]);
@@ -122,92 +113,5 @@ abstract class AbstractMessageItemQueryTranslator extends QueryTranslator
         }
 
         return $result;
-    }
-
-    /**
-     * Checks if there are attributes which are not part of the attributes defined for the
-     * entity the translator should process the parameters for.
-     *
-     * @param $received
-     * @return array
-     */
-    protected function hasOnlyAllowedAttributes($received): array
-    {
-        return array_diff($received, $this->getAttributes());
-    }
-
-
-    /**
-     * @inheritdocs
-     */
-    protected function extractParameters($parameterResource): array
-    {
-        if (!($parameterResource instanceof Request)) {
-            throw new InvalidParameterResourceException(
-                "Expected \"parameterResource\" to be instance of {Illuminate::class}"
-            );
-        }
-        return $parameterResource->only($this->getExpectedParameters());
-    }
-
-
-    /**
-     * Returns all attributes the entity exposes.
-     *
-     * @return string[]
-     */
-    protected function getAttributes(): array
-    {
-        return [
-            "from",
-            "to",
-            "subject",
-            "date",
-            "seen",
-            "answered",
-            "draft",
-            "flagged",
-            "recent",
-            "charset",
-            "references",
-            "messageId",
-            "previewText",
-            "size",
-            "hasAttachments",
-            "cc",
-            "bcc",
-            "replyTo"
-        ];
-    }
-
-
-    /**
-     * Default attributes to pass to the lower level api.
-     *
-     * @return array
-     */
-    protected function getDefaultAttributes(): array
-    {
-        return [
-            "from" => true,
-            "to" => true,
-            "subject" => true,
-            "date" => true,
-            "seen" => true,
-            "answered" => true,
-            "draft" => true,
-            "flagged" => true,
-            "recent" => true,
-            "charset" => true,
-            "references" => true,
-            "messageId" => true,
-            "size" => true,
-            "hasAttachments" => true,
-            "cc" => true,
-            "bcc" => true,
-            "replyTo" => true,
-            "html" =>  ["length" => 200, "trimApi" => true, "precedence" => true],
-            "plain" => ["length" => 200, "trimApi" => true]
-        ];
     }
 }
