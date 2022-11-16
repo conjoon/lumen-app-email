@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,38 +27,43 @@
 
 declare(strict_types=1);
 
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-|API Versioning groups, loading specific route configurations based on the prefix.
-|
-*/
+namespace App\Console\Commands;
 
-$router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+/**
+ *
+ */
+class ConfigureEnvCommand extends BaseConfigurationCommand
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'configure:env';
 
-$prefix = config("app.api.service.auth");
 
-foreach ($versions as $version) {
-    $app->router->group([
-        'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = "Configure the environment this service is used in.";
 
-        'prefix' => "$prefix/" . $version
 
-    ], function () use ($router, $version) {
-        require base_path("routes/rest-imapuser/api_" . $version . ".php");
-    });
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        $this->prepare();
+
+        $env = $this->choice(
+            "Please select the environment this service will be used in",
+            ["production", "development"],
+            "production"
+        );
+
+        $this->updateEnvSettings("APP_ENV", $env);
+        $this->flushEnv();
+    }
 }
-
-// config for latest
-$router->group([
-    'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-
-    'prefix' => $prefix
-
-], function () use ($router, $latest) {
-    require base_path("routes/rest-imapuser/api_" . $latest . ".php");
-});

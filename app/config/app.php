@@ -44,8 +44,8 @@ return [
 */
 "api" => [
     "service" => [
-        "email" => "rest-api-email",
-        "auth"  => "rest-imapuser"
+        "email" => env("APP_EMAIL_PATH", "rest-api-email"),
+        "auth"  => env("APP_AUTH_PATH", "rest-imapuser")
     ],
     // route prefix for rest-api-email. Implementing APIs are advised to dynamically replace
     // {apiVersion} with available api versions implemented by the backend
@@ -120,7 +120,7 @@ return [
 | this application is used with.
 */
 
-"url" => env("APP_URL", "https://lumen-app-email.ddev.site"),
+"url" => env("APP_URL", "https://ddev-ms-email.ddev.site"),
 
 /*
 |--------------------------------------------------------------------------

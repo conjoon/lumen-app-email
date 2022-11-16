@@ -40,11 +40,15 @@ $router = $app->router;
 $versions = config("app.api.versions");
 $latest = config("app.api.latest");
 
+$prefix = config("app.api.service.email");
+
 foreach ($versions as $version) {
     $router->group([
         "middleware" => "auth_" . ucfirst($version),
         'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
-        'prefix' => str_replace("{apiVersion}", $version, config("app.api.emailApiPrefix"))
+
+        'prefix' => "$prefix/" . $version
+
     ], function () use ($router, $version) {
         require base_path("routes/rest-api-email/api_" . $version . ".php");
     });
@@ -54,7 +58,9 @@ foreach ($versions as $version) {
 $router->group([
     "middleware" => "auth_" . ucfirst($latest),
     'namespace' => "App\Http\\" . ucfirst($latest) . "\Controllers",
-    'prefix' => str_replace("{apiVersion}", "", config("app.api.emailApiPrefix"))
+
+    'prefix' => $prefix
+
 ], function () use ($router, $latest) {
     require base_path("routes/rest-api-email/api_" . $latest . ".php");
 });

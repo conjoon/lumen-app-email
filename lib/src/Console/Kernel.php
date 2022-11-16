@@ -27,7 +27,13 @@
 
 namespace App\Console;
 
+use App\Console\Commands\ConfigureUrlCommand;
+use App\Console\Commands\InstallCommand;
+use App\Console\Commands\ConfigureDebugCommand;
+use App\Console\Commands\ConfigureApiCommand;
+use App\Console\Commands\ConfigureEnvCommand;
 use Illuminate\Console\Scheduling\Schedule;
+use App\Console\Commands\CopyConfigCommand;
 use Laravel\Lumen\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -38,7 +44,12 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        // intentionally left empty
+        InstallCommand::class,
+        ConfigureUrlCommand::class,
+        ConfigureApiCommand::class,
+        ConfigureDebugCommand::class,
+        ConfigureEnvCommand::class,
+        CopyConfigCommand::class
     ];
 
     /**

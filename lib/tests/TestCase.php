@@ -97,11 +97,8 @@ abstract class TestCase extends LaravelTestCase
         if (!in_array($type, ["imap", "imapuser"])) {
             throw new RuntimeException("\"$type\" is not valid");
         }
-        return implode("", [
-            $mapping[$type] .
-            "/api",
-            ($version === "latest") ? "" : "/" . $version
-        ]);
+
+        return $mapping[$type] . (($version === "latest") ? "" : "/" . $version);
     }
 
 
