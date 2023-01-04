@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -49,14 +49,14 @@ declare(strict_types=1);
 |        "outbox_address"  => "smtp.gmail.com",
 |        "outbox_port"     => 465,
 |        "outbox_secure"   => "ssl",
-|        // the root mailbox. For most IMAP servers, this will
+|        // the mailbox(es) the account is subscribed to.
+|        // For most IMAP servers, this will
 |        // be "INBOX". Gmail users can use  "[Gmail]" instead.
-|        // You can also provide a separate mailbox named "conjoon".
-|        // The root folders are the only folders which will be
+|        // These mailboxes are the only folders which will be
 |        // queried and displayed in the folder hierarchy for the
 |        // Mail Account, along with its contents, including sub folders.
 |        // leave empty to return all mailboxes
-|        "root"            => ["Gmail"],
+|        "subscriptions" => ["Gmail"],
 |        // a regular expression that makes sure a user's email-address
 |        // is matched against "this" entry, e.g. a sign-in with the
 |        // username "dev@googlemail.com" would be associated with "this",
@@ -80,7 +80,7 @@ return [
         "outbox_address" => "smtp.gmail.com",
         "outbox_port"    => 465,
         "outbox_secure"  => "ssl",
-        "root"           => ["INBOX", "[Gmail]", "[Google Mail]"],
+        "subscriptions"  => ["INBOX", "[Gmail]", "[Google Mail]"],
         "match"          => ["/\@(googlemail.|gmail.)(com)$/mi"]
     ],
 
@@ -97,7 +97,7 @@ return [
         "outbox_address"  => "smtp-mail.outlook.com",
         "outbox_port"     => 587,
         "outbox_secure"   => "tls",
-        "root"            => [],
+        "subscriptions"   => [],
         "match"           => ["/\@(outlook.)(com)$/mi"]
     ],
 
@@ -114,7 +114,7 @@ return [
         "outbox_address"  => "smtp.mail.yahoo.com",
         "outbox_port"     => 587,
         "outbox_secure"   => "ssl",
-        "root"            => ["INBOX"],
+        "subscriptions"   => ["INBOX"],
         "match"           => ["/\@(freenet.)(de)$/mi"]
     ],
 
@@ -131,7 +131,7 @@ return [
         "outbox_address"  => "smtp.aol.com",
         "outbox_port"     => 465,
         "outbox_secure"   => "ssl",
-        "root"            => [],
+        "subscriptions"   => [],
         "match"           => ["/\@(aol.)(com)$/mi"]
     ],
 
@@ -148,7 +148,7 @@ return [
         "outbox_address"  => "mx.freenet.de",
         "outbox_port"     => 587,
         "outbox_secure"   => "tls",
-        "root"            => ["INBOX"],
+        "subscriptions"   => ["INBOX"],
         "match"           => ["/\@(freenet.)(de)$/mi"]
     ],
 
@@ -165,7 +165,7 @@ return [
         "outbox_address"  => "mail.gmx.net",
         "outbox_port"     => 587,
         "outbox_secure"   => "tls",
-        "root"            => [],
+        "subscriptions"   => [],
         "match"           => ["/\@(gmx.)(de|net)$/mi"]
     ],
 
@@ -182,7 +182,7 @@ return [
         "outbox_address"  => "smtp.web.de",
         "outbox_port"     => 587,
         "outbox_secure"   => "tls",
-        "root"            => [],
+        "subscriptions"   => [],
         "match"           => ["/\@(web.)(de)$/mi"]
     ]
 

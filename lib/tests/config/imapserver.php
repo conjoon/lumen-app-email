@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -43,7 +43,7 @@ return [
         "inbox_ssl" => true,
         "outbox_address" => 'someserver.somehost.org',
         "outbox_port" => 2,
-        "root" => ["INBOX"],
+        "subscriptions" => ["INBOX"],
         "match" => ["/\@(conjoon.)(org|de|com|info)$/mi"]
      ]
 ];

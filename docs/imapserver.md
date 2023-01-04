@@ -19,26 +19,26 @@ to `imapserver.php`, then adjust its entries.
         "outbox_address"  => "smtp.gmail.com",
         "outbox_port"     => 465,
         "outbox_secure"   => "ssl",
-        "root"            => ["INBOX"],
+        "subscriptions"   => ["INBOX"],
         "match"           => ["/\@(googlemail.)(com)$/mi"]
     ]
 ```
 
-| Option                           | Description                           |
-|----------------------------------|----------------------------------------|
-  `id`:_string_    |   required for identifying the mail account. **MUST** be unique in the configuration file. Will be refered to as `mailAccountId` throughout [rest-api-email](https://conjoon.stoplight.io/docs/rest-api-description).|
+| Option                           | Description                                                                                                                                                                                                   |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  `id`:_string_    | required for identifying the mail account. **MUST** be unique in the configuration file. Will be refered to as `mailAccountId` throughout [rest-api-email](https://conjoon.stoplight.io/docs/rest-api-description). |
 || **IMAP Settings** |
-`inbox_type`:_string_ | the protocol used with the server for receiving messages. Right now, only **IMAP** is supported. |
-`inbox_address`:_string_ | (ip-)address of the server |
-`inbox_port`:_integer_ | port that should be used with `inbox_address` for server communication |
-`inbox_ssl`:_boolean_ | use encrypted communication with the server. `true`: use **SSL** for encryption, `false`: use no encryption |
+`inbox_type`:_string_ | the protocol used with the server for receiving messages. Right now, only **IMAP** is supported.                                                                                                              |
+`inbox_address`:_string_ | (ip-)address of the server                                                                                                                                                                                    |
+`inbox_port`:_integer_ | port that should be used with `inbox_address` for server communication                                                                                                                                        |
+`inbox_ssl`:_boolean_ | use encrypted communication with the server. `true`: use **SSL** for encryption, `false`: use no encryption                                                                                                   |
 || **SMTP Settings** |
-`outbox_address`:_string_ | (ip-)address of the server |
-`outbox_port`:_integer_ | port that should be used with `outbox_address` for server communication |
-`outbox_secure`:_string_ | the encryption protocol to use with SMTP. Can be any of `ssl`, `tls` or `starttls` |
+`outbox_address`:_string_ | (ip-)address of the server                                                                                                                                                                                    |
+`outbox_port`:_integer_ | port that should be used with `outbox_address` for server communication                                                                                                                                       |
+`outbox_secure`:_string_ | the encryption protocol to use with SMTP. Can be any of `ssl`, `tls` or `starttls`                                                                                                                            |
 || **Account Settings** |
-`match`:_array_ | a regular expression that matches an email-address to **THIS** server configuration. |
-`root`:_array_ | an array of mailbox names that serve as root folders to display for this account. Leave the array empty if all mailboxes should be read out and send to the client.|
+`match`:_array_ | a regular expression that matches an email-address to **THIS** server configuration.                                                                                                                          |
+`subscriptions`:_array_ | an array of mailbox names that denote the mailboxes the account has subscribed to. Leave the array empty if all mailboxes should be read out and send to the client.    |
 
 
 
@@ -47,7 +47,7 @@ to `imapserver.php`, then adjust its entries.
 <br>
 A client authenticates with the username "name@**googlemail.com**". `lumen-app-email` will query through the configurations of `imapserver.php` and test **this** username against regular expression defined in `match`. In this example, the above regular expression matches the username (i.e. email address). The configuration where the regular expression is specified will be used for subsequent operations requested by the client.
 
-### Example for `root`
+### Example for `subscriptions`
 A common mailbox layout of IMAP servers looks like this: 
 ```
 INBOX
@@ -57,7 +57,7 @@ INBOX.Junk
 INBOX.Trash
 ```
 
-If the `root`-configuration is set to `["INBOX"]`, the following mailboxes will be returned to the client:
+If the `subscriptions`-configuration is set to `["INBOX"]`, the following mailboxes will be returned to the client:
 
 ```
 INBOX
@@ -67,7 +67,7 @@ Junk
 Trash
 ```
 
-Multiple root entries will be considered. This is useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Google Mail]` or `[Gmail]`. `root` should be set to `["[Google Mail]", "[Gmail]"]` in this case. 
+Multiple subscription entries will be considered. This is useful with Google Mail, where root mailboxes (in gmail terms: "labels") can either be `[Google Mail]` or `[Gmail]`. `subscriptions` should be set to `["[Google Mail]", "[Gmail]"]` in this case. 
 
 
 ## Additional Resources
