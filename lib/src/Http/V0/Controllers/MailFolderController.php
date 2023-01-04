@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,8 +30,10 @@ declare(strict_types=1);
 namespace App\Http\V0\Controllers;
 
 use Conjoon\Mail\Client\Service\MailFolderService;
+use Conjoon\Util\ArrayUtil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 /**
  * Class MailFolderController
@@ -65,7 +67,7 @@ class MailFolderController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(string $mailAccountId): JsonResponse
+    public function index(Request $request, string $mailAccountId): JsonResponse
     {
 
         $user = Auth::user();
@@ -73,10 +75,16 @@ class MailFolderController extends Controller
         $mailFolderService = $this->mailFolderService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
 
+        $filter = $request->filter;
+        $subscriptions = [];
 
+        if ($filter) {
+            $filter = json_decode($filter, true);
+            $subscriptions = ArrayUtil::unchain("IN.id", $filter["AND"][0] ?? [], []);
+        }
         return response()->json([
             "success" => true,
-            "data"    => $mailFolderService->getMailFolderChildList($mailAccount)->toJson()
+            "data"    => $mailFolderService->getMailFolderChildList($mailAccount, $subscriptions)->toJson()
         ]);
     }
 }
