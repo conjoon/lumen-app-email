@@ -46,7 +46,7 @@ class LocalAccountServiceProvider extends ServiceProvider
         $this->app["auth"]->provider(
             "LocalAccountProviderDriver",
             function ($app, array $config) {
-                return $app->make(LocalAccountProvider::class);
+                return new LocalAccountProvider($this->app->request);
             }
         );
     }
