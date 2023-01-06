@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,10 +29,10 @@ declare(strict_types=1);
 
 namespace App\Http\V0\Controllers;
 
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Mail\Client\Service\AuthService;
-use Illuminate\Http\Request;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * Class UserController

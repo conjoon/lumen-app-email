@@ -31,8 +31,8 @@ namespace Tests\App\Providers;
 
 use App\Providers\ImapAuthServiceProvider;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUser;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
+use Conjoon\Illuminate\Auth\ImapUser;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Http\Request;
 use Mockery;
 use Mockery\MockInterface;

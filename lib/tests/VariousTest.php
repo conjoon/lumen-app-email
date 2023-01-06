@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2020-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,7 +35,6 @@ use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
@@ -58,6 +57,7 @@ use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use ReflectionClass;

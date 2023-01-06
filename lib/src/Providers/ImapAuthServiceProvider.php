@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,8 +27,8 @@
 
 namespace App\Providers;
 
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Closure;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
