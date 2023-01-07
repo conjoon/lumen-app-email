@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,19 +27,21 @@
 
 declare(strict_types=1);
 
-use App\Providers\ImapAuthServiceProvider;
+use App\Providers\LocalAccountServiceProvider;
 
 return [
 
-    "providerClass" => ImapAuthServiceProvider::class,
+    "providerClass" => LocalAccountServiceProvider::class,
 
     "defaults" => [
         "guard" => env("AUTH_GUARD", "api"),
 
         /**
          * The default provider.
+         * Change this to a provider that suits your needs and make
+         * sure you update app.php with the proper (Auth)ServiceProvider.
          */
-        "provider" => "single-imap-user"
+        "provider" => "local-account-user"
     ],
 
     "guards" => [
@@ -49,13 +51,12 @@ return [
     ],
 
     "providers" => [
-        "single-imap-user" => [
+        "local-account-user" => [
             /**
              * Must be registered in the (Auth)ServiceProvider used with this
              * app and allows for returning a custom UserProvider.
              */
-            "driver" => "ImapUserProviderDriver"
+            "driver" => "LocalAccountProviderDriver"
         ]
     ]
 ];
-

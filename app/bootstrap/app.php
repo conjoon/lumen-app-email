@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use App\Providers\ImapAuthServiceProvider;
 use Fruitcake\Cors\CorsServiceProvider;
 use Fruitcake\Cors\HandleCors;
 use Laravel\Lumen\Bootstrap\LoadEnvironmentVariables;
@@ -103,7 +102,9 @@ $app->routeMiddleware($authMiddleware);
 |
 */
 
-$app->register(ImapAuthServiceProvider::class);
+$app->configure('auth');
+$authProviderClass = config("auth.providerClass");
+$app->register($authProviderClass);
 
 /*
 |--------------------------------------------------------------------------
