@@ -70,7 +70,11 @@ class ImapAuthServiceProvider extends ServiceProvider
             Closure::fromCallable([$this, "getImapUser"])
         );
 
-        config(["app.api.service.auth" => env("APP_AUTH_PATH", "rest-imapuser")]);
+        config(["app.api.service.imapuser" => [
+            "path" => env("APP_AUTH_PATH", "rest-imapuser"),
+            "versions" => ["v0"],
+            "latest" => "v0"
+        ]]);
 
         $this->app->configure('imapserver');
 

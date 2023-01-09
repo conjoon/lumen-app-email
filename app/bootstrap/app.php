@@ -82,7 +82,7 @@ $app->register(CorsServiceProvider::class);
 $app->configure('cors');
 $app->middleware([HandleCors::class]);
 
-$versions = config("app.api.versions");
+$versions = config("app.api.service.email.versions");
 $authMiddleware = [];
 foreach ($versions as $version) {
     $version = ucfirst($version);

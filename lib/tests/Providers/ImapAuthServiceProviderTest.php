@@ -123,18 +123,15 @@ class ImapAuthServiceProviderTest extends TestCase
                 return true;
             });
 
-        config(["app.api.service.auth" => null]);
-        $this->assertNull(config("app.api.service.auth"));
-
-        $routes = $app->router->getRoutes();
-
-        $versions = array_merge(config("app.api.versions"), ["latest"]);
-
-        foreach ($versions as $version) {
-            $this->assertArrayNotHasKey("POST/" . $this->getImapUserEndpoint("auth", "$version"), $routes);
-        }
+        // tests automatically set the auth in app.php, reset here to
+        // make sure boot() applies them
+        config(["app.api.service.imapuser" => null]);
+        $this->assertNull(config("app.api.service.imapuser"));
 
         $provider->boot();
+
+        $versions = array_merge(config("app.api.service.imapuser.versions"), ["latest"]);
+
 
         foreach ($versions as $version) {
             $this->assertArrayHasKey(
@@ -144,7 +141,14 @@ class ImapAuthServiceProviderTest extends TestCase
         }
 
         $this->assertNotNull(env("APP_AUTH_PATH"));
-        $this->assertSame(config("app.api.service.auth"), env("APP_AUTH_PATH"));
+        $this->assertEquals(
+            config("app.api.service.imapuser"),
+            [
+                "path" => env("APP_AUTH_PATH"),
+                "versions" => ["v0"],
+                "latest" => "v0"
+            ]
+        );
     }
 
 

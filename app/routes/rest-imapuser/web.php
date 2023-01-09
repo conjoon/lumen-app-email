@@ -37,10 +37,10 @@ declare(strict_types=1);
 */
 
 $router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+$versions = config("app.api.service.imapuser.versions");
+$latest = config("app.api.service.imapuser.latest");
 
-$prefix = config("app.api.service.auth");
+$prefix = config("app.api.service.imapuser.path");
 
 foreach ($versions as $version) {
     $router->group([

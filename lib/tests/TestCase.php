@@ -83,7 +83,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 
         $mapping = [
             "imap" => config("app.api.service.email"),
-            "imapuser"  => config("app.api.service.auth")
+            "imapuser"  => config("app.api.service.imapuser")
         ];
 
         $type = strtolower($type);
@@ -91,7 +91,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
             throw new RuntimeException("\"$type\" is not valid");
         }
 
-        return $mapping[$type] . (($version === "latest") ? "" : "/" . $version);
+        return $mapping[$type]["path"] . (($version === "latest") ? "" : "/" . $version);
     }
 
 
@@ -154,5 +154,4 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 
         parent::expectException($exception);
     }
-
 }

@@ -56,10 +56,12 @@ class ConfigTest extends TestCase
         $config = include(__DIR__ . "../../../../app/config/app.php");
         $this->assertEquals([
             "service" => [
-                "email" => "rest-api-email"
-            ],
-            "versions" => ["v0"],
-            "latest" => "v0"
+                "email" => [
+                    "path" => "rest-api-email",
+                    "versions" => ["v0"],
+                    "latest" => "v0"
+                ]
+            ]
         ], $config["api"]);
     }
 }

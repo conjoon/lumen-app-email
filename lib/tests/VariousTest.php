@@ -90,8 +90,8 @@ class VariousTest extends TestCase
         );
 
 
-        $this->assertEquals(["v0"], config("app.api.versions"));
-        $this->assertSame("v0", config("app.api.latest"));
+        $this->assertEquals(["v0"], config("app.api.service.email.versions"));
+        $this->assertSame("v0", config("app.api.service.email.latest"));
     }
 
     /**
@@ -106,7 +106,7 @@ class VariousTest extends TestCase
         $property = $reflection->getMethod("gatherMiddlewareClassNames");
         $property->setAccessible(true);
 
-        $versions = config("app.api.versions");
+        $versions = config("app.api.service.email.versions");
         $this->assertGreaterThan(0, $versions);
         foreach ($versions as $version) {
             $version = ucfirst($version);
@@ -126,8 +126,8 @@ class VariousTest extends TestCase
     {
         $routes = $this->app->router->getRoutes();
 
-        $versions = config("app.api.versions");
-        $latest   = config("app.api.latest");
+        $versions = config("app.api.service.email.versions");
+        $latest   = config("app.api.service.email.latest");
         $messageItemsEndpoint = "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems";
         $this->assertGreaterThan(0, $versions);
 

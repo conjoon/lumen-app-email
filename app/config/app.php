@@ -44,10 +44,12 @@ return [
 */
 "api" => [
     "service" => [
-        "email" => env("APP_EMAIL_PATH", "rest-api-email")
-    ],
-    "versions" => ["v0"],
-    "latest" => "v0"
+        "email" => [
+            "path" => env("APP_EMAIL_PATH", "rest-api-email"),
+            "versions" => ["v0"],
+            "latest" => "v0"
+        ]
+    ]
 ],
 
 /*
