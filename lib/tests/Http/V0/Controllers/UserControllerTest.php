@@ -46,6 +46,8 @@ class UserControllerTest extends TestCase
 {
     /**
      * Tests authenticate() to make sure method either returns an imap user or not.
+     * This method considers various auth providers configurable with the default installation
+     * of lumen-app-email.
      *
      * @return void
      *
@@ -53,6 +55,11 @@ class UserControllerTest extends TestCase
      */
     public function testAuthenticate()
     {
+        if (config("auth.defaults.provider") !== "single-imap-user") {
+            $this->assertSame("local-mail-account", config("auth.defaults.provider"));
+            return;
+        }
+
         $endpoint = $this->getImapUserEndpoint("auth", "v0");
 
         $authService = $this->getMockBuilder(DefaultAuthService::class)

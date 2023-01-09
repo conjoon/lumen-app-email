@@ -84,6 +84,12 @@ class VariousTest extends TestCase
      */
     public function testApi()
     {
+        $this->assertGreaterThan(
+            -1,
+            array_search(env("AUTH_PROVIDER"), ["single-imap-user", "local-mail-account"])
+        );
+
+
         $this->assertEquals(["v0"], config("app.api.versions"));
         $this->assertSame("v0", config("app.api.latest"));
     }
@@ -128,8 +134,6 @@ class VariousTest extends TestCase
         $versions[] = "latest";
         $this->assertGreaterThan(1, $versions);
         foreach ($versions as $version) {
-            $this->assertArrayHasKey("POST/" . $this->getImapUserEndpoint("auth", $version), $routes);
-
             $testAuthsFor = [
                 "GET/" . $this->getImapEndpoint("MailAccounts", $version),
                 "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders", $version),

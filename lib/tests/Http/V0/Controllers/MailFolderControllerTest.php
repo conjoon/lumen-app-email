@@ -87,7 +87,8 @@ class MailFolderControllerTest extends TestCase
                          ->call(
                              "GET",
                              $this->getImapEndpoint(
-                                 "MailAccounts/dev_sys_conjoon_org/MailFolders?filter={\"AND\":[{\"IN\":{\"id\":[\"INBOX\"]}}]}",
+                                 "MailAccounts/dev_sys_conjoon_org/MailFolders?" .
+                                 "filter={\"AND\":[{\"IN\":{\"id\":[\"INBOX\"]}}]}",
                                  "v0"
                              )
                          );

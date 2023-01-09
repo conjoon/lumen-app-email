@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,34 +27,39 @@
 
 declare(strict_types=1);
 
+namespace Tests\config;
+
+use Tests\TestCase;
 use App\Providers\ImapAuthServiceProvider;
+use App\Providers\LocalAccountServiceProvider;
 
-return [
+class ConfigTest extends TestCase
+{
+    public function testImapUserConfig()
+    {
+        $config = include(__DIR__ . "../../../../app/config/auth.php");
 
-    "providerClass" => ImapAuthServiceProvider::class,
+        $this->assertEquals([
+            "providerClass" => LocalAccountServiceProvider::class,
+            "driver" => "LocalAccountProviderDriver"
+        ], $config["providers"]["local-mail-account"]);
 
-    "defaults" => [
-        "guard" => env("AUTH_GUARD", "api"),
-
-        /**
-         * The default provider.
-         */
-        "provider" => "single-imap-user"
-    ],
-
-    "guards" => [
-        "api" => [
-            "driver" => "api"
-        ],
-    ],
-
-    "providers" => [
-        "single-imap-user" => [
-            /**
-             * Must be registered in the (Auth)ServiceProvider used with this
-             * app and allows for returning a custom UserProvider.
-             */
+        $this->assertEquals([
+            "providerClass" => ImapAuthServiceProvider::class,
             "driver" => "ImapUserProviderDriver"
-        ]
-    ]
-];
+        ], $config["providers"]["single-imap-user"]);
+    }
+
+
+    public function testAppConfig()
+    {
+        $config = include(__DIR__ . "../../../../app/config/app.php");
+        $this->assertEquals([
+            "service" => [
+                "email" => "rest-api-email"
+            ],
+            "versions" => ["v0"],
+            "latest" => "v0"
+        ], $config["api"]);
+    }
+}

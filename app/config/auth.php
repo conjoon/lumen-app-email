@@ -27,35 +27,34 @@
 
 declare(strict_types=1);
 
+use App\Providers\LocalAccountServiceProvider;
 use App\Providers\ImapAuthServiceProvider;
 
 return [
 
-    "providerClass" => ImapAuthServiceProvider::class,
-
-    "defaults" => [
+     "defaults" => [
         "guard" => env("AUTH_GUARD", "api"),
 
         /**
          * The default provider.
          */
-        "provider" => "single-imap-user"
-    ],
+        "provider" => env("AUTH_PROVIDER", "single-imap-user")
+     ],
 
-    "guards" => [
+     "guards" => [
         "api" => [
             "driver" => "api"
         ],
-    ],
+     ],
 
-    "providers" => [
+     "providers" => [
+        "local-mail-account" => [
+            "providerClass" => LocalAccountServiceProvider::class,
+            "driver" => "LocalAccountProviderDriver"
+        ],
         "single-imap-user" => [
-            /**
-             * Must be registered in the (Auth)ServiceProvider used with this
-             * app and allows for returning a custom UserProvider.
-             */
+            "providerClass" => ImapAuthServiceProvider::class,
             "driver" => "ImapUserProviderDriver"
         ]
-    ]
+     ]
 ];
-

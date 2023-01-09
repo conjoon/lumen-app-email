@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2020-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -43,7 +43,7 @@ $latest = config("app.api.latest");
 $prefix = config("app.api.service.auth");
 
 foreach ($versions as $version) {
-    $app->router->group([
+    $router->group([
         'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
         'prefix' => "$prefix/" . $version
     ], function () use ($router, $version) {

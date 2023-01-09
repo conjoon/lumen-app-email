@@ -69,6 +69,13 @@ class ImapAuthServiceProvider extends ServiceProvider
             "api",
             Closure::fromCallable([$this, "getImapUser"])
         );
+
+        config(["app.api.service.auth" => env("APP_AUTH_PATH", "rest-imapuser")]);
+
+        $this->app->configure('imapserver');
+
+        $app = $this->app;
+        require base_path('routes/rest-imapuser/web.php');
     }
 
 

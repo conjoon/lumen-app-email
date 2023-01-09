@@ -34,6 +34,7 @@ use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\Auth\ImapUser;
 use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Http\Request;
+use Laravel\Lumen\Routing\Router;
 use Mockery;
 use Mockery\MockInterface;
 use ReflectionClass;
@@ -82,9 +83,12 @@ class ImapAuthServiceProviderTest extends TestCase
      * Makes sure boot() calls getImapUser.
      *
      */
-    public function testBootCallsGetUser()
+    public function testBoot()
     {
         $app = $this->createAppMock();
+
+        $app->shouldReceive("configure")->with("imapserver");
+
 
         $imapUser = $this->getMockBuilder(ImapUser::class)
             ->disableOriginalConstructor()
@@ -119,7 +123,28 @@ class ImapAuthServiceProviderTest extends TestCase
                 return true;
             });
 
+        config(["app.api.service.auth" => null]);
+        $this->assertNull(config("app.api.service.auth"));
+
+        $routes = $app->router->getRoutes();
+
+        $versions = array_merge(config("app.api.versions"), ["latest"]);
+
+        foreach ($versions as $version) {
+            $this->assertArrayNotHasKey("POST/" . $this->getImapUserEndpoint("auth", "$version"), $routes);
+        }
+
         $provider->boot();
+
+        foreach ($versions as $version) {
+            $this->assertArrayHasKey(
+                "POST/" . $this->getImapUserEndpoint("auth", "$version"),
+                $app->router->getRoutes()
+            );
+        }
+
+        $this->assertNotNull(env("APP_AUTH_PATH"));
+        $this->assertSame(config("app.api.service.auth"), env("APP_AUTH_PATH"));
     }
 
 
@@ -170,6 +195,8 @@ class ImapAuthServiceProviderTest extends TestCase
     protected function createAppMock(): MockInterface
     {
         $app = Mockery::mock($this->app);
+
+        $app->router = new Router($app);
 
         $app->shouldReceive("make")
             ->with(ImapUserProvider::class)

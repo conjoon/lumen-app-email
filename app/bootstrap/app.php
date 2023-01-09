@@ -54,9 +54,8 @@ $app = new Laravel\Lumen\Application(
 );
 
 $app->withFacades();
-
 $app->configure('app');
-$app->configure('imapserver');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -103,7 +102,9 @@ $app->routeMiddleware($authMiddleware);
 */
 
 $app->configure('auth');
-$authProviderClass = config("auth.providerClass");
+$provider = config("auth.defaults.provider");
+$providers =  config("auth.providers");
+$authProviderClass = $providers[$provider]["providerClass"];
 $app->register($authProviderClass);
 
 /*
