@@ -68,7 +68,7 @@ the value of this setting must therefore be
 https://localhost:8080/lumen-app-email/htdocs
 ```
 
-## `configure:api` <a name="configure_api"></a>
+## `configure:api`
 
 Specify the paths to the APIs exposed by this instance. This also includes the selection of an Auth Provider.
 

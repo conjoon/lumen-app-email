@@ -2,7 +2,7 @@
 When the instance of **lumen-app-email** was configured with the `single-imap-user` Authentication Provider, you
 will have to maintain a list of IMAP server users may sign in to. 
 
-Use [`php artisan configure:api`](./commands.md#configure_api) for configuring the Authentication Provider.
+Use [`php artisan configure:api`](./commands.md#configureapi) for configuring the Authentication Provider.
 
 In order for users to authenticate against IMAP servers, `lumen-app-email` provides a template-configuration file in `app/config/imapserver.php.example`.
 In this file, you can specify an array of mail server configurations. Each entry represents a mail server to which connection may be established, for both sending and receiving messages.
