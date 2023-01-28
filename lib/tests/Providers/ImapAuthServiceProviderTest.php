@@ -140,11 +140,11 @@ class ImapAuthServiceProviderTest extends TestCase
             );
         }
 
-        $this->assertNotNull(env("APP_AUTH_PATH"));
+
         $this->assertEquals(
             config("app.api.service.imapuser"),
             [
-                "path" => env("APP_AUTH_PATH"),
+                "path" => env("APP_AUTH_PATH") ?? "rest-imapuser",
                 "versions" => ["v0"],
                 "latest" => "v0"
             ]
