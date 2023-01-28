@@ -68,7 +68,6 @@ class LocalAccountServiceProvider extends ServiceProvider
 
     /**
      * Returns the user for the request, if any.
-     * Delegates to the ImapUserProvider registered via "ImapUserProviderDriver".
      *
      * @param Request $request
      * @param LocalAccountProvider $provider
