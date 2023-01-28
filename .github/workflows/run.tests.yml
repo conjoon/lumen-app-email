@@ -36,10 +36,14 @@ jobs:
         run: composer install --no-progress
 
       - name: Execute Unit Tests with AUTH_PROVIDER=single-imap-user
-        run: AUTH_PROVIDER=single-imap-user ./vendor/bin/phpunit --do-not-cache-result
+        run: |
+          echo "AUTH_PROVIDER=single-imap-user" >> $GITHUB_ENV
+        run: ./vendor/bin/phpunit --do-not-cache-result
 
       - name: Execute Unit Tests with AUTH_PROVIDER=local-mail-account
-        run: AUTH_PROVIDER=local-mail-account ./vendor/bin/phpunit --do-not-cache-result
+        run: |
+          echo "AUTH_PROVIDER=local-mail-account" >> $GITHUB_ENV
+        run: ./vendor/bin/phpunit --do-not-cache-result
 
       - name: Check Project Coding Standards
         run: vendor/bin/phpcs
