@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use App\Providers\ImapAuthServiceProvider;
 use Fruitcake\Cors\CorsServiceProvider;
 use Fruitcake\Cors\HandleCors;
 use Laravel\Lumen\Bootstrap\LoadEnvironmentVariables;
@@ -55,9 +54,8 @@ $app = new Laravel\Lumen\Application(
 );
 
 $app->withFacades();
-
 $app->configure('app');
-$app->configure('imapserver');
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -84,7 +82,7 @@ $app->register(CorsServiceProvider::class);
 $app->configure('cors');
 $app->middleware([HandleCors::class]);
 
-$versions = config("app.api.versions");
+$versions = config("app.api.service.email.versions");
 $authMiddleware = [];
 foreach ($versions as $version) {
     $version = ucfirst($version);
@@ -103,7 +101,11 @@ $app->routeMiddleware($authMiddleware);
 |
 */
 
-$app->register(ImapAuthServiceProvider::class);
+$app->configure('auth');
+$provider = config("auth.defaults.provider");
+$providers =  config("auth.providers");
+$authProviderClass = $providers[$provider]["providerClass"];
+$app->register($authProviderClass);
 
 /*
 |--------------------------------------------------------------------------

@@ -14,13 +14,13 @@ to get a list of all commands available with this installation.
 #### Commands
 The following CLI commands are available for an instance of **lumen-app-email**:
 
-| Command                        | Description                                                                                                          | 
-|--------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| [install](#install)            | Starts the installation process                                                                                      |
-| [configure:url](#configureurl) | Configure URL where this instance is available                                                                       |
-| [configure:api](#configureapi) | Configure API paths                                                                                                  | 
-| [configure:env](#configureenv)        | Specify the environment this instance runs in                                                                        | 
-| [configure:debug](#configuredebug)    | Enable or disable debug mode                                                                                         | 
+| Command                        | Description                                                    | 
+|--------------------------------|----------------------------------------------------------------|
+| [install](#install)            | Starts the installation process                                |
+| [configure:url](#configureurl) | Configure URL where this instance is available                 |
+| [configure:api](#configureapi) | Configure API paths and Auth Providers                         | 
+| [configure:env](#configureenv)        | Specify the environment this instance runs in                  | 
+| [configure:debug](#configuredebug)    | Enable or disable debug mode                                   | 
 | [copyconfig](#copyconfig)      | Activate pre-defined configuration templates for this instance | 
  
 
@@ -70,10 +70,10 @@ https://localhost:8080/lumen-app-email/htdocs
 
 ## `configure:api`
 
-Specify the paths to the APIs exposed by this instance.
+Specify the paths to the APIs exposed by this instance. This also includes the selection of an Auth Provider.
 
-**lumen-app-email** provides an _auth_-Service and an _email_-Service. The _auth_-Service is required for
-authenticating against the **IMAP**/**SMTP** servers the _email_-Service will connect to.
+**lumen-app-email** provides _auth_-Services and an _email_-Service. An _auth_-Service is required for
+authenticating against the **IMAP**/**SMTP** servers the _email_-Service can connect to.
 
 These settings provide the base-paths to the endpoints the services expose.
 
@@ -91,11 +91,21 @@ $ php artisan configure:api
 
 The path to the _email_-Service. 
 
+`AUTH_PROVIDER` <a name="auth_provider"></a>
+ - Type: `List`
+ - Values: `local-mail-account`, `single-imap-user`
+ - Default: `local-mail-account`
+
+The Auth Provider used with this instance. `local-mail-account` is the provider used when the client
+sends connection information in the payload of requests.
+`single-imap-user` authenticates a single user against a single IMAP-server. Selecting
+`single-imap-user` will require the configuration of the `APP_AUTH_PATH`.
+
 `APP_AUTH_PATH`
 - Type: `String`
 - Default: `rest-imapuser`
 
-The path to the _auth_-Service. 
+The path to the _auth_-Service. Depending on the selected `AUTH_PROVIDER`, this setting might not be available.
 
 ### Example
 **lumen-app-email** is available at
@@ -182,10 +192,10 @@ $ php artisan copyconfig
 
 The following configuration files are affected by this command:
 
-| Template                               | Target          | Description                                                      | 
-|----------------------------------------|-----------------|------------------------------------------------------------------|
-| `cors.example.php`            | `cors.php`        | Cross-Origin Resource Sharing configuration                      |
-| `imapserver.example.php` | `imapserver.php`  | Configuration for Email servers this instance may connect to     |
+| Template                               | Target          | Description                                                                                                                                                    | 
+|----------------------------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `cors.example.php`            | `cors.php`        | Cross-Origin Resource Sharing configuration                                                                                                                    |
+| `imapserver.example.php` | `imapserver.php`  | Configuration for Email servers this instance may connect to. Only considered if the `single-imap-user` was selected as the [`AUTH_PROVIDER`](#auth_provider). |
 
 Once the files where copied, you should adjust the settings found therein to your needs.
 

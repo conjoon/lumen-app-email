@@ -20,17 +20,15 @@ Please refer to the official [documentation](./docs) of **lumen-app-email** for 
 ## Features
 
 **lumen-app-email** follows a service oriented approach. 
-Services are easily replacable with the help of upfront DI configurations and related bindings. 
+Services are easily replaceable with the help of upfront DI configurations and related bindings. 
 
 **Use lumen-app-email, if you...**
 - need a fully functional middleware for communicating with IMAP / SMTP servers
-- want to provide webmail solutions with domain-specific sign-in to IMAP accounts
-- are looking for a distribution with minimal footprint and easy setup
-- require a headless, service oriented standalone application with your infrastructure 
-
-**do not use lumen-app-email, if you...**
- - are looking for a stateful, session based webmail backend
- - need baked-in caching
+- want to provide webmail solutions with various authentication methods, such as 
+  - domain-specific sign-in to IMAP accounts, orchestrated by the server 
+  - connecting to IMAP accounts solely configured by the users 
+- are looking for an email messaging solution with minimal footprint that's easy to distribute 
+- require a headless, service oriented standalone application in your infrastructure that can also be run frontend agnostic
 
 ## API Examples
 

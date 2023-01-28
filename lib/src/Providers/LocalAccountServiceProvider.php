@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -28,18 +28,12 @@
 namespace App\Providers;
 
 use Closure;
-use Conjoon\Illuminate\Auth\ImapUserProvider;
+use Conjoon\Illuminate\Auth\LocalMailAccount\LocalAccountProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 
-/**
- * Class ImapAuthServiceProvider.
- * Uses a RequestGuard for authorization of API calls.
- *
- * @package App\Providers
- */
-class ImapAuthServiceProvider extends ServiceProvider
+class LocalAccountServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -50,9 +44,9 @@ class ImapAuthServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app["auth"]->provider(
-            "ImapUserProviderDriver",
+            "LocalAccountProviderDriver",
             function ($app, array $config) {
-                return $app->make(ImapUserProvider::class);
+                return new LocalAccountProvider($this->app->request);
             }
         );
     }
@@ -67,19 +61,8 @@ class ImapAuthServiceProvider extends ServiceProvider
     {
         $this->app["auth"]->viaRequest(
             "api",
-            Closure::fromCallable([$this, "getImapUser"])
+            Closure::fromCallable([$this, "getUser"])
         );
-
-        config(["app.api.service.imapuser" => [
-            "path" => env("APP_AUTH_PATH", "rest-imapuser"),
-            "versions" => ["v0"],
-            "latest" => "v0"
-        ]]);
-
-        $this->app->configure('imapserver');
-
-        $app = $this->app;
-        require base_path('routes/rest-imapuser/web.php');
     }
 
 
@@ -88,11 +71,11 @@ class ImapAuthServiceProvider extends ServiceProvider
      * Delegates to the ImapUserProvider registered via "ImapUserProviderDriver".
      *
      * @param Request $request
-     * @param ImapUserProvider $provider
+     * @param LocalAccountProvider $provider
      *
      * @return Authenticatable
      */
-    protected function getImapUser(Request $request, ImapUserProvider $provider): Authenticatable
+    protected function getUser(Request $request, LocalAccountProvider $provider): Authenticatable
     {
         $username = $request->getUser();
         $password = $request->getPassword();

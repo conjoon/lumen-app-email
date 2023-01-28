@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2020-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -37,13 +37,13 @@ declare(strict_types=1);
 */
 
 $router = $app->router;
-$versions = config("app.api.versions");
-$latest = config("app.api.latest");
+$versions = config("app.api.service.imapuser.versions");
+$latest = config("app.api.service.imapuser.latest");
 
-$prefix = config("app.api.service.auth");
+$prefix = config("app.api.service.imapuser.path");
 
 foreach ($versions as $version) {
-    $app->router->group([
+    $router->group([
         'namespace' => "App\Http\\" . ucfirst($version) . "\Controllers",
         'prefix' => "$prefix/" . $version
     ], function () use ($router, $version) {

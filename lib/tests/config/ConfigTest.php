@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,34 +27,41 @@
 
 declare(strict_types=1);
 
-use App\Providers\LocalAccountServiceProvider;
+namespace Tests\config;
+
+use Tests\TestCase;
 use App\Providers\ImapAuthServiceProvider;
+use App\Providers\LocalAccountServiceProvider;
 
-return [
+class ConfigTest extends TestCase
+{
+    public function testImapUserConfig()
+    {
+        $config = include(__DIR__ . "../../../../app/config/auth.php");
 
-     "defaults" => [
-        "guard" => env("AUTH_GUARD", "api"),
-
-        /**
-         * The default provider.
-         */
-        "provider" => env("AUTH_PROVIDER", "single-imap-user")
-     ],
-
-     "guards" => [
-        "api" => [
-            "driver" => "api"
-        ],
-     ],
-
-     "providers" => [
-        "local-mail-account" => [
+        $this->assertEquals([
             "providerClass" => LocalAccountServiceProvider::class,
             "driver" => "LocalAccountProviderDriver"
-        ],
-        "single-imap-user" => [
+        ], $config["providers"]["local-mail-account"]);
+
+        $this->assertEquals([
             "providerClass" => ImapAuthServiceProvider::class,
             "driver" => "ImapUserProviderDriver"
-        ]
-     ]
-];
+        ], $config["providers"]["single-imap-user"]);
+    }
+
+
+    public function testAppConfig()
+    {
+        $config = include(__DIR__ . "../../../../app/config/app.php");
+        $this->assertEquals([
+            "service" => [
+                "email" => [
+                    "path" => "rest-api-email",
+                    "versions" => ["v0"],
+                    "latest" => "v0"
+                ]
+            ]
+        ], $config["api"]);
+    }
+}

@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -51,7 +51,7 @@ class EndScreen
         or use any of the available configuration-commands:
 
             <fg=green>php artisan configure:url</> (configure the URL where this instance is located)
-            <fg=green>php artisan configure:api</> (configure the paths to the API-endpoints)
+            <fg=green>php artisan configure:api</> (configure auth provider and the paths to the API-endpoints)
             <fg=green>php artisan configure:env</> (configure the environment this instance runs in)
             <fg=green>php artisan configure:debug</> (configure the debug mode for this instance)
 

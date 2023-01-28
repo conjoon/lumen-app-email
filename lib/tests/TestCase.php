@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -33,7 +33,6 @@ use App\Exceptions\Handler;
 use Conjoon\Mail\Client\Data\MailAccount;
 use Conjoon\Mail\Client\Service\AuthService;
 use Exception;
-use Illuminate\Support\Facades\Config;
 use Laravel\Lumen\Application;
 use RuntimeException;
 use Illuminate\Http\Response;
@@ -65,9 +64,6 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
                 };
             });
         }
-
-
-        Config::set("imapserver", require __DIR__ . "/config/imapserver.php");
         return $app;
     }
 
@@ -87,7 +83,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
 
         $mapping = [
             "imap" => config("app.api.service.email"),
-            "imapuser"  => config("app.api.service.auth")
+            "imapuser"  => config("app.api.service.imapuser")
         ];
 
         $type = strtolower($type);
@@ -95,7 +91,7 @@ abstract class TestCase extends \Laravel\Lumen\Testing\TestCase
             throw new RuntimeException("\"$type\" is not valid");
         }
 
-        return $mapping[$type] . (($version === "latest") ? "" : "/" . $version);
+        return $mapping[$type]["path"] . (($version === "latest") ? "" : "/" . $version);
     }
 
 

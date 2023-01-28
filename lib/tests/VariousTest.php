@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2020-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2020-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,7 +35,6 @@ use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
 use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
@@ -58,6 +57,7 @@ use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use ReflectionClass;
@@ -84,8 +84,14 @@ class VariousTest extends TestCase
      */
     public function testApi()
     {
-        $this->assertEquals(["v0"], config("app.api.versions"));
-        $this->assertSame("v0", config("app.api.latest"));
+        $this->assertGreaterThan(
+            -1,
+            array_search(env("AUTH_PROVIDER"), ["single-imap-user", "local-mail-account"])
+        );
+
+
+        $this->assertEquals(["v0"], config("app.api.service.email.versions"));
+        $this->assertSame("v0", config("app.api.service.email.latest"));
     }
 
     /**
@@ -100,7 +106,7 @@ class VariousTest extends TestCase
         $property = $reflection->getMethod("gatherMiddlewareClassNames");
         $property->setAccessible(true);
 
-        $versions = config("app.api.versions");
+        $versions = config("app.api.service.email.versions");
         $this->assertGreaterThan(0, $versions);
         foreach ($versions as $version) {
             $version = ucfirst($version);
@@ -120,16 +126,14 @@ class VariousTest extends TestCase
     {
         $routes = $this->app->router->getRoutes();
 
-        $versions = config("app.api.versions");
-        $latest   = config("app.api.latest");
+        $versions = config("app.api.service.email.versions");
+        $latest   = config("app.api.service.email.latest");
         $messageItemsEndpoint = "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems";
         $this->assertGreaterThan(0, $versions);
 
         $versions[] = "latest";
         $this->assertGreaterThan(1, $versions);
         foreach ($versions as $version) {
-            $this->assertArrayHasKey("POST/" . $this->getImapUserEndpoint("auth", $version), $routes);
-
             $testAuthsFor = [
                 "GET/" . $this->getImapEndpoint("MailAccounts", $version),
                 "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders", $version),

@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "conjoon/php-lib-conjoon": "^1.0",
+        "conjoon/php-lib-conjoon": "^1.1.0",
         "fruitcake/laravel-cors": "^2.0",
         "laravel/lumen-framework": "5.8.*"
     },

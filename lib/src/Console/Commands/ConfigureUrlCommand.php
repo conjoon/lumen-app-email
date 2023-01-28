@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -46,7 +46,7 @@ class ConfigureUrlCommand extends BaseConfigurationCommand
      *
      * @var string
      */
-    protected $description = "Configure the URL for this service.";
+    protected $description = "Configure the URL for this instance.";
 
 
     /**
@@ -69,7 +69,7 @@ class ConfigureUrlCommand extends BaseConfigurationCommand
     {
 
         $url = $this->choice(
-            "Please select the URL where this service will be located, or type in manually",
+            "Please select the URL where this instance will be located, or type in manually",
             $defaultUrls,
             $defaultUrls[0]
         );

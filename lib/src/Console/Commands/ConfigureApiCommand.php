@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -59,11 +59,26 @@ class ConfigureApiCommand extends BaseConfigurationCommand
         $this->prepare();
 
         $apis = [
-            "email" => ["api.service.email" => "APP_EMAIL_PATH"],
-            "auth"  => ["api.service.auth" => "APP_AUTH_PATH"]
+            "email" => ["api.service.email.path" => "APP_EMAIL_PATH"],
+            "imapuser"  => ["api.service.imapuser.path" => "APP_AUTH_PATH"]
         ];
 
         foreach ($apis as $serviceName => $config) {
+            if ($serviceName === "imapuser") {
+                $auth = $this->choice(
+                    "Please provide the auth service for this instance.",
+                    ["single-imap-user", "local-mail-account"],
+                    "local-mail-account"
+                );
+
+                if ($auth === "local-mail-account") {
+                    $this->updateEnvSettings("APP_AUTH_PATH", null);
+                    $this->updateEnvSettings("AUTH_PROVIDER", "local-mail-account");
+                    $this->flushEnv();
+                    continue;
+                }
+            }
+
             $appConfigPath = array_keys($config)[0];
             $envKey = array_values($config)[0];
 
@@ -77,6 +92,9 @@ class ConfigureApiCommand extends BaseConfigurationCommand
             );
 
             $this->updateEnvSettings($envKey, $path);
+            if ($serviceName === "imapuser") {
+                $this->updateEnvSettings("AUTH_PROVIDER", "single-imap-user");
+            }
             $this->flushEnv();
         }
     }
@@ -121,6 +139,10 @@ class ConfigureApiCommand extends BaseConfigurationCommand
 
     private function getDefaultPathOption($appPathKey)
     {
+        if (strpos($appPathKey, "imapuser") !== false) {
+            return "rest-imapuser";
+        }
+
         return ArrayUtil::unchain($appPathKey, $this->appSettings);
     }
 }

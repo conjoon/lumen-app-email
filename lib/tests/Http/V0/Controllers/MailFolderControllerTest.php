@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -76,7 +76,10 @@ class MailFolderControllerTest extends TestCase
 
         $service->expects($this->once())
                    ->method("getMailFolderChildList")
-                   ->with($this->getTestMailAccount("dev_sys_conjoon_org"))
+                   ->with(
+                       $this->getTestMailAccount("dev_sys_conjoon_org"),
+                       ["INBOX"]
+                   )
                    ->willReturn($resultList);
 
 
@@ -84,7 +87,8 @@ class MailFolderControllerTest extends TestCase
                          ->call(
                              "GET",
                              $this->getImapEndpoint(
-                                 "MailAccounts/dev_sys_conjoon_org/MailFolders",
+                                 "MailAccounts/dev_sys_conjoon_org/MailFolders?" .
+                                 "filter={\"AND\":[{\"IN\":{\"id\":[\"INBOX\"]}}]}",
                                  "v0"
                              )
                          );

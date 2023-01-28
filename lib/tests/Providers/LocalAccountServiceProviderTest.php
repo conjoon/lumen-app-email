@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (c) 2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -29,12 +29,10 @@ declare(strict_types=1);
 
 namespace Tests\App\Providers;
 
-use App\Providers\ImapAuthServiceProvider;
-use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use App\Providers\LocalAccountServiceProvider;
 use Conjoon\Illuminate\Auth\ImapUser;
-use Conjoon\Illuminate\Auth\ImapUserProvider;
+use Conjoon\Illuminate\Auth\LocalMailAccount\LocalAccountProvider;
 use Illuminate\Http\Request;
-use Laravel\Lumen\Routing\Router;
 use Mockery;
 use Mockery\MockInterface;
 use ReflectionClass;
@@ -42,13 +40,12 @@ use ReflectionException;
 use Tests\TestCase;
 
 /**
- * Class ImapAuthServiceProviderTest
- * @package Tests\App\Providers
+ * Class LocalAccountServiceProvider.
  */
-class ImapAuthServiceProviderTest extends TestCase
+class LocalAccountServiceProviderTest extends TestCase
 {
     /**
-     * Makes sure register() registers the ImapUserProvider.
+     * Makes sure register() registers the LocalAccountProvider.
      *
      *
      */
@@ -56,7 +53,7 @@ class ImapAuthServiceProviderTest extends TestCase
     {
         $app = $this->createAppMock();
         /** @noinspection PhpParamsInspection */
-        $provider = new ImapAuthServiceProvider($app);
+        $provider = new LocalAccountServiceProvider($app);
 
         $app['auth'] = Mockery::mock($app['auth']);
 
@@ -64,11 +61,11 @@ class ImapAuthServiceProviderTest extends TestCase
             ->shouldReceive("provider")
             ->withArgs(
                 function ($driverName, $callback) use ($app) {
-                    $this->assertSame("ImapUserProviderDriver", $driverName);
+                    $this->assertSame("LocalAccountProviderDriver", $driverName);
                     $this->assertIsCallable($callback);
 
                     $this->assertInstanceOf(
-                        ImapUserProvider::class,
+                        LocalAccountProvider::class,
                         $callback($app, [])
                     );
 
@@ -80,30 +77,27 @@ class ImapAuthServiceProviderTest extends TestCase
     }
 
     /**
-     * Makes sure boot() calls getImapUser.
+     * Makes sure boot() calls getUser.
      *
      */
-    public function testBoot()
+    public function testBootCallsGetUser()
     {
         $app = $this->createAppMock();
-
-        $app->shouldReceive("configure")->with("imapserver");
-
 
         $imapUser = $this->getMockBuilder(ImapUser::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $provider = $this->getMockBuilder(ImapAuthServiceProvider::class)
+        $provider = $this->getMockBuilder(LocalAccountServiceProvider::class)
             ->setConstructorArgs([$app])
-            ->onlyMethods(["getImapUser"])
+            ->onlyMethods(["getUser"])
             ->getMock();
 
         $cb = function () use ($imapUser) {
             return $imapUser;
         };
 
-        $provider->method("getImapUser")
+        $provider->method("getUser")
             ->willReturnCallback($cb);
 
 
@@ -117,38 +111,13 @@ class ImapAuthServiceProviderTest extends TestCase
                 /** @noinspection PhpUndefinedMethodInspection */
                 $this->assertSame($imapUser, $callback(
                     new Request(),
-                    $app->make(ImapUserProvider::class)
+                    $app->make(LocalAccountProvider::class)
                 ));
 
                 return true;
             });
 
-        // tests automatically set the auth in app.php, reset here to
-        // make sure boot() applies them
-        config(["app.api.service.imapuser" => null]);
-        $this->assertNull(config("app.api.service.imapuser"));
-
         $provider->boot();
-
-        $versions = array_merge(config("app.api.service.imapuser.versions"), ["latest"]);
-
-
-        foreach ($versions as $version) {
-            $this->assertArrayHasKey(
-                "POST/" . $this->getImapUserEndpoint("auth", "$version"),
-                $app->router->getRoutes()
-            );
-        }
-
-        $this->assertNotNull(env("APP_AUTH_PATH"));
-        $this->assertEquals(
-            config("app.api.service.imapuser"),
-            [
-                "path" => env("APP_AUTH_PATH"),
-                "versions" => ["v0"],
-                "latest" => "v0"
-            ]
-        );
     }
 
 
@@ -157,12 +126,12 @@ class ImapAuthServiceProviderTest extends TestCase
      *
      * @throws ReflectionException
      */
-    public function testGetImapUserCallRetrieveByCredentials()
+    public function testgetUserCallRetrieveByCredentials()
     {
         $app = $this->createAppMock();
 
         /** @noinspection PhpParamsInspection */
-        $authProvider = new ImapAuthServiceProvider($app);
+        $authProvider = new LocalAccountServiceProvider($app);
 
         $request = Mockery::mock(new Request());
         $request->shouldReceive("getUser")
@@ -171,7 +140,7 @@ class ImapAuthServiceProviderTest extends TestCase
             ->andReturn("somePassword");
 
         /** @noinspection PhpUndefinedMethodInspection */
-        $userProvider = Mockery::mock($app->make(ImapUserProvider::class));
+        $userProvider = Mockery::mock($app->make(LocalAccountProvider::class));
 
         $userProvider->shouldReceive("retrieveByCredentials")
                      ->withArgs([["username" => "someUser", "password" => "somePassword"]])
@@ -182,7 +151,7 @@ class ImapAuthServiceProviderTest extends TestCase
                      );
 
         $reflection = new ReflectionClass($authProvider);
-        $property = $reflection->getMethod("getImapUser");
+        $property = $reflection->getMethod("getUser");
         $property->setAccessible(true);
 
         $user = $property->invokeArgs($authProvider, [$request, $userProvider]);
@@ -192,7 +161,7 @@ class ImapAuthServiceProviderTest extends TestCase
 
 
     /**
-     * Mocks the application by returning a specific ImapUserProvider-configuration.
+     * Mocks the application by returning a specific LocalAccountProvider-configuration.
      *
      * @return MockInterface
      */
@@ -200,22 +169,34 @@ class ImapAuthServiceProviderTest extends TestCase
     {
         $app = Mockery::mock($this->app);
 
-        $app->router = new Router($app);
+
+        $request = $this->getMockBuilder(Request::class)
+            ->onlyMethods(["header", "route"])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $request->expects($this->once())->method("route")->with("mailAccountId")->willReturn("routeId");
+
+        $conf = [
+            "from" => ["address" => "", "name" => "name"],
+            "replyTo" => ["address" => "", "name" => "name"],
+            "inbox_type" => "IMAP",
+            "inbox_port" => 993,
+            "inbox_ssl" => true,
+            "outbox_address" => "a.b.c",
+            "outbox_port" => 993,
+            "outbox_secure" => "ssl",
+        ];
+
+        $request->expects($this->once())->method("header")->with("x-cnmail-data")->willReturn(
+            base64_encode(json_encode($conf))
+        );
+
+        $provider = new LocalAccountProvider($request);
 
         $app->shouldReceive("make")
-            ->with(ImapUserProvider::class)
-            ->andReturn(new DefaultImapUserProvider([
-                ["id" => "conjoon",
-                    "inbox_type" => "IMAP",
-                    "inbox_port" => 993,
-                    "inbox_ssl" => true,
-                    "outbox_address" => "a.b.c",
-                    "outbox_port" => 993,
-                    "outbox_secure" => "ssl",
-                    "subscriptions" => ["INBOX"],
-                    "match" => ["/conjoon$/mi"]
-                ]
-            ]));
+            ->with(LocalAccountProvider::class)
+            ->andReturn($provider);
 
         return $app;
     }

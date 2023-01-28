@@ -3,7 +3,7 @@
 /**
  * conjoon
  * lumen-app-email
- * Copyright (C) 2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * Copyright (C) 2022-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -69,6 +69,11 @@ abstract class BaseConfigurationCommand extends Command
 
     protected function updateEnvSettings($key, $value)
     {
+        if ($value === "" || $value === null) {
+            unset($this->envSettings[$key]);
+            return;
+        }
+
         $this->envSettings[$key] = $value;
     }
 
