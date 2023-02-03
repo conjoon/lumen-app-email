@@ -69,7 +69,7 @@ class ConfigureUrlCommand extends BaseConfigurationCommand
     {
 
         $url = $this->choice(
-            "Please select the URL where this instance will be located, or type in manually",
+            "Please provide the URL where this instance will be located",
             $defaultUrls,
             $defaultUrls[0]
         );

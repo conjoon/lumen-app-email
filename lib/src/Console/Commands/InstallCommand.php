@@ -38,6 +38,11 @@ class InstallCommand extends BaseConfigurationCommand
 
     public function handle()
     {
+        if (!class_exists("\\Composer\\InstalledVersions")) {
+            $this->line("<fg=red;bg=white>Some requirements could not be resolved. Please make sure you're using Composer >= 2.0 ");
+            return;
+        }
+
         $this->line(StartScreen::toString());
 
         $this->call('configure:url');

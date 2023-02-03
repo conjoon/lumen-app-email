@@ -5,6 +5,8 @@ The recommended way to install **lumen-app-email** is by using `composer create-
 
 `composer create-project {packageName} {targetDirectory} {version}`
 
+The install tool of **lumen-app-email** requires [**Composer**](https://getcomposer.org/) >= V2.0.
+
 The following command will install an instance of **lumen-app-email** along with its dependencies into the directory
 `htdocs` relative to the current working directory:
 
