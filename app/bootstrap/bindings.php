@@ -101,9 +101,11 @@ $app->singleton(
     ConsoleKernel::class
 );
 
-$app->singleton(ImapUserProvider::class, function () {
-    return new DefaultImapUserProvider(config('imapserver'));
-});
+if (env("AUTH_PROVIDER") === "single-imap-user") {
+    $app->singleton(ImapUserProvider::class, function () {
+        return new DefaultImapUserProvider(config('imapserver') ?? []);
+    });
+}
 
 $app->singleton(MailFolderService::class, function ($app) use ($getMailClient) {
     $mailClient = $getMailClient($app->auth->user()->getMailAccount($app->request->route('mailAccountId')));

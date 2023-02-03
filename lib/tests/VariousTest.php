@@ -191,10 +191,14 @@ class VariousTest extends TestCase
         $property->setAccessible(true);
 
 
-        $this->assertInstanceOf(
-            DefaultImapUserProvider::class,
-            $this->app->build($property->invokeArgs($this->app, [ImapUserProvider::class]))
-        );
+        if (env("AUTH_PROVIDER") === "single-imap-user") {
+            $this->assertInstanceOf(
+                DefaultImapUserProvider::class,
+                $this->app->build($property->invokeArgs($this->app, [ImapUserProvider::class]))
+            );
+        } else {
+            $this->assertSame("local-mail-account", env("AUTH_PROVIDER"));
+        }
 
         $this->assertInstanceOf(
             DefaultMessageItemDraftJsonTransformer::class,
