@@ -27,3 +27,16 @@ further details about the configuration options available:
 ## Related Resources
 A pre-configured container for running an instance of **lumen-app-email** is also available and can be found at 
 [conjoon\/ddev-ms-email](https://github.com/conjoon/ddev-ms-email).
+
+## nginx configuration
+The default distribution of **lumen-app-emails** contains an `.htaccess`-file containing rewrite rules for properly
+routing API paths when using an **Apache HTTP Server**.
+If you want to use **nginx**, you can apply the following configuration to make sure requests are properly routed.
+
+Assuming **lumen-app-email** is installed in `./htdocs` - relative to the (virtual) server's `root`-dir:
+
+```apacheconf
+location /htdocs {
+    try_files $uri $uri/ /htdocs/app/public/index.php?$query_string;
+}
+```
