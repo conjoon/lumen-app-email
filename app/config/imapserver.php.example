@@ -115,7 +115,7 @@ return [
         "outbox_port"     => 587,
         "outbox_secure"   => "ssl",
         "subscriptions"   => ["INBOX"],
-        "match"           => ["/\@(freenet.)(de)$/mi"]
+        "match"           => ["/\@(yahoo.)(com)$/mi"]
     ],
 
 
