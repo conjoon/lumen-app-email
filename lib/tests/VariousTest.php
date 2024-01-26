@@ -31,31 +31,32 @@ namespace Tests;
 
 use App\ControllerUtil;
 use Closure;
-use Conjoon\Horde_Imap\Client\SortInfoStrategy;
 use Conjoon\Core\Contract\JsonStrategy;
+use Conjoon\Data\Resource\ObjectDescription;
 use Conjoon\Horde_Imap\Client\HordeClient;
-use Conjoon\JsonApi\Query\Validation\Validator;
-use Conjoon\JsonApi\Request\Request as JsonApiRequest;
+use Conjoon\Horde_Imap\Client\SortInfoStrategy;
 use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
 use Conjoon\Horde_Mime\Composer\HordeBodyComposer;
 use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Conjoon\JsonApi\Request\ResourceUrlRegexList;
-use Conjoon\Data\Resource\ObjectDescription;
-use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
-use Conjoon\MailClient\Data\MailAccount;
-use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
-use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
-use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
-use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
-use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
-use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
 use Conjoon\Illuminate\MailClient\Data\Protocol\Http\Request\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\JsonApi\Query\Validation\Validator;
+use Conjoon\JsonApi\Request as JsonApiRequest;
+use Conjoon\JsonApi\Resource\ResourceList;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
+use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
+use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
+use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
+use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
 use Conjoon\MailClient\Service\AttachmentService;
 use Conjoon\MailClient\Service\AuthService;
 use Conjoon\MailClient\Service\DefaultAttachmentService;
@@ -64,8 +65,7 @@ use Conjoon\MailClient\Service\DefaultMailFolderService;
 use Conjoon\MailClient\Service\DefaultMessageItemService;
 use Conjoon\MailClient\Service\MailFolderService;
 use Conjoon\MailClient\Service\MessageItemService;
-use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
-use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
+use Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use Laravel\Lumen\Routing\Router;
@@ -103,8 +103,6 @@ class VariousTest extends TestCase
             ["regex" => "/MailAccounts\/.+\/(MailFolders)(\/)?[^\/]*$/m", "nameIndex" => 1, "singleIndex" => 2],
         ], config("app.api.resourceUrls"));
 
-        $this->assertSame("rest-imapuser/api/{apiVersion}", config("app.api.imapUserApiPrefix"));
-        $this->assertSame("rest-api-email/api/{apiVersion}", config("app.api.emailApiPrefix"));
         $this->assertSame("/\/(v[0-9]+)/mi", config("app.api.versionRegex"));
         $this->assertSame(
             "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
@@ -112,8 +110,28 @@ class VariousTest extends TestCase
         );
 
         $this->assertSame([
-            "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
-            "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+            "urlPatterns" => [
+                "MessageItem" => [
+                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItem}",
+                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems",
+                ],
+                "MessageBody" => [
+                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies/{messageItem}",
+                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies",
+                ],
+                "MailFolder" => [
+                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}",
+                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders",
+                ],
+                "MailAccount" => [
+                    "single" => "/MailAccounts/{mailAccountId}",
+                    "collection" => "/MailAccounts",
+                ]
+            ],
+            "repositoryPatterns" => [
+                "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+                "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+            ]
         ], config("app.api.validationTpl"));
     }
 
@@ -156,7 +174,10 @@ class VariousTest extends TestCase
 
         $versions[] = "latest";
         $this->assertGreaterThan(1, $versions);
+
+
         foreach ($versions as $version) {
+
             $this->assertArrayHasKey("POST/" . $this->getImapUserEndpoint("auth", $version), $routes);
 
             $testAuthsFor = [
@@ -352,15 +373,7 @@ class VariousTest extends TestCase
             $messageItemService->getPreviewTextProcessor()
         );
 
-        $resourceUrlRegexList = $this->app->build($property->invokeArgs(
-            $this->app,
-            [ResourceUrlRegexList::class]
-        ));
-        $this->assertInstanceOf(
-            ResourceUrlRegexList::class,
-            $resourceUrlRegexList
-        );
-        $this->assertEquals(config("app.api.resourceUrls"), $resourceUrlRegexList->toArray());
+
     }
 
 
@@ -371,10 +384,10 @@ class VariousTest extends TestCase
     public function testScopedRequest()
     {
         $urls = [
-            "/MailAccounts/dev/MailFolders/INBOX/MessageItems",
-            "/MailAccounts/dev/MailFolders/INBOX/MessageBodies",
-            "/MailAccounts",
-            "/MailAccounts/dev/MailFolders/INBOX"
+            "http://localhost/MailAccounts/dev/MailFolders/INBOX/MessageItems",
+            "http://localhost/MailAccounts/dev/MailFolders/INBOX/MessageBodies",
+            "http://localhost/MailAccounts",
+            "http://localhost/MailAccounts/dev/MailFolders/INBOX"
         ];
         foreach ($urls as $testUrl) {
             $this->app = $this->createApplication();
@@ -400,7 +413,6 @@ class VariousTest extends TestCase
 
             $this->assertSame($testUrl, $jsonApiRequest->getUrl()->toString());
 
-            $this->assertInstanceOf(ObjectDescription::class, $jsonApiRequest->getResourceTarget());
             $this->assertInstanceOf(Validator::class, $jsonApiRequest->getQueryValidator());
         }
     }

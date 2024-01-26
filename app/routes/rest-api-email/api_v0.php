@@ -50,6 +50,10 @@ $router->get(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
     'MessageItemController@index'
 );
+$router->get(
+    'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageBodies',
+    'MessageItemController@getMessageBodies'
+);
 $router->post(
     'MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems',
     'MessageItemController@post'

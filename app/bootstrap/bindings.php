@@ -30,38 +30,40 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\ControllerUtil;
 use App\Exceptions\Handler;
-use Conjoon\Core\Util\ClassLoader;
-use Conjoon\Horde_Imap\Client\SortInfoStrategy;
+use App\Http\V0\JsonApi\ValidatorFactory;
 use Conjoon\Core\Contract\JsonStrategy;
+use Conjoon\Core\Util\ClassLoader;
+use Conjoon\Data\Resource\ObjectDescription;
 use Conjoon\Horde_Imap\Client\HordeClient;
-use Conjoon\Http\Url;
-use Conjoon\JsonApi\Query\Validation\Validator;
-use Conjoon\JsonApi\Request\Request as JsonApiRequest;
+use Conjoon\Horde_Imap\Client\SortInfoStrategy;
 use Conjoon\Horde_Mime\Composer\HordeAttachmentComposer;
 use Conjoon\Horde_Mime\Composer\HordeBodyComposer;
 use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
+use Conjoon\Http\RequestMethod as HttpMethod;
+use Conjoon\JsonApi\Resource\ResourceList;
+use Conjoon\Net\Url;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
-use Conjoon\Illuminate\Auth\Imap\ImapUserProvider;
-use Conjoon\JsonApi\Request\ResourceUrlParser;
-use Conjoon\JsonApi\Request\Url as JsonApiUrl;
-use Conjoon\JsonApi\Request\ResourceUrlRegex;
-use Conjoon\JsonApi\Request\ResourceUrlRegexList;
-use Conjoon\Data\Resource\ObjectDescription;
-use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
-use Conjoon\MailClient\Data\MailAccount;
-use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
-use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
-use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
-use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
-use Conjoon\MailClient\Data\Reader\DefaultPlainReadableStrategy;
-use Conjoon\MailClient\Data\Reader\PurifiedHtmlStrategy;
-use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
-use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
 use Conjoon\Illuminate\MailClient\Data\Protocol\Http\Request\Transformer\LaravelAttachmentListJsonTransformer;
+use Conjoon\JsonApi\Query\Validation\Validator;
+use Conjoon\JsonApi\Request as JsonApiRequest;
+use Conjoon\MailClient\Data\MailAccount;
+use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\AttachmentListJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageBodyDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\DefaultMessageItemDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageBodyDraftJsonTransformer;
 use Conjoon\MailClient\Data\Protocol\Http\Request\Transformer\MessageItemDraftJsonTransformer;
+use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
+use Conjoon\MailClient\Data\Protocol\Imap\Util\DefaultFolderIdToTypeMapper;
+use Conjoon\MailClient\Data\Reader\DefaultPlainReadableStrategy;
+use Conjoon\MailClient\Data\Reader\PurifiedHtmlStrategy;
+use Conjoon\MailClient\Data\Reader\ReadableMessagePartContentProcessor;
+use Conjoon\MailClient\Data\Writer\DefaultHtmlWritableStrategy;
+use Conjoon\MailClient\Data\Writer\DefaultPlainWritableStrategy;
+use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
+use Conjoon\MailClient\Folder\Tree\DefaultMailFolderTreeBuilder;
+use Conjoon\MailClient\Message\Attachment\Processor\InlineDataProcessor;
+use Conjoon\MailClient\Message\Text\DefaultMessageItemFieldsProcessor;
+use Conjoon\MailClient\Message\Text\DefaultPreviewTextProcessor;
 use Conjoon\MailClient\Service\AttachmentService;
 use Conjoon\MailClient\Service\AuthService;
 use Conjoon\MailClient\Service\DefaultAttachmentService;
@@ -70,11 +72,8 @@ use Conjoon\MailClient\Service\DefaultMailFolderService;
 use Conjoon\MailClient\Service\DefaultMessageItemService;
 use Conjoon\MailClient\Service\MailFolderService;
 use Conjoon\MailClient\Service\MessageItemService;
-use Conjoon\MailClient\Data\Protocol\Http\Response\JsonApiStrategy;
-use Conjoon\MailClient\Data\Writer\DefaultHtmlWritableStrategy;
-use Conjoon\MailClient\Data\Writer\DefaultPlainWritableStrategy;
-use Conjoon\MailClient\Data\Writer\WritableMessagePartContentProcessor;
 use Conjoon\Text\CharsetConverter;
+use Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 
@@ -174,13 +173,13 @@ $app->singleton(AttachmentListJsonTransformer::class, function () {
 });
 
 
-$app->singleton(ResourceUrlRegexList::class, function () {
+$app->singleton(ResourceList::class, function () {
     $resourceUrls = config("app.api.resourceUrls");
 
-    $urlRegexList = new ResourceUrlRegexList();
+    $resourceList = new ResourceList();
 
     foreach ($resourceUrls as $resourceUrlCfg) {
-        $urlRegexList[] = new ResourceUrlRegex(
+        $resourceList[] = new Resource(
             $resourceUrlCfg["regex"],
             $resourceUrlCfg["nameIndex"],
             $resourceUrlCfg["singleIndex"]
@@ -197,8 +196,6 @@ $app->scoped(JsonApiRequest::class, function ($app) {
     $fullUrl = $app->request->fullUrl();
     $httpUrl = new Url($fullUrl);
 
-    $urlRegexList = $app->make(ResourceUrlRegexList::class);
-
     $latest = config("app.api.latest");
     preg_match_all(
         config("app.api.versionRegex"),
@@ -210,35 +207,18 @@ $app->scoped(JsonApiRequest::class, function ($app) {
     $apiVersion = strtoupper(
         $matches && $matches[0][1] ? $matches[0][1] : $latest
     );
-    $resourceDescriptionParser = new ResourceUrlParser(
-        $urlRegexList,
-        str_replace("{apiVersion}", $apiVersion, config("app.api.resourceDescriptionTpl"))
-    );
 
-    $validationParser = new ResourceUrlParser(
-        $urlRegexList,
-        str_replace("{apiVersion}", $apiVersion, config("app.api.validationTpl.single")),
-        str_replace("{apiVersion}", $apiVersion, config("app.api.validationTpl.collection"))
-    );
+    // replace apiVersion
+    $validationTpl = config("app.api.validationTpl");
+    foreach ($validationTpl["repositoryPatterns"] as $key => &$value) {
+        $value = str_replace("{apiVersion}", $apiVersion, $value);
+    }
 
-    $classLoader = new ClassLoader();
-    $resourceDescription = $classLoader->load(
-        $resourceDescriptionParser->parse($httpUrl),
-        ObjectDescription::class
-    );
-
-    $validator = $classLoader->load(
-        $validationParser->parse($httpUrl),
-        Validator::class
-    );
 
     return new JsonApiRequest(
-        new JsonApiUrl(
-            $fullUrl,
-            $resourceDescription,
-            $resourceDescriptionParser->targetsResourceCollection($httpUrl)
-        ),
-        $validator
+        Url::make($fullUrl),
+        HttpMethod::from($app->request->method()),
+        ValidatorFactory::getValidator(Url::make($fullUrl), $validationTpl)
     );
 });
 
