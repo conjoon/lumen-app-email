@@ -30,6 +30,7 @@ declare(strict_types=1);
 use App\Console\Kernel as ConsoleKernel;
 use App\ControllerUtil;
 use App\Exceptions\Handler;
+use App\Http\V0\JsonApi\ObjectDescriptionFactory;
 use App\Http\V0\JsonApi\ValidatorFactory;
 use Conjoon\Core\Contract\JsonStrategy;
 use Conjoon\Core\Util\ClassLoader;
@@ -41,6 +42,7 @@ use Conjoon\Horde_Mime\Composer\HordeBodyComposer;
 use Conjoon\Horde_Mime\Composer\HordeHeaderComposer;
 use Conjoon\Http\RequestMethod as HttpMethod;
 use Conjoon\JsonApi\Resource\ResourceList;
+use Conjoon\Net\Uri;
 use Conjoon\Net\Url;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
 use Conjoon\Illuminate\MailClient\Data\Protocol\Http\Request\Transformer\LaravelAttachmentListJsonTransformer;
@@ -192,15 +194,18 @@ $app->scoped(JsonApiRequest::class, function ($app) {
     );
 
     // replace apiVersion
-    $validationTpl = config("app.api.validationTpl");
-    foreach ($validationTpl["repositoryPatterns"] as $key => &$value) {
+    $validationTpl = config("app.api.resourceTpl");
+    foreach ($validationTpl["repositoryPatterns"]["validations"] as $key => &$value) {
         $value = str_replace("{apiVersion}", $apiVersion, $value);
     }
 
+    $validationTpl["repositoryPatterns"]["descriptions"] = str_replace(
+        "{apiVersion}", $apiVersion, $validationTpl["repositoryPatterns"]["descriptions"]);
 
     return new JsonApiRequest(
         $httpUrl,
         HttpMethod::from($app->request->method()),
+        ObjectDescriptionFactory::getObjectDescription(Url::make($fullUrl), $validationTpl),
         ValidatorFactory::getValidator(Url::make($fullUrl), $validationTpl)
     );
 });

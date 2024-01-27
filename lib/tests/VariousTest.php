@@ -112,27 +112,33 @@ class VariousTest extends TestCase
         $this->assertSame([
             "urlPatterns" => [
                 "MessageItem" => [
-                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItem}",
-                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems",
+                    "single" => "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems/{messageItem}",
+                    "collection" => "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageItems",
                 ],
                 "MessageBody" => [
-                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies/{messageItem}",
-                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies",
+                    "single" => "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies/{messageItem}",
+                    "collection" => "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}/MessageBodies",
                 ],
                 "MailFolder" => [
-                    "single" => "/MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}",
-                    "collection" => "/MailAccounts/{mailAccountId}/MailFolders",
+                    "single" => "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId}",
+                    "collection" => "MailAccounts/{mailAccountId}/MailFolders",
                 ],
                 "MailAccount" => [
-                    "single" => "/MailAccounts/{mailAccountId}",
-                    "collection" => "/MailAccounts",
+                    "single" => "MailAccounts/{mailAccountId}",
+                    "collection" => "MailAccounts",
                 ]
             ],
             "repositoryPatterns" => [
-                "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
-                "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+                "validations" => [
+                    "single" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}Validator",
+                    "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+                ],
+                "descriptions" =>  [
+                    "single" => "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}",
+                    "collection" => "App\\Http\\{apiVersion}\\JsonApi\\Resource\\{0}List",
+                ]
             ]
-        ], config("app.api.validationTpl"));
+        ], config("app.api.resourceTpl"));
     }
 
     /**
@@ -413,7 +419,9 @@ class VariousTest extends TestCase
 
             $this->assertSame($testUrl, $jsonApiRequest->getUrl()->toString());
 
-            $this->assertInstanceOf(Validator::class, $jsonApiRequest->getQueryValidator());
+            $getQueryValidator = $this->makeAccessible($jsonApiRequest, "getQueryValidator");
+
+            $this->assertInstanceOf(Validator::class, $getQueryValidator->invokeArgs($jsonApiRequest, []));
         }
     }
 

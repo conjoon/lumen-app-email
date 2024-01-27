@@ -32,8 +32,10 @@ use Conjoon\JsonApi\Query\Validation\Validator;
   *         ]
   *     ],
   *     "repositoryPatterns" => [
-  *        "single" => "App\\Http\\V0\\JsonApi\\Query\\Validation\\{0}Validator",
-  *        "collection" => "App\\Http\\V0\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+  *         "validations" => [
+  *          "single" => "App\\Http\\V0\\JsonApi\\Query\\Validation\\{0}Validator",
+  *          "collection" => "App\\Http\\V0\\JsonApi\\Query\\Validation\\{0}CollectionValidator"
+  *       ]
   *     ]
   *  ];
   *
@@ -56,8 +58,8 @@ class ValidatorFactory {
     {
 
         $classLoader = new ClassLoader();
-        $singleRepository = $config["repositoryPatterns"]["single"];
-        $multiRepository = $config["repositoryPatterns"]["collection"];
+        $singleRepository = $config["repositoryPatterns"]["validations"]["single"];
+        $multiRepository = $config["repositoryPatterns"]["validations"]["collection"];
 
         foreach ($config["urlPatterns"] as $resource => $tplEntry) {
 
