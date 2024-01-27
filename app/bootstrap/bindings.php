@@ -173,23 +173,6 @@ $app->singleton(AttachmentListJsonTransformer::class, function () {
 });
 
 
-$app->singleton(ResourceList::class, function () {
-    $resourceUrls = config("app.api.resourceUrls");
-
-    $resourceList = new ResourceList();
-
-    foreach ($resourceUrls as $resourceUrlCfg) {
-        $resourceList[] = new Resource(
-            $resourceUrlCfg["regex"],
-            $resourceUrlCfg["nameIndex"],
-            $resourceUrlCfg["singleIndex"]
-        );
-    }
-
-    return $urlRegexList;
-});
-
-
 
 $app->scoped(JsonApiRequest::class, function ($app) {
 
@@ -199,7 +182,7 @@ $app->scoped(JsonApiRequest::class, function ($app) {
     $latest = config("app.api.latest");
     preg_match_all(
         config("app.api.versionRegex"),
-        $app->request->route()->getPrefix(),
+        $app->request->url(),
         $matches,
         PREG_SET_ORDER,
         0
@@ -216,7 +199,7 @@ $app->scoped(JsonApiRequest::class, function ($app) {
 
 
     return new JsonApiRequest(
-        Url::make($fullUrl),
+        $httpUrl,
         HttpMethod::from($app->request->method()),
         ValidatorFactory::getValidator(Url::make($fullUrl), $validationTpl)
     );
