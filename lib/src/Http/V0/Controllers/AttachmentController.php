@@ -1,28 +1,12 @@
 <?php
 
 /**
- * conjoon
- * lumen-app-email
- * Copyright (C) 2019-2022 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * This file is part of the conjoon/lumen-app-email project.
  *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * (c) 2019-2024 Thorsten Suckow-Homberg <thorsten@suckow-homberg.de>
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * For full copyright and license information, please consult the LICENSE-file distributed
+ * with this source code.
  */
 
 declare(strict_types=1);
@@ -77,16 +61,16 @@ class AttachmentController extends Controller
      * @param Request $request
      * @param $mailAccountId
      * @param $mailFolderId
-     * @param $parentMessageItemId
+     * @param $messageItemId
      * @return JsonResponse
      */
-    public function index(Request $request, $mailAccountId, $mailFolderId, $parentMessageItemId): JsonResponse
+    public function index(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
     {
         $user = Auth::user();
 
         $attachmentService = $this->attachmentService;
         $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, urldecode($mailFolderId), $parentMessageItemId);
+        $key               = new MessageKey($mailAccount, urldecode($mailFolderId), $messageItemId);
 
         return response()->json([
             "success" => true,
@@ -102,17 +86,17 @@ class AttachmentController extends Controller
      * @param Request $request
      * @param {String} $mailAccountId
      * @param {String} $mailFolderId
-     * @param {String} $parentMessageItemId
+     * @param {String} $messageItemId
      *
      * @return JsonResponse
      */
-    public function post(Request $request, $mailAccountId, $mailFolderId, $parentMessageItemId): JsonResponse
+    public function post(Request $request, $mailAccountId, $mailFolderId, $messageItemId): JsonResponse
     {
         $user = Auth::user();
         $attachmentService = $this->attachmentService;
         /** @noinspection PhpPossiblePolymorphicInvocationInspection */
         $mailAccount       = $user->getMailAccount($mailAccountId);
-        $key               = new MessageKey($mailAccount, $mailFolderId, $parentMessageItemId);
+        $key               = new MessageKey($mailAccount, $mailFolderId, $messageItemId);
 
         $postedData = $request->get("files");
         foreach ($postedData as $index => $req) {
@@ -130,14 +114,14 @@ class AttachmentController extends Controller
 
 
     /**
-     * Deletes the attachment uniquely identified by mailAccountId, mailFolderId, parentMessageItemId
+     * Deletes the attachment uniquely identified by $mailAccountId, $mailFolderId, $messageItemId
      * and $attachmentId.
      *
      * @param Request $request
      * @param $mailAccountId
      * @param $mailFolderId
-     * @param $parentMessageItemId
-     * @param $attachmentId
+     * @param $messageItemId
+     * @param $id
      *
      * @return JsonResponse
      */
@@ -145,8 +129,8 @@ class AttachmentController extends Controller
         Request $request,
         $mailAccountId,
         $mailFolderId,
-        $parentMessageItemId,
-        $attachmentId
+        $messageItemId,
+        $id
     ): JsonResponse {
 
         $user = Auth::user();
@@ -157,9 +141,10 @@ class AttachmentController extends Controller
 
         $mailFolderId = urldecode($mailFolderId);
 
-        $attachmentKey = new AttachmentKey($mailAccount, $mailFolderId, $parentMessageItemId, $attachmentId);
+        $attachmentKey = new AttachmentKey($mailAccount, $mailFolderId, $messageItemId, $id);
 
         $messageKey = $attachmentService->deleteAttachment($attachmentKey);
+
 
         return response()->json([
             "success" => !!$messageKey,
