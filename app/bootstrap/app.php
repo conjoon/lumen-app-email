@@ -1,28 +1,12 @@
 <?php
 
 /**
- * conjoon
- * lumen-app-email
- * Copyright (c) 2019-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * This file is part of the conjoon/lumen-app-email project.
  *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * (c) 2019-2024 Thorsten Suckow-Homberg <thorsten@suckow-homberg.de>
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * For full copyright and license information, please consult the LICENSE-file distributed
+ * with this source code.
  */
 
 declare(strict_types=1);
@@ -56,6 +40,9 @@ $app = new Laravel\Lumen\Application(
 $app->withFacades();
 $app->configure('app');
 
+$versions = config("app.api.service.email.versions");
+$requested = config("app.api.service.email.latest");
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings
@@ -66,7 +53,7 @@ $app->configure('app');
 | your own bindings here if you like or you can make another file.
 |
 */
-require __DIR__ . "/bindings.php";
+require __DIR__ . "/bindings_{$requested}.php";
 
 /*
 |--------------------------------------------------------------------------
@@ -82,7 +69,6 @@ $app->register(CorsServiceProvider::class);
 $app->configure('cors');
 $app->middleware([HandleCors::class]);
 
-$versions = config("app.api.service.email.versions");
 $authMiddleware = [];
 foreach ($versions as $version) {
     $version = ucfirst($version);

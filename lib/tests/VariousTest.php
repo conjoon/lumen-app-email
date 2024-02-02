@@ -1,28 +1,12 @@
 <?php
 
 /**
- * conjoon
- * lumen-app-email
- * Copyright (C) 2020-2023 Thorsten Suckow-Homberg https://github.com/conjoon/lumen-app-email
+ * This file is part of the conjoon/lumen-app-email project.
  *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * (c) 2020-2024 Thorsten Suckow-Homberg <thorsten@suckow-homberg.de>
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
- * USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * For full copyright and license information, please consult the LICENSE-file distributed
+ * with this source code.
  */
 
 declare(strict_types=1);
@@ -35,6 +19,7 @@ use Conjoon\Horde\Mail\Client\Message\Composer\HordeAttachmentComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeBodyComposer;
 use Conjoon\Horde\Mail\Client\Message\Composer\HordeHeaderComposer;
 use Conjoon\Illuminate\Auth\Imap\DefaultImapUserProvider;
+use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Conjoon\Illuminate\Mail\Client\Request\Attachment\Transformer\LaravelAttachmentListJsonTransformer;
 use Conjoon\Mail\Client\Attachment\Processor\InlineDataProcessor;
 use Conjoon\Mail\Client\Data\MailAccount;
@@ -57,11 +42,12 @@ use Conjoon\Mail\Client\Service\DefaultMessageItemService;
 use Conjoon\Mail\Client\Service\MailFolderService;
 use Conjoon\Mail\Client\Service\MessageItemService;
 use Conjoon\Mail\Client\Writer\WritableMessagePartContentProcessor;
-use Conjoon\Illuminate\Auth\ImapUserProvider;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use ReflectionClass;
 use ReflectionException;
+use Tests\V0\RoutesTrait as V0Routes;
+use Tests\V1\RoutesTrait as V1Routes;
 
 /**
  * Class VariousTest
@@ -74,6 +60,8 @@ use ReflectionException;
 class VariousTest extends TestCase
 {
     use TestTrait;
+    use V0Routes;
+    use V1Routes;
 
     protected bool $useFakeAuth = false;
 
@@ -90,8 +78,8 @@ class VariousTest extends TestCase
         );
 
 
-        $this->assertEquals(["v0"], config("app.api.service.email.versions"));
-        $this->assertSame("v0", config("app.api.service.email.latest"));
+        $this->assertEquals(["v0", "v1"], config("app.api.service.email.versions"));
+        $this->assertSame(env("APP_EMAIL_API"), config("app.api.service.email.latest"));
     }
 
     /**
@@ -124,50 +112,8 @@ class VariousTest extends TestCase
      */
     public function testRoutes()
     {
-        $routes = $this->app->router->getRoutes();
+        $this->{"apiRoutes" . strtoupper(env("APP_EMAIL_API"))}();
 
-        $versions = config("app.api.service.email.versions");
-        $latest   = config("app.api.service.email.latest");
-        $messageItemsEndpoint = "MailAccounts/{mailAccountId}/MailFolders/{mailFolderId:.*}/MessageItems";
-        $this->assertGreaterThan(0, $versions);
-
-        $versions[] = "latest";
-        $this->assertGreaterThan(1, $versions);
-        foreach ($versions as $version) {
-            $testAuthsFor = [
-                "GET/" . $this->getImapEndpoint("MailAccounts", $version),
-                "GET/" . $this->getImapEndpoint("MailAccounts/{mailAccountId}/MailFolders", $version),
-                "GET/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
-                "POST/" . $this->getImapEndpoint($messageItemsEndpoint, $version),
-                "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
-                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageBody", $version),
-                "GET/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
-                "POST/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
-                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageItem", $version),
-                "PATCH/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}/MessageDraft", $version),
-                "DELETE/" . $this->getImapEndpoint($messageItemsEndpoint . "/{messageItemId}", $version),
-                "GET/" . $this->getImapEndpoint(
-                    $messageItemsEndpoint . "/{messageItemId}/Attachments",
-                    $version
-                ),
-                "POST/" . $this->getImapEndpoint(
-                    $messageItemsEndpoint . "/{messageItemId}/Attachments",
-                    $version
-                ),
-                "DELETE/" . $this->getImapEndpoint(
-                    $messageItemsEndpoint . "/{messageItemId}/Attachments/{id}",
-                    $version
-                )
-            ];
-
-            foreach ($testAuthsFor as $route) {
-                $this->assertArrayHasKey($route, $routes);
-
-                // "latest"-string will fall back to the current version being used
-                $postfix = $version === "latest" ? ucfirst($latest) : ucfirst($version);
-                $this->assertSame("auth_" . $postfix, $routes[$route]["action"]["middleware"][0]);
-            }
-        }
     }
 
 

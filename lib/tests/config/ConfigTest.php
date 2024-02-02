@@ -58,8 +58,8 @@ class ConfigTest extends TestCase
             "service" => [
                 "email" => [
                     "path" => "rest-api-email",
-                    "versions" => ["v0"],
-                    "latest" => "v0"
+                    "versions" => ["v0", "v1"],
+                    "latest" => env("APP_EMAIL_API")
                 ]
             ]
         ], $config["api"]);
