@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Tests\V0;
 
-trait RoutesTrait {
-
-
-    protected function apiRoutesV0() {
+trait RoutesTrait
+{
+    protected function apiRoutesV0()
+    {
 
         $routes = $this->app->router->getRoutes();
 
@@ -60,5 +60,4 @@ trait RoutesTrait {
             }
         }
     }
-
 }

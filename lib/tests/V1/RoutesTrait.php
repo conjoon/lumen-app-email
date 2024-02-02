@@ -13,10 +13,9 @@ declare(strict_types=1);
 
 namespace Tests\V1;
 
-trait RoutesTrait {
-
-    protected function apiRoutesV1() {
-
+trait RoutesTrait
+{
+    protected function apiRoutesV1()
+    {
     }
-
 }

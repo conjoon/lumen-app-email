@@ -113,7 +113,6 @@ class VariousTest extends TestCase
     public function testRoutes()
     {
         $this->{"apiRoutes" . strtoupper(env("APP_EMAIL_API"))}();
-
     }
 
 
