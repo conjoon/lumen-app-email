@@ -37,7 +37,7 @@ class MailAccountController extends Controller
 
         return response()->json([
             "success" => true,
-            "data" => $accounts->toArray()
+            "data" => $accounts->toJson()
         ]);
     }
 }

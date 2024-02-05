@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use Conjoon\Mail\Client\Data\MailAccount;
-use Conjoon\MailClient\Data\MailAccountList;
+use Conjoon\Mail\Client\Data\MailAccountList;
 use Illuminate\Contracts\Auth\Authenticatable;
 use PHPUnit\Framework\MockObject\MockObject;
 use ReflectionClass;
@@ -69,8 +69,10 @@ trait TestTrait
                      return $this->getTestMailAccount($accountId);
                  }));
 
+        $mailAccountList = new MailAccountList();
+        $mailAccountList[] = $this->getTestMailAccount("dev_sys_conjoon_org");
         $userStub->method("getMailAccounts")
-                 ->willReturn(MailAccountList::make($this->getTestMailAccount("dev_sys_conjoon_org")));
+                 ->willReturn($mailAccountList);
 
         return $userStub;
     }
